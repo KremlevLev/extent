@@ -8,9 +8,9 @@ import json
 from transformers import AutoTokenizer
 
 # Импортируем ваши новые модули
-from config import QwenConfig
-from modeling import FlaxQwenForCausalLM
-from checkpoint import load_and_shard_weights
+from config.model_config import QwenConfig
+from modeling.modeling_qwen import FlaxQwenForCausalLM
+from training.checkpoint import load_and_shard_weights
 
 # =====================================================================
 # 1. ЗАГРУЗКА И НАСТРОЙКА КОНФИГУРАЦИИ И ТОКЕНИЗАТОРА
