@@ -30,3 +30,6 @@ def send_telegram_notification(text: str):
     # Отправляем POST-запрос на эндпоинт Telegram
     response = requests.post(url, json=payload)
     return response.json()
+
+def send_tg():
+    send_telegram_notification('success')

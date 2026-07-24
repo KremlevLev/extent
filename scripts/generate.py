@@ -6,19 +6,19 @@ from jax.sharding import Mesh, NamedSharding, PartitionSpec as P
 import os
 import json
 from transformers import AutoTokenizer
-
+from huggingface_hub import snapshot_download
 # Импортируем ваши новые модули
 from config.model_config import QwenConfig
 from modeling.modeling_qwen import FlaxQwenForCausalLM
 from training.checkpoint import load_and_shard_weights
-
+from scripts.tg_notifier import send_tg
 # =====================================================================
 # 1. ЗАГРУЗКА И НАСТРОЙКА КОНФИГУРАЦИИ И ТОКЕНИЗАТОРА
 # =====================================================================
+send_tg()
 print("[Шаг 1] Инициализация конфигурации...")
 # Путь, куда HF скачивает модель (мы узнаем его после первого запуска snapshot_download)
 # Для теста укажем путь к кэшу или скачаем заново:
-from huggingface_hub import snapshot_download
 model_dir = snapshot_download(
     repo_id="Qwen/Qwen3-14B",
     allow_patterns=["*.json", "*.safetensors"]
