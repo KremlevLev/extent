@@ -4,7 +4,7 @@ from safetensors import safe_open
 import jax
 import jax.numpy as jnp
 import gc
-from config import QwenConfig
+from config.model_config import QwenConfig
 
 def load_and_shard_weights(
     model_dir,
