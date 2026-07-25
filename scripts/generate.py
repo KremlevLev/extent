@@ -12,9 +12,11 @@ from config.model_config import QwenConfig
 from modeling.modeling_qwen import FlaxQwenForCausalLM
 from training.checkpoint import load_and_shard_weights
 from scripts.tg_notifier import send_tg
+from arg import parse_args
 # =====================================================================
 # 1. ЗАГРУЗКА И НАСТРОЙКА КОНФИГУРАЦИИ И ТОКЕНИЗАТОРА
 # =====================================================================
+parse_args()
 send_tg()
 print("[Шаг 1] Инициализация конфигурации...")
 # Путь, куда HF скачивает модель (мы узнаем его после первого запуска snapshot_download)
@@ -24,7 +26,7 @@ model_dir = snapshot_download(
     allow_patterns=["*.json", "*.safetensors"]
 )
 
-config = QwenConfig(model_dir)
+config = QwenConfig(model_dir) 
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-14B")
 
 with open(os.path.join(model_dir, "model.safetensors.index.json"), "r") as f:
