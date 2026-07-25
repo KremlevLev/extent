@@ -12,7 +12,7 @@ from config.model_config import QwenConfig
 from modeling.modeling_qwen import FlaxQwenForCausalLM
 from training.checkpoint import load_and_shard_weights
 from scripts.tg_notifier import send_tg
-from arg import parse_args
+from utils.arg import parse_args
 # =====================================================================
 # 1. ЗАГРУЗКА И НАСТРОЙКА КОНФИГУРАЦИИ И ТОКЕНИЗАТОРА
 # =====================================================================
