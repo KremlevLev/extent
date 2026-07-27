@@ -1,4 +1,3 @@
-# generate.py
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -7,40 +6,34 @@ import os
 import json
 from transformers import AutoTokenizer
 from huggingface_hub import snapshot_download
-# Импортируем ваши новые модули
+
+# Импортируем ваши модули (судя по вкладкам в вашем редакторе)
 from config.model_config import QwenConfig
 from modeling.modeling_qwen import FlaxQwenForCausalLM
 from training.checkpoint import load_and_shard_weights
-from scripts.tg_notifier import send_tg
-from utils.arg import parse_args
+
 # =====================================================================
-# 1. ЗАГРУЗКА И НАСТРОЙКА КОНФИГУРАЦИИ И ТОКЕНИЗАТОРА
+# ШАГ 1: ЗАГРУЗКА И НАСТРОЙКА КОНФИГУРАЦИИ И ТОКЕНИЗАТОРА
 # =====================================================================
-args = parse_args()
-send_tg()
-print("[Шаг 1] Инициализация конфигурации...")
-# Путь, куда HF скачивает модель (мы узнаем его после первого запуска snapshot_download)
-# Для теста укажем путь к кэшу или скачаем заново:
+print("[Шаг 1] Инициализация конфигурации и токенизатора...")
 model_dir = snapshot_download(
     repo_id="Qwen/Qwen3-14B",
     allow_patterns=["*.json", "*.safetensors"]
 )
 
-config = QwenConfig(model_dir) 
-if args.num_hidden_layers is not None:
-    config.num_hidden_layers = args.num_hidden_layers
+config = QwenConfig(model_dir)
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-14B")
 
 with open(os.path.join(model_dir, "model.safetensors.index.json"), "r") as f:
     weight_map = json.load(f)["weight_map"]
 
-# Проверяем QK-norm
+# Проверяем наличие QK-norm
 q_norm_key_test = "model.layers.0.self_attn.q_norm.weight"
 k_norm_key_test = "model.layers.0.self_attn.k_norm.weight"
 config.use_qk_norm = q_norm_key_test in weight_map and k_norm_key_test in weight_map
 
 # =====================================================================
-# 2. НАСТРОЙКА TPU ШАРДИНГА
+# ШАГ 2: НАСТРОЙКА TPU ШАРДИНГА
 # =====================================================================
 print("[Шаг 2] Настройка сетки устройств TPU...")
 devices = np.array(jax.devices())
@@ -48,18 +41,17 @@ num_devices = len(devices)
 devices_mesh = devices.reshape(1, num_devices)
 mesh = Mesh(devices_mesh, ('data', 'tensor'))
 
-# Определяем маски для разной размерности тензоров
+# Определяем маски для распределения тензоров по чипам TPU
 sharding_repl_1d = NamedSharding(mesh, P(None))
-sharding_repl_2d = NamedSharding(mesh, P(None, None))       # Нужна для embed_tokens
-sharding_repl_3d = NamedSharding(mesh, P(None, None, None))
+sharding_repl_2d = NamedSharding(mesh, P(None, None))
 sharding_col = NamedSharding(mesh, P(None, 'tensor'))
 sharding_row = NamedSharding(mesh, P('tensor', None))
 
 # =====================================================================
-# 3. ЗАГРУЗКА ВЕСОВ
+# ШАГ 3: ЗАГРУЗКА ВЕСОВ НА TPU
 # =====================================================================
-# Для начала проверьте на 1 или 2 слоях (измените config.num_hidden_layers = 1 для быстрого теста)
-# Если все хорошо, верните config.num_hidden_layers = 40 (из конфига)
+# ВНИМАНИЕ: Для теста скорости генерации можете поставить config.num_hidden_layers = 1,
+# чтобы не ждать загрузку всех 40 слоев. Для финального запуска оставьте как есть.
 print(f"[Шаг 3] Загрузка и нарезка весов для {config.num_hidden_layers} слоев...")
 tpu_params = load_and_shard_weights(
     model_dir=model_dir,
@@ -73,44 +65,83 @@ tpu_params = load_and_shard_weights(
 )
 
 # =====================================================================
-# 4. ПОДГОТОВКА ТЕКСТОВОГО ВВОДА
+# ШАГ 4: ИНИЦИАЛИЗАЦИЯ KV-КЭША И ФУНКЦИЙ JIT
 # =====================================================================
-print("[Шаг 4] Токенизация входного текста...")
-prompt = "The capital of France is"
-inputs = tokenizer(prompt, return_tensors="np")
-input_ids_np = inputs["input_ids"] # Имеет форму [1, seq_len]
-seq_len = input_ids_np.shape[1]
-
-# Переносим токены на TPU
-tpu_input_ids = jax.device_put(jnp.array(input_ids_np, dtype=jnp.int32), sharding_repl_2d)
-
-# Создаем position_ids и маску
-position_ids_np = np.arange(seq_len, dtype=np.int32)[None, :]
-tpu_position_ids = jax.device_put(jnp.array(position_ids_np), sharding_repl_2d)
-
-# =====================================================================
-# 5. КОМПИЛЯЦИЯ И ИНФЕРЕНС С ПОЛНОЙ МОДЕЛЬЮ
-# =====================================================================
-print("[Шаг 5] Сборка модели и запуск инференса...")
+print("\n[Шаг 4] Подготовка функций генерации и KV-кэша...")
 model = FlaxQwenForCausalLM(config=config)
 
+# Создаем пустой кэш нужного размера (инициализация переменных)
+rng = jax.random.PRNGKey(0)
+dummy_ids = jnp.ones((1, 1), dtype=jnp.int32)
+dummy_pos = jnp.zeros((1, 1), dtype=jnp.int32)
+variables = model.init(rng, dummy_ids, dummy_pos, use_cache=True)
+kv_cache = variables['cache'] # Достаем пустые матрицы кэша
+
+# Функция 1: Обработка промпта (mutable=['cache'] разрешает JAX изменять кэш)
 @jax.jit
-def inference_step(weights, input_ids, position_ids):
-    return model.apply(weights, input_ids, position_ids)
+def prefill_step(weights, cache, input_ids, position_ids):
+    logits, mutated_vars = model.apply(
+        {'params': weights, 'cache': cache},
+        input_ids, position_ids,
+        use_cache=True,
+        mutable=['cache']
+    )
+    return logits, mutated_vars['cache']
 
-# Делаем проход модели (forward pass)
-logits = inference_step(tpu_params, tpu_input_ids, tpu_position_ids)
-logits.block_until_ready()
+# Функция 2: Обработка ОДНОГО нового токена (очень быстрая!)
+@jax.jit
+def decode_step(weights, cache, input_ids, position_ids):
+    logits, mutated_vars = model.apply(
+        {'params': weights, 'cache': cache},
+        input_ids, position_ids,
+        use_cache=True,
+        mutable=['cache']
+    )
+    return logits, mutated_vars['cache']
 
-# Берем логиты последнего предсказанного токена
-next_token_logits = logits[0, -1, :] # Форма [vocab_size]
+# =====================================================================
+# ШАГ 5: ЗАПУСК ГЕНЕРАЦИИ ТЕКСТА
+# =====================================================================
+prompt = "The capital of France is"
+input_ids = tokenizer(prompt, return_tensors="np")["input_ids"]
+seq_len = input_ids.shape[1]
 
-# Находим самый вероятный токен (Greedy Search)
-next_token_id = int(jnp.argmax(next_token_logits))
-predicted_word = tokenizer.decode([next_token_id])
+# 1. PREFILL: Проглатываем весь текст сразу
+tpu_input_ids = jax.device_put(jnp.array(input_ids, dtype=jnp.int32), sharding_repl_2d)
+tpu_position_ids = jax.device_put(jnp.arange(seq_len, dtype=jnp.int32)[None, :], sharding_repl_2d)
 
-print("\n" + "=" * 60)
-print(f"Входной промпт: '{prompt}'")
-print(f"ID предсказанного токена: {next_token_id}")
-print(f"Декодированное слово: '{predicted_word}'")
-print("=" * 60)
+print(f"\nОбработка промпта: '{prompt}'...")
+logits, current_cache = prefill_step(tpu_params, kv_cache, tpu_input_ids, tpu_position_ids)
+
+# Берем логиты самого последнего слова промпта и предсказываем следующее
+next_token_id = int(jnp.argmax(logits[0, -1, :]))
+generated_tokens = [next_token_id]
+print(f"Первый сгенерированный токен: {tokenizer.decode([next_token_id])}")
+
+# 2. DECODE LOOP: Генерируем следующие 10 слов
+current_pos = seq_len
+MAX_NEW_TOKENS = 10
+
+print("Продолжение генерации (Decode):", end=" ", flush=True)
+
+for i in range(MAX_NEW_TOKENS):
+    # На вход подаем только 1 слово (последнее предсказанное)
+    step_input_id = jax.device_put(jnp.array([[next_token_id]], dtype=jnp.int32), sharding_repl_2d)
+    step_position = jax.device_put(jnp.array([[current_pos]], dtype=jnp.int32), sharding_repl_2d)
+    
+    # Очень быстрый JIT-проход!
+    logits, current_cache = decode_step(tpu_params, current_cache, step_input_id, step_position)
+    
+    # Выбираем следующее слово
+    next_token_id = int(jnp.argmax(logits[0, -1, :]))
+    
+    # Если модель выдала токен конца текста — останавливаемся
+    if next_token_id == 151645: # <|im_end|> для Qwen
+        break
+        
+    generated_tokens.append(next_token_id)
+    print(tokenizer.decode([next_token_id]), end="", flush=True)
+    
+    current_pos += 1
+
+print("\n\nГенерация завершена!")
