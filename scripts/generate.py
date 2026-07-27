@@ -11,7 +11,10 @@ from huggingface_hub import snapshot_download
 from config.model_config import QwenConfig
 from modeling.modeling_qwen import FlaxQwenForCausalLM
 from training.checkpoint import load_and_shard_weights
-
+from utils.arg import parse_args
+from scripts.tg_notifier import send_telegram_notification
+send_telegram_notification("success")
+args = parse_args()
 # =====================================================================
 # ШАГ 1: ЗАГРУЗКА И НАСТРОЙКА КОНФИГУРАЦИИ И ТОКЕНИЗАТОРА
 # =====================================================================
@@ -22,6 +25,8 @@ model_dir = snapshot_download(
 )
 
 config = QwenConfig(model_dir)
+if args.num_hidden_layers is not None:
+    config.num_hidden_layers = args.num_hidden_layers
 tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen3-14B")
 
 with open(os.path.join(model_dir, "model.safetensors.index.json"), "r") as f:
