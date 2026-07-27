@@ -56,47 +56,65 @@ class FlaxQwenAttention(nn.Module):
 
         q, k = apply_rotary_emb(q, k, position_ids, self.rope_theta, self.head_dim)
         
-        ### ИСПРАВЛЕНО: Логика кэша для Prefill (весь промпт) и Decode (по 1 токену)
+        # Определяем режим: Prefill (промпт) или Decode (1 токен)
+        is_prefill = seq_len > 1
+        
         if use_cache:
+            # Создаем пустой кэш на всю длину max_seq_len (статическая форма!)
             cache_k = self.variable('cache', 'k', jnp.zeros, (batch_size, self.max_seq_len, self.num_key_value_heads, self.head_dim), k.dtype)
             cache_v = self.variable('cache', 'v', jnp.zeros, (batch_size, self.max_seq_len, self.num_key_value_heads, self.head_dim), v.dtype)
             
-            if seq_len > 1:
-                # Этап Prefill: записываем весь кусок промпта начиная с 0
+            if is_prefill:
+                # Этап Prefill: сохраняем промпт в начало кэша
                 new_cache_k = jax.lax.dynamic_update_slice(cache_k.value, k, (0, 0, 0, 0))
                 new_cache_v = jax.lax.dynamic_update_slice(cache_v.value, v, (0, 0, 0, 0))
+                cache_k.value = new_cache_k
+                cache_v.value = new_cache_v
+                
+                # Для prefill используем текущие K и V (их размер статичен и равен seq_len промпта)
+                k_attn = k
+                v_attn = v
             else:
-                # Этап Decode: записываем ровно 1 токен в текущую позицию
+                # Этап Decode: записываем 1 токен в текущую позицию
                 current_pos = position_ids[0, 0]
                 new_cache_k = jax.lax.dynamic_update_slice(cache_k.value, k, (0, current_pos, 0, 0))
                 new_cache_v = jax.lax.dynamic_update_slice(cache_v.value, v, (0, current_pos, 0, 0))
-            
-            cache_k.value = new_cache_k
-            cache_v.value = new_cache_v
-            
-            # Достаем валидный кусок кэша вплоть до текущего слова
-            max_pos = position_ids[0, -1] + 1
-            k = new_cache_k[:, :max_pos, :, :]
-            v = new_cache_v[:, :max_pos, :, :]
+                cache_k.value = new_cache_k
+                cache_v.value = new_cache_v
+                
+                # ВНИМАНИЕ: Для decode берем ВЕСЬ кэш, чтобы не ломать статические формы JAX
+                k_attn = new_cache_k
+                v_attn = new_cache_v
+        else:
+            k_attn = k
+            v_attn = v
 
         num_groups = self.num_attention_heads // self.num_key_value_heads
-        k = jnp.repeat(k, num_groups, axis=2)
-        v = jnp.repeat(v, num_groups, axis=2)
+        k_attn = jnp.repeat(k_attn, num_groups, axis=2)
+        v_attn = jnp.repeat(v_attn, num_groups, axis=2)
         
         scale = 1.0 / jnp.sqrt(self.head_dim)
-        attn_weights = jnp.einsum("bqhd,bkhd->bhqk", q, k) * scale
+        attn_weights = jnp.einsum("bqhd,bkhd->bhqk", q, k_attn) * scale
         
         if attention_mask is not None:
             attn_weights = attn_weights + attention_mask
         
-        ### ИСПРАВЛЕНО: Треугольная маска нужна только когда мы скармливаем промпт целиком (seq_len > 1)
-        if seq_len > 1:
+        if use_cache and not is_prefill:
+            # Динамическая маска для Decode: скрываем нули в будущем кэше
+            current_pos = position_ids[0, 0]
+            indices = jnp.arange(self.max_seq_len)
+            # Все индексы > current_pos получают True (будут скрыты)
+            decode_mask = indices > current_pos 
+            decode_mask = decode_mask.reshape(1, 1, 1, self.max_seq_len)
+            attn_weights = jnp.where(decode_mask, -1e9, attn_weights)
+        elif is_prefill or (not use_cache and seq_len > 1):
+            # Классическая треугольная маска для Prefill
             causal_mask = jnp.tril(jnp.ones((seq_len, seq_len)))
             causal_mask = causal_mask.reshape(1, 1, seq_len, seq_len)
             attn_weights = jnp.where(causal_mask == 0, -1e9, attn_weights)
         
         attn_weights = jax.nn.softmax(attn_weights.astype(jnp.float32)).astype(q.dtype)
-        attn_output = jnp.einsum("bhqk,bkhd->bqhd", attn_weights, v)
+        attn_output = jnp.einsum("bhqk,bkhd->bqhd", attn_weights, v_attn)
         attn_output = attn_output.reshape(batch_size, seq_len, -1)
         
         output = nn.Dense(self.hidden_size, use_bias=False, name="o_proj")(attn_output)
