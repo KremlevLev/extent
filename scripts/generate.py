@@ -144,7 +144,7 @@ for i in range(MAX_NEW_TOKENS):
     step_position = jax.device_put(jnp.array([[current_pos]], dtype=jnp.int32), sharding_repl_2d)
     
     # Очень быстрый JIT-проход!
-    logits, current_cache = decode_step(tpu_params, current_cache, step_input_id, step_position)
+    logits, current_cache = decode_step(tpu_params["params"], current_cache, step_input_id, step_position)
     
     # Выбираем следующее слово
     next_token_id = int(jnp.argmax(logits[0, -1, :]))
