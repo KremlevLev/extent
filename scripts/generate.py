@@ -75,14 +75,23 @@ tpu_params = load_and_shard_weights(
 print("\n[Шаг 4] Подготовка функций генерации и KV-кэша...")
 model = FlaxQwenForCausalLM(config=config)
 
-# Создаем пустой кэш нужного размера (инициализация переменных)
-rng = jax.random.PRNGKey(0)
-dummy_ids = jnp.ones((1, 1), dtype=jnp.int32)
-dummy_pos = jnp.zeros((1, 1), dtype=jnp.int32)
-variables = model.init(rng, dummy_ids, dummy_pos, use_cache=True)
-kv_cache = variables['cache'] # Достаем пустые матрицы кэша
+# 1. Подготавливаем фиктивные данные для создания кэша
+dummy_ids = jax.device_put(jnp.ones((1, 1), dtype=jnp.int32), sharding_repl_2d)
+dummy_pos = jax.device_put(jnp.zeros((1, 1), dtype=jnp.int32), sharding_repl_2d)
 
-# Функция 1: Обработка промпта (mutable=['cache'] разрешает JAX изменять кэш)
+# 2. Холостой прогон для инициализации ТОЛЬКО кэша
+# Передаем уже загруженные tpu_params. Flax увидит, что 'cache' не передан,
+# создаст его с помощью jnp.zeros и вернет в initial_vars.
+_, initial_vars = model.apply(
+    tpu_params,          # Наши реальные веса
+    dummy_ids, 
+    dummy_pos, 
+    use_cache=True, 
+    mutable=['cache']    # Разрешаем создать кэш
+)
+kv_cache = initial_vars['cache'] # Забираем готовые пустые матрицы кэша
+
+# 3. Функция 1: Обработка промпта (Prefill)
 @jax.jit
 def prefill_step(weights, cache, input_ids, position_ids):
     logits, mutated_vars = model.apply(
@@ -93,7 +102,7 @@ def prefill_step(weights, cache, input_ids, position_ids):
     )
     return logits, mutated_vars['cache']
 
-# Функция 2: Обработка ОДНОГО нового токена (очень быстрая!)
+# 4. Функция 2: Обработка ОДНОГО нового токена (Decode)
 @jax.jit
 def decode_step(weights, cache, input_ids, position_ids):
     logits, mutated_vars = model.apply(

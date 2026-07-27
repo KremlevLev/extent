@@ -1,10 +1,12 @@
 import json
 import requests
 import os
-from kaggle_secrets import UserSecretsClient
+try:
+    from kaggle_secrets import UserSecretsClient
+except ModuleNotFoundError:
 # Пытаемся прочитать переменные из окружения
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_USER_ID = os.getenv("TELEGRAM_USER_ID")
+    TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+    TELEGRAM_USER_ID = os.getenv("TELEGRAM_USER_ID")
 # Локально в VS Code подгружаем .env, если библиотека установлена
 try:
     user_secrets = UserSecretsClient()
