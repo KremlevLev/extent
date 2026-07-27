@@ -125,7 +125,7 @@ tpu_input_ids = jax.device_put(jnp.array(input_ids, dtype=jnp.int32), sharding_r
 tpu_position_ids = jax.device_put(jnp.arange(seq_len, dtype=jnp.int32)[None, :], sharding_repl_2d)
 
 print(f"\nОбработка промпта: '{prompt}'...")
-logits, current_cache = prefill_step(tpu_params, kv_cache, tpu_input_ids, tpu_position_ids)
+logits, current_cache = prefill_step(tpu_params["params"], kv_cache, tpu_input_ids, tpu_position_ids)
 
 # Берем логиты самого последнего слова промпта и предсказываем следующее
 next_token_id = int(jnp.argmax(logits[0, -1, :]))
