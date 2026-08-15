@@ -40,7 +40,7 @@ class ModelConfig:
     attention_dropout: float = 0.0
 
     # --- Распределение слоёв (Attention слои) ---
-    attention_layer_indices: List[int] = field(default_factory=lambda: [0][4][8][12][16][20][24][28][32][36][40][44])
+    attention_layer_indices: List[int] = field(default_factory=lambda: list(range(3, 48, 4)))
 
     def __post_init__(self):
         assert self.mamba_layers + self.attention_layers == self.num_hidden_layers, \

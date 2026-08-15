@@ -22,7 +22,7 @@ class TrainingConfig:
     warmup_type: str = "linear"
 
     # --- Оптимизатор ---
-    optimizer: str = "adamw"
+    optimizer: str = "lion"
     weight_decay: float = 0.1
     beta1: float = 0.9
     beta2: float = 0.95

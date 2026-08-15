@@ -1,6 +1,10 @@
 jax
-jaxlib 
+jaxlib
 flax
 optax
-tqdm 
+numpy
+PyYAML
+safetensors
+pytest
+tqdm
 wandb

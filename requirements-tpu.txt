@@ -1,0 +1,8 @@
+# Install this file only inside a Linux TPU runtime (Kaggle/Google Cloud).
+jax[tpu]>=0.4.35
+flax>=0.10
+optax>=0.2.4
+numpy>=1.26
+PyYAML>=6
+safetensors>=0.4
+pytest>=8

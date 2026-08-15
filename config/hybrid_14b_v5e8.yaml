@@ -1,0 +1,52 @@
+model:
+  vocab_size: 152064
+  hidden_size: 5120
+  intermediate_size: 13824
+  num_layers: 48
+  attention_layer_indices: [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47]
+  max_position_embeddings: 8192
+  param_dtype: bfloat16
+  compute_dtype: bfloat16
+  logits_dtype: float32
+  remat_policy: full
+  mamba:
+    d_state: 64
+    expand: 0.75
+    head_dim: 64
+    groups: 1
+    mimo_rank: 4
+    rope_fraction: 0.5
+    dt_min: 0.001
+    dt_max: 0.1
+    a_floor: 0.0001
+  mla:
+    num_heads: 40
+    q_lora_rank: 1536
+    kv_lora_rank: 512
+    qk_nope_head_dim: 128
+    qk_rope_head_dim: 64
+    v_head_dim: 128
+    rope_theta: 1000000.0
+    qk_head_chunk_size: 4
+
+training:
+  micro_batch_size: 1
+  sequence_length: 1024
+  # MultiSteps adds another full BF16 parameter-sized buffer. Start without it
+  # on 16 GiB v5e devices; enable only after measuring HBM.
+  gradient_accumulation_steps: 1
+  learning_rate: 0.0001
+  warmup_steps: 2000
+  max_steps: 100000
+  optimizer: lion
+  lion_momentum_dtype: bfloat16
+  gradient_dtype: bfloat16
+  weight_decay: 0.1
+  max_grad_norm: 1.0
+
+mesh:
+  axes: [data, fsdp, tensor]
+  shape: [1, 4, 2]
+  remat: full
+  donate_train_state: true
+  note: "Start at seq=1024; raise to 2048 only after an HBM profile on v5e-8."

@@ -1,0 +1,22 @@
+# Drop-in overrides for the MLA layers. MaxText does not yet supply Mamba-3;
+# singularity.model owns the hybrid decoder and mirrors these projection names.
+attention_type: mla
+base_emb_dim: 5120
+base_num_query_heads: 40
+base_num_kv_heads: 1
+head_dim: 192
+q_lora_rank: 1536
+kv_lora_rank: 512
+qk_nope_head_dim: 128
+qk_rope_head_dim: 64
+v_head_dim: 128
+mla_qk_head_chunk_size: 4
+mla_naive_kvcache: false
+weight_dtype: bfloat16
+remat_policy: full
+scan_layers: false
+ici_data_parallelism: 1
+ici_fsdp_parallelism: 4
+ici_tensor_parallelism: 2
+per_device_batch_size: 0.125
+max_target_length: 1024
