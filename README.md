@@ -35,6 +35,22 @@ The legacy `tests/test_qwen_base.py` is excluded from collection because it
 downloads Qwen3-14B and runs work at import time. Treat it as a manual checkpoint
 integration script, not an offline unit test.
 
+To verify real multi-device parameter and optimizer sharding on two GPUs:
+
+```bash
+python -m scripts.sharded_smoke --sequence-length 8 --steps 1
+```
+
+For a two-device `tensor=2` mesh, the tiny model should report approximately
+`partitioned_param_arrays=20/47` and
+`partitioned_train_state_arrays=40/97`. The second number includes the sharded
+Lion momentum. Exact loss can vary slightly between CUDA and TPU.
+
+Do not pass `--config config/hybrid_14b_v5e8.yaml --allow-full-model` on ordinary
+two-GPU Kaggle instances: the ideal BF16 weights + gradients + Lion state alone
+would require about 41 GiB per GPU. The full configuration is intended for eight
+devices and should still begin with a zero/one-step HBM bring-up.
+
 On a fresh Kaggle TPU runtime:
 
 ```bash

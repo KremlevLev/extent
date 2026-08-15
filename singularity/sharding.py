@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Any
 
 import jax
 import numpy as np
@@ -53,3 +54,41 @@ def named_sharding_tree(params: Mapping, mesh: Mesh) -> Mapping:
 
 def activation_sharding(mesh: Mesh) -> NamedSharding:
     return NamedSharding(mesh, P("data", None, "tensor"))
+
+
+def batch_sharding(mesh: Mesh) -> NamedSharding:
+    """Shard batches over data replicas and replicate over model axes."""
+    return NamedSharding(mesh, P("data", None))
+
+
+def replicated_sharding(mesh: Mesh) -> NamedSharding:
+    return NamedSharding(mesh, P())
+
+
+def sharding_tree_from_arrays(tree: Any) -> Any:
+    """Capture the concrete layouts chosen by GSPMD for reuse in jitted steps."""
+    return jax.tree.map(lambda value: value.sharding, tree)
+
+
+def count_partitioned_arrays(tree: Any) -> tuple[int, int]:
+    arrays = [leaf for leaf in jax.tree.leaves(tree) if isinstance(leaf, jax.Array)]
+    partitioned = sum(not leaf.sharding.is_fully_replicated for leaf in arrays)
+    return partitioned, len(arrays)
+
+
+def validate_partition_specs(params: Mapping, mesh: Mesh) -> None:
+    """Fail before compilation when a tensor dimension cannot be evenly sharded."""
+    from flax import traverse_util
+
+    axis_sizes = mesh.shape
+    for path, value in traverse_util.flatten_dict(params).items():
+        spec = parameter_partition_spec(path, value.shape)
+        for dimension, axes in zip(value.shape, spec):
+            if axes is None:
+                continue
+            axes = (axes,) if isinstance(axes, str) else axes
+            parts = int(np.prod([axis_sizes[axis] for axis in axes]))
+            if dimension % parts:
+                raise ValueError(
+                    f"{'/'.join(path)} shape {value.shape} is not divisible by {axes}={parts}"
+                )
