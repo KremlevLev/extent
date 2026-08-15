@@ -1,12 +1,23 @@
 import jax
 import numpy as np
 import pytest
+from dataclasses import replace
 from flax import traverse_util
+from types import SimpleNamespace
 
 from singularity import HybridForCausalLM, tiny_config
 from singularity.optimizer import create_lion
+from singularity.hardware import recommended_compute_dtype
 from singularity.sharding import create_v5e_mesh
 from singularity.train_step import initialize_sharded_runtime, shard_host_batch
+
+
+def test_t4_uses_safe_fp32_compute_policy():
+    decision = recommended_compute_dtype(
+        [SimpleNamespace(platform="gpu", device_kind="Tesla T4")]
+    )
+    assert decision.dtype == "float32"
+    assert "pre-Ampere" in decision.reason
 
 
 def test_sharded_initialization_lion_layout_and_train_step():
@@ -21,7 +32,8 @@ def test_sharded_initialization_lion_layout_and_train_step():
         },
         mesh,
     )
-    model = HybridForCausalLM(tiny_config())
+    dtype_decision = recommended_compute_dtype()
+    model = HybridForCausalLM(replace(tiny_config(), compute_dtype=dtype_decision.dtype))
     tx = create_lion(total_steps=4, warmup_steps=1)
     runtime = initialize_sharded_runtime(model, tx, jax.random.key(7), batch, mesh, donate_state=False)
 

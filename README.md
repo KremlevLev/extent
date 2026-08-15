@@ -51,6 +51,9 @@ non-finite step is reported and skipped instead of corrupting parameters.
 When CUDA reports non-finite gradients, the launcher recompiles a diagnostic
 backward and prints the exact parameter paths. On pre-Ampere GPUs, compare with
 `--compute-dtype float32`; parameters and stored gradients remain BF16.
+The sharded launcher defaults to `--compute-dtype auto`: it selects FP32 compute
+on T4/V100-class GPUs and BF16 on TPU v5e or BF16-capable modern GPUs. Passing
+`--compute-dtype bfloat16` explicitly keeps the failure-reproduction path.
 
 Do not pass `--config config/hybrid_14b_v5e8.yaml --allow-full-model` on ordinary
 two-GPU Kaggle instances: the ideal BF16 weights + gradients + Lion state alone

@@ -11,6 +11,7 @@ from flax import traverse_util
 from singularity import HybridForCausalLM, tiny_config
 from singularity.config import load_config
 from singularity.estimate import parameter_count, training_state_gib
+from singularity.hardware import recommended_compute_dtype
 from singularity.optimizer import create_lion
 from singularity.sharding import count_partitioned_arrays, create_v5e_mesh
 from singularity.train_step import initialize_sharded_runtime, shard_host_batch
@@ -23,8 +24,8 @@ def main() -> None:
     parser.add_argument("--config", type=str, default=None, help="YAML model config; default is the tiny model.")
     parser.add_argument(
         "--compute-dtype",
-        choices=("bfloat16", "float32", "float16"),
-        default=None,
+        choices=("auto", "bfloat16", "float32", "float16"),
+        default="auto",
         help="Override activation compute dtype without changing BF16 parameter/gradient storage.",
     )
     parser.add_argument(
@@ -37,13 +38,14 @@ def main() -> None:
         parser.error("--config requires --allow-full-model; run the tiny distributed smoke test first")
 
     config = load_config(args.config)[0] if args.config else tiny_config()
-    if args.compute_dtype:
-        config = replace(config, compute_dtype=args.compute_dtype)
+    dtype_decision = recommended_compute_dtype(requested=args.compute_dtype)
+    config = replace(config, compute_dtype=dtype_decision.dtype)
     mesh = create_v5e_mesh()
     counts = parameter_count(config)
     ideal_per_device = training_state_gib(config) / mesh.size
     print(f"devices={jax.devices()}")
     print(f"mesh={dict(mesh.shape)}")
+    print(f"compute_dtype={config.compute_dtype} reason={dtype_decision.reason}")
     print(f"parameters={counts['total']:,} ideal_weight_grad_lion_gib_per_device={ideal_per_device:.3f}")
 
     batch_size = mesh.shape["data"]
