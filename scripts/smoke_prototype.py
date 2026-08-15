@@ -12,10 +12,10 @@ from singularity.sharding import create_v5e_mesh
 from singularity.train_step import create_train_state, make_train_step
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Compile a tiny hybrid forward/backward step.")
     parser.add_argument("--sequence-length", type=int, default=8)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     config = tiny_config()
     model = HybridForCausalLM(config)
     tokens = (jnp.arange(args.sequence_length)[None, :] % config.vocab_size).astype(jnp.int32)

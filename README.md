@@ -67,6 +67,18 @@ pip install -r requirements-tpu.txt
 python -m scripts.smoke_prototype --sequence-length 8
 ```
 
+In Google Colab, libtpu is exclusive to one Python process. After importing JAX
+in the notebook kernel, do not launch `!python` or `!pytest`. Run validation in
+that same process instead:
+
+```python
+import pytest
+pytest.main(["-q"])
+
+from scripts.sharded_smoke import main as sharded_smoke
+sharded_smoke(["--sequence-length", "8", "--steps", "1"])
+```
+
 Start real bring-up with `config/hybrid_14b_v5e8.yaml`. Its sequence length is
 deliberately 1024 and micro-batch size is one. Compile a single step and inspect
 HBM before raising sequence length. The analytical model size is approximately

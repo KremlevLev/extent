@@ -17,7 +17,7 @@ from singularity.sharding import count_partitioned_arrays, create_v5e_mesh
 from singularity.train_step import initialize_sharded_runtime, shard_host_batch
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Real multi-device init + training smoke test.")
     parser.add_argument("--sequence-length", type=int, default=8)
     parser.add_argument("--steps", type=int, default=1)
@@ -33,7 +33,7 @@ def main() -> None:
         action="store_true",
         help="Required with --config because full initialization can exhaust accelerator memory.",
     )
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     if args.config and not args.allow_full_model:
         parser.error("--config requires --allow-full-model; run the tiny distributed smoke test first")
 
