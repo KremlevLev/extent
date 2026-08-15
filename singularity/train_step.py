@@ -11,7 +11,7 @@ import optax
 from jax.sharding import Mesh, NamedSharding
 
 from singularity.model import causal_lm_loss
-from singularity.optimizer import cast_grads_bf16, gradient_health
+from singularity.optimizer import cast_grads_bf16, gradient_health, gradient_health_tree
 from singularity.sharding import (
     batch_sharding,
     named_sharding_tree,
@@ -52,6 +52,7 @@ def make_train_step() -> Callable:
 class ShardedRuntime:
     state: TrainState
     train_step: Callable
+    diagnose_gradients: Callable
     batch_layout: NamedSharding
     state_layout: Any
 
@@ -146,7 +147,31 @@ def initialize_sharded_runtime(
         out_shardings=(state_layout, metric_layout),
         donate_argnums=(0,) if donate_state else (),
     )
-    return ShardedRuntime(state, compiled_step, batch_layout, state_layout)
+
+    replicated_param_tree = jax.tree.map(lambda _: replicated, param_layout)
+
+    def diagnose_gradients(params, batch):
+        def loss_fn(candidate_params):
+            logits = model.apply(
+                {"params": candidate_params},
+                batch["input_ids"],
+                attention_mask=batch["attention_mask"],
+            )
+            return causal_lm_loss(logits, batch["labels"], batch["loss_mask"])
+
+        loss, grads = jax.value_and_grad(loss_fn)(params)
+        grads = cast_grads_bf16(grads)
+        return loss, gradient_health_tree(grads)
+
+    compiled_diagnostics = jax.jit(
+        diagnose_gradients,
+        in_shardings=(param_layout, batch_layout_tree),
+        out_shardings=(
+            replicated,
+            {"finite": replicated_param_tree, "max_abs": replicated_param_tree},
+        ),
+    )
+    return ShardedRuntime(state, compiled_step, compiled_diagnostics, batch_layout, state_layout)
 
 
 def shard_host_batch(batch: dict[str, Any], mesh: Mesh) -> dict[str, jax.Array]:

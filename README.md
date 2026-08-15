@@ -48,6 +48,9 @@ Lion momentum. Exact loss can vary slightly between CUDA and TPU.
 The step also reports `grads_finite` and `nonfinite_grad_leaves`. Gradient norm
 and clipping use FP32 reductions even though stored gradients remain BF16. A
 non-finite step is reported and skipped instead of corrupting parameters.
+When CUDA reports non-finite gradients, the launcher recompiles a diagnostic
+backward and prints the exact parameter paths. On pre-Ampere GPUs, compare with
+`--compute-dtype float32`; parameters and stored gradients remain BF16.
 
 Do not pass `--config config/hybrid_14b_v5e8.yaml --allow-full-model` on ordinary
 two-GPU Kaggle instances: the ideal BF16 weights + gradients + Lion state alone

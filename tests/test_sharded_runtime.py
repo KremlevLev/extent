@@ -1,5 +1,7 @@
 import jax
 import numpy as np
+import pytest
+from flax import traverse_util
 
 from singularity import HybridForCausalLM, tiny_config
 from singularity.optimizer import create_lion
@@ -31,6 +33,11 @@ def test_sharded_initialization_lion_layout_and_train_step():
     _, metrics = runtime.train_step(runtime.state, batch)
     jax.block_until_ready(metrics)
     assert np.isfinite(float(metrics["loss"]))
+    if not bool(metrics["grads_finite"]):
+        _, diagnostics = runtime.diagnose_gradients(runtime.state.params, batch)
+        jax.block_until_ready(diagnostics)
+        finite = traverse_util.flatten_dict(diagnostics["finite"])
+        bad_paths = ["/".join(path) for path, value in finite.items() if not bool(value)]
+        pytest.fail(f"non-finite gradient parameters: {bad_paths}")
     assert np.isfinite(float(metrics["grad_norm"]))
-    assert bool(metrics["grads_finite"])
     assert int(metrics["nonfinite_grad_leaves"]) == 0

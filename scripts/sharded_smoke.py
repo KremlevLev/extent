@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import argparse
+from dataclasses import replace
 
 import jax
 import jax.numpy as jnp
 import numpy as np
+from flax import traverse_util
 
 from singularity import HybridForCausalLM, tiny_config
 from singularity.config import load_config
@@ -20,6 +22,12 @@ def main() -> None:
     parser.add_argument("--steps", type=int, default=1)
     parser.add_argument("--config", type=str, default=None, help="YAML model config; default is the tiny model.")
     parser.add_argument(
+        "--compute-dtype",
+        choices=("bfloat16", "float32", "float16"),
+        default=None,
+        help="Override activation compute dtype without changing BF16 parameter/gradient storage.",
+    )
+    parser.add_argument(
         "--allow-full-model",
         action="store_true",
         help="Required with --config because full initialization can exhaust accelerator memory.",
@@ -29,6 +37,8 @@ def main() -> None:
         parser.error("--config requires --allow-full-model; run the tiny distributed smoke test first")
 
     config = load_config(args.config)[0] if args.config else tiny_config()
+    if args.compute_dtype:
+        config = replace(config, compute_dtype=args.compute_dtype)
     mesh = create_v5e_mesh()
     counts = parameter_count(config)
     ideal_per_device = training_state_gib(config) / mesh.size
@@ -65,6 +75,16 @@ def main() -> None:
             f"grads_finite={bool(metrics['grads_finite'])} "
             f"nonfinite_grad_leaves={int(metrics['nonfinite_grad_leaves'])}"
         )
+        if not bool(metrics["grads_finite"]):
+            print("nonfinite gradient parameters:")
+            _, diagnostics = runtime.diagnose_gradients(state.params, batch)
+            jax.block_until_ready(diagnostics)
+            finite = traverse_util.flatten_dict(diagnostics["finite"])
+            max_abs = traverse_util.flatten_dict(diagnostics["max_abs"])
+            for path, is_finite in finite.items():
+                if not bool(is_finite):
+                    print(f"  {'/'.join(path)} finite_max_abs={float(max_abs[path]):.6g}")
+            break
 
 
 if __name__ == "__main__":

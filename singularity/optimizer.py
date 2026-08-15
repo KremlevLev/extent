@@ -43,14 +43,28 @@ def gradient_health(grads: optax.Updates) -> dict[str, jax.Array]:
     """Small replicated diagnostics used to distinguish norm issues from NaNs."""
     leaves = jax.tree.leaves(grads)
     finite_by_leaf = jnp.stack([jnp.all(jnp.isfinite(value)) for value in leaves])
-    max_by_leaf = jnp.stack(
-        [jnp.max(jnp.abs(jnp.nan_to_num(value.astype(jnp.float32)))) for value in leaves]
-    )
+    max_by_leaf = jnp.stack([
+        jnp.max(jnp.where(jnp.isfinite(value), jnp.abs(value.astype(jnp.float32)), 0.0))
+        for value in leaves
+    ])
     return {
         "grad_norm": global_norm_fp32(grads),
         "grads_finite": jnp.all(finite_by_leaf),
         "nonfinite_grad_leaves": jnp.sum(~finite_by_leaf, dtype=jnp.int32),
         "max_abs_grad": jnp.max(max_by_leaf),
+    }
+
+
+def gradient_health_tree(grads: optax.Updates) -> dict[str, optax.Updates]:
+    """Per-parameter diagnostics, materialized only after a failed smoke step."""
+    return {
+        "finite": jax.tree.map(lambda value: jnp.all(jnp.isfinite(value)), grads),
+        "max_abs": jax.tree.map(
+            lambda value: jnp.max(
+                jnp.where(jnp.isfinite(value), jnp.abs(value.astype(jnp.float32)), 0.0)
+            ),
+            grads,
+        ),
     }
 
 
