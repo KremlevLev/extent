@@ -27,7 +27,10 @@ def main() -> None:
     print(f"devices={jax.devices()}")
     print(f"mesh={create_v5e_mesh().shape}")
     print(f"logits={model.apply({'params': state.params}, tokens).shape}")
-    print(f"loss={float(metrics['loss']):.4f} grad_norm={float(metrics['grad_norm']):.4f}")
+    print(
+        f"loss={float(metrics['loss']):.4f} grad_norm={float(metrics['grad_norm']):.4f} "
+        f"grads_finite={bool(metrics['grads_finite'])}"
+    )
     print(f"tiny_params={counts['total']:,} training_state_gib={training_state_gib(config):.4f}")
 
 

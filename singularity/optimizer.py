@@ -15,6 +15,45 @@ def decay_mask(params: optax.Params) -> optax.Params:
     return traverse_util.unflatten_dict({path: path[-1] not in excluded for path in flat})
 
 
+def global_norm_fp32(tree: optax.Updates) -> jax.Array:
+    """Compute a distributed norm with FP32 squares/reductions for BF16 grads."""
+    leaves = jax.tree.leaves(tree)
+    if not leaves:
+        return jnp.array(0.0, jnp.float32)
+    squared = [jnp.sum(jnp.square(value.astype(jnp.float32))) for value in leaves]
+    return jnp.sqrt(jnp.sum(jnp.stack(squared), dtype=jnp.float32))
+
+
+def clip_by_global_norm_fp32(max_norm: float) -> optax.GradientTransformation:
+    """Optax-compatible clipping that never reduces squared gradients in BF16."""
+    def init_fn(_):
+        return optax.EmptyState()
+
+    def update_fn(updates, state, params=None):
+        del params
+        norm = global_norm_fp32(updates)
+        scale = jnp.minimum(1.0, jnp.asarray(max_norm, jnp.float32) / jnp.maximum(norm, 1e-12))
+        clipped = jax.tree.map(lambda value: value * scale.astype(value.dtype), updates)
+        return clipped, state
+
+    return optax.GradientTransformation(init_fn, update_fn)
+
+
+def gradient_health(grads: optax.Updates) -> dict[str, jax.Array]:
+    """Small replicated diagnostics used to distinguish norm issues from NaNs."""
+    leaves = jax.tree.leaves(grads)
+    finite_by_leaf = jnp.stack([jnp.all(jnp.isfinite(value)) for value in leaves])
+    max_by_leaf = jnp.stack(
+        [jnp.max(jnp.abs(jnp.nan_to_num(value.astype(jnp.float32)))) for value in leaves]
+    )
+    return {
+        "grad_norm": global_norm_fp32(grads),
+        "grads_finite": jnp.all(finite_by_leaf),
+        "nonfinite_grad_leaves": jnp.sum(~finite_by_leaf, dtype=jnp.int32),
+        "max_abs_grad": jnp.max(max_by_leaf),
+    }
+
+
 def create_lion(
     learning_rate: float = 1e-4,
     warmup_steps: int = 2_000,
@@ -33,7 +72,7 @@ def create_lion(
         end_value=learning_rate * 0.1,
     )
     optimizer = optax.chain(
-        optax.clip_by_global_norm(max_grad_norm),
+        clip_by_global_norm_fp32(max_grad_norm),
         optax.scale_by_lion(b1=0.9, b2=0.99, mu_dtype=jnp.bfloat16),
         optax.add_decayed_weights(weight_decay, mask=decay_mask),
         optax.scale_by_learning_rate(schedule),

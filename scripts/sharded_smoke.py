@@ -58,7 +58,13 @@ def main() -> None:
     for step in range(args.steps):
         state, metrics = runtime.train_step(state, batch)
         jax.block_until_ready(metrics)
-        print(f"step={step} loss={float(metrics['loss']):.4f} grad_norm={float(metrics['grad_norm']):.4f}")
+        print(
+            f"step={step} loss={float(metrics['loss']):.4f} "
+            f"grad_norm={float(metrics['grad_norm']):.4f} "
+            f"max_abs_grad={float(metrics['max_abs_grad']):.4f} "
+            f"grads_finite={bool(metrics['grads_finite'])} "
+            f"nonfinite_grad_leaves={int(metrics['nonfinite_grad_leaves'])}"
+        )
 
 
 if __name__ == "__main__":

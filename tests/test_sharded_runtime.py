@@ -32,3 +32,5 @@ def test_sharded_initialization_lion_layout_and_train_step():
     jax.block_until_ready(metrics)
     assert np.isfinite(float(metrics["loss"]))
     assert np.isfinite(float(metrics["grad_norm"]))
+    assert bool(metrics["grads_finite"])
+    assert int(metrics["nonfinite_grad_leaves"]) == 0

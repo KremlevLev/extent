@@ -11,7 +11,7 @@ import optax
 from jax.sharding import Mesh, NamedSharding
 
 from singularity.model import causal_lm_loss
-from singularity.optimizer import cast_grads_bf16
+from singularity.optimizer import cast_grads_bf16, gradient_health
 from singularity.sharding import (
     batch_sharding,
     named_sharding_tree,
@@ -38,8 +38,12 @@ def make_train_step() -> Callable:
 
         loss, grads = jax.value_and_grad(loss_fn)(state.params)
         grads = cast_grads_bf16(grads)
-        state = state.apply_gradients(grads=grads)
-        return state, {"loss": loss, "grad_norm": optax.tree.norm(grads)}
+        health = gradient_health(grads)
+        candidate = state.apply_gradients(grads=grads)
+        state = jax.tree.map(
+            lambda new, old: jax.numpy.where(health["grads_finite"], new, old), candidate, state
+        )
+        return state, {"loss": loss, **health}
 
     return train_step
 
@@ -108,7 +112,13 @@ def initialize_sharded_runtime(
         out_shardings=state_layout,
     )(variables["params"])
     batch_layout_tree = jax.tree.map(lambda _: batch_layout, example_batch)
-    metric_layout = {"loss": replicated, "grad_norm": replicated}
+    metric_layout = {
+        "loss": replicated,
+        "grad_norm": replicated,
+        "grads_finite": replicated,
+        "nonfinite_grad_leaves": replicated,
+        "max_abs_grad": replicated,
+    }
 
     def distributed_step(current_state: TrainState, batch: dict[str, jax.Array]):
         def loss_fn(params):
@@ -121,8 +131,14 @@ def initialize_sharded_runtime(
 
         loss, grads = jax.value_and_grad(loss_fn)(current_state.params)
         grads = cast_grads_bf16(grads)
-        new_state = current_state.apply_gradients(grads=grads)
-        return new_state, {"loss": loss, "grad_norm": optax.tree.norm(grads)}
+        health = gradient_health(grads)
+        candidate = current_state.apply_gradients(grads=grads)
+        new_state = jax.tree.map(
+            lambda new, old: jax.numpy.where(health["grads_finite"], new, old),
+            candidate,
+            current_state,
+        )
+        return new_state, {"loss": loss, **health}
 
     compiled_step = jax.jit(
         distributed_step,

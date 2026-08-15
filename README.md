@@ -45,6 +45,9 @@ For a two-device `tensor=2` mesh, the tiny model should report approximately
 `partitioned_param_arrays=20/47` and
 `partitioned_train_state_arrays=40/97`. The second number includes the sharded
 Lion momentum. Exact loss can vary slightly between CUDA and TPU.
+The step also reports `grads_finite` and `nonfinite_grad_leaves`. Gradient norm
+and clipping use FP32 reductions even though stored gradients remain BF16. A
+non-finite step is reported and skipped instead of corrupting parameters.
 
 Do not pass `--config config/hybrid_14b_v5e8.yaml --allow-full-model` on ordinary
 two-GPU Kaggle instances: the ideal BF16 weights + gradients + Lion state alone
