@@ -11,12 +11,11 @@ import optax
 from jax.sharding import Mesh, NamedSharding
 
 from singularity.model import causal_lm_loss
+from singularity.initialization import initialize_sharded_parameters
 from singularity.optimizer import cast_grads_bf16, gradient_health, gradient_health_tree
 from singularity.sharding import (
     batch_sharding,
-    named_sharding_tree,
     replicated_sharding,
-    validate_partition_specs,
 )
 
 
@@ -74,23 +73,14 @@ def initialize_sharded_runtime(
     batch_layout = batch_sharding(mesh)
     replicated = replicated_sharding(mesh)
     input_ids = example_batch["input_ids"]
-    abstract_rng = jax.ShapeDtypeStruct(rng.shape, rng.dtype)
-    abstract_tokens = jax.ShapeDtypeStruct(input_ids.shape, input_ids.dtype)
-    abstract_variables = jax.eval_shape(model.init, abstract_rng, abstract_tokens)
-    validate_partition_specs(abstract_variables["params"], mesh)
-    param_layout = named_sharding_tree(abstract_variables["params"], mesh)
-
-    init_model = jax.jit(
-        model.init,
-        in_shardings=(replicated, batch_layout),
-        out_shardings={"params": param_layout},
-    )
-    variables = init_model(jax.device_put(rng, replicated), input_ids)
+    initialized = initialize_sharded_parameters(model, rng, input_ids, mesh)
+    abstract_params = initialized.abstract_params
+    param_layout = initialized.layout
 
     def init_state(params):
         return TrainState.create(apply_fn=model.apply, params=params, tx=tx)
 
-    abstract_state = jax.eval_shape(init_state, abstract_variables["params"])
+    abstract_state = jax.eval_shape(init_state, abstract_params)
     opt_layout_items = []
     for item in abstract_state.opt_state:
         if hasattr(item, "mu"):
@@ -111,7 +101,7 @@ def initialize_sharded_runtime(
         init_state,
         in_shardings=(param_layout,),
         out_shardings=state_layout,
-    )(variables["params"])
+    )(initialized.params)
     batch_layout_tree = jax.tree.map(lambda _: batch_layout, example_batch)
     metric_layout = {
         "loss": replicated,

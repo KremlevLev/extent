@@ -76,11 +76,19 @@ def count_partitioned_arrays(tree: Any) -> tuple[int, int]:
     return partitioned, len(arrays)
 
 
-def validate_partition_specs(params: Mapping, mesh: Mesh) -> None:
+def validate_partition_specs(
+    params: Mapping,
+    mesh: Mesh | None = None,
+    *,
+    axis_sizes: Mapping[str, int] | None = None,
+) -> None:
     """Fail before compilation when a tensor dimension cannot be evenly sharded."""
     from flax import traverse_util
 
-    axis_sizes = mesh.shape
+    if axis_sizes is None:
+        if mesh is None:
+            raise ValueError("mesh or axis_sizes is required")
+        axis_sizes = mesh.shape
     for path, value in traverse_util.flatten_dict(params).items():
         spec = parameter_partition_spec(path, value.shape)
         for dimension, axes in zip(value.shape, spec):

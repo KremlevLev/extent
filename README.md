@@ -60,6 +60,24 @@ two-GPU Kaggle instances: the ideal BF16 weights + gradients + Lion state alone
 would require about 41 GiB per GPU. The full configuration is intended for eight
 devices and should still begin with a zero/one-step HBM bring-up.
 
+Before reserving v5e-8, run the exact shape-only audit on any machine (including
+v5e-1). It traces all parameter shapes but allocates no 14B arrays:
+
+```python
+from scripts.full_model_preflight import main as full_preflight
+full_preflight([])
+```
+
+Only on v5e-8, after reviewing the report, initialize parameter shards with:
+
+```python
+full_preflight(["--initialize-params"])
+```
+
+The guarded initialization refuses to run unless the actual eight-device mesh
+matches `data=1, fsdp=4, tensor=2`. It creates weights only—not Lion state or a
+full training step.
+
 On a fresh Kaggle TPU runtime:
 
 ```bash

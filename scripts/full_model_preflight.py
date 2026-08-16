@@ -1,0 +1,80 @@
+from __future__ import annotations
+
+import argparse
+
+import jax
+import numpy as np
+
+from singularity import HybridForCausalLM
+from singularity.config import load_config
+from singularity.initialization import abstract_parameter_tree, initialize_sharded_parameters
+from singularity.preflight import allocated_bytes_by_device, build_preflight_report
+from singularity.sharding import batch_sharding, create_v5e_mesh
+
+
+def _gib(value: int) -> float:
+    return value / 2**30
+
+
+def main(argv: list[str] | None = None) -> None:
+    parser = argparse.ArgumentParser(description="Shape-only 14B v5e-8 audit and guarded parameter init.")
+    parser.add_argument("--config", default="config/hybrid_14b_v5e8.yaml")
+    parser.add_argument("--initialize-params", action="store_true")
+    parser.add_argument("--init-sequence-length", type=int, default=1)
+    parser.add_argument("--hbm-per-device-gib", type=float, default=16.0)
+    args = parser.parse_args(argv)
+
+    config, extras = load_config(args.config)
+    axes = tuple(extras["mesh"]["axes"])
+    shape = tuple(int(size) for size in extras["mesh"]["shape"])
+    axis_sizes = dict(zip(axes, shape))
+    model = HybridForCausalLM(config)
+
+    print("Tracing exact parameter shapes (no model arrays are allocated)...")
+    abstract_params = abstract_parameter_tree(model, batch_size=shape[0], sequence_length=1)
+    report = build_preflight_report(abstract_params, axis_sizes)
+    headroom = args.hbm_per_device_gib - report.training_gib_per_device
+    print(f"target_mesh={axis_sizes} mesh_size={report.mesh_size}")
+    print(f"exact_parameters={report.parameter_count:,} tensors={report.tensor_count}")
+    print(f"partitioned_tensors={report.partitioned_tensor_count}/{report.tensor_count}")
+    print(f"global_bf16_weights={report.global_weight_gib:.3f} GiB")
+    print(f"weights_per_device={report.weight_gib_per_device:.3f} GiB")
+    print(f"weights_grad_lion_per_device={report.training_gib_per_device:.3f} GiB")
+    print(f"persistent_headroom_at_{args.hbm_per_device_gib:g}GiB={headroom:.3f} GiB")
+    print("largest local tensors:")
+    for tensor in report.largest_tensors:
+        print(
+            f"  {tensor.path} shape={tensor.shape} shards={tensor.partitions} "
+            f"local={_gib(tensor.bytes_per_device):.3f} GiB"
+        )
+    if headroom < 4.0:
+        print("verdict=NO-GO: less than 4 GiB remains for activations/XLA temporaries")
+    else:
+        print("verdict=PREFLIGHT-PASS: persistent state fits; a real HBM check is still required")
+
+    if not args.initialize_params:
+        print("mode=shape-only; no full model arrays were allocated")
+        return
+
+    devices = list(jax.devices())
+    if len(devices) != report.mesh_size:
+        raise RuntimeError(
+            f"refusing full initialization: need {report.mesh_size} devices, found {len(devices)}"
+        )
+    mesh = create_v5e_mesh(devices)
+    if dict(mesh.shape) != axis_sizes:
+        raise RuntimeError(f"actual mesh {dict(mesh.shape)} does not match target {axis_sizes}")
+    host_tokens = np.zeros((mesh.shape["data"], args.init_sequence_length), dtype=np.int32)
+    tokens = jax.device_put(host_tokens, batch_sharding(mesh))
+    print("initializing parameters directly into device shards...")
+    initialized = initialize_sharded_parameters(model, jax.random.key(0), tokens, mesh)
+    jax.block_until_ready(initialized.params)
+    allocated = allocated_bytes_by_device(initialized.params)
+    print("allocated_parameter_bytes_by_device:")
+    for device, size in sorted(allocated.items()):
+        print(f"  {device}: {_gib(size):.3f} GiB")
+    print("initialization=PASS (parameters only; optimizer and train step were not created)")
+
+
+if __name__ == "__main__":
+    main()
