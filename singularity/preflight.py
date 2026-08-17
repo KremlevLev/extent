@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+import jax
 import numpy as np
 from flax import traverse_util
 
@@ -93,10 +94,12 @@ def build_preflight_report(
     )
 
 
-def allocated_bytes_by_device(params: Any) -> dict[str, int]:
-    """Measure physical parameter bytes after real sharded initialization."""
+def allocated_bytes_by_device(tree: Any) -> dict[str, int]:
+    """Sum addressable shard bytes for an arbitrary JAX pytree."""
     totals: dict[str, int] = {}
-    for value in traverse_util.flatten_dict(params).values():
+    for value in jax.tree.leaves(tree):
+        if not isinstance(value, jax.Array):
+            continue
         for shard in value.addressable_shards:
             device = str(shard.device)
             totals[device] = totals.get(device, 0) + shard.data.size * shard.data.dtype.itemsize

@@ -7,7 +7,12 @@ import numpy as np
 
 from singularity import HybridForCausalLM
 from singularity.config import load_config
-from singularity.initialization import abstract_parameter_tree, initialize_sharded_parameters
+from singularity.initialization import (
+    abstract_parameter_tree,
+    initialize_sharded_optimizer_state,
+    initialize_sharded_parameters,
+)
+from singularity.optimizer import create_lion
 from singularity.preflight import allocated_bytes_by_device, build_preflight_report
 from singularity.sharding import batch_sharding, create_v5e_mesh
 
@@ -20,6 +25,11 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Shape-only 14B v5e-8 audit and guarded parameter init.")
     parser.add_argument("--config", default="config/hybrid_14b_v5e8.yaml")
     parser.add_argument("--initialize-params", action="store_true")
+    parser.add_argument(
+        "--initialize-optimizer",
+        action="store_true",
+        help="Also allocate the Lion state; implies --initialize-params.",
+    )
     parser.add_argument("--init-sequence-length", type=int, default=1)
     parser.add_argument("--hbm-per-device-gib", type=float, default=16.0)
     args = parser.parse_args(argv)
@@ -52,7 +62,7 @@ def main(argv: list[str] | None = None) -> None:
     else:
         print("verdict=PREFLIGHT-PASS: persistent state fits; a real HBM check is still required")
 
-    if not args.initialize_params:
+    if not (args.initialize_params or args.initialize_optimizer):
         print("mode=shape-only; no full model arrays were allocated")
         return
 
@@ -74,6 +84,45 @@ def main(argv: list[str] | None = None) -> None:
     for device, size in sorted(allocated.items()):
         print(f"  {device}: {_gib(size):.3f} GiB")
     print("initialization=PASS (parameters only; optimizer and train step were not created)")
+
+    if not args.initialize_optimizer:
+        return
+
+    training = extras["training"]
+    if int(training.get("gradient_accumulation_steps", 1)) != 1:
+        raise RuntimeError(
+            "optimizer HBM probe requires gradient_accumulation_steps=1; "
+            "MultiSteps adds a full gradient buffer"
+        )
+    tx = create_lion(
+        learning_rate=float(training["learning_rate"]),
+        warmup_steps=int(training["warmup_steps"]),
+        total_steps=int(training["max_steps"]),
+        weight_decay=float(training["weight_decay"]),
+        max_grad_norm=float(training["max_grad_norm"]),
+        accumulation_steps=1,
+    )
+    print("initializing Lion state directly into device shards...")
+    initialized_optimizer = initialize_sharded_optimizer_state(
+        tx,
+        initialized.params,
+        initialized.abstract_params,
+        initialized.layout,
+        mesh,
+    )
+    jax.block_until_ready(initialized_optimizer.opt_state)
+    optimizer_allocated = allocated_bytes_by_device(initialized_optimizer.opt_state)
+    print("allocated_optimizer_bytes_by_device:")
+    for device, size in sorted(optimizer_allocated.items()):
+        print(f"  {device}: {_gib(size):.3f} GiB")
+    print("allocated_persistent_bytes_by_device:")
+    for device in sorted(set(allocated) | set(optimizer_allocated)):
+        total = allocated.get(device, 0) + optimizer_allocated.get(device, 0)
+        print(f"  {device}: {_gib(total):.3f} GiB")
+    print(
+        "optimizer_initialization=PASS "
+        "(weights + Lion state only; no gradients, activations, or train step)"
+    )
 
 
 if __name__ == "__main__":

@@ -78,6 +78,19 @@ The guarded initialization refuses to run unless the actual eight-device mesh
 matches `data=1, fsdp=4, tensor=2`. It creates weights only—not Lion state or a
 full training step.
 
+After parameter initialization passes, restart with a fresh TPU runtime and
+probe the real persistent allocation for weights plus Lion momentum:
+
+```python
+from scripts.full_model_preflight import main as full_preflight
+full_preflight(["--initialize-optimizer"])
+```
+
+This still does not run forward/backward and does not allocate gradients or
+activations. It prints parameter, optimizer, and combined bytes for every TPU.
+Run it in the notebook kernel; do not use `!python`, `%run`, or a subprocess
+after JAX has initialized libtpu.
+
 On a fresh Kaggle TPU runtime:
 
 ```bash

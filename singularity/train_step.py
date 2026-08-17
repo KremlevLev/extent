@@ -11,7 +11,10 @@ import optax
 from jax.sharding import Mesh, NamedSharding
 
 from singularity.model import causal_lm_loss
-from singularity.initialization import initialize_sharded_parameters
+from singularity.initialization import (
+    initialize_sharded_parameters,
+    optimizer_state_layout,
+)
 from singularity.optimizer import cast_grads_bf16, gradient_health, gradient_health_tree
 from singularity.sharding import (
     batch_sharding,
@@ -81,20 +84,11 @@ def initialize_sharded_runtime(
         return TrainState.create(apply_fn=model.apply, params=params, tx=tx)
 
     abstract_state = jax.eval_shape(init_state, abstract_params)
-    opt_layout_items = []
-    for item in abstract_state.opt_state:
-        if hasattr(item, "mu"):
-            # optax.ScaleByLionState: momentum has exactly the parameter pytree.
-            replacements = {"mu": param_layout}
-            if hasattr(item, "count"):
-                replacements["count"] = replicated
-            opt_layout_items.append(item._replace(**replacements))
-        else:
-            opt_layout_items.append(jax.tree.map(lambda _: replicated, item))
+    _, opt_layout = optimizer_state_layout(tx, abstract_params, param_layout, mesh)
     state_layout = abstract_state.replace(
         step=replicated,
         params=param_layout,
-        opt_state=tuple(opt_layout_items),
+        opt_state=opt_layout,
     )
     # Explicit out layouts prevent Lion momentum from becoming fully replicated.
     state = jax.jit(
