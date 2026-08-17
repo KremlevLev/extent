@@ -22,12 +22,18 @@ model:
     a_floor: 0.0001
   mla:
     num_heads: 40
+    num_kv_heads: 40
+    num_key_rope_heads: 1
     q_lora_rank: 1536
     kv_lora_rank: 512
     qk_nope_head_dim: 128
     qk_rope_head_dim: 64
     v_head_dim: 128
     rope_theta: 1000000.0
+    rope_original_head_dim: 64
+    partial_rope_strategy: high
+    use_qk_norm: true
+    use_kv_latent_norm: true
     qk_head_chunk_size: 4
 
 training:

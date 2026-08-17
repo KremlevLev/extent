@@ -10,15 +10,30 @@ from singularity.config import MLAConfig
 from singularity.layers.common import RMSNorm
 
 
-def apply_rope(x: jax.Array, positions: jax.Array, theta: float) -> jax.Array:
-    dim = x.shape[-1]
-    inv_freq = theta ** (-jnp.arange(0, dim, 2, dtype=jnp.float32) / dim)
+def apply_partial_rope(
+    x: jax.Array,
+    positions: jax.Array,
+    theta: float,
+    original_head_dim: int,
+    strategy: str,
+) -> jax.Array:
+    """Apply Qwen split-half RoPE while preserving selected source frequencies."""
+    pairs = x.shape[-1] // 2
+    original_pairs = original_head_dim // 2
+    if strategy == "high":
+        frequencies = jnp.arange(pairs, dtype=jnp.float32)
+    elif strategy == "low":
+        frequencies = jnp.arange(original_pairs - pairs, original_pairs, dtype=jnp.float32)
+    else:
+        raise ValueError(f"unsupported partial RoPE strategy: {strategy}")
+    inv_freq = theta ** (-(2.0 * frequencies) / original_head_dim)
     phase = positions.astype(jnp.float32)[..., None] * inv_freq
     while phase.ndim < x.ndim:
         phase = jnp.expand_dims(phase, -2)
-    even, odd = x[..., 0::2], x[..., 1::2]
+    first, second = jnp.split(x.astype(jnp.float32), 2, axis=-1)
     cos, sin = jnp.cos(phase), jnp.sin(phase)
-    return jnp.stack((even * cos - odd * sin, even * sin + odd * cos), axis=-1).reshape(x.shape)
+    rotated = jnp.concatenate((first * cos - second * sin, second * cos + first * sin), axis=-1)
+    return rotated.astype(x.dtype)
 
 
 class MultiHeadLatentAttention(nn.Module):
@@ -57,24 +72,72 @@ class MultiHeadLatentAttention(nn.Module):
 
         if cfg.q_lora_rank > 0:
             q_latent = dense(cfg.q_lora_rank, "query_wa_proj")(inputs)
-            q_latent = RMSNorm(cfg.q_lora_rank, param_dtype=self.param_dtype, name="q_layernorm")(q_latent)
-            q = dense(cfg.num_heads * (cfg.qk_nope_head_dim + cfg.qk_rope_head_dim), "query_wb_proj")(q_latent)
+            q_latent = RMSNorm(
+                cfg.q_lora_rank,
+                param_dtype=self.param_dtype,
+                name="q_layernorm",
+            )(q_latent)
+            q = dense(
+                cfg.num_heads * (cfg.qk_nope_head_dim + cfg.qk_rope_head_dim),
+                "query_wb_proj",
+            )(q_latent)
         else:
-            q = dense(cfg.num_heads * (cfg.qk_nope_head_dim + cfg.qk_rope_head_dim), "query_proj")(inputs)
+            q = dense(
+                cfg.num_heads * (cfg.qk_nope_head_dim + cfg.qk_rope_head_dim),
+                "query_proj",
+            )(inputs)
 
-        # One shared latent and one shared RoPE key are the compressed KV cache.
-        kv_and_rope = dense(cfg.kv_lora_rank + cfg.qk_rope_head_dim, "kv_wa_proj")(inputs)
+        # One shared latent plus one or more RoPE keys form the compressed cache.
+        rope_width = cfg.num_key_rope_heads * cfg.qk_rope_head_dim
+        kv_and_rope = dense(cfg.kv_lora_rank + rope_width, "kv_wa_proj")(inputs)
         kv_latent, k_rope = jnp.split(kv_and_rope, (cfg.kv_lora_rank,), axis=-1)
-        kv_latent = RMSNorm(cfg.kv_lora_rank, param_dtype=self.param_dtype, name="kv_layernorm")(kv_latent)
-        kv = dense(cfg.num_heads * (cfg.qk_nope_head_dim + cfg.v_head_dim), "kv_wb_proj")(kv_latent)
+        if cfg.use_kv_latent_norm:
+            kv_latent = RMSNorm(
+                cfg.kv_lora_rank, param_dtype=self.param_dtype, name="kv_layernorm"
+            )(kv_latent)
+        kv = dense(
+            cfg.num_kv_heads * (cfg.qk_nope_head_dim + cfg.v_head_dim),
+            "kv_wb_proj",
+        )(kv_latent)
 
-        q = q.reshape(batch, length, cfg.num_heads, cfg.qk_nope_head_dim + cfg.qk_rope_head_dim)
-        q_nope, q_rope = jnp.split(q, (cfg.qk_nope_head_dim,), axis=-1)
-        kv = kv.reshape(batch, length, cfg.num_heads, cfg.qk_nope_head_dim + cfg.v_head_dim)
+        q = q.reshape(
+            batch,
+            length,
+            cfg.num_heads,
+            cfg.qk_nope_head_dim + cfg.qk_rope_head_dim,
+        )
+        if cfg.use_qk_norm:
+            q = RMSNorm(q.shape[-1], param_dtype=self.param_dtype, name="q_norm")(q)
+        kv = kv.reshape(batch, length, cfg.num_kv_heads, cfg.qk_nope_head_dim + cfg.v_head_dim)
         k_nope, value = jnp.split(kv, (cfg.qk_nope_head_dim,), axis=-1)
-        q_rope = apply_rope(q_rope, positions, cfg.rope_theta)
-        k_rope = apply_rope(k_rope[:, :, None, :], positions, cfg.rope_theta)
-        key = jnp.concatenate((k_nope, jnp.broadcast_to(k_rope, q_rope.shape)), axis=-1)
+        kv_groups = cfg.num_heads // cfg.num_kv_heads
+        k_nope = jnp.repeat(k_nope, kv_groups, axis=2)
+        value = jnp.repeat(value, kv_groups, axis=2)
+        k_rope = k_rope.reshape(
+            batch, length, cfg.num_key_rope_heads, cfg.qk_rope_head_dim
+        )
+        rope_groups = cfg.num_heads // cfg.num_key_rope_heads
+        k_rope = jnp.repeat(k_rope, rope_groups, axis=2)
+        key = jnp.concatenate((k_nope, k_rope), axis=-1)
+        if cfg.use_qk_norm:
+            key = RMSNorm(key.shape[-1], param_dtype=self.param_dtype, name="k_norm")(key)
+        q_nope, q_rope = jnp.split(q, (cfg.qk_nope_head_dim,), axis=-1)
+        k_nope, k_rope = jnp.split(key, (cfg.qk_nope_head_dim,), axis=-1)
+        q_rope = apply_partial_rope(
+            q_rope,
+            positions,
+            cfg.rope_theta,
+            cfg.rope_original_head_dim,
+            cfg.partial_rope_strategy,
+        )
+        k_rope = apply_partial_rope(
+            k_rope,
+            positions,
+            cfg.rope_theta,
+            cfg.rope_original_head_dim,
+            cfg.partial_rope_strategy,
+        )
+        key = jnp.concatenate((k_nope, k_rope), axis=-1)
         query = jnp.concatenate((q_nope, q_rope), axis=-1)
 
         scale = (cfg.qk_nope_head_dim + cfg.qk_rope_head_dim) ** -0.5
@@ -102,7 +165,10 @@ class MultiHeadLatentAttention(nn.Module):
             to_chunks = lambda tensor: jnp.transpose(
                 tensor.reshape(batch, length, chunks, chunk, tensor.shape[-1]), (2, 0, 1, 3, 4)
             )
-            attended = jax.lax.map(lambda tensors: attend(*tensors), (to_chunks(query), to_chunks(key), to_chunks(value)))
+            attended = jax.lax.map(
+                lambda tensors: attend(*tensors),
+                (to_chunks(query), to_chunks(key), to_chunks(value)),
+            )
             attended = jnp.transpose(attended, (1, 2, 0, 3, 4)).reshape(
                 batch, length, cfg.num_heads, cfg.v_head_dim
             )

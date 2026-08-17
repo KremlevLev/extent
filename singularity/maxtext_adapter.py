@@ -16,7 +16,7 @@ def maxtext_mla_overrides(config: HybridConfig) -> dict[str, object]:
         "attention_type": "mla",
         "base_emb_dim": config.hidden_size,
         "base_num_query_heads": mla.num_heads,
-        "base_num_kv_heads": 1,
+        "base_num_kv_heads": mla.num_key_rope_heads,
         "head_dim": mla.qk_nope_head_dim + mla.qk_rope_head_dim,
         "q_lora_rank": mla.q_lora_rank,
         "kv_lora_rank": mla.kv_lora_rank,

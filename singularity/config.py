@@ -24,12 +24,18 @@ class Mamba3Config:
 @dataclass(frozen=True)
 class MLAConfig:
     num_heads: int = 40
+    num_kv_heads: int = 40
+    num_key_rope_heads: int = 1
     q_lora_rank: int = 1536
     kv_lora_rank: int = 512
     qk_nope_head_dim: int = 128
     qk_rope_head_dim: int = 64
     v_head_dim: int = 128
     rope_theta: float = 1_000_000.0
+    rope_original_head_dim: int = 64
+    partial_rope_strategy: str = "high"
+    use_qk_norm: bool = True
+    use_kv_latent_norm: bool = True
     qk_head_chunk_size: int = 4
 
 
@@ -58,7 +64,10 @@ class HybridConfig:
             raise ValueError("at least one MLA layer is required")
         if len(set(self.attention_layer_indices)) != len(self.attention_layer_indices):
             raise ValueError("attention_layer_indices must be unique")
-        if min(self.attention_layer_indices) < 0 or max(self.attention_layer_indices) >= self.num_layers:
+        if (
+            min(self.attention_layer_indices) < 0
+            or max(self.attention_layer_indices) >= self.num_layers
+        ):
             raise ValueError("attention layer index is outside the decoder")
         if self.mamba.mimo_rank < 1:
             raise ValueError("mimo_rank must be positive")
@@ -69,6 +78,16 @@ class HybridConfig:
             raise ValueError("Mamba-3 complex rotation requires an even d_state")
         if self.mla.qk_rope_head_dim % 2:
             raise ValueError("MLA RoPE head dimension must be even")
+        if self.mla.num_heads % self.mla.num_kv_heads:
+            raise ValueError("MLA query heads must be divisible by reconstructed KV heads")
+        if self.mla.num_heads % self.mla.num_key_rope_heads:
+            raise ValueError("MLA query heads must be divisible by key RoPE heads")
+        if self.mla.rope_original_head_dim % 2:
+            raise ValueError("MLA original RoPE head dimension must be even")
+        if self.mla.qk_rope_head_dim > self.mla.rope_original_head_dim:
+            raise ValueError("partial RoPE width cannot exceed the original RoPE width")
+        if self.mla.partial_rope_strategy not in {"high", "low"}:
+            raise ValueError("partial_rope_strategy must be high or low")
 
     @property
     def mamba_layer_indices(self) -> tuple[int, ...]:
@@ -98,11 +117,15 @@ def tiny_config() -> HybridConfig:
         ),
         mla=MLAConfig(
             num_heads=4,
+            num_kv_heads=4,
+            num_key_rope_heads=1,
             q_lora_rank=16,
             kv_lora_rank=16,
             qk_nope_head_dim=8,
             qk_rope_head_dim=8,
             v_head_dim=8,
+            rope_original_head_dim=8,
+            use_kv_latent_norm=True,
             qk_head_chunk_size=2,
         ),
     )

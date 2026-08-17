@@ -286,8 +286,8 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-008 — Qwen3 6/34 target shape audit
 
 - **Configuration:** 6 MLA / 34 Mamba-3 MIMO, MLA indices `[5, 12, 19, 25, 32, 39]`
-- **Exact parameter count (DERIVED):** 14,707,399,920 across 619 tensors.
-- **Partitioned tensors (DERIVED):** 220/619.
+- **Exact parameter count (DERIVED):** 14,707,402,224 across 631 tensors after adding source-compatible Q/K RMSNorm to the six MLA mixers.
+- **Partitioned tensors (DERIVED):** 220/631.
 - **Global BF16 weight size (DERIVED):** 27.395 GiB.
 - **Ideal per-device BF16 weights (DERIVED):** 3.429 GiB.
 - **Ideal per-device weights + BF16 gradients + BF16 Lion momentum (DERIVED):** 10.288 GiB.
@@ -309,14 +309,28 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-010 — Qwen3 decoder-layer cross-framework parity
 
 - **Implementation commit title:** `feat: add cross-framework Qwen3 layer parity harness`
-- **Status:** harness implemented; real checkpoint execution pending independent Kaggle run.
+- **Status:** PASS; independently executed in Kaggle on two visible CUDA devices.
 - **Frozen source:** `Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18`; official reference implementation pinned to `transformers==4.51.0` as recorded in the source config.
 - **Scope:** decoder layer 0, all 11 layer tensors, deterministic FP32 input, sequence length 4, seed 123, eager causal attention.
 - **Download scope (DERIVED/VALIDATED):** only `model-00001-of-00008.safetensors` is required for layer 0; HTTP metadata reports 3,841,788,544 bytes (3.578 GiB).
 - **Acceptance gates (FROZEN TARGET):** maximum absolute output error <= `5e-3` and relative L2 error <= `5e-4`.
 - **Synthetic cross-framework test (MEASURED):** an official Transformers Qwen3 decoder layer and the JAX decoder layer passed with identical small synthetic weights; the three parity-module tests passed in 9.38 s.
 - **Regression suite (MEASURED):** 25 tests passed in 46.09 s after adding the harness.
-- **Required result:** metrics from the real pinned layer must be recorded before GQA-to-MLA or GQA-to-Mamba numerical experiments are accepted.
+- **Real checkpoint result (MEASURED):** layer 0, sequence length 4, seed 123, FP32; `max_abs=4.0531158447265625e-06`, `mean_abs=6.121665592218051e-08`, `rmse=9.890513461222466e-08`, `relative_l2=9.860404374182388e-08`, `cosine_similarity=0.9999999999999956`.
+- **Result:** `PARITY-PASS`; both frozen gates passed with substantial margin. The JAX layer is accepted as the numerical teacher for subsequent conversion-shock experiments.
+
+### EXP-011 — Qwen3 GQA-to-MLA initialization shock
+
+- **Implementation commit title:** `feat: add Qwen3 GQA-to-MLA conversion baselines`
+- **Status:** harness implemented; real layer-0 execution pending.
+- **Frozen input:** pinned Qwen3 layer 0, sequence length 4, hidden-state seed 123, FP32, SVD seed 0.
+- **Common tensors:** source input/post-attention norms and MLP are copied identically in every variant.
+- **MLA controls:** `random_mla`; `projection_copy_random_kv`; joint rank-512 SVD with 64 partial-RoPE dimensions.
+- **Prior-method baseline:** joint SVD while retaining all eight Qwen GQA RoPE-key heads; analytical cache is 1024 elements/token/layer versus 2048 for source GQA (50% reduction).
+- **Aggressive target:** the same joint SVD but averaging eight RoPE-key projections into one shared head; analytical cache is 576 elements/token/layer (71.875% reduction).
+- **Primary shock metric:** relative L2 and cosine similarity of the clean mixer output. Full decoder-output metrics are secondary because the residual path can hide mixer damage.
+- **Regression suite (MEASURED):** 27 tests passed in 49.98 s; grouped/shared conversion paths, Qwen split-half partial-RoPE indices, shapes, and finite outputs passed.
+- **Required result:** determine how much additional shock is caused specifically by collapsing eight RoPE-key heads to one, before changing the production MLA recipe.
 
 ## 7. Development milestones
 

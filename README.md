@@ -238,6 +238,27 @@ Qwen3 config. It prints `PARITY-PASS` only when both maximum absolute error and
 relative L2 error pass their predeclared thresholds. Run this on a CPU or GPU
 notebook; TPU is not required.
 
+After real layer parity passes, measure the immediate GQA-to-MLA shock using the
+same downloaded shard:
+
+```python
+from scripts.qwen_mla_shock import main as qwen_mla_shock
+qwen_mla_shock([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--layer-index", "0",
+    "--sequence-length", "4",
+    "--kv-rank", "512",
+    "--rope-dim", "64",
+    "--result-json", "/kaggle/working/qwen3-mla-shock-layer0.json",
+])
+```
+
+This compares random MLA, copied Q/output projections with random KV, joint-SVD
+with all eight source RoPE-key heads, and the more aggressive one-RoPE-head
+target. It reports clean mixer-output error separately from residual-masked
+decoder-output error. These are initialization diagnostics, not recovered-model
+quality results.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional
