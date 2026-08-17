@@ -14,6 +14,7 @@ from flax.core import freeze, unfreeze
 from singularity.config import HybridConfig
 from singularity.mla_conversion import (
     convert_qwen3_gqa_to_mla_joint_svd,
+    factorize_qwen3_joint_kv,
     qwen3_decoder_common_params,
     qwen3_mla_conversion_config,
 )
@@ -142,6 +143,17 @@ def main(argv: list[str] | None = None) -> None:
         attention_mask,
     )
     common = qwen3_decoder_common_params(arrays, args.layer_index)
+    maximum_joint_rank = source.num_key_value_heads * (
+        2 * source.head_dim - args.rope_dim
+    )
+    factors = factorize_qwen3_joint_kv(
+        arrays,
+        source,
+        args.layer_index,
+        rope_dim=args.rope_dim,
+        max_rank=maximum_joint_rank,
+        seed=args.svd_seed,
+    )
     variants = {}
     reports = {}
     converted_params = {}
@@ -153,7 +165,12 @@ def main(argv: list[str] | None = None) -> None:
             grouped_rope=grouped_rope,
         )
         attention_params, report = convert_qwen3_gqa_to_mla_joint_svd(
-            arrays, source, mla, args.layer_index, seed=args.svd_seed
+            arrays,
+            source,
+            mla,
+            args.layer_index,
+            seed=args.svd_seed,
+            factors=factors,
         )
         name = report.method
         params = {**common, "self_attn": attention_params}

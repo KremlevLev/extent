@@ -75,6 +75,29 @@ def jax_layer_params(
     return freeze(traverse_util.unflatten_dict(flat))
 
 
+def jax_attention_params(
+    arrays: Mapping[str, np.ndarray],
+    config: Qwen3TeacherConfig,
+    layer_index: int,
+) -> Any:
+    """Materialize only one attention module, avoiding unused MLP device arrays."""
+    layer_prefix = f"layers_{layer_index}/self_attn/"
+    flat: dict[tuple[str, ...], jax.Array] = {}
+    for entry in layer_mapping_entries(config, layer_index):
+        if not entry.target.startswith(layer_prefix):
+            continue
+        value = arrays[entry.source]
+        if entry.transform == "transpose":
+            value = value.T
+        elif entry.transform != "identity":
+            raise ValueError(f"unsupported transform: {entry.transform}")
+        relative_target = entry.target.removeprefix(layer_prefix)
+        flat[tuple(relative_target.split("/"))] = jnp.asarray(
+            value, dtype=jnp.float32
+        )
+    return freeze(traverse_util.unflatten_dict(flat))
+
+
 def torch_layer_state(
     arrays: Mapping[str, np.ndarray],
     config: Qwen3TeacherConfig,

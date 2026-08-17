@@ -3,6 +3,7 @@ import pytest
 from dataclasses import replace
 
 from singularity.qwen3_parity import (
+    jax_attention_params,
     jax_layer_params,
     layer_mapping_entries,
     parity_metrics,
@@ -107,3 +108,23 @@ def test_tiny_jax_layer_matches_transformers_qwen3():
     metrics = parity_metrics(torch_output.numpy(), np.asarray(jax_output))
     assert metrics.max_abs < 5e-5
     assert metrics.relative_l2 < 5e-5
+
+
+def test_attention_only_loader_excludes_mlp_tensors():
+    config = tiny_qwen3_teacher_config()
+    rng = np.random.default_rng(9)
+    arrays = {
+        entry.source: rng.normal(
+            size=expected_qwen_shape(entry, config)
+        ).astype(np.float32)
+        for entry in layer_mapping_entries(config, 0)
+    }
+    params = jax_attention_params(arrays, config, 0)
+    assert set(params) == {
+        "q_proj",
+        "k_proj",
+        "v_proj",
+        "o_proj",
+        "q_norm",
+        "k_norm",
+    }

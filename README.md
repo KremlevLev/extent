@@ -279,6 +279,27 @@ Rank 1536 is the no-low-rank-loss control for the 64-dimensional partial-RoPE
 layout. The grouped variant has no cache reduction at that rank; its purpose is
 to isolate partial-RoPE damage rather than serve as a deployable configuration.
 
+Finally, probe whether the short-sequence partial-RoPE result survives increasing
+positions. This is a controlled synthetic-prefix diagnostic, not a long-context
+quality benchmark:
+
+```python
+from scripts.qwen_mla_context_sweep import main as qwen_mla_context_sweep
+qwen_mla_context_sweep([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--layer-index", "0",
+    "--lengths", "4,64,256,1024",
+    "--compressed-rank", "512",
+    "--rope-dim", "64",
+    "--tail-tokens", "128",
+    "--result-json", "/kaggle/working/qwen3-mla-context-sweep-layer0.json",
+])
+```
+
+The script reports error over all tokens and separately over the final 128
+tokens. It compares rank 512 against the no-SVD-loss rank 1536 control with both
+grouped and shared RoPE keys.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional
