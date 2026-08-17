@@ -75,6 +75,19 @@ def _head_group_projection(
     return np.concatenate(channels, axis=1).astype(np.float32)
 
 
+def _match_rms(value: np.ndarray, reference: np.ndarray) -> np.ndarray:
+    """Match one transplanted slice to the RMS of its random-base control."""
+    value = np.asarray(value, dtype=np.float32)
+    reference = np.asarray(reference, dtype=np.float32)
+    value_rms = float(np.sqrt(np.mean(np.square(value), dtype=np.float64)))
+    reference_rms = float(
+        np.sqrt(np.mean(np.square(reference), dtype=np.float64))
+    )
+    if not np.isfinite(value_rms) or value_rms <= np.finfo(np.float32).tiny:
+        raise ValueError("cannot RMS-match a zero or non-finite transplant slice")
+    return (value * (reference_rms / value_rms)).astype(np.float32)
+
+
 def build_qwen3_to_mamba3_transplant_variants(
     base_params: Mapping,
     arrays: Mapping[str, np.ndarray],
@@ -82,7 +95,7 @@ def build_qwen3_to_mamba3_transplant_variants(
     config: Mamba3Config,
     layer_index: int,
 ) -> tuple[dict[str, FrozenDict], dict[str, Mamba3TransplantReport]]:
-    """Build controlled INIT-A..E mixer initializations from one random base."""
+    """Build controlled mixer initializations from one canonical random base."""
     if config.groups != 1:
         raise ValueError("the Qwen3 transplant currently requires one Mamba B/C group")
     prefix = f"model.layers.{layer_index}.self_attn"
@@ -131,6 +144,19 @@ def build_qwen3_to_mamba3_transplant_variants(
     x_projection = fit_matrix(v, (source.hidden_size, slices["x"].stop - slices["x"].start))
     prior_b = fit_matrix(k, (source.hidden_size, bc_width))
     prior_c = fit_matrix(q, (source.hidden_size, bc_width))
+    base_in = np.asarray(base_params["in_proj"]["kernel"], dtype=np.float32)
+    matched_x = _match_rms(x_projection, base_in[:, slices["x"]])
+    matched_b = _match_rms(prior_b, base_in[:, slices["b"]])
+    matched_c = _match_rms(prior_c, base_in[:, slices["c"]])
+
+    def interpolate(
+        name: str, matched: np.ndarray, fraction: float
+    ) -> np.ndarray:
+        random_slice = base_in[:, slices[name]]
+        return (
+            (1.0 - fraction) * random_slice + fraction * matched
+        ).astype(np.float32)
+
     siso_b = _head_group_projection(
         k,
         source.num_key_value_heads,
@@ -188,6 +214,27 @@ def build_qwen3_to_mamba3_transplant_variants(
             b_projection=mimo_b,
             c_projection=mimo_c,
         ),
+        "INIT-F-variance-matched-qkvo": replace(
+            copy_out=True,
+            copy_bc_norm=True,
+            x_projection=matched_x,
+            b_projection=matched_b,
+            c_projection=matched_c,
+        ),
+        "INIT-G-vm-qkvo-blend-0.25": replace(
+            copy_out=True,
+            copy_bc_norm=True,
+            x_projection=interpolate("x", matched_x, 0.25),
+            b_projection=interpolate("b", matched_b, 0.25),
+            c_projection=interpolate("c", matched_c, 0.25),
+        ),
+        "INIT-H-vm-qkvo-blend-0.5": replace(
+            copy_out=True,
+            copy_bc_norm=True,
+            x_projection=interpolate("x", matched_x, 0.5),
+            b_projection=interpolate("b", matched_b, 0.5),
+            c_projection=interpolate("c", matched_c, 0.5),
+        ),
     }
     copied_qkvo = (
         slices["x"].stop - slices["x"].start + 2 * bc_width
@@ -223,6 +270,33 @@ def build_qwen3_to_mamba3_transplant_variants(
             total_width,
             True,
             "disjoint source-head groups",
+        ),
+        "INIT-F-variance-matched-qkvo": Mamba3TransplantReport(
+            "INIT-F-variance-matched-qkvo",
+            "The flat QKVO port with x/B/C slices independently RMS-matched to their canonical random controls.",
+            copied_qkvo,
+            total_width,
+            True,
+            "flat resize with per-slice RMS matching",
+            MAMBA_IN_LLAMA_REFERENCE_COMMIT,
+        ),
+        "INIT-G-vm-qkvo-blend-0.25": Mamba3TransplantReport(
+            "INIT-G-vm-qkvo-blend-0.25",
+            "A 25% interpolation from the canonical random x/B/C slices toward the RMS-matched QKVO port.",
+            copied_qkvo,
+            total_width,
+            True,
+            "25% variance-matched flat port plus 75% random base",
+            MAMBA_IN_LLAMA_REFERENCE_COMMIT,
+        ),
+        "INIT-H-vm-qkvo-blend-0.5": Mamba3TransplantReport(
+            "INIT-H-vm-qkvo-blend-0.5",
+            "A 50% interpolation from the canonical random x/B/C slices toward the RMS-matched QKVO port.",
+            copied_qkvo,
+            total_width,
+            True,
+            "50% variance-matched flat port plus 50% random base",
+            MAMBA_IN_LLAMA_REFERENCE_COMMIT,
         ),
     }
     for name, params in variants.items():

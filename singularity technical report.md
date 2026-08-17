@@ -697,6 +697,16 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** close `INIT-C-prior-qkvo-port` as the proposed initializer while retaining it as a negative baseline. The next initializer study must reduce transplantation shock, for example by variance matching and controlled interpolation with the canonical random base, and must beat random under the same cache/budget protocol.
 - **Raw artifact:** `results/EXP-031-qwen3-mamba3-cached-distill-sweep-layer18-160step.json`.
 
+### EXP-032 — Shock-matched QKVO initializer screen
+
+- **Implementation commit title:** `feat: add shock-matched Qwen-to-Mamba initializers`
+- **Status:** implementation complete; layer-0 screening run pending.
+- **Question:** does the direct QKVO port fail because resized Q/K/V projections have an incompatible scale, or because their directions are intrinsically unhelpful to the new Mamba-3 recurrence?
+- **Controlled arms:** `INIT-A-random`; rejected full-strength `INIT-C-prior-qkvo-port`; `INIT-F-variance-matched-qkvo`, whose x/B/C slices independently match the RMS of the same seed's canonical random slices; and 25%/50% random-to-matched interpolation arms `INIT-G`/`INIT-H`.
+- **Invariant parameters:** all arms start from the same seed-specific random Mamba base. Only x/B/C slices differ; z, dt, A, trap, angle, convolution, and other recurrence parameters remain identical. Output projection calibration and optimizer protocol remain shared by the distillation harness.
+- **Screening rule:** run one paired seed for 20 updates on layer 0. Advance only the best shock-reduced arm to the existing three-seed, 80-step confirmation if it beats random on held-out relative L2. This prevents spending the full layer-18 budget on an unpromising initializer family.
+- **Interpretation boundary:** interpolation is a targeted mechanism ablation, not automatic layer allocation and not evidence of full-model recovery.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.

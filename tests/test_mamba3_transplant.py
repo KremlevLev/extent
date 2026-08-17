@@ -68,6 +68,34 @@ def test_transplant_variants_are_controlled_and_mimo_channels_are_distinct():
     )
     np.testing.assert_allclose(siso_b[:, :state], siso_b[:, state : 2 * state])
     assert not np.allclose(mimo_b[:, :state], mimo_b[:, state : 2 * state])
+
+    matched = variants["INIT-F-variance-matched-qkvo"]["in_proj"]["kernel"]
+    blend_25 = variants["INIT-G-vm-qkvo-blend-0.25"]["in_proj"]["kernel"]
+    blend_50 = variants["INIT-H-vm-qkvo-blend-0.5"]["in_proj"]["kernel"]
+    for name in ("x", "b", "c"):
+        base_slice = base_in[:, slices[name]]
+        matched_slice = np.asarray(matched[:, slices[name]])
+        np.testing.assert_allclose(
+            np.sqrt(np.mean(np.square(matched_slice), dtype=np.float64)),
+            np.sqrt(np.mean(np.square(base_slice), dtype=np.float64)),
+            rtol=2e-6,
+        )
+        np.testing.assert_allclose(
+            blend_25[:, slices[name]],
+            0.75 * base_slice + 0.25 * matched_slice,
+            rtol=2e-6,
+            atol=2e-7,
+        )
+        np.testing.assert_allclose(
+            blend_50[:, slices[name]],
+            0.5 * base_slice + 0.5 * matched_slice,
+            rtol=2e-6,
+            atol=2e-7,
+        )
+    for name in ("dt", "a", "trap", "angle", "z"):
+        np.testing.assert_array_equal(
+            matched[:, slices[name]], base_in[:, slices[name]]
+        )
     assert set(variants) == set(reports)
     inputs = jnp.asarray(
         np.random.default_rng(52).normal(size=(1, 5, source.hidden_size)).astype(
