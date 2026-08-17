@@ -23,6 +23,19 @@ class MLAConversionReport:
     rope_aggregation_relative_l2: float
 
 
+@dataclass(frozen=True)
+class MLAJointFactors:
+    joint: np.ndarray
+    down: np.ndarray
+    up: np.ndarray
+    rope_dim: int
+    partial_rope_strategy: str
+
+    @property
+    def max_rank(self) -> int:
+        return self.down.shape[1]
+
+
 def partial_rope_indices(
     head_dim: int,
     rope_dim: int,
@@ -79,6 +92,40 @@ def _relative_l2(reference: np.ndarray, candidate: np.ndarray) -> float:
     return float(np.linalg.norm(candidate - reference) / denominator)
 
 
+def factorize_qwen3_joint_kv(
+    arrays: Mapping[str, np.ndarray],
+    source: Qwen3TeacherConfig,
+    layer_index: int,
+    *,
+    rope_dim: int,
+    max_rank: int,
+    partial_rope_strategy: str = "high",
+    seed: int = 0,
+) -> MLAJointFactors:
+    """Compute one maximum-rank factorization reusable by every lower-rank sweep."""
+    prefix = f"model.layers.{layer_index}.self_attn"
+    content_indices, _ = partial_rope_indices(
+        source.head_dim, rope_dim, partial_rope_strategy
+    )
+    key = _kernel(arrays, f"{prefix}.k_proj.weight").reshape(
+        source.hidden_size, source.num_key_value_heads, source.head_dim
+    )
+    value = _kernel(arrays, f"{prefix}.v_proj.weight").reshape(
+        source.hidden_size, source.num_key_value_heads, source.head_dim
+    )
+    joint = np.concatenate((key[:, :, content_indices], value), axis=-1).reshape(
+        source.hidden_size, -1
+    )
+    down, up = truncated_svd(joint, max_rank, seed=seed)
+    return MLAJointFactors(
+        joint=joint,
+        down=down,
+        up=up,
+        rope_dim=rope_dim,
+        partial_rope_strategy=partial_rope_strategy,
+    )
+
+
 def convert_qwen3_gqa_to_mla_joint_svd(
     arrays: Mapping[str, np.ndarray],
     source: Qwen3TeacherConfig,
@@ -86,6 +133,7 @@ def convert_qwen3_gqa_to_mla_joint_svd(
     layer_index: int,
     *,
     seed: int = 0,
+    factors: MLAJointFactors | None = None,
 ) -> tuple[dict, MLAConversionReport]:
     """MHA2MLA-style joint KV SVD with either grouped or shared RoPE keys."""
     if target.q_lora_rank != 0 or target.use_kv_latent_norm:
@@ -111,8 +159,31 @@ def convert_qwen3_gqa_to_mla_joint_svd(
     ).reshape(source.hidden_size, -1)
     key_content = key[:, :, content_indices]
     key_rope = key[:, :, rope_indices]
-    joint = np.concatenate((key_content, value), axis=-1).reshape(source.hidden_size, -1)
-    down, up = truncated_svd(joint, target.kv_lora_rank, seed=seed)
+    joint = np.concatenate((key_content, value), axis=-1).reshape(
+        source.hidden_size, -1
+    )
+    if factors is None:
+        factors = factorize_qwen3_joint_kv(
+            arrays,
+            source,
+            layer_index,
+            rope_dim=target.qk_rope_head_dim,
+            max_rank=target.kv_lora_rank,
+            partial_rope_strategy=target.partial_rope_strategy,
+            seed=seed,
+        )
+    if (
+        factors.rope_dim != target.qk_rope_head_dim
+        or factors.partial_rope_strategy != target.partial_rope_strategy
+        or factors.joint.shape != joint.shape
+    ):
+        raise ValueError("precomputed joint factors do not match the MLA target")
+    if target.kv_lora_rank > factors.max_rank:
+        raise ValueError(
+            f"requested rank {target.kv_lora_rank} exceeds factor rank {factors.max_rank}"
+        )
+    down = factors.down[:, : target.kv_lora_rank]
+    up = factors.up[: target.kv_lora_rank]
 
     if target.num_key_rope_heads == source.num_key_value_heads:
         cached_rope = key_rope

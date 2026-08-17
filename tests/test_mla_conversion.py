@@ -5,6 +5,7 @@ import numpy as np
 from singularity.layers.mla import MultiHeadLatentAttention, apply_partial_rope
 from singularity.mla_conversion import (
     convert_qwen3_gqa_to_mla_joint_svd,
+    factorize_qwen3_joint_kv,
     partial_rope_indices,
     qwen3_mla_conversion_config,
 )
@@ -61,3 +62,20 @@ def test_joint_svd_grouped_and_shared_rope_are_runnable():
         else:
             assert report.rope_aggregation_relative_l2 > 0.0
             assert report.target_cache_elements_per_token == 24
+
+
+def test_one_factorization_supports_monotonic_rank_sweep():
+    source, arrays = _tiny_arrays()
+    factors = factorize_qwen3_joint_kv(
+        arrays, source, 0, rope_dim=8, max_rank=32, seed=3
+    )
+    errors = []
+    for rank in (8, 16, 32):
+        config = qwen3_mla_conversion_config(
+            source, kv_lora_rank=rank, rope_dim=8, grouped_rope=True
+        )
+        _, report = convert_qwen3_gqa_to_mla_joint_svd(
+            arrays, source, config, 0, factors=factors
+        )
+        errors.append(report.joint_reconstruction_relative_l2)
+    assert errors[0] >= errors[1] >= errors[2]

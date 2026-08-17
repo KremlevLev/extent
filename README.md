@@ -259,6 +259,26 @@ target. It reports clean mixer-output error separately from residual-masked
 decoder-output error. These are initialization diagnostics, not recovered-model
 quality results.
 
+Use the measured layer-0 artifact to isolate the KV-rank bottleneck. The sweep
+computes one rank-1536 factorization and reuses its leading factors for every
+lower rank, so the comparison is nested and deterministic:
+
+```python
+from scripts.qwen_mla_rank_sweep import main as qwen_mla_rank_sweep
+qwen_mla_rank_sweep([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--layer-index", "0",
+    "--sequence-length", "4",
+    "--rope-dim", "64",
+    "--ranks", "256,512,1024,1536",
+    "--result-json", "/kaggle/working/qwen3-mla-rank-sweep-layer0.json",
+])
+```
+
+Rank 1536 is the no-low-rank-loss control for the 64-dimensional partial-RoPE
+layout. The grouped variant has no cache reduction at that rank; its purpose is
+to isolate partial-RoPE damage rather than serve as a deployable configuration.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional
