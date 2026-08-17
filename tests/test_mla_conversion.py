@@ -79,3 +79,32 @@ def test_one_factorization_supports_monotonic_rank_sweep():
         )
         errors.append(report.joint_reconstruction_relative_l2)
     assert errors[0] >= errors[1] >= errors[2]
+
+
+def test_full_rope_width_with_zero_content_key_is_runnable():
+    source, arrays = _tiny_arrays()
+    config = qwen3_mla_conversion_config(
+        source,
+        kv_lora_rank=16,
+        rope_dim=source.head_dim,
+        grouped_rope=False,
+    )
+    params, report = convert_qwen3_gqa_to_mla_joint_svd(
+        arrays, source, config, 0
+    )
+    x = jnp.ones((1, 3, source.hidden_size), dtype=jnp.float32)
+    output = MultiHeadLatentAttention(
+        source.hidden_size,
+        config,
+        dtype=jnp.float32,
+        param_dtype=jnp.float32,
+    ).apply(
+        {"params": params},
+        x,
+        jnp.arange(3, dtype=jnp.int32)[None, :],
+    )
+
+    assert config.qk_nope_head_dim == 0
+    assert report.target_cache_elements_per_token == 32
+    assert output.shape == x.shape
+    assert np.all(np.isfinite(np.asarray(output)))

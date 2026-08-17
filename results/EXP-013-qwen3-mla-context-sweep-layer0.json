@@ -1,0 +1,54 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "layer_index": 0,
+  "seed": 123,
+  "svd_seed": 0,
+  "compute_dtype": "float32",
+  "jax_backend": "gpu",
+  "input_kind": "shared_prefix_deterministic_gaussian",
+  "lengths": [4, 64, 256, 1024],
+  "tail_tokens": 128,
+  "rope_dim": 64,
+  "compressed_rank": 512,
+  "control_rank": 1536,
+  "factorization_seconds": 8.908630733999985,
+  "variants": {
+    "rank_512_grouped_rope": {
+      "conversion": {"source_cache_elements_per_token": 2048, "target_cache_elements_per_token": 1024, "cache_reduction_fraction": 0.5, "joint_reconstruction_relative_l2": 0.6255965232849121, "rope_aggregation_relative_l2": 0.0},
+      "lengths": {
+        "4": {"all_tokens": {"relative_l2": 0.5886948060110025, "cosine_similarity": 0.8083553830952237}, "tail_tokens": {"relative_l2": 0.5886948060110025, "cosine_similarity": 0.8083553830952237}},
+        "64": {"all_tokens": {"relative_l2": 0.699935575263692, "cosine_similarity": 0.7170377883519614}, "tail_tokens": {"relative_l2": 0.699935575263692, "cosine_similarity": 0.7170377883519614}},
+        "256": {"all_tokens": {"relative_l2": 0.7357764232923821, "cosine_similarity": 0.6824559571396293}, "tail_tokens": {"relative_l2": 0.758859103845715, "cosine_similarity": 0.658634909667375}},
+        "1024": {"all_tokens": {"relative_l2": 0.7682865059821605, "cosine_similarity": 0.6475114732494514}, "tail_tokens": {"relative_l2": 0.8047762423037462, "cosine_similarity": 0.6061501390649869}}
+      }
+    },
+    "rank_512_shared_rope": {
+      "conversion": {"source_cache_elements_per_token": 2048, "target_cache_elements_per_token": 576, "cache_reduction_fraction": 0.71875, "joint_reconstruction_relative_l2": 0.6255965232849121, "rope_aggregation_relative_l2": 0.9331836104393005},
+      "lengths": {
+        "4": {"all_tokens": {"relative_l2": 0.6453814723289585, "cosine_similarity": 0.7646340912356105}, "tail_tokens": {"relative_l2": 0.6453814723289585, "cosine_similarity": 0.7646340912356105}},
+        "64": {"all_tokens": {"relative_l2": 0.8644216754748623, "cosine_similarity": 0.5379471510025579}, "tail_tokens": {"relative_l2": 0.8644216754748623, "cosine_similarity": 0.5379471510025579}},
+        "256": {"all_tokens": {"relative_l2": 0.9215713528667047, "cosine_similarity": 0.4529759668542328}, "tail_tokens": {"relative_l2": 0.9565882278604437, "cosine_similarity": 0.39097051353062845}},
+        "1024": {"all_tokens": {"relative_l2": 0.973568550256774, "cosine_similarity": 0.3681602616476902}, "tail_tokens": {"relative_l2": 1.0172787242196486, "cosine_similarity": 0.29138217007113315}}
+      }
+    },
+    "rank_1536_grouped_rope": {
+      "conversion": {"source_cache_elements_per_token": 2048, "target_cache_elements_per_token": 2048, "cache_reduction_fraction": 0.0, "joint_reconstruction_relative_l2": 6.817094231337251e-07, "rope_aggregation_relative_l2": 0.0},
+      "lengths": {
+        "4": {"all_tokens": {"relative_l2": 0.0002018372857783964, "cosine_similarity": 0.9999999796440094}, "tail_tokens": {"relative_l2": 0.0002018372857783964, "cosine_similarity": 0.9999999796440094}},
+        "64": {"all_tokens": {"relative_l2": 0.005092647998655082, "cosine_similarity": 0.9999870334645568}, "tail_tokens": {"relative_l2": 0.005092647998655082, "cosine_similarity": 0.9999870334645568}},
+        "256": {"all_tokens": {"relative_l2": 0.024409237796454906, "cosine_similarity": 0.9997020736257612}, "tail_tokens": {"relative_l2": 0.03563380189589243, "cosine_similarity": 0.9993649731091866}},
+        "1024": {"all_tokens": {"relative_l2": 0.09817964623595711, "cosine_similarity": 0.9951787928350856}, "tail_tokens": {"relative_l2": 0.17858196139216823, "cosine_similarity": 0.9840143131224879}}
+      }
+    },
+    "rank_1536_shared_rope": {
+      "conversion": {"source_cache_elements_per_token": 2048, "target_cache_elements_per_token": 1600, "cache_reduction_fraction": 0.21875, "joint_reconstruction_relative_l2": 6.817094231337251e-07, "rope_aggregation_relative_l2": 0.9331836104393005},
+      "lengths": {
+        "4": {"all_tokens": {"relative_l2": 0.27100900593227506, "cosine_similarity": 0.9629595349437065}, "tail_tokens": {"relative_l2": 0.27100900593227506, "cosine_similarity": 0.9629595349437065}},
+        "64": {"all_tokens": {"relative_l2": 0.6043970665344177, "cosine_similarity": 0.8086943231349812}, "tail_tokens": {"relative_l2": 0.6043970665344177, "cosine_similarity": 0.8086943231349812}},
+        "256": {"all_tokens": {"relative_l2": 0.6840703094045985, "cosine_similarity": 0.7487663596921802}, "tail_tokens": {"relative_l2": 0.7313266766753397, "cosine_similarity": 0.7077655425398748}},
+        "1024": {"all_tokens": {"relative_l2": 0.7531502662327736, "cosine_similarity": 0.6863026728474622}, "tail_tokens": {"relative_l2": 0.8290123999961153, "cosine_similarity": 0.6076829155080758}}
+      }
+    }
+  },
+  "note": "Compact archival copy retaining all primary L2/cosine results; the original Kaggle artifact additionally contains max_abs, mean_abs, and RMSE fields."
+}

@@ -300,6 +300,29 @@ The script reports error over all tokens and separately over the final 128
 tokens. It compares rank 512 against the no-SVD-loss rank 1536 control with both
 grouped and shared RoPE keys.
 
+After recording the context-length result, compare partial-RoPE widths under the
+same deployable shared-cache budget. The latent rank is reduced as RoPE width
+grows, so every `shared_fixed_cache` variant stores exactly 576 elements per
+token per layer:
+
+```python
+from scripts.qwen_mla_rope_width_sweep import main as qwen_mla_rope_width_sweep
+qwen_mla_rope_width_sweep([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--layer-index", "0",
+    "--sequence-length", "1024",
+    "--rope-widths", "32,64,96,128",
+    "--target-cache-elements", "576",
+    "--tail-tokens", "128",
+    "--result-json", "/kaggle/working/qwen3-mla-rope-width-sweep-layer0.json",
+])
+```
+
+The resulting latent ranks are 544, 512, 480, and 448. For every width the
+script also runs grouped- and shared-RoPE controls at the maximum joint rank,
+separating positional-frequency removal and RoPE-head aggregation from the
+fixed-budget low-rank tradeoff.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional
