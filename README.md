@@ -452,6 +452,21 @@ cache; it is not yet an absorbed or optimized incremental-decode kernel.
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional
 equivalence. Compare it against random mixer initialization, copied MLP/norms,
-and MLA-only conversion under the same recovery-token budget. The tests here
-cover contracts and differentiability; numerical parity with the official
-CUDA Mamba-3 kernels still needs a dedicated cross-framework fixture.
+and MLA-only conversion under the same recovery-token budget.
+
+The readable JAX recurrence is checked against an independent eager PyTorch
+implementation of the official Mamba-3 MIMO one-token equations pinned to
+`state-spaces/mamba@e9594ce1c732d97440f0332fdc43170a2294dbfa`. In a notebook,
+run the focused cross-framework fixture without starting a second JAX process:
+
+```python
+import pytest
+
+exit_code = pytest.main(["-q", "tests/test_mamba3_reference_parity.py"])
+print("pytest exit code:", exit_code)
+```
+
+Expected: `2 passed` and exit code `0`. This verifies the FP32 mathematical
+reference and official parameter shapes. Numerical parity with the optimized
+TileLang/CuTe kernel, long-context stability, and production throughput remain
+separate accelerator experiments.

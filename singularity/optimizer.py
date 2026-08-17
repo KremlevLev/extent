@@ -11,7 +11,7 @@ from flax import traverse_util
 def decay_mask(params: optax.Params) -> optax.Params:
     """Exclude norms, biases and recurrent stability scalars from weight decay."""
     flat = traverse_util.flatten_dict(params)
-    excluded = {"scale", "bias", "dt_logit", "D", "b_bias", "c_bias"}
+    excluded = {"scale", "bias", "dt_bias", "D", "b_bias", "c_bias"}
     return traverse_util.unflatten_dict({path: path[-1] not in excluded for path in flat})
 
 

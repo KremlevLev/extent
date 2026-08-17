@@ -17,6 +17,7 @@ class Mamba3Config:
     rope_fraction: float = 0.5
     dt_min: float = 1e-3
     dt_max: float = 1e-1
+    dt_init_floor: float = 1e-4
     a_floor: float = 1e-4
     conv_kernel: int = 4
 

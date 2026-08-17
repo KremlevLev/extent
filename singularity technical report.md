@@ -488,6 +488,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Probe-to-module agreement:** deployable all-token relative L2 differs from EXP-018 by approximately `3.8e-8`, showing that the measured BKV behavior survived extraction into the normal module path rather than depending on probe-only arithmetic.
 - **Raw artifact:** `results/EXP-019-qwen3-deployable-mla-parity-layer0.json`.
 
+### EXP-020 — Mamba-3 MIMO mathematical reference parity
+
+- **Implementation commit title:** `test: add Mamba-3 reference parity fixtures`
+- **Reference:** official `state-spaces/mamba` source at immutable commit `e9594ce1c732d97440f0332fdc43170a2294dbfa`; the independent oracle directly implements the published one-token MIMO recurrence in eager PyTorch rather than calling the JAX implementation.
+- **Status:** local cross-framework recurrence parity completed; accelerator-specific parity against the optimized TileLang/CuTe kernels remains a separate test.
+- **Discovered defect:** the bring-up JAX path incorrectly applied `tanh` to the predicted angle increment. Official Mamba-3 accumulates `pi * angle_projection * dt` directly. The fixture deliberately includes angle projections outside `[-1,1]` so the old implementation fails decisively.
+- **Contract correction:** the module now stores the official inverse-softplus `dt_bias` directly and uses official MIMO parameter shapes `[heads, rank, head_dim]` with names `mimo_x`, `mimo_z`, and `mimo_o`. This is intentionally corrected before any recovery checkpoint exists.
+- **Parity result (MEASURED):** deterministic FP32 fixture with batch 2, length 7, 3 heads, MIMO rank 2, state size 8, partial complex rotation, nontrivial trapezoidal gates, decay, skip, and MIMO projections: max absolute error `2.91e-11`, mean absolute error `1.03e-12`, RMSE `3.78e-12`, relative L2 `7.66e-8` against eager PyTorch.
+- **Regression suite (MEASURED):** 37 tests passed in 58.46 s after the correction.
+- **Boundary:** this establishes the recurrence and parameter contract, not numerical equivalence to the fused production kernel, training throughput, long-context stability, or superiority of MIMO. Those require accelerator fixtures and controlled ablations.
+
 ## 7. Development milestones
 
 1. **Completed only for the sharding mechanism:** wrong-generation weights + Lion state fit on v5e-8; exact Qwen3 HBM validation remains pending.
@@ -495,12 +506,13 @@ Thresholds will be frozen before final experiments after pilot variance is known
 3. **Completed:** validate the pinned Qwen3-14B metadata, target shapes, and streaming mapping contracts.
 4. **Completed:** implement the exact Qwen3 GQA teacher and establish decoder-layer parity against the official PyTorch implementation.
 5. **Completed for the frozen reference direction:** establish fold-1 RoRoPE + BKV rank-448 conversion diagnostics and a cache-producing Flax mapping; optimized decode remains pending.
-6. **Current:** establish Mamba-3 reference parity, then implement transplant variants and single-layer shock tests.
-7. Run small-scale ablations and freeze the 14B recovery recipe.
-8. Compile the first guarded full-model short-sequence forward/backward.
-9. Recovery training, fixed evaluation checkpoints, and failure logging.
-10. Optimized inference kernel and matched end-to-end benchmarks.
-11. Only after base recovery: separate reasoning SFT study using legally and scientifically documented data.
+6. **Completed for the mathematical reference path:** establish cross-framework Mamba-3 MIMO recurrence parity and align the module parameter contract with the official implementation.
+7. **Current:** implement attention-to-Mamba-3 transplant variants and single-layer shock tests.
+8. Run small-scale ablations and freeze the 14B recovery recipe.
+9. Compile the first guarded full-model short-sequence forward/backward.
+10. Recovery training, fixed evaluation checkpoints, and failure logging.
+11. Optimized inference kernel and matched end-to-end benchmarks.
+12. Only after base recovery: separate reasoning SFT study using legally and scientifically documented data.
 
 ## 8. Reasoning SFT boundary
 

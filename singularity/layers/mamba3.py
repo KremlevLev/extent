@@ -18,6 +18,11 @@ from singularity.config import Mamba3Config
 from singularity.layers.common import RMSNorm
 
 
+# Formula/parameter contract checked against state-spaces/mamba at
+# commit e9594ce1c732d97440f0332fdc43170a2294dbfa.
+MAMBA3_REFERENCE_COMMIT = "e9594ce1c732d97440f0332fdc43170a2294dbfa"
+
+
 class ScanState(NamedTuple):
     ssm: jax.Array
     previous_k: jax.Array
@@ -58,7 +63,7 @@ def mamba3_reference_scan(
     angle_step: jax.Array,
     mimo_x: jax.Array,
     mimo_z: jax.Array,
-    mimo_out: jax.Array,
+    mimo_o: jax.Array,
     skip: jax.Array,
     rotary_pairs: int,
 ) -> jax.Array:
@@ -75,6 +80,9 @@ def mamba3_reference_scan(
         previous_v=jnp.zeros((batch, heads, head_dim), jnp.float32),
         angle=jnp.zeros((batch, heads, rotary_pairs), jnp.float32),
     )
+    mimo_x_rank_first = jnp.swapaxes(mimo_x, 0, 1).astype(jnp.float32)
+    mimo_z_rank_first = jnp.swapaxes(mimo_z, 0, 1).astype(jnp.float32)
+    mimo_o_rank_first = jnp.swapaxes(mimo_o, 0, 1).astype(jnp.float32)
 
     time_major = tuple(jnp.swapaxes(t, 0, 1) for t in (x, z, b, c, dt, decay, trap, angle_step))
 
@@ -85,21 +93,23 @@ def mamba3_reference_scan(
         gamma = jax.nn.sigmoid(trap_t.astype(jnp.float32)) * dt_t
         beta = (1.0 - jax.nn.sigmoid(trap_t.astype(jnp.float32))) * dt_t * alpha
 
-        angle_increment = jnp.pi * jnp.tanh(angle_t[:, None, :].astype(jnp.float32))
+        angle_increment = jnp.pi * angle_t[:, None, :].astype(jnp.float32)
         new_angle = state.angle + angle_increment * dt_t[..., None]
         b_rot = _rotate_mimo_halves(b_t.astype(jnp.float32), new_angle, rotary_pairs)
         c_rot = _rotate_mimo_halves(c_t.astype(jnp.float32), new_angle, rotary_pairs)
 
         # Rank-specific value streams; the MIMO rank is reduced only after readout.
-        value_now = x_t[:, None].astype(jnp.float32) * mimo_x[None].astype(jnp.float32)
-        value_prev = state.previous_v[:, None] * mimo_x[None].astype(jnp.float32)
+        value_now = x_t[:, None].astype(jnp.float32) * mimo_x_rank_first[None]
+        value_prev = state.previous_v[:, None] * mimo_x_rank_first[None]
         injection = jnp.einsum("brhp,brhn->bhpn", gamma[:, None, :, None] * value_now, b_rot)
         previous = jnp.einsum("brhp,brhn->bhpn", beta[:, None, :, None] * value_prev, state.previous_k)
         ssm = alpha[:, :, None, None] * state.ssm + injection + previous
         y_rank = jnp.einsum("bhpn,brhn->brhp", ssm, c_rot)
         y_rank += skip[None, None, :, None].astype(jnp.float32) * value_now
-        gated = y_rank * jax.nn.silu(z_t[:, None].astype(jnp.float32) * mimo_z[None].astype(jnp.float32))
-        y = jnp.sum(gated * mimo_out[None].astype(jnp.float32), axis=1)
+        gated = y_rank * jax.nn.silu(
+            z_t[:, None].astype(jnp.float32) * mimo_z_rank_first[None]
+        )
+        y = jnp.sum(gated * mimo_o_rank_first[None], axis=1)
         next_state = ScanState(ssm, b_rot, x_t.astype(jnp.float32), new_angle)
         return next_state, y.astype(x_t.dtype)
 
@@ -160,19 +170,60 @@ class Mamba3MIMO(nn.Module):
         c = c + jnp.transpose(c_bias, (1, 0, 2))[None, None]
 
         log_dt_min, log_dt_max = math.log(cfg.dt_min), math.log(cfg.dt_max)
-        dt_init = nn.initializers.uniform(scale=log_dt_max - log_dt_min)
-        dt_logit = self.param("dt_logit", dt_init, (heads,), self.param_dtype).astype(jnp.float32) + log_dt_min
-        initial_dt = jnp.exp(dt_logit)
-        dt_bias = initial_dt + jnp.log(-jnp.expm1(-initial_dt))
+
+        def dt_bias_init(key, shape, dtype):
+            log_dt = jax.random.uniform(
+                key,
+                shape,
+                dtype=jnp.float32,
+                minval=log_dt_min,
+                maxval=log_dt_max,
+            )
+            initial_dt = jnp.maximum(jnp.exp(log_dt), cfg.dt_init_floor)
+            inverse_softplus = initial_dt + jnp.log(-jnp.expm1(-initial_dt))
+            return inverse_softplus.astype(dtype)
+
+        dt_bias = self.param(
+            "dt_bias", dt_bias_init, (heads,), self.param_dtype
+        ).astype(jnp.float32)
         dt = jax.nn.softplus(raw_dt.astype(jnp.float32) + dt_bias)
         decay = -heavy_tail_activation(raw_a)
         decay = jnp.minimum(decay, -cfg.a_floor)
 
-        mimo_x = self.param("mimo_x", lambda *_: jnp.full((rank, heads, cfg.head_dim), 1 / rank, self.param_dtype))
-        mimo_z = self.param("mimo_z", nn.initializers.ones, (rank, heads, cfg.head_dim), self.param_dtype)
-        mimo_out = self.param("mimo_out", lambda *_: jnp.full((rank, heads, cfg.head_dim), 1 / rank, self.param_dtype))
+        mimo_x = self.param(
+            "mimo_x",
+            lambda *_: jnp.full(
+                (heads, rank, cfg.head_dim), 1 / rank, self.param_dtype
+            ),
+        )
+        mimo_z = self.param(
+            "mimo_z",
+            nn.initializers.ones,
+            (heads, rank, cfg.head_dim),
+            self.param_dtype,
+        )
+        mimo_o = self.param(
+            "mimo_o",
+            lambda *_: jnp.full(
+                (heads, rank, cfg.head_dim), 1 / rank, self.param_dtype
+            ),
+        )
         skip = self.param("D", nn.initializers.ones, (heads,), self.param_dtype)
-        y = mamba3_reference_scan(x, z, b, c, dt, decay, trap, angle, mimo_x, mimo_z, mimo_out, skip, rotary_pairs)
+        y = mamba3_reference_scan(
+            x,
+            z,
+            b,
+            c,
+            dt,
+            decay,
+            trap,
+            angle,
+            mimo_x,
+            mimo_z,
+            mimo_o,
+            skip,
+            rotary_pairs,
+        )
         return nn.Dense(
             self.hidden_size,
             use_bias=False,
