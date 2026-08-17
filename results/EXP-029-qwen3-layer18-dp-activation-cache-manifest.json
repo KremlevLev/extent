@@ -1,0 +1,95 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+  "method": "streamed_Qwen3_residual_and_attention_activation_cache",
+  "target_layer": 18,
+  "sequence_length": 32,
+  "window_layout": {
+    "calibration": [
+      0,
+      8
+    ],
+    "training": [
+      8,
+      88
+    ],
+    "evaluation": [
+      88,
+      92
+    ],
+    "total_windows": 92
+  },
+  "compute_dtype": "float32",
+  "dtype_reason": "pre-Ampere GPU detected (Tesla T4)",
+  "storage_dtype": "float32",
+  "microbatch_windows": 4,
+  "data_parallel": true,
+  "per_device_windows": 2,
+  "jax_backend": "gpu",
+  "visible_devices": [
+    "cuda:0",
+    "cuda:1"
+  ],
+  "execution": "data-parallel pmap across 2 devices",
+  "prune_consumed_shards": true,
+  "removed_checkpoint_shards": [
+    "model-00001-of-00008.safetensors",
+    "model-00002-of-00008.safetensors",
+    "model-00003-of-00008.safetensors",
+    "model-00004-of-00008.safetensors"
+  ],
+  "artifacts": {
+    "token_ids": {
+      "path": "/kaggle/working/output/qwen3-layer18-activation-cache-token-ids.npy",
+      "shape": [
+        92,
+        32
+      ],
+      "dtype": "int32",
+      "bytes": 11904,
+      "sha256": "7719d3289d9d1add3466a780d08e07db4411b8d90da3b975049c59fd8f61ca84"
+    },
+    "residual_input": {
+      "path": "/kaggle/working/output/qwen3-layer18-activation-cache-residual-input.npy",
+      "shape": [
+        92,
+        32,
+        5120
+      ],
+      "dtype": "float32",
+      "bytes": 60293248,
+      "sha256": "a4c86ad90336b63fda98895064aea9ad7563c905273576459074f2f606eda6b0"
+    },
+    "normalized_input": {
+      "path": "/kaggle/working/output/qwen3-layer18-activation-cache-normalized-input.npy",
+      "shape": [
+        92,
+        32,
+        5120
+      ],
+      "dtype": "float32",
+      "bytes": 60293248,
+      "sha256": "fe78457a60d6bd7433bcaa76bd2ef051b73a98c7b049ade23f7debb92a2ab5ae"
+    },
+    "attention_target": {
+      "path": "/kaggle/working/output/qwen3-layer18-activation-cache-attention-target.npy",
+      "shape": [
+        92,
+        32,
+        5120
+      ],
+      "dtype": "float32",
+      "bytes": 60293248,
+      "sha256": "592de07d2f1b94407e0e4283383bb7f13f8001857f17187a94b4dedea3dd5bd4"
+    }
+  },
+  "passed": true,
+  "notes": [
+    "Each window is an independent causal sequence whose positions restart at zero.",
+    "Residual input is the exact frozen-teacher input before target_layer.",
+    "Normalized input and attention target are sufficient for mixer-only distillation.",
+    "This script performs teacher inference and caching only; it does not train a model."
+  ]
+}
+
+

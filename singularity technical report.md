@@ -663,6 +663,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** the two-device propagation path is accepted for the next layer-18 cache run. TPU-v5e-8 pmap remains a separate topology smoke if that accelerator is chosen instead.
 - **Raw artifact:** `results/EXP-028-qwen3-layer0-dp-activation-cache-manifest.json`.
 
+### EXP-029 — True residual-stream activation cache at layer 18
+
+- **Implementation basis:** `feat: add streaming Qwen3 activation cache` plus `feat: add data-parallel Qwen3 activation caching`.
+- **Status:** completed on Kaggle 2xT4; cached layer-18 distillation pending.
+- **Execution (MEASURED):** frozen Qwen3 layers 0 through 17 are propagated in FP32 using data-parallel `pmap` across two GPUs with two windows/device. Target layer is 18; split is `8/80/4` independent windows of length 32.
+- **Artifact result (MEASURED):** `passed=true`; token IDs are `[92,32]`, while residual input, normalized input, and layer-18 attention target are each `[92,32,5120]` FP32 with independent SHA-256 digests.
+- **Disk result (MEASURED):** pruning is enabled and exactly checkpoint shards 1 through 4 of 8 are removed after their final required layer. No recursive deletion is used.
+- **Scientific meaning:** unlike the earlier layer-0 experiments, the mixer input now contains the true Qwen residual stream after 18 frozen decoder transformations. This makes the next random-versus-QKVO comparison a valid middle-layer transplant ablation.
+- **Boundary:** this is still a 2,944-token, windowed activation dataset and not a full-model or long-context recovery result.
+- **Raw artifact:** `results/EXP-029-qwen3-layer18-dp-activation-cache-manifest.json`.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
