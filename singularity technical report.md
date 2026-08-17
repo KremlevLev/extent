@@ -685,6 +685,18 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** do not select either initializer for full recovery yet. Run a longer layer-18 budget with fixed untouched evaluation data to determine whether QKVO crosses random or merely converges to a worse asymptote. Both current endpoints (`0.766/0.789` L2) remain far from recovered attention behavior.
 - **Raw artifact:** `results/EXP-030-qwen3-mamba3-cached-distill-sweep-layer18.json`.
 
+### EXP-031 — Extended layer-18 delayed-transfer test
+
+- **Status:** completed on Kaggle TPU/BF16 with an independently produced FP32 activation cache.
+- **Protocol:** true layer-18 residual inputs; 160 unique training windows (5,120 tokens) plus disjoint `8` calibration and `4` evaluation windows; checkpoints 0/20/80/160; paired seeds `123/456/789`; identical Lion schedule per variant.
+- **Random recurrence (MEASURED):** mean held-out relative L2 `1.001585`, `0.947928`, `0.844232`, and `0.812722` at steps 0/20/80/160. Step-160 cosine is `0.595412 +/- 0.011582`; relative-L2 reduction is 18.82%.
+- **Prior QKVO port (MEASURED):** mean held-out relative L2 `1.104935`, `1.050423`, `0.930425`, and `0.885929`. Step-160 cosine is `0.541207 +/- 0.025396`; relative-L2 reduction is 19.75%.
+- **Paired ranking (MEASURED):** random wins 3/3 seeds at every checkpoint. Mean random-minus-QKVO L2 contracts monotonically from `-0.103351` at step 0 to `-0.073207` at step 160, but no crossover occurs.
+- **Interpretation:** QKVO shows a small relative convergence-rate advantage only because it starts from a materially worse representation. At the fixed 5,120-token budget it remains worse in absolute L2, cosine, and variance. The delayed-transfer hypothesis is not supported strongly enough to justify the direct full-strength port as a compute-efficient initializer.
+- **Cross-experiment boundary:** absolute metrics cannot be directly compared with EXP-030 because this run changes the held-out prefix, maximum-step learning-rate schedule, teacher compute path, and token budget. The paired within-run conclusion is valid.
+- **Decision:** close `INIT-C-prior-qkvo-port` as the proposed initializer while retaining it as a negative baseline. The next initializer study must reduce transplantation shock, for example by variance matching and controlled interpolation with the canonical random base, and must beat random under the same cache/budget protocol.
+- **Raw artifact:** `results/EXP-031-qwen3-mamba3-cached-distill-sweep-layer18-160step.json`.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
