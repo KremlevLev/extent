@@ -1,0 +1,567 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+  "method": "frozen_Mamba3_feature_calibrated_readout_probe",
+  "layer_index": 0,
+  "calibration_tokens": 256,
+  "selection_tokens": 64,
+  "evaluation_tokens": 128,
+  "ridge_values": [
+    0.01,
+    0.001,
+    0.0001
+  ],
+  "seed": 123,
+  "compute_dtype": "float32",
+  "jax_backend": "gpu",
+  "variants": {
+    "INIT-A-random": {
+      "mapping": {
+        "variant": "INIT-A-random",
+        "description": "Canonical random Mamba-3 initialization.",
+        "copied_in_projection_columns": 0,
+        "total_in_projection_columns": 8388,
+        "copied_output_projection": false,
+        "mimo_channel_rule": "random",
+        "prior_reference_commit": null
+      },
+      "original_heldout": {
+        "max_abs": 4.979984899749979,
+        "mean_abs": 0.03833988412121588,
+        "rmse": 0.0918442490422703,
+        "relative_l2": 1.0005780118586378,
+        "cosine_similarity": -0.005048979222889395
+      },
+      "calibration": {
+        "selection": [
+          {
+            "relative_ridge": 0.01,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.01,
+              "absolute_ridge": 0.00011644087499007583,
+              "calibration_relative_l2": 0.06755324453115463
+            },
+            "validation": {
+              "max_abs": 2.977940246462822,
+              "mean_abs": 0.03390059723866616,
+              "rmse": 0.050456526175091776,
+              "relative_l2": 0.5658289268129776,
+              "cosine_similarity": 0.8278060565713375
+            }
+          },
+          {
+            "relative_ridge": 0.001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.001,
+              "absolute_ridge": 1.1644087862805463e-05,
+              "calibration_relative_l2": 0.017879469320178032
+            },
+            "validation": {
+              "max_abs": 4.052425146102905,
+              "mean_abs": 0.03751878145216088,
+              "rmse": 0.05991718019751335,
+              "relative_l2": 0.6719224714593048,
+              "cosine_similarity": 0.7605016014032129
+            }
+          },
+          {
+            "relative_ridge": 0.0001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.0001,
+              "absolute_ridge": 1.1644087862805463e-06,
+              "calibration_relative_l2": 0.0022175235208123922
+            },
+            "validation": {
+              "max_abs": 4.566614985466003,
+              "mean_abs": 0.03896709499388617,
+              "rmse": 0.06429873089749988,
+              "relative_l2": 0.7210580009594294,
+              "cosine_similarity": 0.729183973738697
+            }
+          }
+        ],
+        "selected_relative_ridge": 0.01,
+        "final_fit": {
+          "samples": 256,
+          "feature_width": 3840,
+          "target_width": 5120,
+          "relative_ridge": 0.01,
+          "absolute_ridge": 0.00012943353794980794,
+          "calibration_relative_l2": 0.06332284212112427
+        }
+      },
+      "calibrated_heldout": {
+        "max_abs": 3.1009694635868073,
+        "mean_abs": 0.030729728244560467,
+        "rmse": 0.04548796547994047,
+        "relative_l2": 0.49555915082354096,
+        "cosine_similarity": 0.8768584145239764
+      },
+      "finite": true
+    },
+    "INIT-B-output-only": {
+      "mapping": {
+        "variant": "INIT-B-output-only",
+        "description": "Only the Qwen attention output projection is resized and copied.",
+        "copied_in_projection_columns": 0,
+        "total_in_projection_columns": 8388,
+        "copied_output_projection": true,
+        "mimo_channel_rule": "random",
+        "prior_reference_commit": null
+      },
+      "original_heldout": {
+        "max_abs": 4.968179374933243,
+        "mean_abs": 0.03835084407992303,
+        "rmse": 0.09182106429983646,
+        "relative_l2": 1.0003254305186862,
+        "cosine_similarity": 0.005644900549421411
+      },
+      "calibration": {
+        "selection": [
+          {
+            "relative_ridge": 0.01,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.01,
+              "absolute_ridge": 0.00011644087499007583,
+              "calibration_relative_l2": 0.06755324453115463
+            },
+            "validation": {
+              "max_abs": 2.977940246462822,
+              "mean_abs": 0.03390059723866616,
+              "rmse": 0.050456526175091776,
+              "relative_l2": 0.5658289268129776,
+              "cosine_similarity": 0.8278060565713375
+            }
+          },
+          {
+            "relative_ridge": 0.001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.001,
+              "absolute_ridge": 1.1644087862805463e-05,
+              "calibration_relative_l2": 0.017879469320178032
+            },
+            "validation": {
+              "max_abs": 4.052425146102905,
+              "mean_abs": 0.03751878145216088,
+              "rmse": 0.05991718019751335,
+              "relative_l2": 0.6719224714593048,
+              "cosine_similarity": 0.7605016014032129
+            }
+          },
+          {
+            "relative_ridge": 0.0001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.0001,
+              "absolute_ridge": 1.1644087862805463e-06,
+              "calibration_relative_l2": 0.0022175235208123922
+            },
+            "validation": {
+              "max_abs": 4.566614985466003,
+              "mean_abs": 0.03896709499388617,
+              "rmse": 0.06429873089749988,
+              "relative_l2": 0.7210580009594294,
+              "cosine_similarity": 0.729183973738697
+            }
+          }
+        ],
+        "selected_relative_ridge": 0.01,
+        "final_fit": {
+          "samples": 256,
+          "feature_width": 3840,
+          "target_width": 5120,
+          "relative_ridge": 0.01,
+          "absolute_ridge": 0.00012943353794980794,
+          "calibration_relative_l2": 0.06332284212112427
+        }
+      },
+      "calibrated_heldout": {
+        "max_abs": 3.1009694635868073,
+        "mean_abs": 0.030729728244560467,
+        "rmse": 0.04548796547994047,
+        "relative_l2": 0.49555915082354096,
+        "cosine_similarity": 0.8768584145239764
+      },
+      "finite": true
+    },
+    "INIT-C-prior-qkvo-port": {
+      "mapping": {
+        "variant": "INIT-C-prior-qkvo-port",
+        "description": "Mamba-in-the-Llama-style V->x, K->B, Q->C, O->out port adapted to mismatched widths.",
+        "copied_in_projection_columns": 4352,
+        "total_in_projection_columns": 8388,
+        "copied_output_projection": true,
+        "mimo_channel_rule": "flat resize",
+        "prior_reference_commit": "b03f123152eeba5f2ae9d8694f4a001147e0a14c"
+      },
+      "original_heldout": {
+        "max_abs": 4.990473901852965,
+        "mean_abs": 0.03847297175183434,
+        "rmse": 0.09188979384838407,
+        "relative_l2": 1.0010741902478895,
+        "cosine_similarity": 0.004316280802046388
+      },
+      "calibration": {
+        "selection": [
+          {
+            "relative_ridge": 0.01,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.01,
+              "absolute_ridge": 0.0002906197914853692,
+              "calibration_relative_l2": 0.0768202468752861
+            },
+            "validation": {
+              "max_abs": 4.11049222946167,
+              "mean_abs": 0.03848785601777058,
+              "rmse": 0.06235443065676132,
+              "relative_l2": 0.6992542542091743,
+              "cosine_similarity": 0.7295876965211067
+            }
+          },
+          {
+            "relative_ridge": 0.001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.001,
+              "absolute_ridge": 2.9061980967526324e-05,
+              "calibration_relative_l2": 0.019799616187810898
+            },
+            "validation": {
+              "max_abs": 5.318095445632935,
+              "mean_abs": 0.042950916687233213,
+              "rmse": 0.07407553807115091,
+              "relative_l2": 0.8306969462076118,
+              "cosine_similarity": 0.6294962709850452
+            }
+          },
+          {
+            "relative_ridge": 0.0001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.0001,
+              "absolute_ridge": 2.906197778429487e-06,
+              "calibration_relative_l2": 0.002442778553813696
+            },
+            "validation": {
+              "max_abs": 6.052834510803223,
+              "mean_abs": 0.0446488752669236,
+              "rmse": 0.07957375745906309,
+              "relative_l2": 0.8923550073442194,
+              "cosine_similarity": 0.585482505810672
+            }
+          }
+        ],
+        "selected_relative_ridge": 0.01,
+        "final_fit": {
+          "samples": 256,
+          "feature_width": 3840,
+          "target_width": 5120,
+          "relative_ridge": 0.01,
+          "absolute_ridge": 0.00032172651845030487,
+          "calibration_relative_l2": 0.07385307550430298
+        }
+      },
+      "calibrated_heldout": {
+        "max_abs": 4.964160442352295,
+        "mean_abs": 0.034741092609059124,
+        "rmse": 0.05364513955165464,
+        "relative_l2": 0.5844257821060742,
+        "cosine_similarity": 0.8389066344236085
+      },
+      "finite": true
+    },
+    "INIT-D-siso-copied": {
+      "mapping": {
+        "variant": "INIT-D-siso-copied",
+        "description": "Head-pooled K/Q state projections copied identically into every MIMO channel.",
+        "copied_in_projection_columns": 4352,
+        "total_in_projection_columns": 8388,
+        "copied_output_projection": true,
+        "mimo_channel_rule": "one pooled channel copied across rank",
+        "prior_reference_commit": null
+      },
+      "original_heldout": {
+        "max_abs": 5.007141228765249,
+        "mean_abs": 0.03958186639398168,
+        "rmse": 0.0924930499851195,
+        "relative_l2": 1.0076462383862377,
+        "cosine_similarity": 0.005292263961406557
+      },
+      "calibration": {
+        "selection": [
+          {
+            "relative_ridge": 0.01,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.01,
+              "absolute_ridge": 0.0017426415579393506,
+              "calibration_relative_l2": 0.0838264748454094
+            },
+            "validation": {
+              "max_abs": 4.210419297218323,
+              "mean_abs": 0.038313342761458605,
+              "rmse": 0.06200052648571724,
+              "relative_l2": 0.6952855066065031,
+              "cosine_similarity": 0.7330367968513485
+            }
+          },
+          {
+            "relative_ridge": 0.001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.001,
+              "absolute_ridge": 0.00017426417616661638,
+              "calibration_relative_l2": 0.027829881757497787
+            },
+            "validation": {
+              "max_abs": 5.853609800338745,
+              "mean_abs": 0.044036212240505565,
+              "rmse": 0.07784963708768777,
+              "relative_l2": 0.8730203988528152,
+              "cosine_similarity": 0.6025129218994704
+            }
+          },
+          {
+            "relative_ridge": 0.0001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.0001,
+              "absolute_ridge": 1.7426415070076473e-05,
+              "calibration_relative_l2": 0.003862653160467744
+            },
+            "validation": {
+              "max_abs": 7.74486780166626,
+              "mean_abs": 0.047467133575285377,
+              "rmse": 0.08966465601373039,
+              "relative_l2": 1.0055162321172535,
+              "cosine_similarity": 0.5174863769729292
+            }
+          }
+        ],
+        "selected_relative_ridge": 0.01,
+        "final_fit": {
+          "samples": 256,
+          "feature_width": 3840,
+          "target_width": 5120,
+          "relative_ridge": 0.01,
+          "absolute_ridge": 0.0019705549348145723,
+          "calibration_relative_l2": 0.07959596812725067
+        }
+      },
+      "calibrated_heldout": {
+        "max_abs": 5.2354501485824585,
+        "mean_abs": 0.03476560081845892,
+        "rmse": 0.05388541416807664,
+        "relative_l2": 0.5870434037917712,
+        "cosine_similarity": 0.8393394685555635
+      },
+      "finite": true
+    },
+    "INIT-E-mimo-aware": {
+      "mapping": {
+        "variant": "INIT-E-mimo-aware",
+        "description": "Disjoint Q/K head groups initialize distinct MIMO state channels.",
+        "copied_in_projection_columns": 4352,
+        "total_in_projection_columns": 8388,
+        "copied_output_projection": true,
+        "mimo_channel_rule": "disjoint source-head groups",
+        "prior_reference_commit": null
+      },
+      "original_heldout": {
+        "max_abs": 4.993627432733774,
+        "mean_abs": 0.038645700685975726,
+        "rmse": 0.09197594207022548,
+        "relative_l2": 1.002012714079638,
+        "cosine_similarity": 0.005667835019011677
+      },
+      "calibration": {
+        "selection": [
+          {
+            "relative_ridge": 0.01,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.01,
+              "absolute_ridge": 0.0005103488801978528,
+              "calibration_relative_l2": 0.08238185942173004
+            },
+            "validation": {
+              "max_abs": 4.320622682571411,
+              "mean_abs": 0.038468480973938526,
+              "rmse": 0.062231596372636006,
+              "relative_l2": 0.6978767675601476,
+              "cosine_similarity": 0.7311588285142193
+            }
+          },
+          {
+            "relative_ridge": 0.001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.001,
+              "absolute_ridge": 5.103489093016833e-05,
+              "calibration_relative_l2": 0.026560703292489052
+            },
+            "validation": {
+              "max_abs": 6.096285581588745,
+              "mean_abs": 0.044086301079200446,
+              "rmse": 0.07796223322416498,
+              "relative_l2": 0.8742830729981796,
+              "cosine_similarity": 0.6009171194955781
+            }
+          },
+          {
+            "relative_ridge": 0.0001,
+            "fit": {
+              "samples": 192,
+              "feature_width": 3840,
+              "target_width": 5120,
+              "relative_ridge": 0.0001,
+              "absolute_ridge": 5.103489002067363e-06,
+              "calibration_relative_l2": 0.003624901408329606
+            },
+            "validation": {
+              "max_abs": 7.531253337860107,
+              "mean_abs": 0.047256754042764255,
+              "rmse": 0.08892235831718216,
+              "relative_l2": 0.9971919668367598,
+              "cosine_similarity": 0.5212355906493867
+            }
+          }
+        ],
+        "selected_relative_ridge": 0.01,
+        "final_fit": {
+          "samples": 256,
+          "feature_width": 3840,
+          "target_width": 5120,
+          "relative_ridge": 0.01,
+          "absolute_ridge": 0.0005785970715805888,
+          "calibration_relative_l2": 0.07851261645555496
+        }
+      },
+      "calibrated_heldout": {
+        "max_abs": 5.169561982154846,
+        "mean_abs": 0.03457549027255637,
+        "rmse": 0.05353307623616762,
+        "relative_l2": 0.5832049316926675,
+        "cosine_similarity": 0.840403511519151
+      },
+      "finite": true
+    }
+  },
+  "raw_normalized_hidden_control": {
+    "calibration": {
+      "selection": [
+        {
+          "relative_ridge": 0.01,
+          "fit": {
+            "samples": 192,
+            "feature_width": 5120,
+            "target_width": 5120,
+            "relative_ridge": 0.01,
+            "absolute_ridge": 0.006910938303917646,
+            "calibration_relative_l2": 0.16562588512897491
+          },
+          "validation": {
+            "max_abs": 1.2342619895935059,
+            "mean_abs": 0.028653191368047955,
+            "rmse": 0.040960560305105746,
+            "relative_l2": 0.4593393884999075,
+            "cosine_similarity": 0.8893682905059846
+          }
+        },
+        {
+          "relative_ridge": 0.001,
+          "fit": {
+            "samples": 192,
+            "feature_width": 5120,
+            "target_width": 5120,
+            "relative_ridge": 0.001,
+            "absolute_ridge": 0.0006910939118824899,
+            "calibration_relative_l2": 0.16558125615119934
+          },
+          "validation": {
+            "max_abs": 1.2315773963928223,
+            "mean_abs": 0.028669335479258116,
+            "rmse": 0.04096282436731202,
+            "relative_l2": 0.4593647781171786,
+            "cosine_similarity": 0.88930389424316
+          }
+        },
+        {
+          "relative_ridge": 0.0001,
+          "fit": {
+            "samples": 192,
+            "feature_width": 5120,
+            "target_width": 5120,
+            "relative_ridge": 0.0001,
+            "absolute_ridge": 6.910938100190833e-05,
+            "calibration_relative_l2": 0.1655818074941635
+          },
+          "validation": {
+            "max_abs": 1.2313287258148193,
+            "mean_abs": 0.028671171066305318,
+            "rmse": 0.0409632892637265,
+            "relative_l2": 0.4593699915525698,
+            "cosine_similarity": 0.8892969005850051
+          }
+        }
+      ],
+      "selected_relative_ridge": 0.01,
+      "final_fit": {
+        "samples": 256,
+        "feature_width": 5120,
+        "target_width": 5120,
+        "relative_ridge": 0.01,
+        "absolute_ridge": 0.006992735899984837,
+        "calibration_relative_l2": 0.16707688570022583
+      }
+    },
+    "heldout": {
+      "max_abs": 0.9997090101242065,
+      "mean_abs": 0.025266115772942587,
+      "rmse": 0.03570642739376884,
+      "relative_l2": 0.3889962246388355,
+      "cosine_similarity": 0.9217518009015698
+    }
+  },
+  "passed": true,
+  "notes": [
+    "Ridge is selected on a suffix inside calibration, never on held-out evaluation.",
+    "The selected ridge is refit on the complete calibration prefix.",
+    "Only the linear readout is fitted; every Mamba recurrent parameter is frozen."
+  ]
+}
+

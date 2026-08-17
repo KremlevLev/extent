@@ -528,7 +528,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-022 — Frozen-feature calibrated Mamba-3 readout
 
 - **Implementation commit title:** `feat: add Mamba-3 calibrated readout probe`
-- **Status:** implementation and local tests complete; Kaggle measurement pending.
+- **Status:** completed on the real Qwen3 layer-0 checkpoint on Kaggle GPU; frozen features are readout-recoverable, but the proposed static transplants underperform random Mamba features and the raw-hidden control.
 - **Question:** do frozen Mamba-3 recurrent features contain teacher-aligned information that the copied Qwen output projection simply cannot decode, or is the information absent before the readout?
 - **Protocol:** process one contiguous real-text prefix, fit only an uncentered linear readout on the first 256 tokens, and evaluate on the next disjoint 128 tokens. Every recurrent parameter remains frozen.
 - **Regularization selection:** for each feature variant, fit candidate relative ridge values `1e-2/1e-3/1e-4` on the first 192 calibration tokens, select using the following 64 calibration tokens, then refit on all 256. The final 128 evaluation tokens never influence selection.
@@ -537,6 +537,15 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision rule:** a material held-out improvement shows that readout alignment, not merely recurrence construction, is a bottleneck. Failure despite near-zero calibration error indicates feature overfit/no transferable signal and motivates short layerwise distillation rather than more static Q/K/V slicing.
 - **Regression suite (MEASURED):** 39 tests passed in 67.24 s. A synthetic linear system is recovered on held-out data, and existing Mamba parity/transplant/full-model tests remain green.
 - **Boundary:** 256 calibration tokens intentionally test few-shot recoverability; they are not a proposed final calibration budget. Ridge readout is a diagnostic and not yet the recovery-training method.
+- **Regularization result (MEASURED):** every Mamba variant selected relative ridge `1e-2` on the internal validation split. Lower ridge values drove calibration error toward zero while degrading validation, confirming substantial overfit pressure and validating the nested selection protocol.
+- **INIT-A/B result (MEASURED):** the two variants have identical recurrent features and therefore identical calibrated output: held-out relative L2 `0.495559`, cosine `0.876858`, versus original relative L2 approximately `1.0006/1.0003` and cosine approximately `-0.0050/0.0056`.
+- **INIT-C result (MEASURED):** calibrated held-out relative L2 `0.584426`, cosine `0.838907`.
+- **INIT-D result (MEASURED):** calibrated held-out relative L2 `0.587043`, cosine `0.839339`.
+- **INIT-E result (MEASURED):** calibrated held-out relative L2 `0.583205`, cosine `0.840404`.
+- **Raw-hidden control (MEASURED):** held-out relative L2 `0.388996`, cosine `0.921752`, outperforming every frozen Mamba representation.
+- **Interpretation:** a learned readout recovers substantial held-out teacher alignment from random Mamba features, proving that the copied output projection was a major failure point in EXP-021. However, every Q/K/V transplant degrades recoverability relative to random features, so INIT-C/D/E are rejected in their current form. The stronger raw-hidden control means this experiment alone does not prove that the recurrence captures useful contextual information; much of layer-0 attention output is linearly predictable from the current token representation.
+- **Decision:** before layerwise distillation, test incremental contextual value by fitting a raw-hidden baseline and then fitting frozen Mamba features only to its residual on disjoint tokens. Mamba is useful only if the combined held-out prediction beats the raw-hidden control. This prevents mistaking a random-feature readout for successful attention transplantation.
+- **Raw artifact:** `results/EXP-022-qwen3-mamba3-readout-probe-layer0.json`.
 
 ## 7. Development milestones
 
@@ -547,11 +556,12 @@ Thresholds will be frozen before final experiments after pilot variance is known
 5. **Completed for the frozen reference direction:** establish fold-1 RoRoPE + BKV rank-448 conversion diagnostics and a cache-producing Flax mapping; optimized decode remains pending.
 6. **Completed for the mathematical reference path:** establish cross-framework Mamba-3 MIMO recurrence parity and align the module parameter contract with the official implementation.
 7. **Completed:** implement controlled attention-to-Mamba-3 transplant variants and establish that direct Q/K/V/O reuse alone does not preserve layer-0 mixer alignment.
-8. **Current:** diagnose frozen Mamba-3 feature recoverability with a disjoint calibrated-readout probe before adding more transplant mechanisms.
-9. Compile the first guarded full-model short-sequence forward/backward.
-10. Recovery training, fixed evaluation checkpoints, and failure logging.
-11. Optimized inference kernel and matched end-to-end benchmarks.
-12. Only after base recovery: separate reasoning SFT study using legally and scientifically documented data.
+8. **Completed:** show that frozen random Mamba features are readout-recoverable, while current Q/K/V transplants hurt and raw hidden states remain the strongest linear control.
+9. **Current:** measure incremental contextual value with a residualized raw-hidden-plus-Mamba feature probe; proceed to short layerwise distillation only if recurrence features add held-out signal.
+10. Compile the first guarded full-model short-sequence forward/backward.
+11. Recovery training, fixed evaluation checkpoints, and failure logging.
+12. Optimized inference kernel and matched end-to-end benchmarks.
+13. Only after base recovery: separate reasoning SFT study using legally and scientifically documented data.
 
 ## 8. Reasoning SFT boundary
 
