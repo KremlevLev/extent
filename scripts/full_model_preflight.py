@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import argparse
+import json
+from pathlib import Path
 
 import jax
 import numpy as np
@@ -8,13 +10,24 @@ import numpy as np
 from singularity import HybridForCausalLM
 from singularity.config import load_config
 from singularity.initialization import (
+    ShardedParameters,
     abstract_parameter_tree,
     initialize_sharded_optimizer_state,
     initialize_sharded_parameters,
 )
 from singularity.optimizer import create_lion
 from singularity.preflight import allocated_bytes_by_device, build_preflight_report
+from singularity.qwen_source import (
+    QWEN2_5_14B_BASE,
+    validate_source_marker,
+    validate_source_metadata,
+)
 from singularity.sharding import batch_sharding, create_v5e_mesh
+from singularity.weight_mapping import (
+    QwenCheckpointReader,
+    stream_direct_qwen_weights,
+    validate_local_direct_shapes,
+)
 
 
 def _gib(value: int) -> float:
@@ -32,6 +45,10 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument("--init-sequence-length", type=int, default=1)
     parser.add_argument("--hbm-per-device-gib", type=float, default=16.0)
+    parser.add_argument(
+        "--qwen-model-dir",
+        help="Import pinned Qwen embeddings/MLPs/norms/head after sharded initialization.",
+    )
     args = parser.parse_args(argv)
 
     config, extras = load_config(args.config)
@@ -62,7 +79,7 @@ def main(argv: list[str] | None = None) -> None:
     else:
         print("verdict=PREFLIGHT-PASS: persistent state fits; a real HBM check is still required")
 
-    if not (args.initialize_params or args.initialize_optimizer):
+    if not (args.initialize_params or args.initialize_optimizer or args.qwen_model_dir):
         print("mode=shape-only; no full model arrays were allocated")
         return
 
@@ -84,6 +101,36 @@ def main(argv: list[str] | None = None) -> None:
     for device, size in sorted(allocated.items()):
         print(f"  {device}: {_gib(size):.3f} GiB")
     print("initialization=PASS (parameters only; optimizer and train step were not created)")
+
+    if args.qwen_model_dir:
+        qwen_dir = Path(args.qwen_model_dir)
+        validate_source_marker(qwen_dir, QWEN2_5_14B_BASE)
+        source_config = json.loads((qwen_dir / "config.json").read_text(encoding="utf-8"))
+        source_index = json.loads(
+            (qwen_dir / "model.safetensors.index.json").read_text(encoding="utf-8")
+        )
+        validate_source_metadata(source_config, source_index, QWEN2_5_14B_BASE)
+        reader = QwenCheckpointReader(qwen_dir)
+        validate_local_direct_shapes(reader, config)
+        print("streaming direct Qwen tensors into their final device shards...")
+        def report_import_progress(index, total, entry):
+            if index == 1 or index % 16 == 0 or index == total:
+                print(f"  imported={index}/{total} latest={entry.source}")
+
+        loaded_params, mapping_report = stream_direct_qwen_weights(
+            initialized.params,
+            reader,
+            config,
+            progress=report_import_progress,
+        )
+        jax.block_until_ready(loaded_params)
+        initialized = ShardedParameters(
+            loaded_params, initialized.layout, initialized.abstract_params
+        )
+        print(
+            f"qwen_direct_import=PASS tensors={mapping_report.tensor_count} "
+            f"parameters={mapping_report.parameter_count:,}"
+        )
 
     if not args.initialize_optimizer:
         return

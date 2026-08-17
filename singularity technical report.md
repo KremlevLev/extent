@@ -254,6 +254,19 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Result (DERIVED):** shape-only preflight passed.
 - **Status:** real parameter/Lion allocation for this final schedule remains to be measured on the next v5e-8 session.
 
+### EXP-006 — Pinned Qwen source and direct-map metadata audit
+
+- **Implementation commit title:** `feat: add pinned Qwen2.5 streaming checkpoint import`
+- **Source:** `Qwen/Qwen2.5-14B`
+- **Immutable revision:** `97e1e76335b7017d8f67c08a19d103c0504298c9`
+- **Mode:** metadata-only; no model shards downloaded
+- **Checkpoint index (MEASURED):** 579 tensors, 8 shards, 29,540,067,328 bytes (27.511 GiB).
+- **Direct mapping (DERIVED/VALIDATED):** 243 tensors containing 11,749,790,720 parameters.
+- **Share of final target parameters directly preserved (DERIVED):** 79.94%.
+- **Direct scope:** token embeddings, lm_head, final norm, all input/post-attention norms, and all gate/up/down MLP projections.
+- **Result (MEASURED):** pinned config/index validation and target-shape mapping validation passed.
+- **Excluded by design:** all GQA mixer tensors; MLA conversion and Mamba-3 transplant remain separately measurable experiments.
+
 ## 7. Development milestones
 
 1. **Completed:** validate full weights + Lion state on v5e-8.

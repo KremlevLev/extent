@@ -5,4 +5,5 @@ optax>=0.2.4
 numpy>=1.26
 PyYAML>=6
 safetensors>=0.4
+huggingface_hub>=0.24
 pytest>=8

@@ -162,6 +162,47 @@ This avoids claiming a drop-in MaxText model that cannot compile; the MLA names
 are kept compatible so its optimized kernel can replace the reference attention
 without another checkpoint conversion.
 
+## Pinned Qwen2.5-14B source
+
+The source model is pinned to `Qwen/Qwen2.5-14B` revision
+`97e1e76335b7017d8f67c08a19d103c0504298c9`. Validate its official config,
+safetensors index, and all 243 direct mappings without downloading weights:
+
+```python
+from scripts.qwen_checkpoint_preflight import main as qwen_preflight
+qwen_preflight([])
+```
+
+The direct map covers 11,749,790,720 parameters (79.94% of the final target):
+embeddings, output head, final norm, and every decoder MLP/norm. Attention
+projections are deliberately left
+for controlled MLA and Mamba-3 transplant experiments.
+
+Only on a machine with at least 35 GiB of free disk, download the eight pinned
+weight shards:
+
+```python
+from scripts.download_qwen_checkpoint import main as download_qwen
+download_qwen(["--output-dir", "/path/with/enough/space/qwen2.5-14b"])
+
+qwen_preflight(["--model-dir", "/path/with/enough/space/qwen2.5-14b"])
+```
+
+The loader reads one tensor at a time and constructs global JAX arrays directly
+in the target sharding. Do not create the Lion state before importing weights.
+On v5e-8, the guarded full initializer/import path is:
+
+```python
+from scripts.full_model_preflight import main as full_preflight
+full_preflight([
+    "--initialize-params",
+    "--qwen-model-dir", "/path/with/enough/space/qwen2.5-14b",
+])
+```
+
+This imports only the exactly preserved 11.75B parameters. It does not claim
+teacher parity yet and does not initialize MLA/Mamba-3 from GQA projections.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional

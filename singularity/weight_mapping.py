@@ -6,11 +6,16 @@ to be materialized twice in host RAM.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import json
 from pathlib import Path
+from typing import Any, Mapping
 
+import jax
 import numpy as np
+from flax import traverse_util
+from flax.core import FrozenDict, freeze
 
 from singularity.config import HybridConfig
 
@@ -20,6 +25,12 @@ class MappingEntry:
     source: str
     target: str
     transform: str = "transpose"
+
+
+@dataclass(frozen=True)
+class MappingValidationReport:
+    tensor_count: int
+    parameter_count: int
 
 
 def direct_qwen_mappings(config: HybridConfig) -> list[MappingEntry]:
@@ -87,6 +98,15 @@ class QwenCheckpointReader:
         with safe_open(str(self.model_dir / self.weight_map[name]), framework="np", device="cpu") as shard:
             return shard.get_tensor(name)
 
+    def shape(self, name: str) -> tuple[int, ...]:
+        """Read only a tensor's safetensors header/slice metadata."""
+        from safetensors import safe_open
+
+        if name not in self.weight_map:
+            raise KeyError(f"tensor not present in checkpoint: {name}")
+        with safe_open(str(self.model_dir / self.weight_map[name]), framework="np", device="cpu") as shard:
+            return tuple(shard.get_slice(name).get_shape())
+
     def qkvo(self, layer: int) -> dict[str, np.ndarray]:
         prefix = f"model.layers.{layer}.self_attn"
         return {name: self.read(f"{prefix}.{name}_proj.weight").T for name in ("q", "k", "v", "o")}
@@ -117,3 +137,111 @@ def mamba_transplant_in_projection(
     xz = fit_matrix(np.concatenate((v_kernel, q_kernel), axis=1), (target_shape[0], first))
     controllers = fit_matrix(np.concatenate((k_kernel, q_kernel, v_kernel), axis=1), (target_shape[0], width - first))
     return np.concatenate((xz, controllers), axis=1)
+
+
+def expected_qwen_shape(entry: MappingEntry, config: HybridConfig) -> tuple[int, ...]:
+    """Infer direct-source shapes from the pinned Qwen2 architecture."""
+    name = entry.source
+    if name == "model.embed_tokens.weight" or name == "lm_head.weight":
+        return (config.vocab_size, config.hidden_size)
+    if name == "model.norm.weight" or name.endswith("layernorm.weight"):
+        return (config.hidden_size,)
+    if name.endswith(("mlp.gate_proj.weight", "mlp.up_proj.weight")):
+        return (config.intermediate_size, config.hidden_size)
+    if name.endswith("mlp.down_proj.weight"):
+        return (config.hidden_size, config.intermediate_size)
+    raise KeyError(f"no expected shape rule for {name}")
+
+
+def _transformed_shape(shape: tuple[int, ...], transform: str) -> tuple[int, ...]:
+    if transform == "identity":
+        return shape
+    if transform == "transpose" and len(shape) == 2:
+        return shape[::-1]
+    raise ValueError(f"unsupported transform {transform!r} for shape {shape}")
+
+
+def validate_direct_mapping_plan(
+    config: HybridConfig,
+    abstract_params: Mapping[str, Any],
+    weight_map: Mapping[str, str],
+) -> MappingValidationReport:
+    """Validate all preserved Qwen tensors using only the checkpoint index."""
+    flat_targets = traverse_util.flatten_dict(abstract_params)
+    parameter_count = 0
+    entries = direct_qwen_mappings(config)
+    for entry in entries:
+        if entry.source not in weight_map:
+            raise KeyError(f"source tensor missing from index: {entry.source}")
+        target_path = tuple(entry.target.split("/"))
+        if target_path not in flat_targets:
+            raise KeyError(f"target tensor missing from hybrid model: {entry.target}")
+        source_shape = expected_qwen_shape(entry, config)
+        expected_target = _transformed_shape(source_shape, entry.transform)
+        actual_target = tuple(flat_targets[target_path].shape)
+        if actual_target != expected_target:
+            raise ValueError(
+                f"shape mismatch for {entry.source} -> {entry.target}: "
+                f"expected {expected_target}, target is {actual_target}"
+            )
+        parameter_count += int(np.prod(actual_target))
+    return MappingValidationReport(len(entries), parameter_count)
+
+
+def stream_direct_qwen_weights(
+    params: Mapping[str, Any],
+    reader: QwenCheckpointReader,
+    config: HybridConfig,
+    *,
+    progress: Callable[[int, int, MappingEntry], None] | None = None,
+) -> tuple[Mapping[str, Any], MappingValidationReport]:
+    """Replace preserved tensors one at a time, retaining target device sharding."""
+    report = validate_direct_mapping_plan(config, params, reader.weight_map)
+    was_frozen = isinstance(params, FrozenDict)
+    flat = dict(traverse_util.flatten_dict(params))
+    entries = direct_qwen_mappings(config)
+    for index, entry in enumerate(entries, start=1):
+        target_path = tuple(entry.target.split("/"))
+        target = flat[target_path]
+        source = reader.read(entry.source)
+        actual_source_shape = tuple(source.shape)
+        expected_source_shape = expected_qwen_shape(entry, config)
+        if actual_source_shape != expected_source_shape:
+            raise ValueError(
+                f"checkpoint tensor {entry.source} has shape {actual_source_shape}; "
+                f"expected {expected_source_shape}"
+            )
+        value = source if entry.transform == "identity" else source.T
+        if tuple(value.shape) != tuple(target.shape):
+            raise ValueError(f"transformed {entry.source} does not fit {entry.target}")
+        if isinstance(target, jax.Array):
+            # Materialize each addressable shard from host memory directly. A
+            # temporary full tensor must never land on one accelerator first.
+            host_value = np.ascontiguousarray(value, dtype=np.dtype(target.dtype))
+            value = jax.make_array_from_callback(
+                target.shape,
+                target.sharding,
+                lambda index, host_value=host_value: host_value[index],
+            )
+        else:
+            value = np.asarray(value, dtype=target.dtype)
+        flat[target_path] = value
+        del source
+        if progress is not None:
+            progress(index, len(entries), entry)
+    result = traverse_util.unflatten_dict(flat)
+    return (freeze(result) if was_frozen else result), report
+
+
+def validate_local_direct_shapes(
+    reader: QwenCheckpointReader,
+    config: HybridConfig,
+) -> None:
+    """Check safetensors headers for every directly transferred tensor."""
+    for entry in direct_qwen_mappings(config):
+        actual = reader.shape(entry.source)
+        expected = expected_qwen_shape(entry, config)
+        if actual != expected:
+            raise ValueError(
+                f"checkpoint tensor {entry.source} has shape {actual}; expected {expected}"
+            )

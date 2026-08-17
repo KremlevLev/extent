@@ -5,6 +5,7 @@ optax
 numpy
 PyYAML
 safetensors
+huggingface_hub
 pytest
 tqdm
 wandb
