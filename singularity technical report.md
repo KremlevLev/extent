@@ -474,7 +474,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-019 — Deployable RoRoPE-BKV reference mapping
 
 - **Implementation commit title:** `feat: add deployable Qwen3 RoRoPE-BKV mapping`
-- **Status:** implementation and local invariant tests complete; real-checkpoint Kaggle GPU parity pending.
+- **Status:** completed on the real Qwen3 layer-0 checkpoint on Kaggle GPU; all implementation gates passed.
 - **Purpose:** turn the EXP-018 oracle-style activation probe into a normal Flax attention module with frozen Qwen projections, Q/K normalization, learned RoRoPE rotations, BKV scale, and rank-448 joint basis.
 - **Explicit cache contract:** `kv_latent [batch, tokens, 448]` plus `k_rope [batch, tokens, 128]`; total 576 elements/token/layer versus 2048 for Qwen3 GQA, a `71.875%` element-count reduction.
 - **Correctness invariant:** at full joint rank, the mapped module agrees with the independently implemented uncompressed RoRoPE path within `3e-4` absolute/relative tolerance and emits finite cache tensors of the declared shapes.
@@ -482,6 +482,11 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Numerical controls:** FP32 diagnostic execution, high matmul precision, explicit finite checks, and a pinned Qwen3/WikiText source.
 - **Boundary:** this is a deployable cache-producing correctness reference. It still computes the original K/V projections and reconstructs K/V before attention. Projection absorption, incremental decoding, and an optimized kernel are separate later experiments; this commit does not claim their speedup.
 - **Regression suite (MEASURED):** 35 tests passed in 55.49 s after adding the mapping and cache-shape invariant.
+- **Mapping result (MEASURED):** BKV ratio `32.170153`; calibration joint reconstruction relative L2 `0.256885`; source/target cache `2048/576` elements per token, or `71.875%` fewer elements.
+- **Mixer result (MEASURED):** all/tail relative L2 `0.237558/0.236841`; all/tail cosine `0.973784/0.974106`; all-token max absolute error `0.752632`.
+- **Runtime contract (MEASURED):** `kv_latent=[1,1024,448]`, `k_rope=[1,1024,128]`, finite arrays, exact cache shapes, and the `relative_l2 <= 0.30` / cosine `>= 0.95` engineering gates all passed under JAX `0.7.2` on GPU.
+- **Probe-to-module agreement:** deployable all-token relative L2 differs from EXP-018 by approximately `3.8e-8`, showing that the measured BKV behavior survived extraction into the normal module path rather than depending on probe-only arithmetic.
+- **Raw artifact:** `results/EXP-019-qwen3-deployable-mla-parity-layer0.json`.
 
 ## 7. Development milestones
 

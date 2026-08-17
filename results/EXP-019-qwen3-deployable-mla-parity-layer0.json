@@ -1,0 +1,64 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+  "method": "deployable_Qwen3_RoRoPE_BKV_attention_mapping",
+  "layer_index": 0,
+  "compute_dtype": "float32",
+  "matmul_precision": "high",
+  "jax_backend": "gpu",
+  "jax_version": "0.7.2",
+  "calibration_tokens": 8192,
+  "evaluation_tokens": 1024,
+  "mapping": {
+    "method": "qwen3_rorope_fold1_bkv_activation_pca",
+    "layer_index": 0,
+    "calibration_tokens": 8192,
+    "latent_rank": 448,
+    "bkv_balance_ratio": 32.17015253472028,
+    "calibration_joint_reconstruction_relative_l2": 0.2568854093551636,
+    "source_cache_elements_per_token": 2048,
+    "target_cache_elements_per_token": 576,
+    "cache_reduction_fraction": 0.71875
+  },
+  "mixer_output": {
+    "all_tokens": {
+      "max_abs": 0.7526321411132812,
+      "mean_abs": 0.015938407061631483,
+      "rmse": 0.022486005030771587,
+      "relative_l2": 0.2375579673639512,
+      "cosine_similarity": 0.9737844246582026
+    },
+    "tail_tokens": {
+      "max_abs": 0.6727967262268066,
+      "mean_abs": 0.01594038721722717,
+      "rmse": 0.022511763728118216,
+      "relative_l2": 0.23684068342020584,
+      "cosine_similarity": 0.9741059224979557
+    }
+  },
+  "cache_shapes": {
+    "kv_latent": [
+      1,
+      1024,
+      448
+    ],
+    "k_rope": [
+      1,
+      1024,
+      128
+    ]
+  },
+  "gates": {
+    "arrays_finite": true,
+    "cache_shapes_pass": true,
+    "max_relative_l2": 0.3,
+    "min_cosine": 0.95,
+    "quality_gate_pass": true
+  },
+  "passed": true,
+  "notes": [
+    "The cache tensors are explicit, but this is a correctness reference path.",
+    "Absorbed incremental decode and optimized kernels remain future work.",
+    "Quality gates are post-pilot engineering gates, not final paper thresholds."
+  ]
+}
