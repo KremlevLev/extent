@@ -4,6 +4,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import optax
+from flax.core import freeze
 
 from singularity.layerwise_distillation import (
     create_layerwise_train_step,
@@ -11,6 +12,7 @@ from singularity.layerwise_distillation import (
     relative_mse,
 )
 from singularity.qwen3_teacher import Qwen3GQAAttention, tiny_qwen3_teacher_config
+from singularity.optimizer import create_lion
 
 
 def test_relative_mse_is_scale_free_and_zero_for_exact_target():
@@ -44,3 +46,16 @@ def test_teacher_mixer_runner_is_jit_safe():
     jax.block_until_ready(output)
     assert output.shape == inputs.shape
     assert np.all(np.isfinite(np.asarray(output)))
+
+
+def test_project_lion_initializes_with_frozen_mamba_parameters():
+    params = freeze(
+        {
+            "in_proj": {"kernel": jnp.ones((2, 3), jnp.float32)},
+            "b_norm": {"scale": jnp.ones((3,), jnp.float32)},
+            "dt_bias": jnp.zeros((3,), jnp.float32),
+        }
+    )
+    tx = create_lion(total_steps=4, warmup_steps=1)
+    state = tx.init(params)
+    assert jax.tree.structure(state)

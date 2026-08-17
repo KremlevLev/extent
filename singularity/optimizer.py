@@ -6,13 +6,17 @@ import jax
 import jax.numpy as jnp
 import optax
 from flax import traverse_util
+from flax.core import FrozenDict, freeze
 
 
 def decay_mask(params: optax.Params) -> optax.Params:
     """Exclude norms, biases and recurrent stability scalars from weight decay."""
     flat = traverse_util.flatten_dict(params)
     excluded = {"scale", "bias", "dt_bias", "D", "b_bias", "c_bias"}
-    return traverse_util.unflatten_dict({path: path[-1] not in excluded for path in flat})
+    mask = traverse_util.unflatten_dict(
+        {path: path[-1] not in excluded for path in flat}
+    )
+    return freeze(mask) if isinstance(params, FrozenDict) else mask
 
 
 def global_norm_fp32(tree: optax.Updates) -> jax.Array:
