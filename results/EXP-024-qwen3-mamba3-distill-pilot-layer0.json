@@ -1,0 +1,434 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+  "method": "trainable_Mamba3_layerwise_distillation_pilot",
+  "layer_index": 0,
+  "sequence_length": 32,
+  "calibration_windows": 8,
+  "training_steps": 20,
+  "training_tokens_per_variant": 640,
+  "evaluation_windows": 4,
+  "learning_rate": 3e-05,
+  "readout_relative_ridge": 0.01,
+  "seed": 123,
+  "compute_dtype": "float32",
+  "dtype_reason": "pre-Ampere GPU detected (Tesla T4)",
+  "jax_backend": "gpu",
+  "mamba_config": {
+    "d_state": 64,
+    "expand": 0.75,
+    "head_dim": 64,
+    "groups": 1,
+    "mimo_rank": 4,
+    "rope_fraction": 0.5,
+    "dt_min": 0.001,
+    "dt_max": 0.1,
+    "dt_init_floor": 0.0001,
+    "a_floor": 0.0001,
+    "conv_kernel": 4
+  },
+  "trainable_parameters": 62684408,
+  "variants": {
+    "INIT-A-random": {
+      "mapping": {
+        "variant": "INIT-A-random",
+        "description": "Canonical random Mamba-3 initialization.",
+        "copied_in_projection_columns": 0,
+        "total_in_projection_columns": 8388,
+        "copied_output_projection": false,
+        "mimo_channel_rule": "random",
+        "prior_reference_commit": null
+      },
+      "readout_calibration": {
+        "samples": 256,
+        "feature_width": 3840,
+        "target_width": 5120,
+        "relative_ridge": 0.01,
+        "absolute_ridge": 4.8192076064879075e-05,
+        "calibration_relative_l2": 0.08697608858346939
+      },
+      "pre_distillation_heldout": {
+        "max_abs": 8.275093078613281,
+        "mean_abs": 0.04801837745398669,
+        "rmse": 0.08091799881816208,
+        "relative_l2": 0.8861736072676267,
+        "cosine_similarity": 0.5610918849770735
+      },
+      "post_distillation_heldout": {
+        "max_abs": 6.116612195968628,
+        "mean_abs": 0.0435520495656294,
+        "rmse": 0.07153241011833193,
+        "relative_l2": 0.7833873160106076,
+        "cosine_similarity": 0.6241837051125811
+      },
+      "loss_curve": [
+        {
+          "grad_norm": 5.662269115447998,
+          "grads_finite": 1,
+          "loss": 0.6651727557182312,
+          "max_abs_grad": 0.1226532831788063,
+          "nonfinite_grad_leaves": 0,
+          "step": 0
+        },
+        {
+          "grad_norm": 5.511785507202148,
+          "grads_finite": 1,
+          "loss": 0.6880723237991333,
+          "max_abs_grad": 0.12515948712825775,
+          "nonfinite_grad_leaves": 0,
+          "step": 1
+        },
+        {
+          "grad_norm": 4.055888652801514,
+          "grads_finite": 1,
+          "loss": 0.4984320402145386,
+          "max_abs_grad": 0.10814724117517471,
+          "nonfinite_grad_leaves": 0,
+          "step": 2
+        },
+        {
+          "grad_norm": 4.8196234703063965,
+          "grads_finite": 1,
+          "loss": 0.49729734659194946,
+          "max_abs_grad": 0.10651149600744247,
+          "nonfinite_grad_leaves": 0,
+          "step": 3
+        },
+        {
+          "grad_norm": 20.010269165039062,
+          "grads_finite": 1,
+          "loss": 1.1623262166976929,
+          "max_abs_grad": 0.7121791839599609,
+          "nonfinite_grad_leaves": 0,
+          "step": 4
+        },
+        {
+          "grad_norm": 5.9649658203125,
+          "grads_finite": 1,
+          "loss": 0.5121808648109436,
+          "max_abs_grad": 0.15928860008716583,
+          "nonfinite_grad_leaves": 0,
+          "step": 5
+        },
+        {
+          "grad_norm": 7.282825469970703,
+          "grads_finite": 1,
+          "loss": 0.7866675853729248,
+          "max_abs_grad": 0.18629500269889832,
+          "nonfinite_grad_leaves": 0,
+          "step": 6
+        },
+        {
+          "grad_norm": 4.70491361618042,
+          "grads_finite": 1,
+          "loss": 0.6652641892433167,
+          "max_abs_grad": 0.1211128756403923,
+          "nonfinite_grad_leaves": 0,
+          "step": 7
+        },
+        {
+          "grad_norm": 3.7372450828552246,
+          "grads_finite": 1,
+          "loss": 0.4910106062889099,
+          "max_abs_grad": 0.0940064936876297,
+          "nonfinite_grad_leaves": 0,
+          "step": 8
+        },
+        {
+          "grad_norm": 4.267279148101807,
+          "grads_finite": 1,
+          "loss": 0.5816662311553955,
+          "max_abs_grad": 0.08857590705156326,
+          "nonfinite_grad_leaves": 0,
+          "step": 9
+        },
+        {
+          "grad_norm": 3.234776020050049,
+          "grads_finite": 1,
+          "loss": 0.505131721496582,
+          "max_abs_grad": 0.07390754669904709,
+          "nonfinite_grad_leaves": 0,
+          "step": 10
+        },
+        {
+          "grad_norm": 4.12432336807251,
+          "grads_finite": 1,
+          "loss": 0.4657736122608185,
+          "max_abs_grad": 0.10256960242986679,
+          "nonfinite_grad_leaves": 0,
+          "step": 11
+        },
+        {
+          "grad_norm": 3.578660011291504,
+          "grads_finite": 1,
+          "loss": 0.4788677990436554,
+          "max_abs_grad": 0.08615464717149734,
+          "nonfinite_grad_leaves": 0,
+          "step": 12
+        },
+        {
+          "grad_norm": 5.744708061218262,
+          "grads_finite": 1,
+          "loss": 0.5699858069419861,
+          "max_abs_grad": 0.2186802476644516,
+          "nonfinite_grad_leaves": 0,
+          "step": 13
+        },
+        {
+          "grad_norm": 4.997646808624268,
+          "grads_finite": 1,
+          "loss": 0.5581430792808533,
+          "max_abs_grad": 0.11831406503915787,
+          "nonfinite_grad_leaves": 0,
+          "step": 14
+        },
+        {
+          "grad_norm": 3.458298921585083,
+          "grads_finite": 1,
+          "loss": 0.4984608292579651,
+          "max_abs_grad": 0.08628662675619125,
+          "nonfinite_grad_leaves": 0,
+          "step": 15
+        },
+        {
+          "grad_norm": 4.638827323913574,
+          "grads_finite": 1,
+          "loss": 0.6036216020584106,
+          "max_abs_grad": 0.09321336448192596,
+          "nonfinite_grad_leaves": 0,
+          "step": 16
+        },
+        {
+          "grad_norm": 3.725990056991577,
+          "grads_finite": 1,
+          "loss": 0.5355929732322693,
+          "max_abs_grad": 0.0841241329908371,
+          "nonfinite_grad_leaves": 0,
+          "step": 17
+        },
+        {
+          "grad_norm": 2.9618747234344482,
+          "grads_finite": 1,
+          "loss": 0.4635993540287018,
+          "max_abs_grad": 0.060260266065597534,
+          "nonfinite_grad_leaves": 0,
+          "step": 18
+        },
+        {
+          "grad_norm": 3.449028968811035,
+          "grads_finite": 1,
+          "loss": 0.5420534610748291,
+          "max_abs_grad": 0.058609407395124435,
+          "nonfinite_grad_leaves": 0,
+          "step": 19
+        }
+      ],
+      "finite": true
+    },
+    "INIT-C-prior-qkvo-port": {
+      "mapping": {
+        "variant": "INIT-C-prior-qkvo-port",
+        "description": "Mamba-in-the-Llama-style V->x, K->B, Q->C, O->out port adapted to mismatched widths.",
+        "copied_in_projection_columns": 4352,
+        "total_in_projection_columns": 8388,
+        "copied_output_projection": true,
+        "mimo_channel_rule": "flat resize",
+        "prior_reference_commit": "b03f123152eeba5f2ae9d8694f4a001147e0a14c"
+      },
+      "readout_calibration": {
+        "samples": 256,
+        "feature_width": 3840,
+        "target_width": 5120,
+        "relative_ridge": 0.01,
+        "absolute_ridge": 0.00011871896276716143,
+        "calibration_relative_l2": 0.10362683981657028
+      },
+      "pre_distillation_heldout": {
+        "max_abs": 4.831029176712036,
+        "mean_abs": 0.04899350246292232,
+        "rmse": 0.08254226693288344,
+        "relative_l2": 0.9039617824006645,
+        "cosine_similarity": 0.508162499274221
+      },
+      "post_distillation_heldout": {
+        "max_abs": 5.04687762260437,
+        "mean_abs": 0.04704499871648965,
+        "rmse": 0.07642317637494808,
+        "relative_l2": 0.836948551325729,
+        "cosine_similarity": 0.582952130879847
+      },
+      "loss_curve": [
+        {
+          "grad_norm": 5.552358627319336,
+          "grads_finite": 1,
+          "loss": 0.7476773262023926,
+          "max_abs_grad": 0.14304405450820923,
+          "nonfinite_grad_leaves": 0,
+          "step": 0
+        },
+        {
+          "grad_norm": 6.645806789398193,
+          "grads_finite": 1,
+          "loss": 0.8063327670097351,
+          "max_abs_grad": 0.3767955005168915,
+          "nonfinite_grad_leaves": 0,
+          "step": 1
+        },
+        {
+          "grad_norm": 4.4875407218933105,
+          "grads_finite": 1,
+          "loss": 0.559354841709137,
+          "max_abs_grad": 0.10960786789655685,
+          "nonfinite_grad_leaves": 0,
+          "step": 2
+        },
+        {
+          "grad_norm": 4.076594352722168,
+          "grads_finite": 1,
+          "loss": 0.5064338445663452,
+          "max_abs_grad": 0.10900738835334778,
+          "nonfinite_grad_leaves": 0,
+          "step": 3
+        },
+        {
+          "grad_norm": 23.05708122253418,
+          "grads_finite": 1,
+          "loss": 1.07794988155365,
+          "max_abs_grad": 1.8419673442840576,
+          "nonfinite_grad_leaves": 0,
+          "step": 4
+        },
+        {
+          "grad_norm": 5.875802516937256,
+          "grads_finite": 1,
+          "loss": 0.6117856502532959,
+          "max_abs_grad": 0.16312026977539062,
+          "nonfinite_grad_leaves": 0,
+          "step": 5
+        },
+        {
+          "grad_norm": 8.064949989318848,
+          "grads_finite": 1,
+          "loss": 0.8885493278503418,
+          "max_abs_grad": 0.20927076041698456,
+          "nonfinite_grad_leaves": 0,
+          "step": 6
+        },
+        {
+          "grad_norm": 4.765447616577148,
+          "grads_finite": 1,
+          "loss": 0.6862990856170654,
+          "max_abs_grad": 0.12277211993932724,
+          "nonfinite_grad_leaves": 0,
+          "step": 7
+        },
+        {
+          "grad_norm": 5.873400688171387,
+          "grads_finite": 1,
+          "loss": 0.6187921762466431,
+          "max_abs_grad": 0.2802578806877136,
+          "nonfinite_grad_leaves": 0,
+          "step": 8
+        },
+        {
+          "grad_norm": 6.139293670654297,
+          "grads_finite": 1,
+          "loss": 0.6853465437889099,
+          "max_abs_grad": 0.15590348839759827,
+          "nonfinite_grad_leaves": 0,
+          "step": 9
+        },
+        {
+          "grad_norm": 6.343195915222168,
+          "grads_finite": 1,
+          "loss": 0.754024088382721,
+          "max_abs_grad": 0.15837182104587555,
+          "nonfinite_grad_leaves": 0,
+          "step": 10
+        },
+        {
+          "grad_norm": 6.838263034820557,
+          "grads_finite": 1,
+          "loss": 0.6134201288223267,
+          "max_abs_grad": 0.23936930298805237,
+          "nonfinite_grad_leaves": 0,
+          "step": 11
+        },
+        {
+          "grad_norm": 4.416100978851318,
+          "grads_finite": 1,
+          "loss": 0.556542694568634,
+          "max_abs_grad": 0.12642140686511993,
+          "nonfinite_grad_leaves": 0,
+          "step": 12
+        },
+        {
+          "grad_norm": 7.691730499267578,
+          "grads_finite": 1,
+          "loss": 0.624977707862854,
+          "max_abs_grad": 0.4301026463508606,
+          "nonfinite_grad_leaves": 0,
+          "step": 13
+        },
+        {
+          "grad_norm": 4.469816207885742,
+          "grads_finite": 1,
+          "loss": 0.5889372229576111,
+          "max_abs_grad": 0.13898596167564392,
+          "nonfinite_grad_leaves": 0,
+          "step": 14
+        },
+        {
+          "grad_norm": 4.83603572845459,
+          "grads_finite": 1,
+          "loss": 0.5848331451416016,
+          "max_abs_grad": 0.14626431465148926,
+          "nonfinite_grad_leaves": 0,
+          "step": 15
+        },
+        {
+          "grad_norm": 7.535520076751709,
+          "grads_finite": 1,
+          "loss": 0.7983391284942627,
+          "max_abs_grad": 0.24939186871051788,
+          "nonfinite_grad_leaves": 0,
+          "step": 16
+        },
+        {
+          "grad_norm": 6.834850788116455,
+          "grads_finite": 1,
+          "loss": 0.699135959148407,
+          "max_abs_grad": 0.32140690088272095,
+          "nonfinite_grad_leaves": 0,
+          "step": 17
+        },
+        {
+          "grad_norm": 4.549324989318848,
+          "grads_finite": 1,
+          "loss": 0.5593208074569702,
+          "max_abs_grad": 0.21241194009780884,
+          "nonfinite_grad_leaves": 0,
+          "step": 18
+        },
+        {
+          "grad_norm": 4.096399307250977,
+          "grads_finite": 1,
+          "loss": 0.5783972144126892,
+          "max_abs_grad": 0.1863943189382553,
+          "nonfinite_grad_leaves": 0,
+          "step": 19
+        }
+      ],
+      "finite": true
+    }
+  },
+  "passed": true,
+  "notes": [
+    "Calibration, training, and evaluation use disjoint contiguous WikiText windows.",
+    "Every variant receives an independently ridge-calibrated output projection before training.",
+    "All Mamba parameters are trainable with identical Lion settings and token budgets.",
+    "T4 uses FP32 for numerical safety; TPU and BF16-capable accelerators use BF16 parameters, compute, gradients, and Lion momentum."
+  ]
+}
+
+

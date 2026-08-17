@@ -586,13 +586,20 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-024 — Trainable Mamba-3 layerwise distillation pilot
 
 - **Implementation commit title:** `feat: add Mamba-3 layerwise distillation pilot`
-- **Status:** implementation complete; Kaggle measurement pending.
+- **Status:** completed on Kaggle 2xT4 (single-device pilot execution), FP32.
 - **Question:** does a small, fixed token budget of gradient-based mixer distillation recover held-out Qwen3 attention behavior, and does the prior QKVO transplant improve recovery speed over random recurrent initialization?
 - **Controlled comparison:** `INIT-A-random` versus `INIT-C-prior-qkvo-port`. Both receive their own ridge-calibrated output projection, then all Mamba parameters are trained with identical Lion hyperparameters, data windows, seed, and token budget.
 - **Leakage control:** calibration, training, and held-out evaluation use disjoint fixed-length WikiText windows. Evaluation targets never select the readout, learning rate, or checkpoint.
 - **Primary endpoint:** change in held-out mixer relative L2 from pre-distillation to the final fixed step. Cosine similarity and the complete loss/gradient-health curve are secondary diagnostics.
 - **Numerics:** auto dtype uses FP32 on T4 because its BF16 backward path was empirically non-finite; TPU v5e uses BF16 parameters, compute, gradients, and Lion momentum.
 - **Boundary:** this is a one-layer feasibility and initialization-ranking experiment, not evidence that the 14B hybrid has recovered. Positive results justify a larger multi-layer/token-budget sweep; negative results trigger objective/architecture diagnosis before full-model training.
+- **Budget (MEASURED):** layer 0, sequence length 32, 256 calibration tokens, 640 disjoint training tokens per variant, 128 held-out tokens, 20 Lion steps at learning rate `3e-5`, seed 123.
+- **INIT-A random recurrence (MEASURED):** held-out relative L2 improves `0.886174 -> 0.783387` (11.60% relative reduction), while cosine increases `0.561092 -> 0.624184`. All gradients are finite.
+- **INIT-C prior QKVO recurrence (MEASURED):** held-out relative L2 improves `0.903962 -> 0.836949` (7.41% relative reduction), while cosine increases `0.508162 -> 0.582952`. All gradients are finite.
+- **Controlled ranking:** random recurrence is already better after readout calibration and remains better after the identical training budget: post-training L2 advantage `0.053561`, post-training cosine advantage `0.041232`. Thus the tested V-to-x, K-to-B, Q-to-C port provides negative transfer rather than faster recovery.
+- **Interpretation:** this result rejects only the current direct QKVO-to-Mamba mapping at layer 0 under a 640-token pilot. It does not establish that all Mamba-3 initializations should be random, nor that the rest of Qwen should be discarded. Qwen embeddings, norms, MLPs, residual stream, and retained attention layers remain directly reusable; the unresolved question is how to initialize and recover the new recurrent mixers.
+- **Decision:** retain random recurrence as the mandatory control and current leading initializer. Before committing the 14B recovery run, test whether the ranking persists across multiple layers, seeds, and longer fixed token budgets; any proposed learned/transformed transplant must beat this control.
+- **Raw artifact:** `results/EXP-024-qwen3-mamba3-distill-pilot-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 
