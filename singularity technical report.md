@@ -674,6 +674,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Boundary:** this is still a 2,944-token, windowed activation dataset and not a full-model or long-context recovery result.
 - **Raw artifact:** `results/EXP-029-qwen3-layer18-dp-activation-cache-manifest.json`.
 
+### EXP-030 — Layer-18 cached-activation Mamba-3 distillation
+
+- **Status:** completed on Kaggle GPU/FP32 using the EXP-029 portable activation cache.
+- **Protocol:** true layer-18 normalized residual inputs and attention targets; paired seeds `123/456/789`; random recurrence versus prior QKVO port; checkpoints 0/20/80; 2,560 unique training tokens per seed/variant; identical Lion settings and held-out windows.
+- **Random recurrence (MEASURED):** mean held-out relative L2 `0.945156 +/- 0.031969` at step 0, `0.812879 +/- 0.007577` at step 20, and `0.766070 +/- 0.009172` at step 80. Step-80 cosine is `0.643446 +/- 0.011054`; relative-L2 reduction is 18.91%.
+- **Prior QKVO port (MEASURED):** mean held-out relative L2 `0.982541 +/- 0.030771` at step 0, `0.901970 +/- 0.048148` at step 20, and `0.788970 +/- 0.014350` at step 80. Step-80 cosine is `0.617078 +/- 0.017457`; relative-L2 reduction is 19.68%.
+- **Paired ranking (MEASURED):** random wins 3/3 seeds at every checkpoint. Mean random-minus-QKVO L2 is `-0.037385` at step 0, widens to `-0.089092` at step 20, then contracts to `-0.022901` at step 80.
+- **Depth comparison:** the direct port remains decisively harmful at layer 0 through step 80, but at layer 18 it recovers faster late in training and nearly closes the gap. This supports a depth-dependent delayed-transfer hypothesis rather than a universal random-initialization conclusion.
+- **Decision:** do not select either initializer for full recovery yet. Run a longer layer-18 budget with fixed untouched evaluation data to determine whether QKVO crosses random or merely converges to a worse asymptote. Both current endpoints (`0.766/0.789` L2) remain far from recovered attention behavior.
+- **Raw artifact:** `results/EXP-030-qwen3-mamba3-cached-distill-sweep-layer18.json`.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
