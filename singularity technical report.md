@@ -503,7 +503,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-021 — Controlled Qwen3-to-Mamba-3 initialization shock
 
 - **Implementation commit title:** `feat: add Qwen3-to-Mamba3 transplant baselines`
-- **Status:** mapping code, invariants, and real-checkpoint launcher implemented; Kaggle measurement pending.
+- **Status:** completed on the real Qwen3 layer-0 checkpoint on Kaggle GPU; all variants executed finitely, but none preserved useful immediate mixer alignment.
 - **Input:** pinned real WikiText token prefix represented by actual Qwen3 embedding rows. The default first measurement uses layer 0, sequence length 128, FP32, and seed 123.
 - **Shared control:** every variant starts from the same canonical Mamba-3 random parameter tree. Stability/dynamics fields `z`, `dt`, `A`, `trap`, and `angle` remain identical unless a later named ablation explicitly changes one.
 - **INIT-A:** fully random Mamba-3 mixer.
@@ -516,6 +516,14 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Regression suite (MEASURED):** 38 tests passed in 60.45 s; all five tiny transplant variants also execute through the full Mamba-3 module with finite outputs.
 - **Prior-code pin:** `jxiw/MambaInLlama@b03f123152eeba5f2ae9d8694f4a001147e0a14c`.
 - **Boundary:** deterministic width adaptation and head grouping are initialization hypotheses, not functional attention-to-SSM equivalences. One layer and 128 tokens cannot establish full-model recovery quality.
+- **INIT-A result (MEASURED):** mixer relative L2 `1.000352`, cosine `-0.005826`, norm ratio `0.021356`; decoder relative L2 `1.532735`, cosine `0.614348`.
+- **INIT-B result (MEASURED):** mixer relative L2 `0.999703`, cosine `0.024421`, norm ratio `0.023194`; decoder relative L2 `1.531408`, cosine `0.615262`.
+- **INIT-C result (MEASURED):** mixer relative L2 `1.000205`, cosine `0.013098`, norm ratio `0.037219`; decoder relative L2 `1.523208`, cosine `0.614811`.
+- **INIT-D result (MEASURED):** mixer relative L2 `1.003062`, cosine `0.010646`, norm ratio `0.089688`; decoder relative L2 `1.460898`, cosine `0.616681`.
+- **INIT-E result (MEASURED):** mixer relative L2 `1.000674`, cosine `0.010512`, norm ratio `0.048717`; decoder relative L2 `1.515896`, cosine `0.614798`.
+- **Interpretation:** the best mixer cosine is only `0.024421` and every candidate is severely under-scaled. INIT-D's larger norm gives the best decoder relative L2, but its mixer direction remains uncorrelated with the teacher. INIT-E does not beat INIT-D consistently, so distinct MIMO allocation is not supported by this initialization alone. Complex-angle ablation is deferred: changing recurrence details cannot be interpreted while the base features/readout carry almost no teacher-aligned signal.
+- **Decision:** next run a frozen-feature calibrated-readout probe on disjoint real-text calibration/evaluation tokens. This separates “the recurrence features contain no transferable signal” from “the copied output projection cannot read that signal.” Only a held-out improvement justifies deeper transplant refinements.
+- **Raw artifact:** `results/EXP-021-qwen3-mamba3-shock-layer0.json`.
 
 ## 7. Development milestones
 
@@ -525,8 +533,8 @@ Thresholds will be frozen before final experiments after pilot variance is known
 4. **Completed:** implement the exact Qwen3 GQA teacher and establish decoder-layer parity against the official PyTorch implementation.
 5. **Completed for the frozen reference direction:** establish fold-1 RoRoPE + BKV rank-448 conversion diagnostics and a cache-producing Flax mapping; optimized decode remains pending.
 6. **Completed for the mathematical reference path:** establish cross-framework Mamba-3 MIMO recurrence parity and align the module parameter contract with the official implementation.
-7. **Current:** implement attention-to-Mamba-3 transplant variants and single-layer shock tests.
-8. Run small-scale ablations and freeze the 14B recovery recipe.
+7. **Completed:** implement controlled attention-to-Mamba-3 transplant variants and establish that direct Q/K/V/O reuse alone does not preserve layer-0 mixer alignment.
+8. **Current:** diagnose frozen Mamba-3 feature recoverability with a disjoint calibrated-readout probe before adding more transplant mechanisms.
 9. Compile the first guarded full-model short-sequence forward/backward.
 10. Recovery training, fixed evaluation checkpoints, and failure logging.
 11. Optimized inference kernel and matched end-to-end benchmarks.

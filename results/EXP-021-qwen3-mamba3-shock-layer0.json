@@ -1,0 +1,66 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+  "method": "controlled_Qwen3_to_Mamba3_MIMO_initialization_shock",
+  "layer_index": 0,
+  "sequence_length": 128,
+  "seed": 123,
+  "compute_dtype": "float32",
+  "jax_backend": "gpu",
+  "mamba_config": {
+    "d_state": 64,
+    "expand": 0.75,
+    "head_dim": 64,
+    "groups": 1,
+    "mimo_rank": 4,
+    "rope_fraction": 0.5,
+    "dt_min": 0.001,
+    "dt_max": 0.1,
+    "dt_init_floor": 0.0001,
+    "a_floor": 0.0001,
+    "conv_kernel": 4
+  },
+  "variants": {
+    "INIT-A-random": {
+      "mapping": {"variant": "INIT-A-random", "description": "Canonical random Mamba-3 initialization.", "copied_in_projection_columns": 0, "total_in_projection_columns": 8388, "copied_output_projection": false, "mimo_channel_rule": "random", "prior_reference_commit": null},
+      "mixer_output": {"max_abs": 5.028877248056233, "mean_abs": 0.04194484393591036, "rmse": 0.09280009206085306, "relative_l2": 1.000352401455782, "cosine_similarity": -0.005826230326024491},
+      "decoder_output": {"max_abs": 31.785619735717773, "mean_abs": 0.21457647873096258, "rmse": 0.37373755809961995, "relative_l2": 1.532734631390139, "cosine_similarity": 0.614348231257521},
+      "mixer_norm_ratio_to_teacher": 0.021355990320444107,
+      "finite": true
+    },
+    "INIT-B-output-only": {
+      "mapping": {"variant": "INIT-B-output-only", "description": "Only the Qwen attention output projection is resized and copied.", "copied_in_projection_columns": 0, "total_in_projection_columns": 8388, "copied_output_projection": true, "mimo_channel_rule": "random", "prior_reference_commit": null},
+      "mixer_output": {"max_abs": 5.011675265617669, "mean_abs": 0.041946821351246, "rmse": 0.09273980447766887, "relative_l2": 0.9997025224817758, "cosine_similarity": 0.024420711257012787},
+      "decoder_output": {"max_abs": 31.647085189819336, "mean_abs": 0.2145433304854519, "rmse": 0.3734140508350055, "relative_l2": 1.5314078961524444, "cosine_similarity": 0.6152622387940235},
+      "mixer_norm_ratio_to_teacher": 0.02319411002099514,
+      "finite": true
+    },
+    "INIT-C-prior-qkvo-port": {
+      "mapping": {"variant": "INIT-C-prior-qkvo-port", "description": "Mamba-in-the-Llama-style V->x, K->B, Q->C, O->out port adapted to mismatched widths.", "copied_in_projection_columns": 4352, "total_in_projection_columns": 8388, "copied_output_projection": true, "mimo_channel_rule": "flat resize", "prior_reference_commit": "b03f123152eeba5f2ae9d8694f4a001147e0a14c"},
+      "mixer_output": {"max_abs": 5.038370106369257, "mean_abs": 0.04200572200675477, "rmse": 0.09278642946985467, "relative_l2": 1.0002051235230587, "cosine_similarity": 0.013097590763446021},
+      "decoder_output": {"max_abs": 31.6291561126709, "mean_abs": 0.21387230022107703, "rmse": 0.37141453601537094, "relative_l2": 1.5232076884301722, "cosine_similarity": 0.6148109930551899},
+      "mixer_norm_ratio_to_teacher": 0.03721890226006508,
+      "finite": true
+    },
+    "INIT-D-siso-copied": {
+      "mapping": {"variant": "INIT-D-siso-copied", "description": "Head-pooled K/Q state projections copied identically into every MIMO channel.", "copied_in_projection_columns": 4352, "total_in_projection_columns": 8388, "copied_output_projection": true, "mimo_channel_rule": "one pooled channel copied across rank", "prior_reference_commit": null},
+      "mixer_output": {"max_abs": 5.053232343867421, "mean_abs": 0.042496035751783186, "rmse": 0.09305149128427552, "relative_l2": 1.0030623967940402, "cosine_similarity": 0.010646384603483479},
+      "decoder_output": {"max_abs": 31.051416397094727, "mean_abs": 0.20767985150639773, "rmse": 0.35622121378003807, "relative_l2": 1.4608983736415386, "cosine_similarity": 0.616680995477278},
+      "mixer_norm_ratio_to_teacher": 0.08968769758939743,
+      "finite": true
+    },
+    "INIT-E-mimo-aware": {
+      "mapping": {"variant": "INIT-E-mimo-aware", "description": "Disjoint Q/K head groups initialize distinct MIMO state channels.", "copied_in_projection_columns": 4352, "total_in_projection_columns": 8388, "copied_output_projection": true, "mimo_channel_rule": "disjoint source-head groups", "prior_reference_commit": null},
+      "mixer_output": {"max_abs": 5.040327190421522, "mean_abs": 0.04207636097909632, "rmse": 0.09282995380727496, "relative_l2": 1.0006743005949046, "cosine_similarity": 0.010512438586309243},
+      "decoder_output": {"max_abs": 31.530038833618164, "mean_abs": 0.21319694338504558, "rmse": 0.3696317832654738, "relative_l2": 1.5158964433605904, "cosine_similarity": 0.6147977716753162},
+      "mixer_norm_ratio_to_teacher": 0.048716768622398376,
+      "finite": true
+    }
+  },
+  "passed": true,
+  "notes": [
+    "All variants share the identical random base and stability controllers.",
+    "INIT-D versus INIT-E isolates copied versus distinct MIMO B/C channels.",
+    "This is immediate layer shock before any recovery training."
+  ]
+}
