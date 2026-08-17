@@ -550,13 +550,22 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-023 — Residualized Mamba-3 contextual-value probe
 
 - **Implementation commit title:** `feat: add residualized Mamba-3 context-value probe`
-- **Status:** implementation and local tests complete; Kaggle measurement pending.
+- **Status:** completed on Kaggle GPU; frozen/static transplant branch rejected under this protocol.
 - **Question:** after fitting the strongest raw-hidden linear baseline, can frozen Mamba recurrence features predict additional held-out teacher residual?
 - **Nested protocol:** select the raw readout ridge using only the internal calibration validation suffix. For each Mamba variant, fit a context readout to the residual left by the raw model, select its ridge on that same held-in validation protocol, then refit both stages on all 256 calibration tokens. The final 128 tokens remain untouched.
 - **Comparison:** raw-hidden held-out metrics versus `raw prediction + Mamba residual prediction` for INIT-A through INIT-E. Improvement must occur on held-out relative L2 and cosine, not merely calibration error.
 - **Decision rule:** if no variant beats raw hidden, frozen recurrence adds no demonstrated contextual value and the next justified step is short layerwise distillation of recurrent parameters. If a variant wins, retain it as the initialization for that distillation ablation.
 - **Regression suite (MEASURED):** 40 tests passed in 66.70 s. A synthetic two-source target verifies that the residualized procedure improves held-out prediction when context features contain complementary signal.
 - **Boundary:** sequential residual fitting is deliberately interpretable but is not guaranteed to equal a jointly optimized two-block ridge model. It measures incremental signal under the declared fitting rule.
+- **Raw-hidden baseline (MEASURED):** held-out relative L2 `0.388996`, cosine `0.921752`, max absolute error `0.999713`, RMSE `0.0357064`.
+- **INIT-A/B (MEASURED):** both select context ridge `1e-2` and produce identical raw-plus-Mamba held-out relative L2 `0.412084`, cosine `0.911153`. Their recurrent features are identical; only the unused original output projection differs.
+- **INIT-C (MEASURED):** raw-plus-Mamba held-out relative L2 `0.416555`, cosine `0.909114`.
+- **INIT-D (MEASURED):** raw-plus-Mamba held-out relative L2 `0.421239`, cosine `0.906976`.
+- **INIT-E (MEASURED):** raw-plus-Mamba held-out relative L2 `0.420634`, cosine `0.907251`.
+- **Result:** no frozen Mamba variant improves both held-out criteria; every variant is worse than raw hidden. The least harmful random features still increase relative L2 by `0.023088` and reduce cosine by `0.010599`. Current Q/K/V transplants degrade the residual predictor further.
+- **Interpretation:** under one layer-0 WikiText prefix with 256 calibration and 128 held-out tokens, frozen Mamba recurrence features demonstrate no incremental contextual signal beyond the raw-token linear control. This rejects the tested static mapping/probe, not attention-to-Mamba transplantation in general.
+- **Decision:** stop static slicing, complex-angle, and frozen-readout tuning. Proceed to a controlled short layerwise distillation pilot in which recurrent parameters are trainable. Retain random initialization and prior QKVO initialization as mandatory baselines under identical data, optimizer, and token budgets.
+- **Raw artifact:** `results/EXP-023-qwen3-mamba3-context-probe-layer0.json`.
 
 ## 7. Development milestones
 
@@ -568,8 +577,8 @@ Thresholds will be frozen before final experiments after pilot variance is known
 6. **Completed for the mathematical reference path:** establish cross-framework Mamba-3 MIMO recurrence parity and align the module parameter contract with the official implementation.
 7. **Completed:** implement controlled attention-to-Mamba-3 transplant variants and establish that direct Q/K/V/O reuse alone does not preserve layer-0 mixer alignment.
 8. **Completed:** show that frozen random Mamba features are readout-recoverable, while current Q/K/V transplants hurt and raw hidden states remain the strongest linear control.
-9. **Current:** measure incremental contextual value with a residualized raw-hidden-plus-Mamba feature probe; proceed to short layerwise distillation only if recurrence features add held-out signal.
-10. Compile the first guarded full-model short-sequence forward/backward.
+9. **Completed:** frozen residualized Mamba features add no held-out signal beyond raw hidden under EXP-023; the static transplant branch is closed.
+10. **Current:** run a short, controlled layerwise Mamba-3 distillation pilot before attempting a full-model training step.
 11. Recovery training, fixed evaluation checkpoints, and failure logging.
 12. Optimized inference kernel and matched end-to-end benchmarks.
 13. Only after base recovery: separate reasoning SFT study using legally and scientifically documented data.
