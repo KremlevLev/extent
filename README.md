@@ -495,3 +495,30 @@ Use T4/P100 rather than TPU for this diagnostic. Success ends with
 `MAMBA3-SHOCK-PASS`; download the JSON even when a transplanted variant is worse
 than random, because negative results determine which recovery ablations are
 scientifically justified.
+
+If the direct transplant has negligible mixer cosine, test whether its frozen
+recurrent features can support a teacher-aligned linear readout. Ridge selection
+uses only an internal calibration split; the final 128 tokens remain held out:
+
+```python
+%cd /kaggle/working/singularity
+!pip install -q -r requirements-calibration.txt
+
+from scripts.qwen_mamba3_readout_probe import main as qwen_mamba3_readout_probe
+qwen_mamba3_readout_probe([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--layer-index", "0",
+    "--calibration-tokens", "256",
+    "--selection-tokens", "64",
+    "--evaluation-tokens", "128",
+    "--ridge-values", "1e-2,1e-3,1e-4",
+    "--seed", "123",
+    "--result-json", "/kaggle/working/qwen3-mamba3-readout-probe-layer0.json",
+])
+```
+
+Use a Kaggle GPU. Success ends with `MAMBA3-READOUT-PROBE-PASS`; this means the
+linear solves and finite checks succeeded, not that frozen Mamba features passed
+a quality threshold. Download the JSON so held-out gains and failures are both
+retained.

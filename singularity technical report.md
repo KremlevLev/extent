@@ -525,6 +525,19 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** next run a frozen-feature calibrated-readout probe on disjoint real-text calibration/evaluation tokens. This separates “the recurrence features contain no transferable signal” from “the copied output projection cannot read that signal.” Only a held-out improvement justifies deeper transplant refinements.
 - **Raw artifact:** `results/EXP-021-qwen3-mamba3-shock-layer0.json`.
 
+### EXP-022 — Frozen-feature calibrated Mamba-3 readout
+
+- **Implementation commit title:** `feat: add Mamba-3 calibrated readout probe`
+- **Status:** implementation and local tests complete; Kaggle measurement pending.
+- **Question:** do frozen Mamba-3 recurrent features contain teacher-aligned information that the copied Qwen output projection simply cannot decode, or is the information absent before the readout?
+- **Protocol:** process one contiguous real-text prefix, fit only an uncentered linear readout on the first 256 tokens, and evaluate on the next disjoint 128 tokens. Every recurrent parameter remains frozen.
+- **Regularization selection:** for each feature variant, fit candidate relative ridge values `1e-2/1e-3/1e-4` on the first 192 calibration tokens, select using the following 64 calibration tokens, then refit on all 256. The final 128 evaluation tokens never influence selection.
+- **Variants:** all EXP-021 INIT-A through INIT-E recurrent features, plus normalized raw hidden states as a linear-control representation.
+- **Primary metrics:** original versus calibrated held-out mixer relative L2 and cosine. Calibration-fit error is diagnostic only and cannot establish generalization.
+- **Decision rule:** a material held-out improvement shows that readout alignment, not merely recurrence construction, is a bottleneck. Failure despite near-zero calibration error indicates feature overfit/no transferable signal and motivates short layerwise distillation rather than more static Q/K/V slicing.
+- **Regression suite (MEASURED):** 39 tests passed in 67.24 s. A synthetic linear system is recovered on held-out data, and existing Mamba parity/transplant/full-model tests remain green.
+- **Boundary:** 256 calibration tokens intentionally test few-shot recoverability; they are not a proposed final calibration budget. Ridge readout is a diagnostic and not yet the recovery-training method.
+
 ## 7. Development milestones
 
 1. **Completed only for the sharding mechanism:** wrong-generation weights + Lion state fit on v5e-8; exact Qwen3 HBM validation remains pending.

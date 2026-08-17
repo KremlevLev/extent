@@ -75,3 +75,14 @@ def test_mamba3_module_uses_official_parameter_shapes_and_names():
     assert params["dt_bias"].shape == (heads,)
     assert "mimo_out" not in params
     assert "dt_logit" not in params
+    inputs = jnp.ones((1, 3, config.hidden_size), dtype=jnp.float32)
+    output = module.apply({"params": params}, inputs)
+    feature_output, features = module.apply(
+        {"params": params}, inputs, return_features=True
+    )
+    np.testing.assert_allclose(feature_output, output, atol=0.0, rtol=0.0)
+    assert features.shape == (
+        1,
+        3,
+        int(config.hidden_size * config.mamba.expand),
+    )

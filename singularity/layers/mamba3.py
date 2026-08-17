@@ -124,7 +124,9 @@ class Mamba3MIMO(nn.Module):
     param_dtype: jnp.dtype = jnp.bfloat16
 
     @nn.compact
-    def __call__(self, inputs: jax.Array) -> jax.Array:
+    def __call__(
+        self, inputs: jax.Array, *, return_features: bool = False
+    ) -> jax.Array | tuple[jax.Array, jax.Array]:
         cfg = self.config
         inner = int(self.hidden_size * cfg.expand)
         heads = inner // cfg.head_dim
@@ -224,11 +226,13 @@ class Mamba3MIMO(nn.Module):
             skip,
             rotary_pairs,
         )
-        return nn.Dense(
+        features = y.reshape(batch, length, inner)
+        output = nn.Dense(
             self.hidden_size,
             use_bias=False,
             dtype=self.dtype,
             param_dtype=self.param_dtype,
             kernel_init=nn.initializers.normal(0.02),
             name="out_proj",
-        )(y.reshape(batch, length, inner))
+        )(features)
+        return (output, features) if return_features else output
