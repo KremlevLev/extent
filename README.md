@@ -348,6 +348,29 @@ identical to the source mixer. The one-component result measures the shock of
 the single shared RoPE-head target after PCA concentration, rather than naive
 head averaging. This launcher is a GPU diagnostic; TPU is not required.
 
+Next, keep that one-head RoPE cache fixed at 128 elements while grouping nearby
+frequencies for joint PCA. This is the controlled FreqFold-style positional
+diagnostic before balanced or covariance-aware KV compression:
+
+```python
+from scripts.qwen_freqfold_sweep import main as qwen_freqfold_sweep
+qwen_freqfold_sweep([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--layer-index", "0",
+    "--calibration-length", "1024",
+    "--sequence-length", "1024",
+    "--folds", "1,2,4,8",
+    "--tail-tokens", "128",
+    "--calibration-seed", "123",
+    "--evaluation-seed", "124",
+    "--result-json", "/kaggle/working/qwen3-freqfold-sweep-layer0.json",
+])
+```
+
+Fold 1 must reproduce the EXP-015 one-component metrics. Larger folds trade an
+approximation between neighboring RoPE frequencies for a richer PCA subspace,
+without changing the retained RoPE-cache width. TPU is not required.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional

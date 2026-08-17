@@ -2,7 +2,12 @@ import jax.numpy as jnp
 import numpy as np
 
 from singularity.qwen3_teacher import apply_qwen3_rope
-from singularity.rorope import fit_rorope_rotations, rorope_attend
+from singularity.rorope import (
+    fit_freqfold_rotations,
+    fit_rorope_rotations,
+    freqfold_attend,
+    rorope_attend,
+)
 
 
 def test_all_rorope_components_preserve_gqa_attention():
@@ -32,4 +37,33 @@ def test_all_rorope_components_preserve_gqa_attention():
 
     np.testing.assert_allclose(candidate, reference, atol=2e-5, rtol=2e-5)
     assert rotations.shape == (4, 2, 2)
+    assert np.all(eigenvalues[:, 0] >= eigenvalues[:, 1])
+
+
+def test_freqfold_one_matches_standard_one_component_rorope():
+    rng = np.random.default_rng(9)
+    query = jnp.asarray(rng.normal(size=(1, 4, 4, 8)).astype(np.float32))
+    key = jnp.asarray(rng.normal(size=(1, 4, 2, 8)).astype(np.float32))
+    value = jnp.asarray(rng.normal(size=(1, 4, 2, 8)).astype(np.float32))
+    positions = jnp.arange(4, dtype=jnp.int32)[None, :]
+    mapping = jnp.asarray([0, 0, 1, 1], dtype=jnp.int32)
+    standard, _ = fit_rorope_rotations(np.asarray(key))
+    folded, eigenvalues = fit_freqfold_rotations(np.asarray(key), 1)
+
+    expected = rorope_attend(
+        query, key, value, positions, jnp.asarray(standard), mapping, 1, 10_000.0
+    )
+    candidate = freqfold_attend(
+        query,
+        key,
+        value,
+        positions,
+        jnp.asarray(folded),
+        mapping,
+        1,
+        10_000.0,
+    )
+
+    np.testing.assert_allclose(candidate, expected, atol=2e-5, rtol=2e-5)
+    assert folded.shape == (4, 2, 2)
     assert np.all(eigenvalues[:, 0] >= eigenvalues[:, 1])

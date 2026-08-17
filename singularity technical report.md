@@ -402,7 +402,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-015 — Standard TransMLA RoRoPE positional shock
 
 - **Implementation commit title:** `feat: add TransMLA RoRoPE shock baseline`
-- **Status:** harness implemented; Kaggle execution pending.
+- **Status:** completed on a Kaggle GPU runtime.
 - **Prior-method baseline:** standard RoRoPE from TransMLA, without FreqFold, BKV-PCA, or latent KV compression. This is explicitly related-work reproduction, not the proposed contribution.
 - **Calibration/evaluation split:** independent deterministic Gaussian sequences, both length 1024, with seeds 123 and 124. PCA rotations are fitted only on calibration keys.
 - **Mechanism:** for each of Qwen3's 64 split-half RoPE frequencies, fit an orthogonal PCA rotation over the eight normalized KV heads; apply the same rotation to absorbed Q and K components; retain RoPE on the leading `1/2/4/8` components and remove it from the rest.
@@ -410,6 +410,25 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Scope:** this experiment isolates RoPE decoupling. All rotated key components and original values remain present, so it does not yet claim KV-cache compression. FreqFold and joint balanced KV compression are subsequent, separately measured stages.
 - **Qwen3 caveat:** PCA is fitted after Qwen3 per-head K normalization and applied after Q/K normalization. A later weight-mapping experiment must explicitly test whether this ordering remains compatible with the deployable absorbed MLA path.
 - **Regression suite (MEASURED):** 31 tests passed in 50.94 s. The all-component tiny fixture matches ordinary Qwen split-half RoPE GQA attention within `2e-5` absolute/relative tolerance, and PCA eigenvalues are verified in descending order.
+- **Exact-invariance control (MEASURED):** retaining all eight RoPE components gives all-token L2 `3.642e-6`, tail L2 `5.380e-6`, and all-token cosine `0.999999999993`. The implementation invariant passes decisively.
+- **One-component result (MEASURED):** one 128-element shared RoPE component retains `52.726%` of measured positional key energy; all-token/tail L2 is `0.715780/0.807436` and cosine is `0.744083/0.675598`.
+- **Two-component result (MEASURED):** 256 RoPE-cache elements retain `61.491%` energy; all-token/tail L2 is `0.682616/0.775244`.
+- **Four-component result (MEASURED):** 512 RoPE-cache elements retain `76.600%` energy; all-token/tail L2 is `0.585000/0.673825`.
+- **Comparison with naive aggregation (MEASURED):** at full RoPE width, naive eight-to-one averaging had all/tail L2 `1.130436/1.169610`; one-component RoRoPE improves these to `0.715780/0.807436`, reductions of `36.68%/30.97%`, while all-token/tail cosine rises from `0.176311/0.092147` to `0.744083/0.675598`.
+- **Interpretation:** head-aware orthogonal concentration is materially better than averaging and is the valid prior-method direction. Nevertheless, one-component RoRoPE remains a large shock. It is not yet a 128-element cache result because the other seven components remain as NoPE content awaiting joint compression.
+- **Raw artifact:** `results/EXP-015-qwen3-rorope-shock-layer0.json`.
+
+### EXP-016 — Fixed-RoPE-cache FreqFold sweep
+
+- **Implementation commit title:** `feat: add fixed-cache RoRoPE FreqFold sweep`
+- **Status:** harness implemented; Kaggle execution pending.
+- **Frozen RoPE cache:** every variant retains exactly 128 elements/token/layer, equal to one original Qwen3 key head.
+- **Variants:** adjacent-frequency fold sizes `1/2/4/8`. Each group jointly fits PCA over `8 × fold` KV-head/frequency features and retains the leading `fold` components, keeping the total retained positional dimensionality fixed.
+- **Calibration/evaluation:** independent deterministic Gaussian sequences of length 1024 with seeds 123/124, matching EXP-015.
+- **Scientific question:** can nearby-frequency grouping retain more useful positional signal than independent per-frequency PCA without increasing the shared RoPE cache?
+- **Implementation boundary:** this is a FreqFold-style activation diagnostic following TransMLA's joint head/frequency PCA principle. It is not yet claimed numerically identical to the official PyTorch converter. Fold 1 is regression-tested to equal standard one-component RoRoPE.
+- **Compression boundary:** rotated NoPE keys and values are still uncompressed. Balanced joint KV and covariance-aware compression follow only after selecting the positional transform.
+- **Regression suite (MEASURED):** 32 tests passed in 49.68 s. Fold 1 matches the independently implemented standard one-component RoRoPE path within `2e-5` absolute/relative tolerance; a fold-2 shape/finite-output probe also passes.
 
 ## 7. Development milestones
 

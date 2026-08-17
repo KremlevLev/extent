@@ -1,0 +1,107 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "method": "standard_TransMLA_RoRoPE_without_FreqFold_or_KV_compression",
+  "layer_index": 0,
+  "compute_dtype": "float32",
+  "jax_backend": "gpu",
+  "input_kind": "independent_deterministic_gaussian_calibration_and_evaluation",
+  "calibration_length": 1024,
+  "sequence_length": 1024,
+  "calibration_seed": 123,
+  "evaluation_seed": 124,
+  "tail_tokens": 128,
+  "rope_components": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "variants": {
+    "rorope_components_1": {
+      "rope_cache_elements_per_token": 128,
+      "positional_energy_fraction": 0.5272641853777813,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.27759360894560814,
+          "mean_abs": 0.012231418126929239,
+          "rmse": 0.015502304590915167,
+          "relative_l2": 0.7157804610181272,
+          "cosine_similarity": 0.74408270880333
+        },
+        "tail_tokens": {
+          "max_abs": 0.2119010016322136,
+          "mean_abs": 0.011784935137314812,
+          "rmse": 0.014896458003205486,
+          "relative_l2": 0.807436351347618,
+          "cosine_similarity": 0.6755984168440358
+        }
+      }
+    },
+    "rorope_components_2": {
+      "rope_cache_elements_per_token": 256,
+      "positional_energy_fraction": 0.6149061429563586,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.2889329791069031,
+          "mean_abs": 0.011658554911892233,
+          "rmse": 0.014784036361467011,
+          "relative_l2": 0.6826162071877421,
+          "cosine_similarity": 0.7679279997632542
+        },
+        "tail_tokens": {
+          "max_abs": 0.2318219169974327,
+          "mean_abs": 0.011299871497794623,
+          "rmse": 0.014302547136820344,
+          "relative_l2": 0.7752444556045803,
+          "cosine_similarity": 0.701777796299372
+        }
+      }
+    },
+    "rorope_components_4": {
+      "rope_cache_elements_per_token": 512,
+      "positional_energy_fraction": 0.7659959456120574,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.21714985370635986,
+          "mean_abs": 0.009976034625799974,
+          "rmse": 0.012669881794464277,
+          "relative_l2": 0.5850003642169104,
+          "cosine_similarity": 0.8296134455805927
+        },
+        "tail_tokens": {
+          "max_abs": 0.1472177356481552,
+          "mean_abs": 0.009817057291210109,
+          "rmse": 0.012431458311535441,
+          "relative_l2": 0.6738253710268746,
+          "cosine_similarity": 0.7743656920625379
+        }
+      }
+    },
+    "rorope_components_8": {
+      "rope_cache_elements_per_token": 1024,
+      "positional_energy_fraction": 1.0,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 1.9222497940063477e-06,
+          "mean_abs": 5.93678826668907e-08,
+          "rmse": 7.886946259411527e-08,
+          "relative_l2": 3.641601799576959e-06,
+          "cosine_similarity": 0.9999999999933326
+        },
+        "tail_tokens": {
+          "max_abs": 1.2814998626708984e-06,
+          "mean_abs": 7.681759633184097e-08,
+          "rmse": 9.926294703331259e-08,
+          "relative_l2": 5.380373761288949e-06,
+          "cosine_similarity": 0.9999999999855185
+        }
+      }
+    }
+  },
+  "notes": [
+    "All KV components remain present; only leading PCA components retain RoPE.",
+    "The all-component variant is the exact-invariance implementation control.",
+    "No FreqFold, BKV-PCA, or latent KV compression is applied in this experiment."
+  ]
+}
+
