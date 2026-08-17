@@ -9,6 +9,18 @@ import optax
 from singularity.optimizer import cast_grads_bf16, gradient_health
 
 
+def create_teacher_mixer_runner(module, positions, attention_mask) -> Callable:
+    """Compile a Flax teacher apply without crossing JIT with NumPy helpers."""
+
+    @jax.jit
+    def run(params, inputs):
+        return module.apply(
+            {"params": params}, inputs, positions, attention_mask
+        )
+
+    return run
+
+
 def relative_mse(prediction: jax.Array, target: jax.Array) -> jax.Array:
     """Scale-free mixer distillation objective, accumulated in FP32."""
     error = prediction.astype(jnp.float32) - target.astype(jnp.float32)

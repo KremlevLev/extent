@@ -11,11 +11,13 @@ import jax.numpy as jnp
 import numpy as np
 from flax.core import freeze, unfreeze
 
-from scripts.qwen_mla_shock import _run_layer
 from singularity.calibration_data import WIKITEXT_REPO, WIKITEXT_REVISION, load_wikitext2_tokens
 from singularity.config import Mamba3Config
 from singularity.hardware import recommended_compute_dtype
-from singularity.layerwise_distillation import create_layerwise_train_step
+from singularity.layerwise_distillation import (
+    create_layerwise_train_step,
+    create_teacher_mixer_runner,
+)
 from singularity.layers.common import RMSNorm
 from singularity.layers.mamba3 import Mamba3MIMO
 from singularity.mamba3_transplant import build_qwen3_to_mamba3_transplant_variants
@@ -95,7 +97,7 @@ def main(argv: list[str] | None = None) -> None:
     positions = jnp.arange(args.sequence_length, dtype=jnp.int32)[None]
     mask = jnp.ones((1, args.sequence_length), dtype=jnp.bool_)
     teacher_module = Qwen3GQAAttention(source)
-    run_teacher = jax.jit(lambda params, x: _run_layer(teacher_module, params, x, positions, mask))
+    run_teacher = create_teacher_mixer_runner(teacher_module, positions, mask)
     print(f"precomputing_teacher_windows={window_count}")
     teacher_targets = np.stack([
         np.asarray(

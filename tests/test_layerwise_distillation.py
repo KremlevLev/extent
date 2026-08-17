@@ -5,7 +5,12 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 
-from singularity.layerwise_distillation import create_layerwise_train_step, relative_mse
+from singularity.layerwise_distillation import (
+    create_layerwise_train_step,
+    create_teacher_mixer_runner,
+    relative_mse,
+)
+from singularity.qwen3_teacher import Qwen3GQAAttention, tiny_qwen3_teacher_config
 
 
 def test_relative_mse_is_scale_free_and_zero_for_exact_target():
@@ -26,3 +31,16 @@ def test_layerwise_train_step_updates_parameters_and_reports_finite_gradients():
     assert bool(metrics["grads_finite"])
     assert np.isfinite(float(metrics["grad_norm"]))
     assert not np.array_equal(np.asarray(updated["kernel"]), np.asarray(params["kernel"]))
+
+
+def test_teacher_mixer_runner_is_jit_safe():
+    config = tiny_qwen3_teacher_config()
+    module = Qwen3GQAAttention(config)
+    inputs = jnp.ones((1, 3, config.hidden_size), jnp.float32)
+    positions = jnp.arange(3, dtype=jnp.int32)[None]
+    mask = jnp.ones((1, 3), jnp.bool_)
+    params = module.init(jax.random.key(4), inputs, positions, mask)["params"]
+    output = create_teacher_mixer_runner(module, positions, mask)(params, inputs)
+    jax.block_until_ready(output)
+    assert output.shape == inputs.shape
+    assert np.all(np.isfinite(np.asarray(output)))
