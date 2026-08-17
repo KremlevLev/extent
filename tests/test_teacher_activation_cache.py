@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from scripts.qwen_activation_cache import _safe_prune_shards
+from scripts.qwen_activation_cache import (
+    _create_data_parallel_norm_runner,
+    _safe_prune_shards,
+)
+from singularity.layers.common import RMSNorm
 from singularity.teacher_activation_cache import (
     activation_window_layout,
     array_artifact,
     atomic_save_array,
     checkpoint_shard_last_use,
     load_activation_cache,
+    run_host_data_parallel,
     run_host_microbatches,
 )
 
@@ -36,6 +42,37 @@ def test_host_microbatch_runner_preserves_order_and_fp32_output():
     )
     np.testing.assert_array_equal(output, inputs * 2)
     assert output.dtype == np.float32
+
+
+def test_data_parallel_host_batches_pad_and_restore_order():
+    inputs = np.arange(5 * 2 * 3, dtype=np.float32).reshape(5, 2, 3)
+    output = run_host_data_parallel(
+        lambda params, batch: batch + params,
+        3.0,
+        inputs,
+        per_device_windows=2,
+        device_count=2,
+        input_dtype=jnp.float32,
+    )
+    np.testing.assert_array_equal(output, inputs + 3)
+
+
+def test_pmapped_norm_runner_executes_on_available_device():
+    devices = jax.devices()[:1]
+    module = RMSNorm(4, eps=1e-6, param_dtype=jnp.float32)
+    params = {"scale": jnp.ones((4,), jnp.float32)}
+    inputs = np.ones((3, 2, 4), np.float32)
+    runner = _create_data_parallel_norm_runner(module, devices)
+    output = run_host_data_parallel(
+        runner,
+        params,
+        inputs,
+        per_device_windows=2,
+        device_count=1,
+        input_dtype=jnp.float32,
+    )
+    assert output.shape == inputs.shape
+    assert np.all(np.isfinite(output))
 
 
 def test_checkpoint_shard_last_use_tracks_shared_shards():

@@ -58,6 +58,38 @@ def run_host_microbatches(
     return output
 
 
+def run_host_data_parallel(
+    runner: Callable[[object, jax.Array], jax.Array],
+    params: object,
+    inputs: np.ndarray | jax.Array,
+    per_device_windows: int,
+    device_count: int,
+    *,
+    input_dtype: jnp.dtype,
+) -> np.ndarray:
+    """Feed a pmapped frozen layer, padding only the final host batch."""
+    if per_device_windows < 1 or device_count < 1:
+        raise ValueError("per_device_windows and device_count must be positive")
+    windows = int(inputs.shape[0])
+    global_batch = per_device_windows * device_count
+    output = np.empty(tuple(inputs.shape), dtype=np.float32)
+    trailing_shape = tuple(inputs.shape[1:])
+    for start in range(0, windows, global_batch):
+        stop = min(start + global_batch, windows)
+        valid = stop - start
+        host = np.zeros((global_batch, *trailing_shape), dtype=np.dtype(input_dtype))
+        host[:valid] = np.asarray(inputs[start:stop], dtype=np.dtype(input_dtype))
+        sharded = jnp.asarray(
+            host.reshape(device_count, per_device_windows, *trailing_shape),
+            dtype=input_dtype,
+        )
+        value = np.asarray(runner(params, sharded), dtype=np.float32).reshape(
+            global_batch, *trailing_shape
+        )
+        output[start:stop] = value[:valid]
+    return output
+
+
 def checkpoint_shard_last_use(
     weight_map: Mapping[str, str], target_layer: int
 ) -> dict[str, int]:

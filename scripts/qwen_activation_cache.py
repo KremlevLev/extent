@@ -37,6 +37,7 @@ from singularity.teacher_activation_cache import (
     atomic_save_array,
     checkpoint_shard_last_use,
     file_sha256,
+    run_host_data_parallel,
     run_host_microbatches,
 )
 from singularity.weight_mapping import QwenCheckpointReader
@@ -69,6 +70,29 @@ def _create_norm_runner(module):
         return module.apply({"params": params}, inputs)
 
     return run
+
+
+def _create_data_parallel_decoder_runner(module, positions, attention_mask, devices):
+    def apply(params, inputs):
+        batch_positions = jnp.broadcast_to(
+            positions, (inputs.shape[0], positions.shape[1])
+        )
+        batch_mask = jnp.broadcast_to(
+            attention_mask, (inputs.shape[0], attention_mask.shape[1])
+        )
+        return module.apply(
+            {"params": params}, inputs, batch_positions, batch_mask
+        )
+
+    return jax.pmap(apply, in_axes=(None, 0), devices=devices)
+
+
+def _create_data_parallel_norm_runner(module, devices):
+    return jax.pmap(
+        lambda params, inputs: module.apply({"params": params}, inputs),
+        in_axes=(None, 0),
+        devices=devices,
+    )
 
 
 def _safe_prune_shards(
@@ -132,6 +156,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--training-windows", type=int, default=80)
     parser.add_argument("--evaluation-windows", type=int, default=4)
     parser.add_argument("--microbatch-windows", type=int, default=4)
+    parser.add_argument("--data-parallel", action="store_true")
+    parser.add_argument("--per-device-windows", type=int, default=2)
     parser.add_argument(
         "--compute-dtype",
         choices=("auto", "float32", "bfloat16"),
@@ -147,8 +173,8 @@ def main(argv: list[str] | None = None) -> None:
     args = parser.parse_args(argv)
     if not 0 <= args.target_layer < 40:
         raise ValueError("target-layer must be in [0, 40)")
-    if args.sequence_length < 1 or args.microbatch_windows < 1:
-        raise ValueError("sequence-length and microbatch-windows must be positive")
+    if min(args.sequence_length, args.microbatch_windows, args.per_device_windows) < 1:
+        raise ValueError("sequence-length and batch sizes must be positive")
     layout = activation_window_layout(
         args.calibration_windows, args.training_windows, args.evaluation_windows
     )
@@ -168,6 +194,9 @@ def main(argv: list[str] | None = None) -> None:
     )
     if args.target_layer >= source.num_layers:
         raise ValueError("target-layer exceeds the pinned teacher depth")
+    devices = list(jax.devices())
+    if args.data_parallel and len(devices) < 2:
+        raise ValueError("--data-parallel requires at least two visible devices")
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -252,7 +281,27 @@ def main(argv: list[str] | None = None) -> None:
     positions = jnp.arange(args.sequence_length, dtype=jnp.int32)[None]
     attention_mask = jnp.ones((1, args.sequence_length), dtype=jnp.bool_)
     decoder = Qwen3DecoderLayer(source)
-    run_decoder = _create_decoder_runner(decoder, positions, attention_mask)
+    if args.data_parallel:
+        run_decoder = _create_data_parallel_decoder_runner(
+            decoder, positions, attention_mask, devices
+        )
+        run_batches = lambda runner, params, values: run_host_data_parallel(
+            runner,
+            params,
+            values,
+            args.per_device_windows,
+            len(devices),
+            input_dtype=compute_dtype,
+        )
+    else:
+        run_decoder = _create_decoder_runner(decoder, positions, attention_mask)
+        run_batches = lambda runner, params, values: run_host_microbatches(
+            runner,
+            params,
+            values,
+            args.microbatch_windows,
+            input_dtype=compute_dtype,
+        )
     for layer in range(completed_layer + 1, args.target_layer):
         print(f"propagating_decoder_layer={layer}/{args.target_layer - 1}")
         ensure_layer_checkpoint(
@@ -265,13 +314,7 @@ def main(argv: list[str] | None = None) -> None:
         )
         arrays = load_layer_arrays(reader, source, layer)
         params = jax_layer_params(arrays, source, layer)
-        hidden = run_host_microbatches(
-            run_decoder,
-            params,
-            hidden,
-            args.microbatch_windows,
-            input_dtype=compute_dtype,
-        )
+        hidden = run_batches(run_decoder, params, hidden)
         finite = bool(np.all(np.isfinite(hidden)))
         if not finite:
             raise FloatingPointError(f"non-finite residual stream after layer {layer}")
@@ -322,27 +365,25 @@ def main(argv: list[str] | None = None) -> None:
     target_arrays = load_mixer_arrays(reader, source, args.target_layer)
     norm_name = f"model.layers.{args.target_layer}.input_layernorm.weight"
     norm = RMSNorm(source.hidden_size, source.rms_norm_eps, jnp.float32)
-    run_norm = _create_norm_runner(norm)
-    norm_params = {"scale": jnp.asarray(target_arrays[norm_name])}
-    normalized = run_host_microbatches(
-        run_norm,
-        norm_params,
-        hidden,
-        args.microbatch_windows,
-        input_dtype=compute_dtype,
+    run_norm = (
+        _create_data_parallel_norm_runner(norm, devices)
+        if args.data_parallel
+        else _create_norm_runner(norm)
     )
+    norm_params = {"scale": jnp.asarray(target_arrays[norm_name])}
+    normalized = run_batches(run_norm, norm_params, hidden)
     attention = Qwen3GQAAttention(source)
-    run_attention = _create_decoder_runner(attention, positions, attention_mask)
+    run_attention = (
+        _create_data_parallel_decoder_runner(
+            attention, positions, attention_mask, devices
+        )
+        if args.data_parallel
+        else _create_decoder_runner(attention, positions, attention_mask)
+    )
     attention_params = jax_attention_params(
         target_arrays, source, args.target_layer
     )
-    targets = run_host_microbatches(
-        run_attention,
-        attention_params,
-        normalized,
-        args.microbatch_windows,
-        input_dtype=compute_dtype,
-    )
+    targets = run_batches(run_attention, attention_params, normalized)
     finite = bool(
         np.all(np.isfinite(hidden))
         and np.all(np.isfinite(normalized))
@@ -374,9 +415,15 @@ def main(argv: list[str] | None = None) -> None:
         "dtype_reason": dtype_decision.reason,
         "storage_dtype": args.storage_dtype,
         "microbatch_windows": args.microbatch_windows,
+        "data_parallel": args.data_parallel,
+        "per_device_windows": args.per_device_windows,
         "jax_backend": jax.default_backend(),
-        "visible_devices": [str(device) for device in jax.devices()],
-        "execution": "single-device jit; additional visible accelerator devices are not used",
+        "visible_devices": [str(device) for device in devices],
+        "execution": (
+            f"data-parallel pmap across {len(devices)} devices"
+            if args.data_parallel
+            else "single-device jit; additional visible accelerator devices are not used"
+        ),
         "prune_consumed_shards": args.prune_consumed_shards,
         "removed_checkpoint_shards": sorted(set(removed_shards)),
         "artifacts": {

@@ -650,6 +650,15 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** portable cached activations are accepted as a faithful replacement for on-the-fly layer-0 teacher computation. Deeper-layer distillation may now use this interface, provided the producer first propagates the true residual stream through all preceding frozen layers.
 - **Raw artifact:** `results/EXP-027-qwen3-mamba3-cached-distill-sweep-layer0.json`.
 
+### EXP-028 — Data-parallel teacher activation propagation
+
+- **Implementation commit title:** `feat: add data-parallel Qwen3 activation caching`
+- **Status:** implementation complete; layer-0 multi-device smoke pending before layer-18 propagation.
+- **Purpose:** use every visible local TPU/GPU for the expensive frozen-teacher propagation while preserving the exact per-window cache contract validated in EXP-026/027.
+- **Parallel rule:** parameters are replicated, windows are sharded across the leading `pmap` device axis, and only the final global batch is zero-padded before valid outputs are restored in original order. `--per-device-windows` controls bounded activation memory.
+- **Correctness boundary:** this changes throughput only. Each window remains an independent causal sequence, the teacher is frozen, and cache storage/hashing are unchanged.
+- **Execution gate:** validate target layer 0 with `--data-parallel` on the available accelerator topology, then propagate target layer 18 with shard pruning enabled.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
