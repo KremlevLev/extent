@@ -547,6 +547,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** before layerwise distillation, test incremental contextual value by fitting a raw-hidden baseline and then fitting frozen Mamba features only to its residual on disjoint tokens. Mamba is useful only if the combined held-out prediction beats the raw-hidden control. This prevents mistaking a random-feature readout for successful attention transplantation.
 - **Raw artifact:** `results/EXP-022-qwen3-mamba3-readout-probe-layer0.json`.
 
+### EXP-023 — Residualized Mamba-3 contextual-value probe
+
+- **Implementation commit title:** `feat: add residualized Mamba-3 context-value probe`
+- **Status:** implementation and local tests complete; Kaggle measurement pending.
+- **Question:** after fitting the strongest raw-hidden linear baseline, can frozen Mamba recurrence features predict additional held-out teacher residual?
+- **Nested protocol:** select the raw readout ridge using only the internal calibration validation suffix. For each Mamba variant, fit a context readout to the residual left by the raw model, select its ridge on that same held-in validation protocol, then refit both stages on all 256 calibration tokens. The final 128 tokens remain untouched.
+- **Comparison:** raw-hidden held-out metrics versus `raw prediction + Mamba residual prediction` for INIT-A through INIT-E. Improvement must occur on held-out relative L2 and cosine, not merely calibration error.
+- **Decision rule:** if no variant beats raw hidden, frozen recurrence adds no demonstrated contextual value and the next justified step is short layerwise distillation of recurrent parameters. If a variant wins, retain it as the initialization for that distillation ablation.
+- **Regression suite (MEASURED):** 40 tests passed in 66.70 s. A synthetic two-source target verifies that the residualized procedure improves held-out prediction when context features contain complementary signal.
+- **Boundary:** sequential residual fitting is deliberately interpretable but is not guaranteed to equal a jointly optimized two-block ridge model. It measures incremental signal under the declared fitting rule.
+
 ## 7. Development milestones
 
 1. **Completed only for the sharding mechanism:** wrong-generation weights + Lion state fit on v5e-8; exact Qwen3 HBM validation remains pending.

@@ -522,3 +522,26 @@ Use a Kaggle GPU. Success ends with `MAMBA3-READOUT-PROBE-PASS`; this means the
 linear solves and finite checks succeeded, not that frozen Mamba features passed
 a quality threshold. Download the JSON so held-out gains and failures are both
 retained.
+
+The same launcher now also performs EXP-023: after fitting the raw-hidden
+control, it fits each frozen Mamba representation only to the remaining teacher
+residual. Re-run it after pulling the latest commit and use a new artifact name:
+
+```python
+from scripts.qwen_mamba3_readout_probe import main as qwen_mamba3_readout_probe
+qwen_mamba3_readout_probe([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--layer-index", "0",
+    "--calibration-tokens", "256",
+    "--selection-tokens", "64",
+    "--evaluation-tokens", "128",
+    "--ridge-values", "1e-2,1e-3,1e-4",
+    "--seed", "123",
+    "--result-json", "/kaggle/working/qwen3-mamba3-context-probe-layer0.json",
+])
+```
+
+Compare each `raw_plus_mamba_heldout` entry with
+`raw_normalized_hidden_control.heldout`. The Mamba representation adds useful
+context only when the former improves held-out relative L2 and cosine.

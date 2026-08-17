@@ -78,6 +78,69 @@ def _select_and_fit_readout(
     }
 
 
+def _fit_residualized_context_readout(
+    raw_features: jax.Array,
+    context_features: jax.Array,
+    targets: jax.Array,
+    calibration_tokens: int,
+    selection_tokens: int,
+    ridge_values: tuple[float, ...],
+    raw_ridge: float,
+) -> tuple[jax.Array, jax.Array, dict]:
+    """Fit raw-token readout plus a separately regularized context residual."""
+    fit_end = calibration_tokens - selection_tokens
+    raw_selection_kernel, _ = fit_dual_ridge_readout(
+        raw_features[:fit_end], targets[:fit_end], relative_ridge=raw_ridge
+    )
+    raw_selection_prediction = raw_features @ raw_selection_kernel
+    residual_selection_target = targets - raw_selection_prediction
+    selection = []
+    best_ridge = None
+    best_l2 = float("inf")
+    for ridge in ridge_values:
+        residual_kernel, report = fit_dual_ridge_readout(
+            context_features[:fit_end],
+            residual_selection_target[:fit_end],
+            relative_ridge=ridge,
+        )
+        combined = (
+            raw_selection_prediction[fit_end:calibration_tokens]
+            + context_features[fit_end:calibration_tokens] @ residual_kernel
+        )
+        metrics = parity_metrics(
+            np.asarray(targets[fit_end:calibration_tokens]), np.asarray(combined)
+        )
+        selection.append(
+            {
+                "relative_ridge": ridge,
+                "residual_fit": asdict(report),
+                "combined_validation": asdict(metrics),
+            }
+        )
+        if metrics.relative_l2 < best_l2:
+            best_l2 = metrics.relative_l2
+            best_ridge = ridge
+
+    raw_kernel, raw_report = fit_dual_ridge_readout(
+        raw_features[:calibration_tokens],
+        targets[:calibration_tokens],
+        relative_ridge=raw_ridge,
+    )
+    residual_target = targets - raw_features @ raw_kernel
+    residual_kernel, residual_report = fit_dual_ridge_readout(
+        context_features[:calibration_tokens],
+        residual_target[:calibration_tokens],
+        relative_ridge=float(best_ridge),
+    )
+    return raw_kernel, residual_kernel, {
+        "raw_relative_ridge": raw_ridge,
+        "context_selection": selection,
+        "selected_context_relative_ridge": best_ridge,
+        "final_raw_fit": asdict(raw_report),
+        "final_residual_fit": asdict(residual_report),
+    }
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="Test held-out teacher-signal recovery from frozen Mamba-3 features."
@@ -167,6 +230,16 @@ def main(argv: list[str] | None = None) -> None:
         )
     )
     evaluation = slice(args.calibration_tokens, total_tokens)
+    raw_features = normalized[0]
+    raw_kernel, raw_calibration = _select_and_fit_readout(
+        raw_features,
+        jnp.asarray(teacher),
+        args.calibration_tokens,
+        args.selection_tokens,
+        ridge_values,
+    )
+    raw_prediction = np.asarray(raw_features[evaluation] @ raw_kernel)
+    selected_raw_ridge = float(raw_calibration["selected_relative_ridge"])
     results = {}
     passed = True
     for name, params in variants.items():
@@ -181,8 +254,27 @@ def main(argv: list[str] | None = None) -> None:
             ridge_values,
         )
         calibrated = features[evaluation] @ kernel
+        residual_raw_kernel, residual_kernel, residual_calibration = (
+            _fit_residualized_context_readout(
+                raw_features,
+                features,
+                jnp.asarray(teacher),
+                args.calibration_tokens,
+                args.selection_tokens,
+                ridge_values,
+                selected_raw_ridge,
+            )
+        )
+        residualized = (
+            raw_features[evaluation] @ residual_raw_kernel
+            + features[evaluation] @ residual_kernel
+        )
         calibrated_np = np.asarray(calibrated)
-        finite = bool(np.all(np.isfinite(calibrated_np)))
+        residualized_np = np.asarray(residualized)
+        finite = bool(
+            np.all(np.isfinite(calibrated_np))
+            and np.all(np.isfinite(residualized_np))
+        )
         passed &= finite
         results[name] = {
             "mapping": asdict(reports[name]),
@@ -193,27 +285,21 @@ def main(argv: list[str] | None = None) -> None:
             "calibrated_heldout": asdict(
                 parity_metrics(teacher[evaluation], calibrated_np)
             ),
+            "residualized_context_calibration": residual_calibration,
+            "raw_plus_mamba_heldout": asdict(
+                parity_metrics(teacher[evaluation], residualized_np)
+            ),
             "finite": finite,
         }
         print(
             f"{name}=DONE original_l2={results[name]['original_heldout']['relative_l2']:.6g} "
             f"calibrated_l2={results[name]['calibrated_heldout']['relative_l2']:.6g} "
-            f"calibrated_cosine={results[name]['calibrated_heldout']['cosine_similarity']:.6g}"
+            f"raw_plus_mamba_l2={results[name]['raw_plus_mamba_heldout']['relative_l2']:.6g}"
         )
-
-    raw_features = normalized[0]
-    raw_kernel, raw_calibration = _select_and_fit_readout(
-        raw_features,
-        jnp.asarray(teacher),
-        args.calibration_tokens,
-        args.selection_tokens,
-        ridge_values,
-    )
-    raw_prediction = np.asarray(raw_features[evaluation] @ raw_kernel)
     result = {
         "source": f"{spec.repo_id}@{spec.revision}",
         "dataset": f"{WIKITEXT_REPO}@{WIKITEXT_REVISION}",
-        "method": "frozen_Mamba3_feature_calibrated_readout_probe",
+        "method": "frozen_Mamba3_readout_and_residualized_context_probe",
         "layer_index": args.layer_index,
         "calibration_tokens": args.calibration_tokens,
         "selection_tokens": args.selection_tokens,
@@ -232,6 +318,7 @@ def main(argv: list[str] | None = None) -> None:
             "Ridge is selected on a suffix inside calibration, never on held-out evaluation.",
             "The selected ridge is refit on the complete calibration prefix.",
             "Only the linear readout is fitted; every Mamba recurrent parameter is frozen.",
+            "Raw and residual readouts are nested-selected without evaluation-token access.",
         ],
     }
     print(json.dumps(result, indent=2))
