@@ -653,11 +653,15 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-028 — Data-parallel teacher activation propagation
 
 - **Implementation commit title:** `feat: add data-parallel Qwen3 activation caching`
-- **Status:** implementation complete; layer-0 multi-device smoke pending before layer-18 propagation.
+- **Status:** layer-0 multi-device smoke completed on Kaggle 2xT4; layer-18 propagation authorized on the same topology.
 - **Purpose:** use every visible local TPU/GPU for the expensive frozen-teacher propagation while preserving the exact per-window cache contract validated in EXP-026/027.
 - **Parallel rule:** parameters are replicated, windows are sharded across the leading `pmap` device axis, and only the final global batch is zero-padded before valid outputs are restored in original order. `--per-device-windows` controls bounded activation memory.
 - **Correctness boundary:** this changes throughput only. Each window remains an independent causal sequence, the teacher is frozen, and cache storage/hashing are unchanged.
 - **Execution gate:** validate target layer 0 with `--data-parallel` on the available accelerator topology, then propagate target layer 18 with shard pruning enabled.
+- **Hardware result (MEASURED):** JAX GPU backend, two visible T4 devices, FP32 compute/storage, `data_parallel=true`, two windows per device, and `execution=data-parallel pmap across 2 devices`.
+- **Correctness result (MEASURED):** `passed=true`; split remains `8/80/4`, all artifact shapes match EXP-026, and token/residual SHA-256 values match the prior FP32 source inputs. Normalized/target artifacts are finite and independently hashed.
+- **Decision:** the two-device propagation path is accepted for the next layer-18 cache run. TPU-v5e-8 pmap remains a separate topology smoke if that accelerator is chosen instead.
+- **Raw artifact:** `results/EXP-028-qwen3-layer0-dp-activation-cache-manifest.json`.
 
 ## 8. Reasoning SFT boundary
 

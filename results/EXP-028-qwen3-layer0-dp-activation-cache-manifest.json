@@ -1,0 +1,90 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+  "method": "streamed_Qwen3_residual_and_attention_activation_cache",
+  "target_layer": 0,
+  "sequence_length": 32,
+  "window_layout": {
+    "calibration": [
+      0,
+      8
+    ],
+    "training": [
+      8,
+      88
+    ],
+    "evaluation": [
+      88,
+      92
+    ],
+    "total_windows": 92
+  },
+  "compute_dtype": "float32",
+  "dtype_reason": "pre-Ampere GPU detected (Tesla T4)",
+  "storage_dtype": "float32",
+  "microbatch_windows": 4,
+  "data_parallel": true,
+  "per_device_windows": 2,
+  "jax_backend": "gpu",
+  "visible_devices": [
+    "cuda:0",
+    "cuda:1"
+  ],
+  "execution": "data-parallel pmap across 2 devices",
+  "prune_consumed_shards": false,
+  "removed_checkpoint_shards": [],
+  "artifacts": {
+    "token_ids": {
+      "path": "/kaggle/working/output/qwen3-layer0-activation-cache-token-ids.npy",
+      "shape": [
+        92,
+        32
+      ],
+      "dtype": "int32",
+      "bytes": 11904,
+      "sha256": "7719d3289d9d1add3466a780d08e07db4411b8d90da3b975049c59fd8f61ca84"
+    },
+    "residual_input": {
+      "path": "/kaggle/working/output/qwen3-layer0-activation-cache-residual-input.npy",
+      "shape": [
+        92,
+        32,
+        5120
+      ],
+      "dtype": "float32",
+      "bytes": 60293248,
+      "sha256": "9715ddcd7fa47f7b1d638dba1ca881da057503670da6415db4bfae7d96214db3"
+    },
+    "normalized_input": {
+      "path": "/kaggle/working/output/qwen3-layer0-activation-cache-normalized-input.npy",
+      "shape": [
+        92,
+        32,
+        5120
+      ],
+      "dtype": "float32",
+      "bytes": 60293248,
+      "sha256": "6158b428462064706e56a69ddaab5a71bcbf64904486d5fafd75f8364ae8c2fa"
+    },
+    "attention_target": {
+      "path": "/kaggle/working/output/qwen3-layer0-activation-cache-attention-target.npy",
+      "shape": [
+        92,
+        32,
+        5120
+      ],
+      "dtype": "float32",
+      "bytes": 60293248,
+      "sha256": "9629de1e02f8e47489e1ebfb99cb37d79c80ad38b7defce2fb4da91b83a75576"
+    }
+  },
+  "passed": true,
+  "notes": [
+    "Each window is an independent causal sequence whose positions restart at zero.",
+    "Residual input is the exact frozen-teacher input before target_layer.",
+    "Normalized input and attention target are sufficient for mixer-only distillation.",
+    "This script performs teacher inference and caching only; it does not train a model."
+  ]
+}
+
+
