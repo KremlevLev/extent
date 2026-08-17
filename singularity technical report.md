@@ -624,13 +624,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-026 — Streaming Qwen3 teacher-activation cache
 
 - **Implementation commit title:** `feat: add streaming Qwen3 activation cache`
-- **Status:** implementation complete; layer-0 cache validation pending before deeper-layer execution.
+- **Status:** layer-0 cache validation completed on TPU v5e-8; deeper-layer execution remains gated on cached-input consumer validation.
 - **Purpose:** create scientifically valid mixer inputs for arbitrary Qwen3 layers by streaming the frozen teacher through every preceding decoder layer. This removes the invalid assumption that raw embeddings can serve as middle/late-layer residual inputs.
 - **Cached contract:** independent-window token IDs, residual input immediately before the target decoder layer, input-RMSNorm output consumed by its attention mixer, and the exact frozen attention output target. Shapes, dtypes, byte counts, SHA-256 hashes, source revisions, split boundaries, and visible devices are recorded in a manifest.
 - **Memory strategy:** only one teacher layer is materialized on-device at a time; activations move through bounded host/device microbatches. A partial manifest and residual checkpoint are updated after every completed decoder layer.
 - **Disk strategy:** `--prune-consumed-shards` may delete only exact safetensors shard files whose final required layer has completed. This is optional for early layers and intended for deep targets under Kaggle disk limits.
 - **Numerical policy:** T4 uses FP32 teacher compute and FP32 cache storage by default. The cache performs inference only and never updates teacher parameters.
 - **Execution gate:** first reproduce a finite layer-0 cache with the EXP-025 window layout. Only after that artifact passes will layer 18 be propagated and used for a cached-input distillation experiment.
+- **Layer-0 result (MEASURED):** `passed=true`; compute dtype BF16, storage dtype FP32, microbatch 4, split windows calibration/training/evaluation `8/80/4`, total 92, sequence length 32. All eight TPU v5e devices are visible, while the current correctness path executes unsharded on one device.
+- **Artifact contract (MEASURED):** token IDs are `[92,32]`; residual input, normalized input, and attention target are each `[92,32,5120]` FP32 and 60,293,248 bytes including the NPY header. Each artifact has a distinct recorded SHA-256 digest.
+- **Interpretation:** the cache producer can materialize the exact layer-0 mixer dataset without training and persist it independently of the checkpoint session. The next gate is consuming these artifacts in the paired distillation sweep and reproducing the qualitative EXP-025 ranking without an on-the-fly teacher forward.
+- **Raw artifact:** `results/EXP-026-qwen3-layer0-activation-cache-manifest.json`.
 
 ## 8. Reasoning SFT boundary
 
