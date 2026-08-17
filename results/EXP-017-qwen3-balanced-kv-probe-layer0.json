@@ -1,0 +1,96 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "method": "TransMLA_RoRoPE_then_activation_PCA_with_BKV_ablation",
+  "layer_index": 0,
+  "compute_dtype": "float32",
+  "jax_backend": "gpu",
+  "input_kind": "independent_deterministic_gaussian_calibration_and_evaluation",
+  "calibration_length": 1024,
+  "sequence_length": 1024,
+  "calibration_seed": 123,
+  "evaluation_seed": 124,
+  "svd_seed": 0,
+  "tail_tokens": 128,
+  "rope_cache_elements_per_token": 128,
+  "latent_rank": 448,
+  "target_cache_elements_per_token": 576,
+  "auto_bkv_balance_ratio": 86.8204231624832,
+  "variants": {
+    "rorope_uncompressed": {
+      "latent_rank": 1920,
+      "total_cache_elements_per_token": 2048,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.27759360894560814,
+          "mean_abs": 0.012231418126929239,
+          "rmse": 0.015502304590915167,
+          "relative_l2": 0.7157804610181272,
+          "cosine_similarity": 0.74408270880333
+        },
+        "tail_tokens": {
+          "max_abs": 0.2119010016322136,
+          "mean_abs": 0.011784935137314812,
+          "rmse": 0.014896458003205486,
+          "relative_l2": 0.807436351347618,
+          "cosine_similarity": 0.6755984168440358
+        }
+      }
+    },
+    "activation_pca": {
+      "latent_rank": 448,
+      "bkv_balance_ratio": 1.0,
+      "total_cache_elements_per_token": 576,
+      "cache_reduction_fraction": 0.71875,
+      "calibration_joint_reconstruction_relative_l2": 0.2600449025630951,
+      "evaluation_key_reconstruction_relative_l2": 0.5134787559509277,
+      "evaluation_value_reconstruction_relative_l2": 1.1274349689483643,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.5389728783629835,
+          "mean_abs": 0.018267173420237377,
+          "rmse": 0.023604833900970536,
+          "relative_l2": 1.0898946535855307,
+          "cosine_similarity": 0.10367476345675197
+        },
+        "tail_tokens": {
+          "max_abs": 0.2537865936756134,
+          "mean_abs": 0.015559536475340289,
+          "rmse": 0.019928319939514452,
+          "relative_l2": 1.0801795928258269,
+          "cosine_similarity": 0.0942746128072535
+        }
+      }
+    },
+    "bkv_balanced_pca": {
+      "latent_rank": 448,
+      "bkv_balance_ratio": 86.8204231624832,
+      "total_cache_elements_per_token": 576,
+      "cache_reduction_fraction": 0.71875,
+      "calibration_joint_reconstruction_relative_l2": 0.4166015386581421,
+      "evaluation_key_reconstruction_relative_l2": 0.713854193687439,
+      "evaluation_value_reconstruction_relative_l2": 0.7577057480812073,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.416137658059597,
+          "mean_abs": 0.016037419866519232,
+          "rmse": 0.020606262759571718,
+          "relative_l2": 0.9514430690873196,
+          "cosine_similarity": 0.31653017430350316
+        },
+        "tail_tokens": {
+          "max_abs": 0.24467560462653637,
+          "mean_abs": 0.014051634820288062,
+          "rmse": 0.01799869769652869,
+          "relative_l2": 0.975587807112715,
+          "cosine_similarity": 0.24010232035851267
+        }
+      }
+    }
+  },
+  "notes": [
+    "RoRoPE fold 1 is frozen from EXP-015/016.",
+    "Activation PCA is an oracle-style compression diagnostic, not yet a deployable weight map.",
+    "Qwen3 per-head Q/K normalization remains before RoRoPE and compression."
+  ]
+}
+

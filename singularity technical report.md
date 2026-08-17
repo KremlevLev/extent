@@ -437,7 +437,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-017 — Cache-matched balanced KV compression probe
 
 - **Implementation commit title:** `feat: add cache-matched balanced KV compression probe`
-- **Status:** harness implemented; Kaggle execution pending.
+- **Status:** completed on a Kaggle GPU runtime.
 - **Frozen positional transform:** standard fold-1 RoRoPE with one 128-element positional component, selected by EXP-015/016.
 - **Frozen total cache:** 576 elements/token/layer: 128 RoPE plus rank-448 latent KV, a 71.875% reduction from the 2048-element Qwen3 GQA cache.
 - **Compared variants:** uncompressed RoRoPE control; rank-448 uncentered activation PCA; rank-448 TransMLA-style BKV-balanced activation PCA.
@@ -446,6 +446,25 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Metrics:** calibration joint-reconstruction L2, held-out K/V reconstruction L2, and mixer all-token/tail parity against the original Qwen3 GQA layer.
 - **Boundary:** activation PCA is an oracle-style diagnostic of the compressed activation subspace, not yet a deployable linear weight mapping. It intentionally precedes CARE-style covariance-aware weight mapping and real-text calibration.
 - **Regression suite (MEASURED):** 33 tests passed in 53.63 s. Full-rank activation PCA reconstructs its fixture within `2e-5`, BKV scaling equalizes mean tokenwise K/V norms, and the earlier RoRoPE invariants remain green.
+- **Uncompressed RoRoPE control (MEASURED):** all/tail mixer L2 `0.715780/0.807436`, exactly reproducing EXP-015/016.
+- **Measured imbalance:** `alpha=86.8204`, reflecting the very large norm mismatch between normalized Qwen3 `K_nope` activations and unnormalized V activations.
+- **Plain activation PCA (MEASURED):** calibration joint L2 `0.260045`; held-out K/V reconstruction L2 `0.513479/1.127435`; all/tail mixer L2 `1.089895/1.080180`; all/tail cosine `0.103675/0.094275`.
+- **BKV-balanced PCA (MEASURED):** calibration joint L2 `0.416602`; held-out K/V reconstruction L2 `0.713854/0.757706`; all/tail mixer L2 `0.951443/0.975588`; all/tail cosine `0.316530/0.240102`.
+- **Interpretation:** BKV balancing reduces all-token mixer L2 by `12.70%` relative to plain PCA and prevents the factorization from nearly discarding V. It is retained as a required baseline. However, rank-448 compression still adds substantial damage beyond the uncompressed RoRoPE shock. The Gaussian calibration matrix has only 1024 samples for 1920 features and generalizes poorly, so it cannot decide the deployable mapping.
+- **Raw artifact:** `results/EXP-017-qwen3-balanced-kv-probe-layer0.json`.
+
+### EXP-018 — Real-text balanced KV calibration
+
+- **Implementation commit title:** `feat: add real-text MLA calibration probe`
+- **Status:** harness implemented; Kaggle execution pending.
+- **Dataset:** pinned `Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3`, `wikitext-2-raw-v1` train split.
+- **Tokenization/source:** pinned Qwen3-14B tokenizer at the immutable source revision; actual checkpoint embedding rows provide layer-0 hidden inputs.
+- **Split:** first 8192 packed real-text tokens for calibration and the following disjoint 1024 tokens for evaluation. Empty records are skipped and EOS separates documents.
+- **Frozen method:** fold-1 RoRoPE, one 128-element positional cache, rank-448 latent, plain versus BKV-balanced uncentered activation PCA, total cache 576.
+- **Compute path:** randomized PCA runs on the active JAX accelerator rather than CPU NumPy; calibration and evaluation remain FP32 diagnostics.
+- **Scientific question:** does the EXP-017 failure primarily reflect under-sampled isotropic Gaussian calibration, and does BKV remain beneficial on real language-token activations?
+- **Boundary:** WikiText-2 is only a calibration probe, not the final recovery corpus or evaluation benchmark. Layer 0 alone cannot establish a global rank schedule or downstream quality.
+- **Regression suite (MEASURED):** 34 tests passed in 53.49 s. Pinned-text packing, accelerator PCA full-rank reconstruction, standard RoRoPE, and FreqFold regressions pass after factoring out the reusable key rotation.
 
 ## 7. Development milestones
 

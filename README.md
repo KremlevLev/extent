@@ -396,6 +396,32 @@ This remains a GPU layer diagnostic. It reports an uncompressed RoRoPE control,
 plain rank-448 activation PCA, and rank-448 BKV-balanced activation PCA. The
 activation basis is not yet a deployable checkpoint mapping.
 
+Replace the under-sampled Gaussian calibration with a pinned real-text token
+prefix and actual Qwen3 embedding rows. Install the small calibration-only
+dependency set once, then run the same cache-matched comparison:
+
+```python
+%cd /kaggle/working/singularity
+!pip install -q -r requirements-calibration.txt
+
+from scripts.qwen_real_text_kv_probe import main as qwen_real_text_kv_probe
+qwen_real_text_kv_probe([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--layer-index", "0",
+    "--calibration-tokens", "8192",
+    "--sequence-length", "1024",
+    "--latent-rank", "448",
+    "--tail-tokens", "128",
+    "--svd-seed", "0",
+    "--result-json", "/kaggle/working/qwen3-real-text-kv-probe-layer0.json",
+])
+```
+
+The pinned WikiText-2 train prefix is used only for calibration diagnostics.
+The first 8192 packed tokens fit the PCA basis and the following 1024 tokens are
+held out. Randomized PCA executes on the active JAX GPU; TPU is not required.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional

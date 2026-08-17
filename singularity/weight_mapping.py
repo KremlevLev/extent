@@ -127,6 +127,19 @@ class QwenCheckpointReader:
         with safe_open(str(self.model_dir / self.weight_map[name]), framework="np", device="cpu") as shard:
             return shard.get_tensor(name)
 
+    def read_rows(self, name: str, rows: np.ndarray) -> np.ndarray:
+        """Gather selected checkpoint rows without materializing a float32 copy."""
+        import torch
+        from safetensors import safe_open
+
+        if name not in self.weight_map:
+            raise KeyError(f"tensor not present in checkpoint: {name}")
+        indices = torch.as_tensor(np.asarray(rows), dtype=torch.long)
+        with safe_open(
+            str(self.model_dir / self.weight_map[name]), framework="pt", device="cpu"
+        ) as shard:
+            return shard.get_tensor(name)[indices].float().numpy()
+
     def shape(self, name: str) -> tuple[int, ...]:
         """Read only a tensor's safetensors header/slice metadata."""
         from safetensors import safe_open

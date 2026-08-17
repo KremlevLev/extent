@@ -3,6 +3,7 @@ import numpy as np
 from singularity.activation_compression import (
     bkv_balance_ratio,
     fit_activation_pca,
+    fit_activation_pca_jax,
     project_activations,
 )
 
@@ -24,3 +25,7 @@ def test_full_rank_activation_pca_reconstructs_and_bkv_balances_norms():
         np.linalg.norm(value.reshape(-1, value.shape[-1]), axis=-1)
     )
     np.testing.assert_allclose(balanced_key_norm, value_norm, rtol=1e-6)
+
+    jax_basis = fit_activation_pca_jax(samples, 6, seed=2)
+    jax_reconstructed = np.asarray(samples @ np.asarray(jax_basis).T @ np.asarray(jax_basis))
+    np.testing.assert_allclose(jax_reconstructed, samples, atol=2e-5, rtol=2e-5)

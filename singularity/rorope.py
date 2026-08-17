@@ -71,6 +71,18 @@ def fit_freqfold_rotations(
     )
 
 
+def rotate_rorope_key(key: jax.Array, rotations: jax.Array) -> jax.Array:
+    """Apply per-frequency KV-head PCA without positional rotations."""
+    kv_heads, head_dim = key.shape[-2:]
+    pairs = head_dim // 2
+    if rotations.shape != (pairs, kv_heads, kv_heads):
+        raise ValueError("rotations have an incompatible shape")
+    real, imaginary = jnp.split(key.astype(jnp.float32), 2, axis=-1)
+    real = jnp.einsum("blgp,pgc->blcp", real, rotations)
+    imaginary = jnp.einsum("blgp,pgc->blcp", imaginary, rotations)
+    return jnp.concatenate((real, imaginary), axis=-1)
+
+
 def apply_rorope(
     query: jax.Array,
     key: jax.Array,
@@ -89,15 +101,14 @@ def apply_rorope(
         raise ValueError("rotations have an incompatible shape")
 
     q_real, q_imaginary = jnp.split(query.astype(jnp.float32), 2, axis=-1)
-    k_real, k_imaginary = jnp.split(key.astype(jnp.float32), 2, axis=-1)
+    key = rotate_rorope_key(key, rotations)
+    k_real, k_imaginary = jnp.split(key, 2, axis=-1)
     q_rotation = rotations[:, query_to_kv, :].transpose(1, 0, 2)
     q_rotation = q_rotation.transpose(0, 2, 1)
     q_real = q_real[..., None, :] * q_rotation[None, None, :, :, :]
     q_imaginary = (
         q_imaginary[..., None, :] * q_rotation[None, None, :, :, :]
     )
-    k_real = jnp.einsum("blgp,pgc->blcp", k_real, rotations)
-    k_imaginary = jnp.einsum("blgp,pgc->blcp", k_imaginary, rotations)
 
     frequencies = jnp.arange(pairs, dtype=jnp.float32)
     inverse = theta ** (-(2.0 * frequencies) / head_dim)

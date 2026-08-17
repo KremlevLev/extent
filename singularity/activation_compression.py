@@ -37,3 +37,30 @@ def project_activations(samples: np.ndarray, basis: np.ndarray) -> np.ndarray:
     samples = np.asarray(samples, dtype=np.float32)
     basis = np.asarray(basis, dtype=np.float32)
     return (samples @ basis.T) @ basis
+
+
+def fit_activation_pca_jax(
+    samples,
+    rank: int,
+    *,
+    seed: int = 0,
+    oversample: int = 16,
+    power_iterations: int = 2,
+):
+    """Accelerator-backed randomized uncentered PCA for larger calibration sets."""
+    import jax
+    import jax.numpy as jnp
+
+    samples = jnp.asarray(samples, dtype=jnp.float32)
+    if samples.ndim != 2 or not 0 < rank <= min(samples.shape):
+        raise ValueError("rank must fit the two-dimensional sample matrix")
+    width = min(rank + oversample, min(samples.shape))
+    random = jax.random.normal(
+        jax.random.key(seed), (samples.shape[1], width), dtype=jnp.float32
+    )
+    q, _ = jnp.linalg.qr(samples @ random, mode="reduced")
+    for _ in range(power_iterations):
+        q_right, _ = jnp.linalg.qr(samples.T @ q, mode="reduced")
+        q, _ = jnp.linalg.qr(samples @ q_right, mode="reduced")
+    _, _, vh = jnp.linalg.svd(q.T @ samples, full_matrices=False)
+    return vh[:rank]

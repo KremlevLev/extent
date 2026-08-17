@@ -1,0 +1,2 @@
+-r requirements-parity.txt
+pyarrow>=15
