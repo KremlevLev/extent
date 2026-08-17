@@ -52,9 +52,9 @@ The scientific target is approximately 15% MLA attention and 85% Mamba-3 MIMO. W
 - 7 MLA layers = 14.58%;
 - 41 Mamba-3 layers = 85.42%.
 
-**IMPORTANT CURRENT MISMATCH:** `config/hybrid_14b_v5e8.yaml` currently retains 12 MLA layers and uses 36 Mamba layers, which is 25/75. The measured 14.655B preflight result therefore belongs to the 25/75 prototype and must not be reported as the final 15/85 architecture.
+The production configuration uses seven uniformly interleaved MLA layers at zero-based indices `[5, 12, 19, 26, 33, 40, 47]`. The earlier 12/36 bring-up configuration has been removed. Its recorded memory measurements remain historical engineering evidence only and are not an experimental baseline.
 
-The retained-layer locations must be fixed before the main run. Uniform spacing is a baseline, not automatically the best allocation.
+The main retained-layer schedule is fixed to the uniform indices above. Alternative layer placements, if tested, are small-scale allocation ablations and do not restore the removed 25% architecture.
 
 ### 2.3 Long context
 
@@ -131,7 +131,7 @@ This table is essential: without it, quality loss cannot be attributed to the Ma
 
 ### 4.3 Architecture/efficiency ablation
 
-- Attention fractions: 25% (prior-work-compatible baseline), 16.7%, 14.6% (main target), 8.3%, and optionally 0% at small scale.
+- The full-scale architecture is fixed at 14.6% attention (7/48); no 25% model is retained as a baseline.
 - Retained-layer allocation: uniform, late-layer biased, and sensitivity-ranked.
 - Mamba-3: SISO vs MIMO; MIMO rank; state sizes 32/64/128; real vs complex; Euler vs trapezoidal where implementation permits.
 - MLA: latent KV rank, query rank, partial-RoPE dimensions, and SVD/transplant method.
@@ -213,10 +213,10 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Step 0 (MEASURED):** `loss=4.8750`, `grad_norm=4.8699`, `max_abs_grad=0.6875`, `grads_finite=True`, `nonfinite_grad_leaves=0`.
 - **Interpretation:** the intended 8-device mesh, BF16 path, parameter sharding, Lion-state sharding, forward pass, backward pass, and update execute together on the tiny model.
 
-### EXP-003 — Full 25/75 prototype shape audit and parameter allocation
+### EXP-003 — Superseded bring-up shape audit and parameter allocation
 
 - **Hardware:** one TPU v5e-8 slice for allocation; shape audit is hardware-independent
-- **Configuration:** current 12 MLA / 36 Mamba prototype (25/75), not the final 15/85 target
+- **Configuration:** superseded 12 MLA / 36 Mamba bring-up prototype; removed from active configs and not used as a paper baseline
 - **Commit:** `7c7b725`
 - **Exact parameter count (DERIVED):** 14,655,260,384 across 723 tensors.
 - **Partitioned tensors (DERIVED):** 278/723.
@@ -241,11 +241,24 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Result (MEASURED):** `optimizer_initialization=PASS`; no gradients, activations, or train step were created.
 - **Interpretation:** weights and sharded BF16 Lion momentum fit with substantial nominal headroom. The result does not prove that a full 14B forward/backward fits.
 
+### EXP-005 — Final 7/41 target shape audit
+
+- **Hardware:** local shape-only trace; no full arrays allocated
+- **Configuration:** 7 MLA / 41 Mamba-3 MIMO, MLA indices `[5, 12, 19, 26, 33, 40, 47]`
+- **Exact parameter count (DERIVED):** 14,698,336,184 across 743 tensors.
+- **Partitioned tensors (DERIVED):** 263/743.
+- **Global BF16 weight size (DERIVED):** 27.378 GiB.
+- **Ideal per-device BF16 weights (DERIVED):** 3.428 GiB.
+- **Ideal per-device weights + BF16 gradients + BF16 Lion momentum (DERIVED):** 10.285 GiB.
+- **Ideal training-state headroom at 16 GiB (DERIVED):** 5.715 GiB/device before activations and XLA/runtime overhead.
+- **Result (DERIVED):** shape-only preflight passed.
+- **Status:** real parameter/Lion allocation for this final schedule remains to be measured on the next v5e-8 session.
+
 ## 7. Development milestones
 
 1. **Completed:** validate full weights + Lion state on v5e-8.
-2. **Current:** correct target scheduling to configurable 7/48 MLA layers while retaining 12/48 as an ablation baseline.
-3. Pin Qwen2.5-14B Base revision and implement streaming checkpoint mapping with per-tensor validation.
+2. **Completed:** set the only full-scale target schedule to 7/48 MLA layers and remove 12/48 from active configs.
+3. **Current:** pin Qwen2.5-14B Base revision and implement streaming checkpoint mapping with per-tensor validation.
 4. Establish exact teacher parity before conversion (logits/NLL on fixed fixtures).
 5. Implement and test GQA-to-MLA conversion baselines.
 6. Implement Mamba-3 transplant variants and single-layer shock tests.

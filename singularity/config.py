@@ -40,7 +40,7 @@ class HybridConfig:
     intermediate_size: int = 13_824
     num_layers: int = 48
     attention_layer_indices: tuple[int, ...] = field(
-        default_factory=lambda: tuple(range(3, 48, 4))
+        default_factory=lambda: (5, 12, 19, 26, 33, 40, 47)
     )
     rms_norm_eps: float = 1e-6
     max_position_embeddings: int = 8_192

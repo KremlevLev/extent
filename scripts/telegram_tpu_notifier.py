@@ -4,36 +4,58 @@ import argparse
 
 from singularity.notifications import (
     TelegramNotifierError,
+    accelerator_status_message,
     discover_telegram_chat_ids,
     send_telegram_message,
-    tpu_ready_message,
 )
 
 
-def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Notify Telegram when this JAX process sees TPU.")
+def main(argv: list[str] | None = None, *, enabled: bool = True) -> bool:
+    if not enabled:
+        print("Telegram notifier is disabled.")
+        return False
+
+    parser = argparse.ArgumentParser(description="Report the active JAX accelerator to Telegram.")
     parser.add_argument("--show-chat-ids", action="store_true")
     parser.add_argument("--message", help="Optional extra line for the notification.")
     args = parser.parse_args(argv)
 
     if args.show_chat_ids:
-        chats = discover_telegram_chat_ids()
+        try:
+            chats = discover_telegram_chat_ids()
+        except TelegramNotifierError as exc:
+            print(f"Telegram chat discovery failed: {exc}")
+            return False
         if not chats:
-            raise TelegramNotifierError(
-                "No chats found. Open the bot in Telegram, press Start, send a message, and retry."
+            print(
+                "No chats found. Open the bot in Telegram, press Start, "
+                "send a message, and retry."
             )
+            return False
         print("Recent Telegram chats:")
         for chat_id, name in chats:
             print(f"  {chat_id}: {name}")
-        return
+        return True
 
-    import jax
+    try:
+        import jax
 
-    text = tpu_ready_message(jax.devices())
+        text = accelerator_status_message(jax.devices())
+    except Exception as exc:
+        text = (
+            "Singularity runtime status\n"
+            "status=JAX initialization failed\n"
+            f"error={type(exc).__name__}: {str(exc)[:600]}"
+        )
     if args.message:
         text = f"{text}\n{args.message}"
-    message_id = send_telegram_message(text)
+    try:
+        message_id = send_telegram_message(text)
+    except TelegramNotifierError as exc:
+        print(f"Telegram notification failed: {exc}")
+        return False
     print(f"Telegram notification sent (message_id={message_id}).")
+    return True
 
 
 if __name__ == "__main__":

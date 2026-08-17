@@ -3,7 +3,8 @@ model:
   hidden_size: 5120
   intermediate_size: 13824
   num_layers: 48
-  attention_layer_indices: [3, 7, 11, 15, 19, 23, 27, 31, 35, 39, 43, 47]
+  # Seven uniformly interleaved MLA layers: 7/48 = 14.58% attention.
+  attention_layer_indices: [5, 12, 19, 26, 33, 40, 47]
   max_position_embeddings: 8192
   param_dtype: bfloat16
   compute_dtype: bfloat16

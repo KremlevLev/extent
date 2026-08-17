@@ -1,7 +1,7 @@
 # Singularity: JAX Mamba-3/MLA hybrid prototype
 
 This repository contains a research bring-up path for a parameter-matched Qwen
-14B-class hybrid: 36 Mamba-3 MIMO mixers, 12 MLA mixers, and the Qwen SwiGLU
+14B-class hybrid: 41 Mamba-3 MIMO mixers, 7 MLA mixers, and the Qwen SwiGLU
 MLPs. It targets one TPU v5e-8 slice, but all reference code and tests run on CPU.
 
 ## What is implemented
@@ -129,13 +129,20 @@ next fresh TPU session, after installing requirements, run:
 
 ```python
 from scripts.telegram_tpu_notifier import main as telegram_tpu_notifier
-telegram_tpu_notifier(["--message", "v5e-8 experiment session"])
+
+NOTIFIER_ENABLED = True
+telegram_tpu_notifier(
+    ["--message", "experiment runtime initialized"],
+    enabled=NOTIFIER_ENABLED,
+)
 ```
 
-The message is sent only after the current JAX process sees a TPU. This cannot
+The notifier reports whichever runtime JAX actually sees: TPU, GPU, or CPU. If
+JAX initialization itself fails, it attempts to send that failure too. Set
+`NOTIFIER_ENABLED = False` to disable all checks and network calls. It cannot
 notify before Kaggle starts the notebook kernel, because no project code is
-running before that point. Do not launch the notifier through `!python` or
-`%run`; libtpu must stay in the notebook process.
+running before that point. Do not launch it through `!python` or `%run`;
+libtpu must stay in the notebook process.
 
 Start real bring-up with `config/hybrid_14b_v5e8.yaml`. Its sequence length is
 deliberately 1024 and micro-batch size is one. Compile a single step and inspect

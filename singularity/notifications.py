@@ -95,17 +95,19 @@ def discover_telegram_chat_ids(
     return tuple(sorted(chats.items()))
 
 
-def tpu_ready_message(devices: Iterable[Any]) -> str:
-    """Build a concise notification after JAX has initialized a TPU backend."""
+def accelerator_status_message(devices: Iterable[Any]) -> str:
+    """Describe the accelerator JAX actually initialized without rejecting fallbacks."""
     devices = list(devices)
-    tpu_devices = [device for device in devices if getattr(device, "platform", "") == "tpu"]
-    if not tpu_devices:
-        platforms = sorted({str(getattr(device, "platform", "unknown")) for device in devices})
-        raise TelegramNotifierError(f"TPU is not ready; JAX platforms: {platforms}")
-    process_count = len({int(getattr(device, "process_index", 0)) for device in tpu_devices})
+    if not devices:
+        return "Singularity runtime status\nstatus=error\naccelerator=no JAX devices"
+    platforms = sorted({str(getattr(device, "platform", "unknown")) for device in devices})
+    process_count = len({int(getattr(device, "process_index", 0)) for device in devices})
+    accelerator = "+".join(platform.upper() for platform in platforms)
+    tpu_active = "tpu" in platforms
     return (
-        "Singularity TPU is ready\n"
+        "Singularity runtime status\n"
+        f"status={'TPU ready' if tpu_active else 'TPU not active'}\n"
         f"host={socket.gethostname()}\n"
-        f"devices={len(tpu_devices)} processes={process_count}\n"
+        f"accelerator={accelerator} devices={len(devices)} processes={process_count}\n"
         "next=run the planned experiment in this notebook process"
     )

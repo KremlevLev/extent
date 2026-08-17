@@ -6,7 +6,7 @@ import os
 @dataclass
 class ModelConfig:
     """
-    Архитектурные параметры гибридной модели Qwen3-14B (36 Mamba-2 + 12 GQA).
+    Архитектурные параметры гибридной модели Qwen2.5-14B (41 Mamba-3 + 7 MLA).
     """
     # --- Основные параметры (Qwen3-14B) ---
     vocab_size: int = 152064
@@ -18,8 +18,8 @@ class ModelConfig:
     max_position_embeddings: int = 8192
 
     # --- Параметры гибридной архитектуры ---
-    mamba_layers: int = 36
-    attention_layers: int = 12
+    mamba_layers: int = 41
+    attention_layers: int = 7
     mamba_d_state: int = 128
     mamba_d_conv: int = 4
     mamba_expand_factor: int = 2
@@ -40,7 +40,9 @@ class ModelConfig:
     attention_dropout: float = 0.0
 
     # --- Распределение слоёв (Attention слои) ---
-    attention_layer_indices: List[int] = field(default_factory=lambda: list(range(3, 48, 4)))
+    attention_layer_indices: List[int] = field(
+        default_factory=lambda: [5, 12, 19, 26, 33, 40, 47]
+    )
 
     def __post_init__(self):
         assert self.mamba_layers + self.attention_layers == self.num_hidden_layers, \

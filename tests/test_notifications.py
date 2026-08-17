@@ -1,12 +1,12 @@
 import json
+import sys
+from types import SimpleNamespace
 
-import pytest
-
+from scripts import telegram_tpu_notifier
 from singularity.notifications import (
-    TelegramNotifierError,
+    accelerator_status_message,
     discover_telegram_chat_ids,
     send_telegram_message,
-    tpu_ready_message,
 )
 
 
@@ -55,14 +55,37 @@ def test_discover_chat_ids_deduplicates_recent_updates():
     assert discover_telegram_chat_ids(token="secret", urlopen=fake_urlopen) == (("42", "Lev"),)
 
 
-def test_tpu_ready_message_requires_tpu():
+def test_accelerator_status_reports_tpu_and_gpu():
     class Device:
         def __init__(self, platform, process_index=0):
             self.platform = platform
             self.process_index = process_index
 
-    message = tpu_ready_message([Device("tpu"), Device("tpu")])
-    assert "devices=2" in message
-    with pytest.raises(TelegramNotifierError, match="TPU is not ready"):
-        tpu_ready_message([Device("cpu")])
+    tpu_message = accelerator_status_message([Device("tpu"), Device("tpu")])
+    gpu_message = accelerator_status_message([Device("gpu"), Device("gpu")])
+    assert "status=TPU ready" in tpu_message and "devices=2" in tpu_message
+    assert "status=TPU not active" in gpu_message and "accelerator=GPU" in gpu_message
 
+
+def test_notifier_can_be_disabled_without_checking_runtime(capsys):
+    assert not telegram_tpu_notifier.main(["--not-a-real-option"], enabled=False)
+    assert "disabled" in capsys.readouterr().out
+
+
+def test_notifier_sends_gpu_status_and_jax_errors(monkeypatch):
+    class Device:
+        platform = "gpu"
+        process_index = 0
+
+    sent = []
+    monkeypatch.setattr(telegram_tpu_notifier, "send_telegram_message", lambda text: sent.append(text) or 1)
+    monkeypatch.setitem(sys.modules, "jax", SimpleNamespace(devices=lambda: [Device()]))
+    assert telegram_tpu_notifier.main([])
+    assert "TPU not active" in sent.pop()
+
+    def fail_devices():
+        raise RuntimeError("accelerator unavailable")
+
+    monkeypatch.setitem(sys.modules, "jax", SimpleNamespace(devices=fail_devices))
+    assert telegram_tpu_notifier.main([])
+    assert "JAX initialization failed" in sent.pop()
