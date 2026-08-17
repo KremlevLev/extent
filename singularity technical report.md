@@ -639,11 +639,16 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-027 — Portable cached-activation distillation consumer
 
 - **Implementation commit title:** `feat: add cached-activation Mamba-3 distillation`
-- **Status:** implementation complete; layer-0 cache-consumer validation pending.
+- **Status:** layer-0 cache-consumer validation completed on Kaggle GPU/FP32.
 - **Purpose:** run the paired Mamba-3 seed/budget sweep from persisted teacher activations without recomputing embeddings or the teacher attention forward. The same consumer will accept layer-18 caches once their true residual stream exists.
 - **Integrity gate:** resolve artifacts either from their recorded paths, an explicit cache directory, or the manifest directory; require the producer pass flag; verify every SHA-256, shape, and dtype; and reject mismatched source revision, layer index, sequence length, or split layout.
 - **Portability:** manifests produced in `/kaggle/working/output` remain usable after Kaggle publishes them under a different `/kaggle/input/...` directory because artifacts are also resolved by manifest-sibling basename.
 - **Validation target:** cached BF16-teacher/FP32-storage layer-0 data should reproduce the qualitative EXP-025 result: finite training and random recurrence beating the direct QKVO port across paired seeds. Exact metrics need not equal the earlier T4/FP32-teacher run.
+- **Producer used for the measured consumer run:** FP32 teacher compute and FP32 cache storage. The manifest/artifact paths resolve from `/kaggle/working/output`; all integrity checks pass before training.
+- **Reproduction result (MEASURED):** cached-input metrics reproduce EXP-025 nearly numerically. Across all 18 seed/variant/checkpoint comparisons, maximum absolute relative-L2 difference is `2.25e-6` and maximum cosine difference is `3.88e-6`.
+- **Scientific result (MEASURED):** random recurrence again wins 3/3 seeds at steps 0, 20, and 80. At step 80, random versus QKVO mean relative L2 is `0.597026` versus `0.687221`, with cosine `0.803737` versus `0.741241`; all runs are finite.
+- **Decision:** portable cached activations are accepted as a faithful replacement for on-the-fly layer-0 teacher computation. Deeper-layer distillation may now use this interface, provided the producer first propagates the true residual stream through all preceding frozen layers.
+- **Raw artifact:** `results/EXP-027-qwen3-mamba3-cached-distill-sweep-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 
