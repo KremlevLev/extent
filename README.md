@@ -213,6 +213,31 @@ full_preflight([
 This imports only the exactly preserved 12.252B parameters. It does not claim
 teacher parity yet and does not initialize MLA/Mamba-3 from GQA projections.
 
+## Qwen3 decoder-layer numerical parity
+
+Before any mixer conversion, compare a real source layer against the official
+PyTorch implementation. This downloads only the shard containing layer 0
+(`model-00001-of-00008.safetensors`, approximately 3.58 GiB), runs both sides
+in FP32, and applies frozen error gates:
+
+```python
+%cd /kaggle/working/singularity
+!pip install -q -r requirements-parity.txt
+
+from scripts.qwen_layer_parity import main as qwen_layer_parity
+qwen_layer_parity([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--layer-index", "0",
+    "--sequence-length", "4",
+    "--result-json", "/kaggle/working/qwen3-layer-parity-result.json",
+])
+```
+
+The script requires `transformers==4.51.0`, the version recorded by the pinned
+Qwen3 config. It prints `PARITY-PASS` only when both maximum absolute error and
+relative L2 error pass their predeclared thresholds. Run this on a CPU or GPU
+notebook; TPU is not required.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional

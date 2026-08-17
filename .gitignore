@@ -4,3 +4,4 @@
 *.safetensors
 **/.singularity_source.json
 qwen3-14b/
+qwen3-layer-parity/
