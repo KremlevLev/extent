@@ -5,6 +5,7 @@ import pytest
 from scripts.qwen_mamba3_distill_sweep import (
     _parse_unique_ints,
     aggregate_runs,
+    sweep_notes,
 )
 
 
@@ -38,3 +39,10 @@ def test_aggregate_runs_preserves_paired_seed_ranking():
     assert random_final["relative_l2_reduction_from_step0_mean"] > 0.2
     assert paired["first_minus_second_relative_l2_mean"] == pytest.approx(-0.1)
     assert paired["first_wins"] == 2
+
+
+def test_sweep_notes_describe_arbitrary_variant_and_budget_counts():
+    notes = sweep_notes(("a", "b", "c", "d", "e"), 20)
+    assert "all 5 variants" in notes[0]
+    assert "20-step optimization schedule" in notes[2]
+    assert "80-step" not in " ".join(notes)

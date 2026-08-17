@@ -111,6 +111,17 @@ def aggregate_runs(
     return {"by_variant": aggregate, "paired_comparison": paired}
 
 
+def sweep_notes(variants: tuple[str, ...], max_steps: int) -> list[str]:
+    """Describe the actual sweep axes without assuming two arms or 80 steps."""
+    return [
+        f"Seeds are paired: all {len(variants)} variants use the same random base within each seed.",
+        "All checkpoints use one fixed held-out set after the maximum-budget training region.",
+        f"All nonzero checkpoints belong to one {max_steps}-step optimization schedule; no checkpoint is trained as a separately scheduled run.",
+        "Calibration, training, and evaluation windows are disjoint.",
+        "The pass flag certifies finite execution only; it is not a scientific success criterion.",
+    ]
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="Run a paired multi-seed Qwen3-to-Mamba3 distillation sweep."
@@ -450,13 +461,7 @@ def main(argv: list[str] | None = None) -> None:
         "runs": runs,
         "aggregate": aggregate,
         "passed": passed,
-        "notes": [
-            "Seeds are paired: both variants use the same random base for each seed.",
-            "All checkpoints use one fixed held-out set after the maximum-budget training region.",
-            "Checkpoint 20 is an intermediate point on the 80-step learning-rate schedule, not a separately scheduled run.",
-            "Calibration, training, and evaluation windows are disjoint.",
-            "The pass flag certifies finite execution only; it is not a scientific success criterion.",
-        ],
+        "notes": sweep_notes(variants_to_run, max_steps),
     }
     print(json.dumps(result, indent=2))
     if args.result_json:
