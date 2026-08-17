@@ -470,3 +470,28 @@ Expected: `2 passed` and exit code `0`. This verifies the FP32 mathematical
 reference and official parameter shapes. Numerical parity with the optimized
 TileLang/CuTe kernel, long-context stability, and production throughput remain
 separate accelerator experiments.
+
+Run the first controlled Qwen3-to-Mamba-3 initialization-shock experiment on a
+Kaggle GPU. It compares one shared random base, output-only transfer, the
+Mamba-in-the-Llama Q/K/V/O port, copied SISO information, and distinct MIMO
+channel allocation:
+
+```python
+%cd /kaggle/working/singularity
+!pip install -q -r requirements-calibration.txt
+
+from scripts.qwen_mamba3_shock import main as qwen_mamba3_shock
+qwen_mamba3_shock([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--layer-index", "0",
+    "--sequence-length", "128",
+    "--seed", "123",
+    "--result-json", "/kaggle/working/qwen3-mamba3-shock-layer0.json",
+])
+```
+
+Use T4/P100 rather than TPU for this diagnostic. Success ends with
+`MAMBA3-SHOCK-PASS`; download the JSON even when a transplanted variant is worse
+than random, because negative results determine which recovery ablations are
+scientifically justified.

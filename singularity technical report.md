@@ -492,12 +492,30 @@ Thresholds will be frozen before final experiments after pilot variance is known
 
 - **Implementation commit title:** `test: add Mamba-3 reference parity fixtures`
 - **Reference:** official `state-spaces/mamba` source at immutable commit `e9594ce1c732d97440f0332fdc43170a2294dbfa`; the independent oracle directly implements the published one-token MIMO recurrence in eager PyTorch rather than calling the JAX implementation.
-- **Status:** local cross-framework recurrence parity completed; accelerator-specific parity against the optimized TileLang/CuTe kernels remains a separate test.
+- **Status:** local and Kaggle cross-framework recurrence parity completed; accelerator-specific parity against the optimized TileLang/CuTe kernels remains a separate test.
 - **Discovered defect:** the bring-up JAX path incorrectly applied `tanh` to the predicted angle increment. Official Mamba-3 accumulates `pi * angle_projection * dt` directly. The fixture deliberately includes angle projections outside `[-1,1]` so the old implementation fails decisively.
 - **Contract correction:** the module now stores the official inverse-softplus `dt_bias` directly and uses official MIMO parameter shapes `[heads, rank, head_dim]` with names `mimo_x`, `mimo_z`, and `mimo_o`. This is intentionally corrected before any recovery checkpoint exists.
 - **Parity result (MEASURED):** deterministic FP32 fixture with batch 2, length 7, 3 heads, MIMO rank 2, state size 8, partial complex rotation, nontrivial trapezoidal gates, decay, skip, and MIMO projections: max absolute error `2.91e-11`, mean absolute error `1.03e-12`, RMSE `3.78e-12`, relative L2 `7.66e-8` against eager PyTorch.
 - **Regression suite (MEASURED):** 37 tests passed in 58.46 s after the correction.
+- **Kaggle confirmation (MEASURED):** the focused fixture passed `2/2` tests in 11.61 s with exit code 0. The emitted `jupyter_client` UTC deprecation warnings are external notebook warnings and do not affect numerical results.
 - **Boundary:** this establishes the recurrence and parameter contract, not numerical equivalence to the fused production kernel, training throughput, long-context stability, or superiority of MIMO. Those require accelerator fixtures and controlled ablations.
+
+### EXP-021 — Controlled Qwen3-to-Mamba-3 initialization shock
+
+- **Implementation commit title:** `feat: add Qwen3-to-Mamba3 transplant baselines`
+- **Status:** mapping code, invariants, and real-checkpoint launcher implemented; Kaggle measurement pending.
+- **Input:** pinned real WikiText token prefix represented by actual Qwen3 embedding rows. The default first measurement uses layer 0, sequence length 128, FP32, and seed 123.
+- **Shared control:** every variant starts from the same canonical Mamba-3 random parameter tree. Stability/dynamics fields `z`, `dt`, `A`, `trap`, and `angle` remain identical unless a later named ablation explicitly changes one.
+- **INIT-A:** fully random Mamba-3 mixer.
+- **INIT-B:** INIT-A plus resized Qwen output projection only.
+- **INIT-C:** prior-method Q/K/V/O port following the official Mamba-in-the-Llama correspondence `V->x`, `K->B`, `Q->C`, `O->out`, adapted deterministically to the Mamba-3 widths; Q/K norm scales are also preserved.
+- **INIT-D:** head-pooled K/Q state projections copied identically into all four MIMO channels. This is the SISO-information/copy baseline.
+- **INIT-E:** disjoint source Q/K head groups initialize distinct MIMO channels. INIT-D versus INIT-E isolates MIMO allocation while holding every other field fixed.
+- **Metrics:** clean mixer max/mean absolute error, RMSE, relative L2, cosine, output-norm ratio, decoder-layer parity after the shared residual/MLP, and finite checks.
+- **Pass criterion:** this first probe only requires finite execution. No quality ranking is predeclared; the measured result decides whether the MIMO mapping deserves subsequent complex-state and recovery ablations.
+- **Regression suite (MEASURED):** 38 tests passed in 60.45 s; all five tiny transplant variants also execute through the full Mamba-3 module with finite outputs.
+- **Prior-code pin:** `jxiw/MambaInLlama@b03f123152eeba5f2ae9d8694f4a001147e0a14c`.
+- **Boundary:** deterministic width adaptation and head grouping are initialization hypotheses, not functional attention-to-SSM equivalences. One layer and 128 tokens cannot establish full-model recovery quality.
 
 ## 7. Development milestones
 
