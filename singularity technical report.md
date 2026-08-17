@@ -604,7 +604,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-025 — Paired seed and token-budget distillation sweep
 
 - **Implementation commit title:** `feat: add paired Mamba-3 distillation sweep`
-- **Status:** implementation complete; layer-0 Kaggle measurement pending.
+- **Status:** layer-0 measurement completed in a Kaggle 2xT4 allocation; experiment code is unsharded and the reported backend is GPU/FP32.
 - **Question:** is the EXP-024 random-over-QKVO ranking reproducible across paired initialization seeds, and does it persist as the distillation budget grows?
 - **Primary design:** three paired seeds (`123,456,789`), random recurrence versus prior QKVO recurrence, held-out measurements at steps 0, 20, and 80 on the same evaluation windows. Both variants receive independent ridge-calibrated output projections and identical Lion schedules.
 - **Fixed-evaluation rule:** the evaluation set begins after the maximum 80-step training region, so every checkpoint is compared on exactly the same untouched tokens. Step 20 is an intermediate checkpoint of the 80-step schedule rather than a separately tuned run.
@@ -612,6 +612,14 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Execution order:** establish replication on layer 0 first. Only then run the unchanged protocol on representative middle and late Mamba layers, avoiding a costly broad sweep of a failed setup.
 - **Failure safety:** a partial JSON is updated after every completed seed/variant pair.
 - **Kaggle artifact policy:** every partial and final JSON is written both to the requested path and to `/kaggle/working/output/` for explicit notebook-output collection.
+- **Random recurrence aggregate (MEASURED):** mean held-out relative L2 is `0.771632 +/- 0.041263` at step 0, `0.675836 +/- 0.039105` at step 20, and `0.597025 +/- 0.010472` at step 80. Mean cosine at step 80 is `0.803737 +/- 0.006396`; mean relative-L2 reduction from step 0 is 22.52%.
+- **Prior QKVO aggregate (MEASURED):** mean held-out relative L2 is `0.830772 +/- 0.037966` at step 0, `0.766275 +/- 0.026702` at step 20, and `0.687220 +/- 0.025226` at step 80. Mean cosine at step 80 is `0.741243 +/- 0.013787`; mean relative-L2 reduction from step 0 is 17.24%.
+- **Paired result (MEASURED):** random recurrence wins all three seeds at steps 0, 20, and 80. Mean random-minus-QKVO relative-L2 differences are `-0.059140`, `-0.090439`, and `-0.090195`, respectively. The transplant does not catch up with the larger pilot budget; its disadvantage grows by step 20 and remains through step 80.
+- **Numerical result (MEASURED):** all six 80-step runs complete with finite gradients and outputs. The pass flag is true.
+- **Decision:** reject the current direct V-to-x, K-to-B, Q-to-C transplant as the recovery initializer for layer 0. Random recurrence becomes the leading control, but `0.597025` mean relative L2 after 2,560 tokens is still far from layer recovery and is not a deployable result.
+- **Scientific boundary:** the evidence is strong for this layer-0 protocol but does not establish a universal random-initialization rule. Middle/late-layer experiments require true Qwen residual-stream activations from all preceding layers; raw embeddings are invalid there.
+- **Next method step:** implement a real teacher-activation cache for arbitrary layers, then use activation-driven layerwise distillation as the transplant mechanism. Direct matrix reuse remains a negative ablation rather than the proposed method.
+- **Raw artifact:** `results/EXP-025-qwen3-mamba3-distill-sweep-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 
