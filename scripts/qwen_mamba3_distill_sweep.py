@@ -13,7 +13,7 @@ import numpy as np
 from scripts.qwen_mamba3_distill_pilot import (
     _replace_output,
     _window_metrics,
-    _write_json,
+    _write_json_with_output_mirror,
 )
 from singularity.calibration_data import (
     WIKITEXT_REPO,
@@ -135,6 +135,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument("--seeds", default="123,456,789")
     parser.add_argument("--result-json")
+    parser.add_argument("--output-dir", default="/kaggle/working/output")
     args = parser.parse_args(argv)
     checkpoints = tuple(
         sorted(_parse_unique_ints(args.checkpoint_steps, "checkpoint-steps", positive=True))
@@ -344,7 +345,7 @@ def main(argv: list[str] | None = None) -> None:
             }
             runs[str(seed)] = seed_results
             if partial_path:
-                _write_json(
+                mirror = _write_json_with_output_mirror(
                     partial_path,
                     {
                         "status": "in_progress",
@@ -352,8 +353,11 @@ def main(argv: list[str] | None = None) -> None:
                         "checkpoint_steps": evaluation_checkpoints,
                         "completed_runs": runs,
                     },
+                    args.output_dir,
                 )
                 print(f"partial_result_json={partial_path.resolve()}")
+                if mirror:
+                    print(f"partial_output_json={mirror.resolve()}")
 
     aggregate = aggregate_runs(runs, variants_to_run, evaluation_checkpoints)
     result = {
@@ -389,8 +393,10 @@ def main(argv: list[str] | None = None) -> None:
     print(json.dumps(result, indent=2))
     if args.result_json:
         output = Path(args.result_json)
-        _write_json(output, result)
+        mirror = _write_json_with_output_mirror(output, result, args.output_dir)
         print(f"result_json={output.resolve()}")
+        if mirror:
+            print(f"output_json={mirror.resolve()}")
     if not passed:
         raise SystemExit("MAMBA3-DISTILL-SWEEP-FAIL")
     print("MAMBA3-DISTILL-SWEEP-PASS")

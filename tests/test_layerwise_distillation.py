@@ -15,7 +15,11 @@ from singularity.layerwise_distillation import (
 )
 from singularity.qwen3_teacher import Qwen3GQAAttention, tiny_qwen3_teacher_config
 from singularity.optimizer import create_lion
-from scripts.qwen_mamba3_distill_pilot import _json_default, _write_json
+from scripts.qwen_mamba3_distill_pilot import (
+    _json_default,
+    _write_json,
+    _write_json_with_output_mirror,
+)
 
 
 def test_relative_mse_is_scale_free_and_zero_for_exact_target():
@@ -75,3 +79,14 @@ def test_distillation_json_accepts_numpy_scalars_and_is_written(tmp_path):
     output = tmp_path / "result.json"
     _write_json(output, payload)
     assert json.loads(output.read_text(encoding="utf-8")) == json.loads(encoded)
+
+
+def test_result_json_is_mirrored_to_output_directory(tmp_path):
+    requested = tmp_path / "requested" / "result.json"
+    output_dir = tmp_path / "output"
+    mirror = _write_json_with_output_mirror(
+        requested, {"passed": True}, str(output_dir)
+    )
+    assert mirror == output_dir / "result.json"
+    assert json.loads(requested.read_text(encoding="utf-8"))["passed"] is True
+    assert json.loads(mirror.read_text(encoding="utf-8"))["passed"] is True

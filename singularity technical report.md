@@ -611,6 +611,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Primary endpoint:** paired per-seed relative-L2 difference at step 80, supported by mean, sample standard deviation, cosine, and win count. Individual seed measurements remain in the artifact.
 - **Execution order:** establish replication on layer 0 first. Only then run the unchanged protocol on representative middle and late Mamba layers, avoiding a costly broad sweep of a failed setup.
 - **Failure safety:** a partial JSON is updated after every completed seed/variant pair.
+- **Kaggle artifact policy:** every partial and final JSON is written both to the requested path and to `/kaggle/working/output/` for explicit notebook-output collection.
 
 ## 8. Reasoning SFT boundary
 

@@ -58,6 +58,19 @@ def _write_json(path: Path, payload: dict) -> None:
     )
 
 
+def _write_json_with_output_mirror(
+    path: Path, payload: dict, output_dir: str | None
+) -> Path | None:
+    """Write the requested artifact and mirror it into Kaggle's output folder."""
+    _write_json(path, payload)
+    if not output_dir:
+        return None
+    mirror = Path(output_dir) / path.name
+    if mirror.resolve() != path.resolve():
+        _write_json(mirror, payload)
+    return mirror
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Run a controlled one-layer Qwen3-to-Mamba3 distillation pilot.")
     parser.add_argument("--cache-dir", default="/kaggle/working/qwen3-layer-parity")
@@ -73,6 +86,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--variants", default="INIT-A-random,INIT-C-prior-qkvo-port")
     parser.add_argument("--seed", type=int, default=123)
     parser.add_argument("--result-json")
+    parser.add_argument("--output-dir", default="/kaggle/working/output")
     args = parser.parse_args(argv)
     if min(args.sequence_length, args.calibration_windows, args.steps, args.evaluation_windows) < 1:
         raise ValueError("sequence length, window counts, and steps must be positive")
@@ -199,7 +213,7 @@ def main(argv: list[str] | None = None) -> None:
         print(f"{name}=DONE pre_l2={results[name]['pre_distillation_heldout']['relative_l2']:.6g} post_l2={results[name]['post_distillation_heldout']['relative_l2']:.6g}")
         if args.result_json:
             partial = Path(args.result_json).with_suffix(".partial.json")
-            _write_json(
+            mirror = _write_json_with_output_mirror(
                 partial,
                 {
                     "status": "in_progress",
@@ -207,8 +221,11 @@ def main(argv: list[str] | None = None) -> None:
                     "method": "trainable_Mamba3_layerwise_distillation_pilot",
                     "completed_variants": results,
                 },
+                args.output_dir,
             )
             print(f"partial_result_json={partial.resolve()}")
+            if mirror:
+                print(f"partial_output_json={mirror.resolve()}")
 
     result = {
         "source": f"{spec.repo_id}@{spec.revision}",
@@ -241,8 +258,10 @@ def main(argv: list[str] | None = None) -> None:
     print(serialized)
     if args.result_json:
         output = Path(args.result_json)
-        _write_json(output, result)
+        mirror = _write_json_with_output_mirror(output, result, args.output_dir)
         print(f"result_json={output.resolve()}")
+        if mirror:
+            print(f"output_json={mirror.resolve()}")
     if not passed:
         raise SystemExit("MAMBA3-DISTILL-PILOT-FAIL")
     print("MAMBA3-DISTILL-PILOT-PASS")
