@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -13,6 +15,7 @@ from singularity.layerwise_distillation import (
 )
 from singularity.qwen3_teacher import Qwen3GQAAttention, tiny_qwen3_teacher_config
 from singularity.optimizer import create_lion
+from scripts.qwen_mamba3_distill_pilot import _json_default, _write_json
 
 
 def test_relative_mse_is_scale_free_and_zero_for_exact_target():
@@ -59,3 +62,16 @@ def test_project_lion_initializes_with_frozen_mamba_parameters():
     tx = create_lion(total_steps=4, warmup_steps=1)
     state = tx.init(params)
     assert jax.tree.structure(state)
+
+
+def test_distillation_json_accepts_numpy_scalars_and_is_written(tmp_path):
+    payload = {
+        "passed": np.bool_(True),
+        "loss": np.float32(0.5),
+        "steps": np.int32(2),
+    }
+    encoded = json.dumps(payload, default=_json_default)
+    assert json.loads(encoded) == {"passed": True, "loss": 0.5, "steps": 2}
+    output = tmp_path / "result.json"
+    _write_json(output, payload)
+    assert json.loads(output.read_text(encoding="utf-8")) == json.loads(encoded)

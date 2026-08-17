@@ -44,6 +44,20 @@ def _window_metrics(targets: np.ndarray, predictions: np.ndarray) -> dict:
     return asdict(parity_metrics(targets.reshape(-1, targets.shape[-1]), predictions.reshape(-1, predictions.shape[-1])))
 
 
+def _json_default(value):
+    if isinstance(value, np.generic):
+        return value.item()
+    raise TypeError(f"Object of type {type(value).__name__} is not JSON serializable")
+
+
+def _write_json(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(payload, indent=2, default=_json_default) + "\n",
+        encoding="utf-8",
+    )
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Run a controlled one-layer Qwen3-to-Mamba3 distillation pilot.")
     parser.add_argument("--cache-dir", default="/kaggle/working/qwen3-layer-parity")
@@ -165,11 +179,15 @@ def main(argv: list[str] | None = None) -> None:
             record = {key: float(value) if key not in {"grads_finite", "nonfinite_grad_leaves"} else int(value) for key, value in metrics.items()}
             record["step"] = step
             curve.append(record)
-            finite &= bool(metrics["grads_finite"]) and np.isfinite(record["loss"])
+            finite = (
+                finite
+                and bool(metrics["grads_finite"])
+                and bool(np.isfinite(record["loss"]))
+            )
             print(f"{name} step={step} loss={record['loss']:.6g} grad_norm={record['grad_norm']:.6g} finite={bool(metrics['grads_finite'])}")
         post = np.asarray(run_mamba(params, evaluation_inputs), dtype=np.float32)
         finite &= bool(np.all(np.isfinite(post)))
-        passed &= finite
+        passed = passed and finite
         results[name] = {
             "mapping": asdict(reports[name]),
             "readout_calibration": asdict(readout_report),
@@ -179,6 +197,18 @@ def main(argv: list[str] | None = None) -> None:
             "finite": finite,
         }
         print(f"{name}=DONE pre_l2={results[name]['pre_distillation_heldout']['relative_l2']:.6g} post_l2={results[name]['post_distillation_heldout']['relative_l2']:.6g}")
+        if args.result_json:
+            partial = Path(args.result_json).with_suffix(".partial.json")
+            _write_json(
+                partial,
+                {
+                    "status": "in_progress",
+                    "source": f"{spec.repo_id}@{spec.revision}",
+                    "method": "trainable_Mamba3_layerwise_distillation_pilot",
+                    "completed_variants": results,
+                },
+            )
+            print(f"partial_result_json={partial.resolve()}")
 
     result = {
         "source": f"{spec.repo_id}@{spec.revision}",
@@ -207,11 +237,11 @@ def main(argv: list[str] | None = None) -> None:
             "T4 uses FP32 for numerical safety; TPU and BF16-capable accelerators use BF16 parameters, compute, gradients, and Lion momentum.",
         ],
     }
-    print(json.dumps(result, indent=2))
+    serialized = json.dumps(result, indent=2, default=_json_default)
+    print(serialized)
     if args.result_json:
         output = Path(args.result_json)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+        _write_json(output, result)
         print(f"result_json={output.resolve()}")
     if not passed:
         raise SystemExit("MAMBA3-DISTILL-PILOT-FAIL")
