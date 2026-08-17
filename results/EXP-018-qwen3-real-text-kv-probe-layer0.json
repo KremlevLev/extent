@@ -1,0 +1,92 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+  "dataset_split": "wikitext-2-raw-v1/train contiguous token prefix",
+  "method": "real_text_RoRoPE_then_activation_PCA_with_BKV_ablation",
+  "layer_index": 0,
+  "compute_dtype": "float32",
+  "jax_backend": "gpu",
+  "calibration_tokens": 8192,
+  "evaluation_tokens": 1024,
+  "svd_seed": 0,
+  "latent_rank": 448,
+  "target_cache_elements_per_token": 576,
+  "auto_bkv_balance_ratio": 32.17015917579358,
+  "variants": {
+    "rorope_uncompressed": {
+      "total_cache_elements_per_token": 2048,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.8531510829925537,
+          "mean_abs": 0.011342597034645015,
+          "rmse": 0.01654281930755452,
+          "relative_l2": 0.17476997347918435,
+          "cosine_similarity": 0.9868635446790087
+        },
+        "tail_tokens": {
+          "max_abs": 0.6821269989013672,
+          "mean_abs": 0.011690782503207126,
+          "rmse": 0.017084246553204757,
+          "relative_l2": 0.17973911935350304,
+          "cosine_similarity": 0.9862131680223439
+        }
+      }
+    },
+    "activation_pca": {
+      "latent_rank": 448,
+      "bkv_balance_ratio": 1.0,
+      "total_cache_elements_per_token": 576,
+      "cache_reduction_fraction": 0.71875,
+      "calibration_joint_reconstruction_relative_l2": 0.1632774919271469,
+      "evaluation_key_reconstruction_relative_l2": 0.20759806036949158,
+      "evaluation_value_reconstruction_relative_l2": 0.5674630403518677,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.8161203861236572,
+          "mean_abs": 0.02140149141467632,
+          "rmse": 0.030958386347224615,
+          "relative_l2": 0.3270661584505083,
+          "cosine_similarity": 0.9467774109262221
+        },
+        "tail_tokens": {
+          "max_abs": 0.7596430778503418,
+          "mean_abs": 0.021224883830980444,
+          "rmse": 0.030620450536000692,
+          "relative_l2": 0.3221501630995758,
+          "cosine_similarity": 0.9486478357602017
+        }
+      }
+    },
+    "bkv_balanced_pca": {
+      "latent_rank": 448,
+      "bkv_balance_ratio": 32.17015917579358,
+      "total_cache_elements_per_token": 576,
+      "cache_reduction_fraction": 0.71875,
+      "calibration_joint_reconstruction_relative_l2": 0.25686800479888916,
+      "evaluation_key_reconstruction_relative_l2": 0.31947654485702515,
+      "evaluation_value_reconstruction_relative_l2": 0.3133029639720917,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.7526280879974365,
+          "mean_abs": 0.0159384055215422,
+          "rmse": 0.022486001572310683,
+          "relative_l2": 0.23755792923706706,
+          "cosine_similarity": 0.9737844266590409
+        },
+        "tail_tokens": {
+          "max_abs": 0.6727924346923828,
+          "mean_abs": 0.015940385051878513,
+          "rmse": 0.022511757992690232,
+          "relative_l2": 0.2368406206328318,
+          "cosine_similarity": 0.9741059280135902
+        }
+      }
+    }
+  },
+  "notes": [
+    "Calibration and evaluation use disjoint contiguous token ranges.",
+    "This remains an activation-subspace diagnostic for layer 0.",
+    "A deployable weight mapping and multi-layer calibration are not yet implemented."
+  ]
+}
+

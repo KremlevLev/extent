@@ -456,7 +456,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-018 — Real-text balanced KV calibration
 
 - **Implementation commit title:** `feat: add real-text MLA calibration probe`
-- **Status:** harness implemented; Kaggle execution pending.
+- **Status:** completed on Kaggle GPU; deployable direction frozen for the next implementation stage.
 - **Dataset:** pinned `Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3`, `wikitext-2-raw-v1` train split.
 - **Tokenization/source:** pinned Qwen3-14B tokenizer at the immutable source revision; actual checkpoint embedding rows provide layer-0 hidden inputs.
 - **Split:** first 8192 packed real-text tokens for calibration and the following disjoint 1024 tokens for evaluation. Empty records are skipped and EOS separates documents.
@@ -465,15 +465,32 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Scientific question:** does the EXP-017 failure primarily reflect under-sampled isotropic Gaussian calibration, and does BKV remain beneficial on real language-token activations?
 - **Boundary:** WikiText-2 is only a calibration probe, not the final recovery corpus or evaluation benchmark. Layer 0 alone cannot establish a global rank schedule or downstream quality.
 - **Regression suite (MEASURED):** 34 tests passed in 53.49 s. Pinned-text packing, accelerator PCA full-rank reconstruction, standard RoRoPE, and FreqFold regressions pass after factoring out the reusable key rotation.
+- **Uncompressed RoRoPE control (MEASURED):** all/tail mixer relative L2 `0.174770/0.179739`; all/tail cosine `0.986864/0.986213`.
+- **Plain rank-448 PCA (MEASURED):** all/tail mixer relative L2 `0.327066/0.322150`; all/tail cosine `0.946777/0.948648`.
+- **BKV rank-448 PCA (MEASURED):** `alpha=32.170159`; held-out K/V reconstruction relative L2 `0.319477/0.313302`; all/tail mixer relative L2 `0.237558/0.236841`; all/tail cosine `0.973784/0.974106`.
+- **Interpretation:** replacing Gaussian calibration with real text changes the conclusion materially. BKV improves all-token mixer relative L2 by approximately `27.37%` over plain activation PCA and clears the post-pilot cosine target. The frozen MLA reference recipe is therefore fold-1 RoRoPE + BKV + rank 448 + one 128-element positional component, for 576 cached elements per token per retained attention layer.
+- **Raw artifact:** `results/EXP-018-qwen3-real-text-kv-probe-layer0.json`.
+
+### EXP-019 — Deployable RoRoPE-BKV reference mapping
+
+- **Implementation commit title:** `feat: add deployable Qwen3 RoRoPE-BKV mapping`
+- **Status:** implementation and local invariant tests complete; real-checkpoint Kaggle GPU parity pending.
+- **Purpose:** turn the EXP-018 oracle-style activation probe into a normal Flax attention module with frozen Qwen projections, Q/K normalization, learned RoRoPE rotations, BKV scale, and rank-448 joint basis.
+- **Explicit cache contract:** `kv_latent [batch, tokens, 448]` plus `k_rope [batch, tokens, 128]`; total 576 elements/token/layer versus 2048 for Qwen3 GQA, a `71.875%` element-count reduction.
+- **Correctness invariant:** at full joint rank, the mapped module agrees with the independently implemented uncompressed RoRoPE path within `3e-4` absolute/relative tolerance and emits finite cache tensors of the declared shapes.
+- **Real-checkpoint gate:** layer-0 output relative L2 at most `0.30`, cosine at least `0.95`, finite output/cache, and exact cache shapes on the disjoint 1024-token WikiText evaluation prefix.
+- **Numerical controls:** FP32 diagnostic execution, high matmul precision, explicit finite checks, and a pinned Qwen3/WikiText source.
+- **Boundary:** this is a deployable cache-producing correctness reference. It still computes the original K/V projections and reconstructs K/V before attention. Projection absorption, incremental decoding, and an optimized kernel are separate later experiments; this commit does not claim their speedup.
+- **Regression suite (MEASURED):** 35 tests passed in 55.49 s after adding the mapping and cache-shape invariant.
 
 ## 7. Development milestones
 
 1. **Completed only for the sharding mechanism:** wrong-generation weights + Lion state fit on v5e-8; exact Qwen3 HBM validation remains pending.
 2. **Completed:** set the Qwen3 target schedule to exactly 6/40 MLA layers.
 3. **Completed:** validate the pinned Qwen3-14B metadata, target shapes, and streaming mapping contracts.
-4. **Current:** implement the exact Qwen3 GQA teacher and establish logits/NLL parity before conversion.
-5. Implement and test GQA-to-MLA conversion baselines.
-6. Implement Mamba-3 transplant variants and single-layer shock tests.
+4. **Completed:** implement the exact Qwen3 GQA teacher and establish decoder-layer parity against the official PyTorch implementation.
+5. **Completed for the frozen reference direction:** establish fold-1 RoRoPE + BKV rank-448 conversion diagnostics and a cache-producing Flax mapping; optimized decode remains pending.
+6. **Current:** establish Mamba-3 reference parity, then implement transplant variants and single-layer shock tests.
 7. Run small-scale ablations and freeze the 14B recovery recipe.
 8. Compile the first guarded full-model short-sequence forward/backward.
 9. Recovery training, fixed evaluation checkpoints, and failure logging.

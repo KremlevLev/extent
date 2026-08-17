@@ -422,6 +422,32 @@ The pinned WikiText-2 train prefix is used only for calibration diagnostics.
 The first 8192 packed tokens fit the PCA basis and the following 1024 tokens are
 held out. Randomized PCA executes on the active JAX GPU; TPU is not required.
 
+Validate the frozen RoRoPE-BKV recipe through the normal Flax module and its
+explicit compressed-cache interface:
+
+```python
+%cd /kaggle/working/singularity
+!pip install -q -r requirements-calibration.txt
+
+from scripts.qwen_deployable_mla_parity import main as qwen_deployable_mla_parity
+qwen_deployable_mla_parity([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--layer-index", "0",
+    "--calibration-tokens", "8192",
+    "--sequence-length", "1024",
+    "--latent-rank", "448",
+    "--tail-tokens", "128",
+    "--svd-seed", "0",
+    "--result-json", "/kaggle/working/qwen3-deployable-mla-parity-layer0.json",
+])
+```
+
+Run this on a Kaggle GPU, not TPU. Success ends with `DEPLOYABLE-MLA-PASS`.
+Download the result JSON for the experiment archive. This is a correctness
+reference with an actual 448-element latent cache and 128-element positional
+cache; it is not yet an absorbed or optimized incremental-decode kernel.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional
