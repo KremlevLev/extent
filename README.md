@@ -166,14 +166,24 @@ without another checkpoint conversion.
 
 The source model is pinned to `Qwen/Qwen3-14B` revision
 `40c069824f4251a91eefaf281ebe4c544efd3e18`. Validate its official config,
-safetensors index, and all 203 direct mappings without downloading weights:
+safetensors index, the complete 443-tensor JAX teacher mapping, and all 203
+direct student mappings without downloading weights:
 
 ```python
 from scripts.qwen_checkpoint_preflight import main as qwen_preflight
 qwen_preflight([])
 ```
 
-The direct map covers 12,251,714,560 parameters (83.30% of the final target):
+Expected output includes:
+
+```text
+teacher_mapping=PASS tensors=443 parameters=14,768,307,200 coverage=100%
+direct_mapping=PASS tensors=203 parameters=12,251,714,560
+```
+
+The teacher result proves a bijective checkpoint-to-JAX parameter-tree contract;
+it is not yet numerical logits parity. The direct student map covers
+12,251,714,560 parameters (83.30% of the final target):
 embeddings, output head, final norm, and every decoder MLP/norm. Attention
 projections and Q/K norms are deliberately left for controlled MLA and Mamba-3
 transplant experiments.

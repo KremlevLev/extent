@@ -60,7 +60,7 @@ The main retained-layer schedule is fixed to the uniform indices above. Alternat
 
 ### 2.3 Long context
 
-The current prototype uses `max_position_embeddings=8192`; this is only a bring-up default. It does not yet establish long-context support. Long-context claims require:
+The production configuration now matches Qwen3 at `max_position_embeddings=40960`; tiny tests use shorter bring-up lengths. This field alone does not establish long-context support. Long-context claims require:
 
 - a defined target (32K, 64K, or 128K);
 - an MLA positional strategy compatible with the source checkpoint;
@@ -281,6 +281,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Direct scope:** token embeddings, lm_head, final norm, all input/post-attention norms, and all gate/up/down MLP projections.
 - **Mixer tensors reserved for conversion:** Q/K/V/O projections and Q/K per-head RMSNorm parameters.
 - **Result (MEASURED):** pinned Qwen3 config/index validation and target-shape mapping validation passed.
+- **Independent reproduction (MEASURED):** the user reproduced the same metadata-only output in a separate runtime: 443 checkpoint tensors and 203 direct tensors / 12,251,714,560 parameters.
 
 ### EXP-008 — Qwen3 6/34 target shape audit
 
@@ -293,6 +294,16 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Ideal headroom at 16 GiB (DERIVED):** 5.712 GiB/device before activations and XLA/runtime overhead.
 - **Result (DERIVED):** shape-only preflight passed.
 - **Status:** real parameter/Lion allocation for this exact Qwen3 target remains to be measured on v5e-8.
+
+### EXP-009 — Exact JAX Qwen3 teacher parameter-tree contract
+
+- **Implementation commit title:** `feat: add exact Qwen3 GQA teacher parity scaffold`
+- **Mode:** local CPU structural tests plus metadata-only pinned checkpoint audit; no model shards downloaded
+- **Teacher architecture:** 40-layer Qwen3 GQA with 40 query heads, 8 KV heads, head dimension 128, per-head Q/K RMSNorm, split-half RoPE, SwiGLU, and untied output head.
+- **Checkpoint-to-teacher mapping (DERIVED/VALIDATED):** 443 of 443 source tensors mapped bijectively to 443 JAX parameter leaves; 14,768,307,200 parameters; 100% tensor coverage.
+- **Tests (MEASURED):** 22 passed in 38.55 s, including BF16 parameter/logit shapes, split-half RoPE fixture, causal-independence test, and complete mapping bijection.
+- **Result (MEASURED):** metadata preflight printed `teacher_mapping=PASS tensors=443 parameters=14,768,307,200 coverage=100%`.
+- **Interpretation:** source names and shapes are fully accounted for. This is a prerequisite for parity, not evidence of numerical logits/NLL parity; cross-framework comparison after loading the pinned weights remains pending.
 
 ## 7. Development milestones
 

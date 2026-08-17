@@ -20,9 +20,10 @@ class RMSNorm(nn.Module):
     @nn.compact
     def __call__(self, x: jax.Array) -> jax.Array:
         scale = self.param("scale", nn.initializers.ones, (self.features,), self.param_dtype)
-        variance = jnp.mean(jnp.square(x.astype(jnp.float32)), axis=-1, keepdims=True)
-        normalized = x * jax.lax.rsqrt(variance + self.eps).astype(x.dtype)
-        return normalized * scale.astype(x.dtype)
+        x_fp32 = x.astype(jnp.float32)
+        variance = jnp.mean(jnp.square(x_fp32), axis=-1, keepdims=True)
+        normalized = x_fp32 * jax.lax.rsqrt(variance + self.eps)
+        return normalized.astype(x.dtype) * scale.astype(x.dtype)
 
 
 class SwiGLU(nn.Module):

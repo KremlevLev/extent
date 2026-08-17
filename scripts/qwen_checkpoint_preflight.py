@@ -13,10 +13,12 @@ from singularity.qwen_source import (
     validate_source_marker,
     validate_source_metadata,
 )
+from singularity.qwen3_teacher import Qwen3ForCausalLM, Qwen3TeacherConfig
 from singularity.weight_mapping import (
     QwenCheckpointReader,
     validate_direct_mapping_plan,
     validate_local_direct_shapes,
+    validate_teacher_mapping_plan,
 )
 
 
@@ -52,6 +54,14 @@ def main(argv: list[str] | None = None) -> None:
         source_index = _read_json(spec.resolve_url("model.safetensors.index.json"))
     source_report = validate_source_metadata(source_config, source_index, spec)
 
+    teacher_config = Qwen3TeacherConfig()
+    teacher_params = abstract_parameter_tree(
+        Qwen3ForCausalLM(teacher_config), sequence_length=1
+    )
+    teacher_report = validate_teacher_mapping_plan(
+        teacher_config, teacher_params, source_index["weight_map"]
+    )
+
     config, _ = load_config("config/hybrid_14b_v5e8.yaml")
     abstract_params = abstract_parameter_tree(HybridForCausalLM(config), sequence_length=1)
     mapping_report = validate_direct_mapping_plan(config, abstract_params, source_index["weight_map"])
@@ -59,6 +69,10 @@ def main(argv: list[str] | None = None) -> None:
     print(
         f"checkpoint_index=PASS tensors={source_report.tensor_count} "
         f"shards={source_report.shard_count} size={gib:.3f} GiB"
+    )
+    print(
+        f"teacher_mapping=PASS tensors={teacher_report.tensor_count} "
+        f"parameters={teacher_report.parameter_count:,} coverage=100%"
     )
     print(
         f"direct_mapping=PASS tensors={mapping_report.tensor_count} "

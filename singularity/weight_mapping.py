@@ -10,7 +10,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Protocol
 
 import jax
 import numpy as np
@@ -18,6 +18,16 @@ from flax import traverse_util
 from flax.core import FrozenDict, freeze
 
 from singularity.config import HybridConfig
+
+
+class QwenShapeConfig(Protocol):
+    vocab_size: int
+    hidden_size: int
+    intermediate_size: int
+    num_layers: int
+    num_attention_heads: int
+    num_key_value_heads: int
+    head_dim: int
 
 
 @dataclass(frozen=True)
@@ -33,7 +43,7 @@ class MappingValidationReport:
     parameter_count: int
 
 
-def direct_qwen_mappings(config: HybridConfig) -> list[MappingEntry]:
+def direct_qwen_mappings(config: QwenShapeConfig) -> list[MappingEntry]:
     entries = [
         MappingEntry("model.embed_tokens.weight", "embed_tokens/embedding", "identity"),
         MappingEntry("model.norm.weight", "norm/scale", "identity"),
@@ -49,6 +59,25 @@ def direct_qwen_mappings(config: HybridConfig) -> list[MappingEntry]:
                 MappingEntry(f"{source}.mlp.gate_proj.weight", f"{target}/mlp/gate_proj/kernel"),
                 MappingEntry(f"{source}.mlp.up_proj.weight", f"{target}/mlp/up_proj/kernel"),
                 MappingEntry(f"{source}.mlp.down_proj.weight", f"{target}/mlp/down_proj/kernel"),
+            ]
+        )
+    return entries
+
+
+def teacher_qwen_mappings(config: QwenShapeConfig) -> list[MappingEntry]:
+    """Map every tensor in the pinned dense Qwen3 checkpoint to the JAX teacher."""
+    entries = direct_qwen_mappings(config)
+    for layer in range(config.num_layers):
+        source = f"model.layers.{layer}.self_attn"
+        target = f"layers_{layer}/self_attn"
+        entries.extend(
+            [
+                MappingEntry(f"{source}.q_proj.weight", f"{target}/q_proj/kernel"),
+                MappingEntry(f"{source}.k_proj.weight", f"{target}/k_proj/kernel"),
+                MappingEntry(f"{source}.v_proj.weight", f"{target}/v_proj/kernel"),
+                MappingEntry(f"{source}.o_proj.weight", f"{target}/o_proj/kernel"),
+                MappingEntry(f"{source}.q_norm.weight", f"{target}/q_norm/scale", "identity"),
+                MappingEntry(f"{source}.k_norm.weight", f"{target}/k_norm/scale", "identity"),
             ]
         )
     return entries
@@ -139,7 +168,7 @@ def mamba_transplant_in_projection(
     return np.concatenate((xz, controllers), axis=1)
 
 
-def expected_qwen_shape(entry: MappingEntry, config: HybridConfig) -> tuple[int, ...]:
+def expected_qwen_shape(entry: MappingEntry, config: QwenShapeConfig) -> tuple[int, ...]:
     """Infer direct-source shapes from the pinned dense Qwen3 architecture."""
     name = entry.source
     if name == "model.embed_tokens.weight" or name == "lm_head.weight":
@@ -150,6 +179,14 @@ def expected_qwen_shape(entry: MappingEntry, config: HybridConfig) -> tuple[int,
         return (config.intermediate_size, config.hidden_size)
     if name.endswith("mlp.down_proj.weight"):
         return (config.hidden_size, config.intermediate_size)
+    if name.endswith("self_attn.q_proj.weight"):
+        return (config.num_attention_heads * config.head_dim, config.hidden_size)
+    if name.endswith(("self_attn.k_proj.weight", "self_attn.v_proj.weight")):
+        return (config.num_key_value_heads * config.head_dim, config.hidden_size)
+    if name.endswith("self_attn.o_proj.weight"):
+        return (config.hidden_size, config.num_attention_heads * config.head_dim)
+    if name.endswith(("self_attn.q_norm.weight", "self_attn.k_norm.weight")):
+        return (config.head_dim,)
     raise KeyError(f"no expected shape rule for {name}")
 
 
@@ -161,19 +198,27 @@ def _transformed_shape(shape: tuple[int, ...], transform: str) -> tuple[int, ...
     raise ValueError(f"unsupported transform {transform!r} for shape {shape}")
 
 
-def validate_direct_mapping_plan(
-    config: HybridConfig,
+def validate_mapping_plan(
+    config: QwenShapeConfig,
     abstract_params: Mapping[str, Any],
     weight_map: Mapping[str, str],
+    entries: list[MappingEntry],
+    *,
+    require_complete_source: bool = False,
 ) -> MappingValidationReport:
-    """Validate all preserved Qwen tensors using only the checkpoint index."""
+    """Validate a mapping using only abstract target arrays and checkpoint metadata."""
     flat_targets = traverse_util.flatten_dict(abstract_params)
     parameter_count = 0
-    entries = direct_qwen_mappings(config)
+    seen_sources: set[str] = set()
+    seen_targets: set[tuple[str, ...]] = set()
     for entry in entries:
+        if entry.source in seen_sources:
+            raise ValueError(f"source tensor mapped more than once: {entry.source}")
         if entry.source not in weight_map:
             raise KeyError(f"source tensor missing from index: {entry.source}")
         target_path = tuple(entry.target.split("/"))
+        if target_path in seen_targets:
+            raise ValueError(f"target tensor mapped more than once: {entry.target}")
         if target_path not in flat_targets:
             raise KeyError(f"target tensor missing from hybrid model: {entry.target}")
         source_shape = expected_qwen_shape(entry, config)
@@ -185,7 +230,43 @@ def validate_direct_mapping_plan(
                 f"expected {expected_target}, target is {actual_target}"
             )
         parameter_count += int(np.prod(actual_target))
+        seen_sources.add(entry.source)
+        seen_targets.add(target_path)
+    if require_complete_source:
+        unmapped_sources = set(weight_map) - seen_sources
+        unmapped_targets = set(flat_targets) - seen_targets
+        if unmapped_sources or unmapped_targets:
+            raise ValueError(
+                f"mapping is incomplete: {len(unmapped_sources)} source and "
+                f"{len(unmapped_targets)} target tensors remain"
+            )
     return MappingValidationReport(len(entries), parameter_count)
+
+
+def validate_direct_mapping_plan(
+    config: HybridConfig,
+    abstract_params: Mapping[str, Any],
+    weight_map: Mapping[str, str],
+) -> MappingValidationReport:
+    """Validate all tensors preserved unchanged in the hybrid student."""
+    return validate_mapping_plan(
+        config, abstract_params, weight_map, direct_qwen_mappings(config)
+    )
+
+
+def validate_teacher_mapping_plan(
+    config: QwenShapeConfig,
+    abstract_params: Mapping[str, Any],
+    weight_map: Mapping[str, str],
+) -> MappingValidationReport:
+    """Require a one-to-one mapping of the complete Qwen3 teacher checkpoint."""
+    return validate_mapping_plan(
+        config,
+        abstract_params,
+        weight_map,
+        teacher_qwen_mappings(config),
+        require_complete_source=True,
+    )
 
 
 def stream_direct_qwen_weights(
