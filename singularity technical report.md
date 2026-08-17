@@ -601,6 +601,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** retain random recurrence as the mandatory control and current leading initializer. Before committing the 14B recovery run, test whether the ranking persists across multiple layers, seeds, and longer fixed token budgets; any proposed learned/transformed transplant must beat this control.
 - **Raw artifact:** `results/EXP-024-qwen3-mamba3-distill-pilot-layer0.json`.
 
+### EXP-025 — Paired seed and token-budget distillation sweep
+
+- **Implementation commit title:** `feat: add paired Mamba-3 distillation sweep`
+- **Status:** implementation complete; layer-0 Kaggle measurement pending.
+- **Question:** is the EXP-024 random-over-QKVO ranking reproducible across paired initialization seeds, and does it persist as the distillation budget grows?
+- **Primary design:** three paired seeds (`123,456,789`), random recurrence versus prior QKVO recurrence, held-out measurements at steps 0, 20, and 80 on the same evaluation windows. Both variants receive independent ridge-calibrated output projections and identical Lion schedules.
+- **Fixed-evaluation rule:** the evaluation set begins after the maximum 80-step training region, so every checkpoint is compared on exactly the same untouched tokens. Step 20 is an intermediate checkpoint of the 80-step schedule rather than a separately tuned run.
+- **Primary endpoint:** paired per-seed relative-L2 difference at step 80, supported by mean, sample standard deviation, cosine, and win count. Individual seed measurements remain in the artifact.
+- **Execution order:** establish replication on layer 0 first. Only then run the unchanged protocol on representative middle and late Mamba layers, avoiding a costly broad sweep of a failed setup.
+- **Failure safety:** a partial JSON is updated after every completed seed/variant pair.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
