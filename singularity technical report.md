@@ -583,6 +583,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 12. Optimized inference kernel and matched end-to-end benchmarks.
 13. Only after base recovery: separate reasoning SFT study using legally and scientifically documented data.
 
+### EXP-024 — Trainable Mamba-3 layerwise distillation pilot
+
+- **Implementation commit title:** `feat: add Mamba-3 layerwise distillation pilot`
+- **Status:** implementation complete; Kaggle measurement pending.
+- **Question:** does a small, fixed token budget of gradient-based mixer distillation recover held-out Qwen3 attention behavior, and does the prior QKVO transplant improve recovery speed over random recurrent initialization?
+- **Controlled comparison:** `INIT-A-random` versus `INIT-C-prior-qkvo-port`. Both receive their own ridge-calibrated output projection, then all Mamba parameters are trained with identical Lion hyperparameters, data windows, seed, and token budget.
+- **Leakage control:** calibration, training, and held-out evaluation use disjoint fixed-length WikiText windows. Evaluation targets never select the readout, learning rate, or checkpoint.
+- **Primary endpoint:** change in held-out mixer relative L2 from pre-distillation to the final fixed step. Cosine similarity and the complete loss/gradient-health curve are secondary diagnostics.
+- **Numerics:** auto dtype uses FP32 on T4 because its BF16 backward path was empirically non-finite; TPU v5e uses BF16 parameters, compute, gradients, and Lion momentum.
+- **Boundary:** this is a one-layer feasibility and initialization-ranking experiment, not evidence that the 14B hybrid has recovered. Positive results justify a larger multi-layer/token-budget sweep; negative results trigger objective/architecture diagnosis before full-model training.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
