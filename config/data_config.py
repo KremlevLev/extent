@@ -24,7 +24,7 @@ class DataConfig:
     dataset_mixing_ratios: List[float] = field(default_factory=lambda: [0.35, 0.15, 0.10, 0.10, 0.10, 0.15, 0.05])
 
     # --- Токенизация ---
-    tokenizer_path: str = "Qwen/Qwen2.5-14B"
+    tokenizer_path: str = "Qwen/Qwen3-14B"
     max_seq_length: int = 8192
     padding: str = "max_length"  # "max_length", "longest", False
     truncation: bool = True

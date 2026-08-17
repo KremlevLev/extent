@@ -17,7 +17,12 @@ class QwenSourceSpec:
     intermediate_size: int
     num_attention_heads: int
     num_key_value_heads: int
+    head_dim: int
     vocab_size: int
+    max_position_embeddings: int
+    rope_theta: float
+    rms_norm_eps: float
+    tie_word_embeddings: bool
     tensor_count: int
     shard_count: int
     total_size_bytes: int
@@ -26,20 +31,25 @@ class QwenSourceSpec:
         return f"https://huggingface.co/{self.repo_id}/resolve/{self.revision}/{filename}"
 
 
-QWEN2_5_14B_BASE = QwenSourceSpec(
-    repo_id="Qwen/Qwen2.5-14B",
-    revision="97e1e76335b7017d8f67c08a19d103c0504298c9",
-    architecture="Qwen2ForCausalLM",
-    model_type="qwen2",
-    num_hidden_layers=48,
+QWEN3_14B = QwenSourceSpec(
+    repo_id="Qwen/Qwen3-14B",
+    revision="40c069824f4251a91eefaf281ebe4c544efd3e18",
+    architecture="Qwen3ForCausalLM",
+    model_type="qwen3",
+    num_hidden_layers=40,
     hidden_size=5120,
-    intermediate_size=13824,
+    intermediate_size=17408,
     num_attention_heads=40,
     num_key_value_heads=8,
-    vocab_size=152064,
-    tensor_count=579,
+    head_dim=128,
+    vocab_size=151936,
+    max_position_embeddings=40960,
+    rope_theta=1_000_000.0,
+    rms_norm_eps=1e-6,
+    tie_word_embeddings=False,
+    tensor_count=443,
     shard_count=8,
-    total_size_bytes=29_540_067_328,
+    total_size_bytes=29_536_614_400,
 )
 
 SOURCE_MARKER = ".singularity_source.json"
@@ -55,7 +65,7 @@ class SourceValidationReport:
 def validate_source_metadata(
     config_payload: Mapping[str, Any],
     index_payload: Mapping[str, Any],
-    spec: QwenSourceSpec = QWEN2_5_14B_BASE,
+    spec: QwenSourceSpec = QWEN3_14B,
 ) -> SourceValidationReport:
     """Reject a checkpoint whose architecture or index differs from the pin."""
     expected_config = {
@@ -66,7 +76,12 @@ def validate_source_metadata(
         "intermediate_size": spec.intermediate_size,
         "num_attention_heads": spec.num_attention_heads,
         "num_key_value_heads": spec.num_key_value_heads,
+        "head_dim": spec.head_dim,
         "vocab_size": spec.vocab_size,
+        "max_position_embeddings": spec.max_position_embeddings,
+        "rope_theta": spec.rope_theta,
+        "rms_norm_eps": spec.rms_norm_eps,
+        "tie_word_embeddings": spec.tie_word_embeddings,
     }
     mismatches = {
         key: (config_payload.get(key), expected)
@@ -98,7 +113,7 @@ def validate_source_metadata(
 
 def write_source_marker(
     model_dir: str | Path,
-    spec: QwenSourceSpec = QWEN2_5_14B_BASE,
+    spec: QwenSourceSpec = QWEN3_14B,
 ) -> Path:
     path = Path(model_dir) / SOURCE_MARKER
     path.write_text(
@@ -110,7 +125,7 @@ def write_source_marker(
 
 def validate_source_marker(
     model_dir: str | Path,
-    spec: QwenSourceSpec = QWEN2_5_14B_BASE,
+    spec: QwenSourceSpec = QWEN3_14B,
 ) -> None:
     path = Path(model_dir) / SOURCE_MARKER
     if not path.is_file():

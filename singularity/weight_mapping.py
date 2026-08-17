@@ -140,7 +140,7 @@ def mamba_transplant_in_projection(
 
 
 def expected_qwen_shape(entry: MappingEntry, config: HybridConfig) -> tuple[int, ...]:
-    """Infer direct-source shapes from the pinned Qwen2 architecture."""
+    """Infer direct-source shapes from the pinned dense Qwen3 architecture."""
     name = entry.source
     if name == "model.embed_tokens.weight" or name == "lm_head.weight":
         return (config.vocab_size, config.hidden_size)

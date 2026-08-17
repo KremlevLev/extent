@@ -1,7 +1,7 @@
 # Singularity: JAX Mamba-3/MLA hybrid prototype
 
 This repository contains a research bring-up path for a parameter-matched Qwen
-14B-class hybrid: 41 Mamba-3 MIMO mixers, 7 MLA mixers, and the Qwen SwiGLU
+14B-class hybrid: 34 Mamba-3 MIMO mixers, 6 MLA mixers, and the Qwen3 SwiGLU
 MLPs. It targets one TPU v5e-8 slice, but all reference code and tests run on CPU.
 
 ## What is implemented
@@ -162,30 +162,30 @@ This avoids claiming a drop-in MaxText model that cannot compile; the MLA names
 are kept compatible so its optimized kernel can replace the reference attention
 without another checkpoint conversion.
 
-## Pinned Qwen2.5-14B source
+## Pinned Qwen3-14B source
 
-The source model is pinned to `Qwen/Qwen2.5-14B` revision
-`97e1e76335b7017d8f67c08a19d103c0504298c9`. Validate its official config,
-safetensors index, and all 243 direct mappings without downloading weights:
+The source model is pinned to `Qwen/Qwen3-14B` revision
+`40c069824f4251a91eefaf281ebe4c544efd3e18`. Validate its official config,
+safetensors index, and all 203 direct mappings without downloading weights:
 
 ```python
 from scripts.qwen_checkpoint_preflight import main as qwen_preflight
 qwen_preflight([])
 ```
 
-The direct map covers 11,749,790,720 parameters (79.94% of the final target):
+The direct map covers 12,251,714,560 parameters (83.30% of the final target):
 embeddings, output head, final norm, and every decoder MLP/norm. Attention
-projections are deliberately left
-for controlled MLA and Mamba-3 transplant experiments.
+projections and Q/K norms are deliberately left for controlled MLA and Mamba-3
+transplant experiments.
 
 Only on a machine with at least 35 GiB of free disk, download the eight pinned
 weight shards:
 
 ```python
 from scripts.download_qwen_checkpoint import main as download_qwen
-download_qwen(["--output-dir", "/path/with/enough/space/qwen2.5-14b"])
+download_qwen(["--output-dir", "/path/with/enough/space/qwen3-14b"])
 
-qwen_preflight(["--model-dir", "/path/with/enough/space/qwen2.5-14b"])
+qwen_preflight(["--model-dir", "/path/with/enough/space/qwen3-14b"])
 ```
 
 The loader reads one tensor at a time and constructs global JAX arrays directly
@@ -196,11 +196,11 @@ On v5e-8, the guarded full initializer/import path is:
 from scripts.full_model_preflight import main as full_preflight
 full_preflight([
     "--initialize-params",
-    "--qwen-model-dir", "/path/with/enough/space/qwen2.5-14b",
+    "--qwen-model-dir", "/path/with/enough/space/qwen3-14b",
 ])
 ```
 
-This imports only the exactly preserved 11.75B parameters. It does not claim
+This imports only the exactly preserved 12.252B parameters. It does not claim
 teacher parity yet and does not initialize MLA/Mamba-3 from GQA projections.
 
 ## Research caveats

@@ -4,7 +4,7 @@ from transformers import AutoTokenizer
 
 class QwenTokenizer:
     """
-    Обёртка над токенизатором Qwen2.5.
+    Обёртка над токенизатором Qwen3.
     Загружает токенизатор, добавляет pad_token, предоставляет encode/decode.
     """
 

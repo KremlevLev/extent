@@ -3,4 +3,4 @@
 .pytest_cache/
 *.safetensors
 **/.singularity_source.json
-qwen2.5-14b/
+qwen3-14b/

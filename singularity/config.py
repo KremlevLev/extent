@@ -35,15 +35,15 @@ class MLAConfig:
 
 @dataclass(frozen=True)
 class HybridConfig:
-    vocab_size: int = 152_064
+    vocab_size: int = 151_936
     hidden_size: int = 5_120
-    intermediate_size: int = 13_824
-    num_layers: int = 48
+    intermediate_size: int = 17_408
+    num_layers: int = 40
     attention_layer_indices: tuple[int, ...] = field(
-        default_factory=lambda: (5, 12, 19, 26, 33, 40, 47)
+        default_factory=lambda: (5, 12, 19, 25, 32, 39)
     )
     rms_norm_eps: float = 1e-6
-    max_position_embeddings: int = 8_192
+    max_position_embeddings: int = 40_960
     tie_word_embeddings: bool = False
     param_dtype: str = "bfloat16"
     compute_dtype: str = "bfloat16"

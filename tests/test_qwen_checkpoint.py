@@ -6,7 +6,9 @@ import pytest
 from safetensors.numpy import save_file
 
 from singularity import HybridForCausalLM, tiny_config
+from singularity.config import load_config
 from singularity.qwen_source import (
+    QWEN3_14B,
     QwenSourceSpec,
     validate_source_marker,
     validate_source_metadata,
@@ -22,6 +24,20 @@ from singularity.weight_mapping import (
 )
 
 
+def test_production_config_matches_pinned_qwen3_exactly():
+    config, _ = load_config("config/hybrid_14b_v5e8.yaml")
+    spec = QWEN3_14B
+    assert config.vocab_size == spec.vocab_size
+    assert config.hidden_size == spec.hidden_size
+    assert config.intermediate_size == spec.intermediate_size
+    assert config.num_layers == spec.num_hidden_layers
+    assert config.max_position_embeddings == spec.max_position_embeddings
+    assert config.mla.num_heads == spec.num_attention_heads
+    assert config.mla.rope_theta == spec.rope_theta
+    assert config.attention_layer_indices == (5, 12, 19, 25, 32, 39)
+    assert len(config.attention_layer_indices) / config.num_layers == 0.15
+
+
 def test_source_metadata_is_immutable():
     spec = QwenSourceSpec(
         repo_id="test/qwen",
@@ -33,7 +49,12 @@ def test_source_metadata_is_immutable():
         intermediate_size=128,
         num_attention_heads=4,
         num_key_value_heads=2,
+        head_dim=16,
         vocab_size=128,
+        max_position_embeddings=128,
+        rope_theta=1_000_000.0,
+        rms_norm_eps=1e-6,
+        tie_word_embeddings=False,
         tensor_count=2,
         shard_count=1,
         total_size_bytes=12,
@@ -46,7 +67,12 @@ def test_source_metadata_is_immutable():
         "intermediate_size": 128,
         "num_attention_heads": 4,
         "num_key_value_heads": 2,
+        "head_dim": 16,
         "vocab_size": 128,
+        "max_position_embeddings": 128,
+        "rope_theta": 1_000_000.0,
+        "rms_norm_eps": 1e-6,
+        "tie_word_embeddings": False,
     }
     index = {
         "metadata": {"total_size": 12},
@@ -59,7 +85,24 @@ def test_source_metadata_is_immutable():
 
 def test_source_marker_pins_repo_and_revision(tmp_path):
     spec = QwenSourceSpec(
-        "test/qwen", "abc", "Qwen2ForCausalLM", "qwen2", 1, 8, 16, 2, 1, 32, 1, 1, 10
+        repo_id="test/qwen",
+        revision="abc",
+        architecture="Qwen3ForCausalLM",
+        model_type="qwen3",
+        num_hidden_layers=1,
+        hidden_size=8,
+        intermediate_size=16,
+        num_attention_heads=2,
+        num_key_value_heads=1,
+        head_dim=4,
+        vocab_size=32,
+        max_position_embeddings=128,
+        rope_theta=1_000_000.0,
+        rms_norm_eps=1e-6,
+        tie_word_embeddings=False,
+        tensor_count=1,
+        shard_count=1,
+        total_size_bytes=10,
     )
     write_source_marker(tmp_path, spec)
     validate_source_marker(tmp_path, spec)

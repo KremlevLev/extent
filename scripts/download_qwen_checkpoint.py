@@ -3,17 +3,17 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from singularity.qwen_source import QWEN2_5_14B_BASE, write_source_marker
+from singularity.qwen_source import QWEN3_14B, write_source_marker
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description="Download the immutable Qwen2.5-14B source checkpoint.")
+    parser = argparse.ArgumentParser(description="Download the immutable Qwen3-14B source checkpoint.")
     parser.add_argument("--output-dir", required=True)
     args = parser.parse_args(argv)
 
     from huggingface_hub import snapshot_download
 
-    spec = QWEN2_5_14B_BASE
+    spec = QWEN3_14B
     output = Path(args.output_dir).resolve()
     output.mkdir(parents=True, exist_ok=True)
     print(f"downloading {spec.repo_id}@{spec.revision} to {output}")

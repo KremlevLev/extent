@@ -9,7 +9,7 @@ from singularity import HybridForCausalLM
 from singularity.config import load_config
 from singularity.initialization import abstract_parameter_tree
 from singularity.qwen_source import (
-    QWEN2_5_14B_BASE,
+    QWEN3_14B,
     validate_source_marker,
     validate_source_metadata,
 )
@@ -29,7 +29,7 @@ def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Validate the immutable Qwen source and direct map.")
     parser.add_argument("--model-dir", help="Optional downloaded checkpoint directory.")
     args = parser.parse_args(argv)
-    spec = QWEN2_5_14B_BASE
+    spec = QWEN3_14B
     print(f"source={spec.repo_id}@{spec.revision}")
     if args.model_dir:
         model_dir = Path(args.model_dir)

@@ -1,11 +1,11 @@
 model:
-  vocab_size: 152064
+  vocab_size: 151936
   hidden_size: 5120
-  intermediate_size: 13824
-  num_layers: 48
-  # Seven uniformly interleaved MLA layers: 7/48 = 14.58% attention.
-  attention_layer_indices: [5, 12, 19, 26, 33, 40, 47]
-  max_position_embeddings: 8192
+  intermediate_size: 17408
+  num_layers: 40
+  # Six uniformly interleaved MLA layers: 6/40 = exactly 15% attention.
+  attention_layer_indices: [5, 12, 19, 25, 32, 39]
+  max_position_embeddings: 40960
   param_dtype: bfloat16
   compute_dtype: bfloat16
   logits_dtype: float32

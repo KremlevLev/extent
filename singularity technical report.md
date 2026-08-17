@@ -1,6 +1,6 @@
 # Singularity Technical Report and Experiment Ledger
 
-**Working title:** *Singularity: Compute-Efficient Transplantation of Qwen2.5-14B into a Mamba-3/MLA Hybrid*
+**Working title:** *Singularity: Compute-Efficient Transplantation of Qwen3-14B into a Mamba-3/MLA Hybrid*
 
 **Status:** research prototype; no quality or inference claims are established yet.
 
@@ -15,7 +15,7 @@ This document is the source of truth for the paper. Every number must be marked 
 
 ## 1. Research objective
 
-Convert a pretrained Qwen2.5-14B Transformer into a deployable hybrid language model without full pretraining:
+Convert a pretrained Qwen3-14B Transformer into a deployable hybrid language model without full pretraining:
 
 - preserve the Qwen embeddings, MLPs, normalization layers, and as much learned behavior as possible;
 - replace approximately 85% of GQA sequence mixers with Mamba-3 MIMO blocks;
@@ -30,29 +30,31 @@ The paper is not about merely combining Mamba and attention. The intended contri
 
 ### 2.1 Source checkpoint
 
-The current configuration matches **Qwen/Qwen2.5-14B Base**, not the original Qwen-14B and not Qwen3-14B:
+The source checkpoint is **Qwen/Qwen3-14B** (the released post-trained thinking/non-thinking model, not the separate `Qwen3-14B-Base` repository):
 
 | Field | Value |
 |---|---:|
-| Layers | 48 |
+| Layers | 40 |
 | Hidden size | 5120 |
-| MLP intermediate size | 13824 |
+| MLP intermediate size | 17408 |
 | Query heads | 40 |
 | KV heads | 8 |
-| Vocabulary | 152064 |
+| Head dimension | 128 |
+| Attention Q/K normalization | per-head RMSNorm |
+| Vocabulary | 151936 |
 | RoPE theta | 1,000,000 |
-| Published maximum positions | 131072 |
+| Published maximum positions | 40960 |
 
-**OPEN DECISION:** Pin the exact Hugging Face repository and immutable revision before downloading or mapping weights. Decide separately whether recovery starts from Base or Instruct. Base is cleaner for architecture recovery; instruction/reasoning tuning should be a later stage.
+The immutable source revision is `40c069824f4251a91eefaf281ebe4c544efd3e18`. Architecture recovery targets this exact checkpoint; any later additional reasoning tuning remains a separate stage.
 
 ### 2.2 Target ratio
 
-The scientific target is approximately 15% MLA attention and 85% Mamba-3 MIMO. With 48 layers, the closest integer schedule is:
+The scientific target is exactly 15% MLA attention and 85% Mamba-3 MIMO. With 40 layers:
 
-- 7 MLA layers = 14.58%;
-- 41 Mamba-3 layers = 85.42%.
+- 6 MLA layers = 15%;
+- 34 Mamba-3 layers = 85%.
 
-The production configuration uses seven uniformly interleaved MLA layers at zero-based indices `[5, 12, 19, 26, 33, 40, 47]`. The earlier 12/36 bring-up configuration has been removed. Its recorded memory measurements remain historical engineering evidence only and are not an experimental baseline.
+The production configuration uses six uniformly interleaved MLA layers at zero-based indices `[5, 12, 19, 25, 32, 39]`. Earlier 48-layer configurations were based on the wrong Qwen generation and are void for scientific claims.
 
 The main retained-layer schedule is fixed to the uniform indices above. Alternative layer placements, if tested, are small-scale allocation ablations and do not restore the removed 25% architecture.
 
@@ -131,7 +133,7 @@ This table is essential: without it, quality loss cannot be attributed to the Ma
 
 ### 4.3 Architecture/efficiency ablation
 
-- The full-scale architecture is fixed at 14.6% attention (7/48); no 25% model is retained as a baseline.
+- The full-scale architecture is fixed at exactly 15% attention (6/40); no 25% model is retained as a baseline.
 - Retained-layer allocation: uniform, late-layer biased, and sensitivity-ranked.
 - Mamba-3: SISO vs MIMO; MIMO rank; state sizes 32/64/128; real vs complex; Euler vs trapezoidal where implementation permits.
 - MLA: latent KV rank, query rank, partial-RoPE dimensions, and SVD/transplant method.
@@ -139,7 +141,7 @@ This table is essential: without it, quality loss cannot be attributed to the Ma
 
 ### 4.4 Minimum credible scaling strategy
 
-Run broad ablations at a smaller Qwen2.5 scale using the same conversion code, then promote only the best few variants to 14B. A single 14B run cannot establish causality. The 14B experiment should confirm the trend and demonstrate feasibility, not carry the entire ablation matrix.
+Run broad ablations at a smaller Qwen3 scale using the same conversion code, then promote only the best few variants to 14B. A single 14B run cannot establish causality. The 14B experiment should confirm the trend and demonstrate feasibility, not carry the entire ablation matrix.
 
 ## 5. Evaluation protocol
 
@@ -160,7 +162,7 @@ Run broad ablations at a smaller Qwen2.5 scale using the same conversion code, t
 
 ### 5.3 Inference
 
-Compare against the unchanged Qwen2.5-14B GQA teacher and useful intermediate baselines on the same TPU slice, JAX version, BF16 precision, batch sizes, prompt lengths, generated lengths, compilation state, and sampling settings.
+Compare against the unchanged Qwen3-14B GQA teacher and useful intermediate baselines on the same TPU slice, JAX version, BF16 precision, batch sizes, prompt lengths, generated lengths, compilation state, and sampling settings.
 
 Record:
 
@@ -213,7 +215,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Step 0 (MEASURED):** `loss=4.8750`, `grad_norm=4.8699`, `max_abs_grad=0.6875`, `grads_finite=True`, `nonfinite_grad_leaves=0`.
 - **Interpretation:** the intended 8-device mesh, BF16 path, parameter sharding, Lion-state sharding, forward pass, backward pass, and update execute together on the tiny model.
 
-### EXP-003 — Superseded bring-up shape audit and parameter allocation
+### EXP-003 — VOID: wrong-generation bring-up shape audit and parameter allocation
 
 - **Hardware:** one TPU v5e-8 slice for allocation; shape audit is hardware-independent
 - **Configuration:** superseded 12 MLA / 36 Mamba bring-up prototype; removed from active configs and not used as a paper baseline
@@ -225,26 +227,26 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Ideal per-device weights + BF16 gradients + BF16 Lion momentum (DERIVED):** 10.253 GiB.
 - **Real parameter allocation (MEASURED):** 3.418 GiB on each of TPU_0 through TPU_7.
 - **Result (MEASURED):** full parameter initialization passed; optimizer and train step were not created.
-- **Interpretation:** full parameter shapes and the proposed 1x4x2 sharding are feasible. Training feasibility and the final 15/85 parameter count remain unproven.
+- **Interpretation:** the 1x4x2 sharding mechanism worked, but the model used wrong-generation dimensions. No architecture or memory number from this experiment is valid for the Qwen3 target.
 
-### EXP-004 — Full Lion persistent-state HBM probe
+### EXP-004 — VOID: wrong-generation Lion persistent-state HBM probe
 
 - **Commit:** `896b292`
 - **Hardware:** one TPU v5e-8 slice
 - **Mesh:** `data=1, fsdp=4, tensor=2`
-- **Status:** PASS.
+- **Status:** VOID for the Qwen3 target; mechanical optimizer-sharding evidence only.
 - **Command:** `full_preflight(["--initialize-optimizer"])` in the notebook process.
 - **Parameter allocation (MEASURED):** 3.418 GiB on each of eight devices.
 - **Lion optimizer allocation (MEASURED):** 3.418 GiB on each of eight devices.
 - **Combined persistent allocation (MEASURED):** 6.835 GiB on each of eight devices.
 - **Nominal remaining HBM (DERIVED):** 9.165 GiB/device relative to 16 GiB, before gradients, activations, XLA temporaries, executable buffers, and runtime overhead.
 - **Result (MEASURED):** `optimizer_initialization=PASS`; no gradients, activations, or train step were created.
-- **Interpretation:** weights and sharded BF16 Lion momentum fit with substantial nominal headroom. The result does not prove that a full 14B forward/backward fits.
+- **Interpretation:** the optimizer-sharding mechanism worked, but the model used wrong-generation dimensions. This is not a Qwen3 memory result.
 
-### EXP-005 — Final 7/41 target shape audit
+### EXP-005 — VOID: wrong-generation 7/41 target shape audit
 
 - **Hardware:** local shape-only trace; no full arrays allocated
-- **Configuration:** 7 MLA / 41 Mamba-3 MIMO, MLA indices `[5, 12, 19, 26, 33, 40, 47]`
+- **Configuration:** obsolete 48-layer Qwen2.5-shaped prototype, not Qwen3-14B
 - **Exact parameter count (DERIVED):** 14,698,336,184 across 743 tensors.
 - **Partitioned tensors (DERIVED):** 263/743.
 - **Global BF16 weight size (DERIVED):** 27.378 GiB.
@@ -252,9 +254,9 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Ideal per-device weights + BF16 gradients + BF16 Lion momentum (DERIVED):** 10.285 GiB.
 - **Ideal training-state headroom at 16 GiB (DERIVED):** 5.715 GiB/device before activations and XLA/runtime overhead.
 - **Result (DERIVED):** shape-only preflight passed.
-- **Status:** real parameter/Lion allocation for this final schedule remains to be measured on the next v5e-8 session.
+- **Status:** VOID for research use. Retained only as an engineering-error log.
 
-### EXP-006 — Pinned Qwen source and direct-map metadata audit
+### EXP-006 — VOID: Qwen2.5 metadata audit
 
 - **Implementation commit title:** `feat: add pinned Qwen2.5 streaming checkpoint import`
 - **Source:** `Qwen/Qwen2.5-14B`
@@ -265,14 +267,39 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Share of final target parameters directly preserved (DERIVED):** 79.94%.
 - **Direct scope:** token embeddings, lm_head, final norm, all input/post-attention norms, and all gate/up/down MLP projections.
 - **Result (MEASURED):** pinned config/index validation and target-shape mapping validation passed.
-- **Excluded by design:** all GQA mixer tensors; MLA conversion and Mamba-3 transplant remain separately measurable experiments.
+- **Status:** VOID. The audit was internally correct but targeted the wrong model generation and must not be used in the paper.
+
+### EXP-007 — Pinned Qwen3-14B metadata and direct-map audit
+
+- **Implementation commit title:** `fix: migrate Singularity source and target to Qwen3-14B`
+- **Source:** `Qwen/Qwen3-14B` (not `Qwen3-14B-Base`)
+- **Immutable revision:** `40c069824f4251a91eefaf281ebe4c544efd3e18`
+- **Mode:** metadata-only; no model shards downloaded
+- **Checkpoint index (MEASURED):** 443 tensors, 8 shards, 29,536,614,400 bytes (27.508 GiB).
+- **Direct mapping (DERIVED/VALIDATED):** 203 tensors containing 12,251,714,560 parameters.
+- **Share of final target parameters directly preserved (DERIVED):** 83.30%.
+- **Direct scope:** token embeddings, lm_head, final norm, all input/post-attention norms, and all gate/up/down MLP projections.
+- **Mixer tensors reserved for conversion:** Q/K/V/O projections and Q/K per-head RMSNorm parameters.
+- **Result (MEASURED):** pinned Qwen3 config/index validation and target-shape mapping validation passed.
+
+### EXP-008 — Qwen3 6/34 target shape audit
+
+- **Configuration:** 6 MLA / 34 Mamba-3 MIMO, MLA indices `[5, 12, 19, 25, 32, 39]`
+- **Exact parameter count (DERIVED):** 14,707,399,920 across 619 tensors.
+- **Partitioned tensors (DERIVED):** 220/619.
+- **Global BF16 weight size (DERIVED):** 27.395 GiB.
+- **Ideal per-device BF16 weights (DERIVED):** 3.429 GiB.
+- **Ideal per-device weights + BF16 gradients + BF16 Lion momentum (DERIVED):** 10.288 GiB.
+- **Ideal headroom at 16 GiB (DERIVED):** 5.712 GiB/device before activations and XLA/runtime overhead.
+- **Result (DERIVED):** shape-only preflight passed.
+- **Status:** real parameter/Lion allocation for this exact Qwen3 target remains to be measured on v5e-8.
 
 ## 7. Development milestones
 
-1. **Completed:** validate full weights + Lion state on v5e-8.
-2. **Completed:** set the only full-scale target schedule to 7/48 MLA layers and remove 12/48 from active configs.
-3. **Current:** pin Qwen2.5-14B Base revision and implement streaming checkpoint mapping with per-tensor validation.
-4. Establish exact teacher parity before conversion (logits/NLL on fixed fixtures).
+1. **Completed only for the sharding mechanism:** wrong-generation weights + Lion state fit on v5e-8; exact Qwen3 HBM validation remains pending.
+2. **Completed:** set the Qwen3 target schedule to exactly 6/40 MLA layers.
+3. **Completed:** validate the pinned Qwen3-14B metadata, target shapes, and streaming mapping contracts.
+4. **Current:** implement the exact Qwen3 GQA teacher and establish logits/NLL parity before conversion.
 5. Implement and test GQA-to-MLA conversion baselines.
 6. Implement Mamba-3 transplant variants and single-layer shock tests.
 7. Run small-scale ablations and freeze the 14B recovery recipe.
@@ -292,8 +319,8 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - Moudgil et al., *Attention to Mamba: A Recipe for Cross-Architecture Distillation*, arXiv:2604.14191. https://arxiv.org/abs/2604.14191
 - Ji et al., *Towards Economical Inference: Enabling DeepSeek's Multi-Head Latent Attention in Any Transformer-based LLMs*, arXiv:2502.14837. https://arxiv.org/abs/2502.14837
 - TransMLA, arXiv:2502.07864. https://arxiv.org/abs/2502.07864
-- Qwen Team, *Qwen2.5 Technical Report*, arXiv:2412.15115. https://arxiv.org/abs/2412.15115
-- Exact source configuration: https://huggingface.co/Qwen/Qwen2.5-14B/blob/main/config.json (must be replaced in experiments by a pinned immutable revision).
+- Qwen Team, *Qwen3 Technical Report*, arXiv:2505.09388. https://arxiv.org/abs/2505.09388
+- Exact pinned source: https://huggingface.co/Qwen/Qwen3-14B/tree/40c069824f4251a91eefaf281ebe4c544efd3e18
 
 ## 10. Rules for future entries
 

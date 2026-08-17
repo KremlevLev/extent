@@ -6,20 +6,20 @@ import os
 @dataclass
 class ModelConfig:
     """
-    Архитектурные параметры гибридной модели Qwen2.5-14B (41 Mamba-3 + 7 MLA).
+    Архитектурные параметры гибридной модели Qwen3-14B (34 Mamba-3 + 6 MLA).
     """
     # --- Основные параметры (Qwen3-14B) ---
-    vocab_size: int = 152064
+    vocab_size: int = 151936
     hidden_size: int = 5120
-    num_hidden_layers: int = 48
+    num_hidden_layers: int = 40
     num_attention_heads: int = 40
     num_key_value_heads: int = 8
-    intermediate_size: int = 13824
-    max_position_embeddings: int = 8192
+    intermediate_size: int = 17408
+    max_position_embeddings: int = 40960
 
     # --- Параметры гибридной архитектуры ---
-    mamba_layers: int = 41
-    attention_layers: int = 7
+    mamba_layers: int = 34
+    attention_layers: int = 6
     mamba_d_state: int = 128
     mamba_d_conv: int = 4
     mamba_expand_factor: int = 2
@@ -27,7 +27,7 @@ class ModelConfig:
     # --- Параметры инициализации ---
     use_weight_subcloning: bool = True
     init_from_qwen: bool = True
-    qwen_model_id: str = "Qwen/Qwen2.5-14B"
+    qwen_model_id: str = "Qwen/Qwen3-14B"
 
     # --- Параметры нормализации ---
     rms_norm_eps: float = 1e-6
@@ -41,7 +41,7 @@ class ModelConfig:
 
     # --- Распределение слоёв (Attention слои) ---
     attention_layer_indices: List[int] = field(
-        default_factory=lambda: [5, 12, 19, 26, 33, 40, 47]
+        default_factory=lambda: [5, 12, 19, 25, 32, 39]
     )
 
     def __post_init__(self):

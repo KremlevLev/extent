@@ -18,7 +18,7 @@ from singularity.initialization import (
 from singularity.optimizer import create_lion
 from singularity.preflight import allocated_bytes_by_device, build_preflight_report
 from singularity.qwen_source import (
-    QWEN2_5_14B_BASE,
+    QWEN3_14B,
     validate_source_marker,
     validate_source_metadata,
 )
@@ -104,12 +104,12 @@ def main(argv: list[str] | None = None) -> None:
 
     if args.qwen_model_dir:
         qwen_dir = Path(args.qwen_model_dir)
-        validate_source_marker(qwen_dir, QWEN2_5_14B_BASE)
+        validate_source_marker(qwen_dir, QWEN3_14B)
         source_config = json.loads((qwen_dir / "config.json").read_text(encoding="utf-8"))
         source_index = json.loads(
             (qwen_dir / "model.safetensors.index.json").read_text(encoding="utf-8")
         )
-        validate_source_metadata(source_config, source_index, QWEN2_5_14B_BASE)
+        validate_source_metadata(source_config, source_index, QWEN3_14B)
         reader = QwenCheckpointReader(qwen_dir)
         validate_local_direct_shapes(reader, config)
         print("streaming direct Qwen tensors into their final device shards...")
