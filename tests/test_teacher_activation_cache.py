@@ -10,6 +10,7 @@ from singularity.teacher_activation_cache import (
     array_artifact,
     atomic_save_array,
     checkpoint_shard_last_use,
+    load_activation_cache,
     run_host_microbatches,
 )
 
@@ -75,3 +76,34 @@ def test_shard_pruning_is_exact_and_rejects_parent_traversal(tmp_path):
     with pytest.raises(ValueError, match="outside checkpoint cache"):
         _safe_prune_shards(model_dir, {"../outside.safetensors": 3}, 3)
     assert outside.exists()
+
+
+def test_portable_cache_loader_resolves_manifest_sibling_and_checks_hash(tmp_path):
+    import json
+
+    artifacts = {}
+    shapes = {
+        "token_ids": (2, 3),
+        "residual_input": (2, 3, 4),
+        "normalized_input": (2, 3, 4),
+        "attention_target": (2, 3, 4),
+    }
+    for index, (name, shape) in enumerate(shapes.items()):
+        path = tmp_path / f"{name}.npy"
+        dtype = np.int32 if name == "token_ids" else np.float32
+        atomic_save_array(path, np.full(shape, index, dtype=dtype), np.dtype(dtype))
+        artifacts[name] = array_artifact(path)
+        artifacts[name]["path"] = f"/unavailable/kaggle/path/{path.name}"
+    manifest = tmp_path / "manifest.json"
+    manifest.write_text(
+        json.dumps({"passed": True, "artifacts": artifacts}), encoding="utf-8"
+    )
+    _, arrays, paths = load_activation_cache(manifest)
+    assert arrays["attention_target"].shape == (2, 3, 4)
+    assert paths["residual_input"] == (tmp_path / "residual_input.npy").resolve()
+    artifacts["attention_target"]["sha256"] = "0" * 64
+    manifest.write_text(
+        json.dumps({"passed": True, "artifacts": artifacts}), encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="SHA-256 mismatch"):
+        load_activation_cache(manifest)

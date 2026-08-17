@@ -636,6 +636,15 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Interpretation:** the cache producer can materialize the exact layer-0 mixer dataset without training and persist it independently of the checkpoint session. The next gate is consuming these artifacts in the paired distillation sweep and reproducing the qualitative EXP-025 ranking without an on-the-fly teacher forward.
 - **Raw artifact:** `results/EXP-026-qwen3-layer0-activation-cache-manifest.json`.
 
+### EXP-027 — Portable cached-activation distillation consumer
+
+- **Implementation commit title:** `feat: add cached-activation Mamba-3 distillation`
+- **Status:** implementation complete; layer-0 cache-consumer validation pending.
+- **Purpose:** run the paired Mamba-3 seed/budget sweep from persisted teacher activations without recomputing embeddings or the teacher attention forward. The same consumer will accept layer-18 caches once their true residual stream exists.
+- **Integrity gate:** resolve artifacts either from their recorded paths, an explicit cache directory, or the manifest directory; require the producer pass flag; verify every SHA-256, shape, and dtype; and reject mismatched source revision, layer index, sequence length, or split layout.
+- **Portability:** manifests produced in `/kaggle/working/output` remain usable after Kaggle publishes them under a different `/kaggle/input/...` directory because artifacts are also resolved by manifest-sibling basename.
+- **Validation target:** cached BF16-teacher/FP32-storage layer-0 data should reproduce the qualitative EXP-025 result: finite training and random recurrence beating the direct QKVO port across paired seeds. Exact metrics need not equal the earlier T4/FP32-teacher run.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.

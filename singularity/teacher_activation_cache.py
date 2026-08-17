@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+import json
 from pathlib import Path
 from typing import Callable, Mapping
 
@@ -106,3 +107,50 @@ def array_artifact(path: str | Path) -> dict:
         "bytes": int(file.stat().st_size),
         "sha256": file_sha256(file),
     }
+
+
+def load_activation_cache(
+    manifest_path: str | Path,
+    *,
+    artifact_dir: str | Path | None = None,
+    verify_hashes: bool = True,
+) -> tuple[dict, dict[str, np.ndarray], dict[str, Path]]:
+    """Load and validate a portable activation cache from manifest + NPY files."""
+    manifest_file = Path(manifest_path)
+    manifest = json.loads(manifest_file.read_text(encoding="utf-8"))
+    if not manifest.get("passed"):
+        raise ValueError("activation-cache manifest is not marked passed")
+    records = manifest.get("artifacts", {})
+    required = ("token_ids", "residual_input", "normalized_input", "attention_target")
+    missing = [name for name in required if name not in records]
+    if missing:
+        raise KeyError(f"activation-cache manifest is missing artifacts: {missing}")
+    search_dir = Path(artifact_dir) if artifact_dir else None
+    arrays: dict[str, np.ndarray] = {}
+    paths: dict[str, Path] = {}
+    for name in required:
+        record = records[name]
+        recorded = Path(record["path"])
+        candidates = []
+        if search_dir is not None:
+            candidates.append(search_dir / recorded.name)
+        candidates.extend((manifest_file.parent / recorded.name, recorded))
+        path = next((candidate for candidate in candidates if candidate.exists()), None)
+        if path is None:
+            raise FileNotFoundError(
+                f"cannot locate {name}; searched {[str(value) for value in candidates]}"
+            )
+        if verify_hashes and file_sha256(path) != record["sha256"]:
+            raise ValueError(f"SHA-256 mismatch for activation artifact {name}")
+        value = np.load(path, mmap_mode="r", allow_pickle=False)
+        if list(value.shape) != list(record["shape"]):
+            raise ValueError(
+                f"shape mismatch for {name}: {list(value.shape)} != {record['shape']}"
+            )
+        if str(value.dtype) != record["dtype"]:
+            raise ValueError(
+                f"dtype mismatch for {name}: {value.dtype} != {record['dtype']}"
+            )
+        arrays[name] = value
+        paths[name] = path.resolve()
+    return manifest, arrays, paths

@@ -6,6 +6,7 @@ from singularity.qwen3_parity import (
     jax_attention_params,
     jax_layer_params,
     layer_mapping_entries,
+    load_mixer_arrays,
     parity_metrics,
     required_layer_shards,
     torch_layer_state,
@@ -128,3 +129,27 @@ def test_attention_only_loader_excludes_mlp_tensors():
         "q_norm",
         "k_norm",
     }
+
+
+def test_mixer_array_loader_reads_only_attention_and_input_norm():
+    config = tiny_qwen3_teacher_config()
+    entries = layer_mapping_entries(config, 0)
+    arrays = {
+        entry.source: np.zeros(expected_qwen_shape(entry, config), np.float32)
+        for entry in entries
+    }
+
+    class Reader:
+        def __init__(self):
+            self.read_names = []
+
+        def read(self, name):
+            self.read_names.append(name)
+            return arrays[name]
+
+    reader = Reader()
+    loaded = load_mixer_arrays(reader, config, 0)
+    assert len(loaded) == 7
+    assert set(loaded) == set(reader.read_names)
+    assert f"model.layers.0.input_layernorm.weight" in loaded
+    assert not any(".mlp." in name for name in loaded)

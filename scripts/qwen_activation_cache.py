@@ -22,8 +22,8 @@ from singularity.qwen3_parity import (
     ensure_layer_checkpoint,
     jax_attention_params,
     jax_layer_params,
-    layer_mapping_entries,
     load_layer_arrays,
+    load_mixer_arrays,
 )
 from singularity.qwen3_teacher import (
     Qwen3DecoderLayer,
@@ -45,17 +45,6 @@ from singularity.weight_mapping import QwenCheckpointReader
 def _read_json(url: str) -> dict:
     with request.urlopen(url, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
-
-
-def _load_target_arrays(reader, source, layer_index) -> dict[str, np.ndarray]:
-    prefix = f"model.layers.{layer_index}."
-    needed = {
-        entry.source
-        for entry in layer_mapping_entries(source, layer_index)
-        if entry.source == f"{prefix}input_layernorm.weight"
-        or entry.source.startswith(f"{prefix}self_attn.")
-    }
-    return {name: np.asarray(reader.read(name), dtype=np.float32) for name in needed}
 
 
 def _create_decoder_runner(module, positions, attention_mask):
@@ -330,7 +319,7 @@ def main(argv: list[str] | None = None) -> None:
         repo_id=spec.repo_id,
         revision=spec.revision,
     )
-    target_arrays = _load_target_arrays(reader, source, args.target_layer)
+    target_arrays = load_mixer_arrays(reader, source, args.target_layer)
     norm_name = f"model.layers.{args.target_layer}.input_layernorm.weight"
     norm = RMSNorm(source.hidden_size, source.rms_norm_eps, jnp.float32)
     run_norm = _create_norm_runner(norm)
@@ -387,7 +376,7 @@ def main(argv: list[str] | None = None) -> None:
         "microbatch_windows": args.microbatch_windows,
         "jax_backend": jax.default_backend(),
         "visible_devices": [str(device) for device in jax.devices()],
-        "execution": "single-device jit; visible extra GPUs are not used",
+        "execution": "single-device jit; additional visible accelerator devices are not used",
         "prune_consumed_shards": args.prune_consumed_shards,
         "removed_checkpoint_shards": sorted(set(removed_shards)),
         "artifacts": {

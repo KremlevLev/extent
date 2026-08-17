@@ -33,11 +33,12 @@ from singularity.optimizer import create_lion
 from singularity.qwen3_parity import (
     ensure_layer_checkpoint,
     jax_attention_params,
-    load_layer_arrays,
+    load_mixer_arrays,
 )
 from singularity.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
 from singularity.qwen_source import QWEN3_14B, validate_source_metadata
 from singularity.readout_calibration import fit_dual_ridge_readout
+from singularity.teacher_activation_cache import load_activation_cache
 from singularity.weight_mapping import QwenCheckpointReader
 
 
@@ -134,6 +135,8 @@ def main(argv: list[str] | None = None) -> None:
         "--variants", default="INIT-A-random,INIT-C-prior-qkvo-port"
     )
     parser.add_argument("--seeds", default="123,456,789")
+    parser.add_argument("--activation-cache-manifest")
+    parser.add_argument("--activation-cache-dir")
     parser.add_argument("--result-json")
     parser.add_argument("--output-dir", default="/kaggle/working/output")
     args = parser.parse_args(argv)
@@ -168,12 +171,6 @@ def main(argv: list[str] | None = None) -> None:
     )
     mamba_config = Mamba3Config()
     window_count = args.calibration_windows + max_steps + args.evaluation_windows
-    tokens = load_wikitext2_tokens(
-        window_count * args.sequence_length,
-        args.dataset_cache_dir,
-        tokenizer_repo=spec.repo_id,
-        tokenizer_revision=spec.revision,
-    )
     model_dir, shards = ensure_layer_checkpoint(
         args.cache_dir,
         index_payload["weight_map"],
@@ -182,44 +179,98 @@ def main(argv: list[str] | None = None) -> None:
         repo_id=spec.repo_id,
         revision=spec.revision,
     )
-    embedding_shard = index_payload["weight_map"]["model.embed_tokens.weight"]
-    if embedding_shard not in shards:
-        from huggingface_hub import hf_hub_download
-
-        hf_hub_download(
-            repo_id=spec.repo_id,
-            revision=spec.revision,
-            filename=embedding_shard,
-            local_dir=model_dir,
-        )
     reader = QwenCheckpointReader(model_dir)
-    arrays = load_layer_arrays(reader, source, args.layer_index)
-    attention_params = jax_attention_params(arrays, source, args.layer_index)
-    hidden = jnp.asarray(
-        reader.read_rows("model.embed_tokens.weight", tokens)
-    ).reshape(window_count, args.sequence_length, source.hidden_size)
-    norm_scale = jnp.asarray(
-        arrays[f"model.layers.{args.layer_index}.input_layernorm.weight"]
-    )
-    normalized = RMSNorm(source.hidden_size, source.rms_norm_eps, jnp.float32).apply(
-        {"params": {"scale": norm_scale}}, hidden
-    ).astype(compute_dtype)
-    positions = jnp.arange(args.sequence_length, dtype=jnp.int32)[None]
-    mask = jnp.ones((1, args.sequence_length), dtype=jnp.bool_)
-    teacher_module = Qwen3GQAAttention(source)
-    run_teacher = create_teacher_mixer_runner(teacher_module, positions, mask)
-    print(f"precomputing_teacher_windows={window_count}")
-    teacher_targets = np.stack(
-        [
-            np.asarray(
-                run_teacher(attention_params, normalized[index : index + 1])[0],
-                dtype=np.float32,
+    arrays = load_mixer_arrays(reader, source, args.layer_index)
+    activation_cache = None
+    activation_cache_paths = None
+    if args.activation_cache_manifest:
+        activation_cache, cached_arrays, activation_cache_paths = load_activation_cache(
+            args.activation_cache_manifest,
+            artifact_dir=args.activation_cache_dir,
+            verify_hashes=True,
+        )
+        expected_layout = {
+            "calibration": [0, args.calibration_windows],
+            "training": [args.calibration_windows, args.calibration_windows + max_steps],
+            "evaluation": [
+                args.calibration_windows + max_steps,
+                window_count,
+            ],
+            "total_windows": window_count,
+        }
+        checks = {
+            "source": (activation_cache.get("source"), f"{spec.repo_id}@{spec.revision}"),
+            "target_layer": (activation_cache.get("target_layer"), args.layer_index),
+            "sequence_length": (
+                activation_cache.get("sequence_length"),
+                args.sequence_length,
+            ),
+            "window_layout": (activation_cache.get("window_layout"), expected_layout),
+        }
+        mismatches = {
+            name: values for name, values in checks.items() if values[0] != values[1]
+        }
+        if mismatches:
+            raise ValueError(f"activation cache does not match sweep: {mismatches}")
+        normalized = cached_arrays["normalized_input"]
+        teacher_targets = cached_arrays["attention_target"]
+        expected_activation_shape = (
+            window_count,
+            args.sequence_length,
+            source.hidden_size,
+        )
+        if tuple(normalized.shape) != expected_activation_shape:
+            raise ValueError(
+                f"cached normalized input shape {normalized.shape} != {expected_activation_shape}"
             )
-            for index in range(window_count)
-        ]
-    )
-    del attention_params, run_teacher, teacher_module
-    jax.clear_caches()
+        print(
+            f"activation_cache=PASS manifest={Path(args.activation_cache_manifest).resolve()}"
+        )
+    else:
+        tokens = load_wikitext2_tokens(
+            window_count * args.sequence_length,
+            args.dataset_cache_dir,
+            tokenizer_repo=spec.repo_id,
+            tokenizer_revision=spec.revision,
+        )
+        embedding_shard = index_payload["weight_map"]["model.embed_tokens.weight"]
+        if embedding_shard not in shards:
+            from huggingface_hub import hf_hub_download
+
+            hf_hub_download(
+                repo_id=spec.repo_id,
+                revision=spec.revision,
+                filename=embedding_shard,
+                local_dir=model_dir,
+            )
+        attention_params = jax_attention_params(arrays, source, args.layer_index)
+        hidden = jnp.asarray(
+            reader.read_rows("model.embed_tokens.weight", tokens)
+        ).reshape(window_count, args.sequence_length, source.hidden_size)
+        norm_scale = jnp.asarray(
+            arrays[f"model.layers.{args.layer_index}.input_layernorm.weight"]
+        )
+        normalized = RMSNorm(
+            source.hidden_size, source.rms_norm_eps, jnp.float32
+        ).apply({"params": {"scale": norm_scale}}, hidden).astype(compute_dtype)
+        positions = jnp.arange(args.sequence_length, dtype=jnp.int32)[None]
+        mask = jnp.ones((1, args.sequence_length), dtype=jnp.bool_)
+        teacher_module = Qwen3GQAAttention(source)
+        run_teacher = create_teacher_mixer_runner(teacher_module, positions, mask)
+        print(f"precomputing_teacher_windows={window_count}")
+        teacher_targets = np.stack(
+            [
+                np.asarray(
+                    run_teacher(
+                        attention_params, normalized[index : index + 1]
+                    )[0],
+                    dtype=np.float32,
+                )
+                for index in range(window_count)
+            ]
+        )
+        del attention_params, run_teacher, teacher_module
+        jax.clear_caches()
 
     calibration_slice = slice(0, args.calibration_windows)
     training_start = args.calibration_windows
@@ -378,6 +429,23 @@ def main(argv: list[str] | None = None) -> None:
         "jax_backend": jax.default_backend(),
         "mamba_config": asdict(mamba_config),
         "trainable_parameters": trainable_parameters,
+        "activation_source": (
+            "portable_activation_cache"
+            if args.activation_cache_manifest
+            else "on_the_fly_layer0_teacher"
+        ),
+        "activation_cache": (
+            {
+                "manifest": str(Path(args.activation_cache_manifest).resolve()),
+                "producer_compute_dtype": activation_cache["compute_dtype"],
+                "producer_storage_dtype": activation_cache["storage_dtype"],
+                "resolved_artifacts": {
+                    name: str(path) for name, path in activation_cache_paths.items()
+                },
+            }
+            if activation_cache is not None
+            else None
+        ),
         "variants": variants_to_run,
         "runs": runs,
         "aggregate": aggregate,

@@ -57,6 +57,25 @@ def load_layer_arrays(
     }
 
 
+def load_mixer_arrays(
+    reader: QwenCheckpointReader,
+    config: Qwen3TeacherConfig,
+    layer_index: int,
+) -> dict[str, np.ndarray]:
+    """Load only input norm and attention tensors for mixer experiments."""
+    prefix = f"model.layers.{layer_index}."
+    entries = [
+        entry
+        for entry in layer_mapping_entries(config, layer_index)
+        if entry.source == f"{prefix}input_layernorm.weight"
+        or entry.source.startswith(f"{prefix}self_attn.")
+    ]
+    return {
+        entry.source: np.asarray(reader.read(entry.source), dtype=np.float32)
+        for entry in entries
+    }
+
+
 def jax_layer_params(
     arrays: Mapping[str, np.ndarray],
     config: Qwen3TeacherConfig,
