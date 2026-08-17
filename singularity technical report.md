@@ -621,6 +621,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Next method step:** implement a real teacher-activation cache for arbitrary layers, then use activation-driven layerwise distillation as the transplant mechanism. Direct matrix reuse remains a negative ablation rather than the proposed method.
 - **Raw artifact:** `results/EXP-025-qwen3-mamba3-distill-sweep-layer0.json`.
 
+### EXP-026 — Streaming Qwen3 teacher-activation cache
+
+- **Implementation commit title:** `feat: add streaming Qwen3 activation cache`
+- **Status:** implementation complete; layer-0 cache validation pending before deeper-layer execution.
+- **Purpose:** create scientifically valid mixer inputs for arbitrary Qwen3 layers by streaming the frozen teacher through every preceding decoder layer. This removes the invalid assumption that raw embeddings can serve as middle/late-layer residual inputs.
+- **Cached contract:** independent-window token IDs, residual input immediately before the target decoder layer, input-RMSNorm output consumed by its attention mixer, and the exact frozen attention output target. Shapes, dtypes, byte counts, SHA-256 hashes, source revisions, split boundaries, and visible devices are recorded in a manifest.
+- **Memory strategy:** only one teacher layer is materialized on-device at a time; activations move through bounded host/device microbatches. A partial manifest and residual checkpoint are updated after every completed decoder layer.
+- **Disk strategy:** `--prune-consumed-shards` may delete only exact safetensors shard files whose final required layer has completed. This is optional for early layers and intended for deep targets under Kaggle disk limits.
+- **Numerical policy:** T4 uses FP32 teacher compute and FP32 cache storage by default. The cache performs inference only and never updates teacher parameters.
+- **Execution gate:** first reproduce a finite layer-0 cache with the EXP-025 window layout. Only after that artifact passes will layer 18 be propagated and used for a cached-input distillation experiment.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
