@@ -323,6 +323,31 @@ script also runs grouped- and shared-RoPE controls at the maximum joint rank,
 separating positional-frequency removal and RoPE-head aggregation from the
 fixed-budget low-rank tradeoff.
 
+The naive shared-head sweep is followed by a standard TransMLA RoRoPE baseline.
+This fits per-frequency head rotations on one calibration sequence and evaluates
+on an independent sequence. It isolates positional decoupling before FreqFold or
+joint KV compression:
+
+```python
+from scripts.qwen_rorope_shock import main as qwen_rorope_shock
+qwen_rorope_shock([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--layer-index", "0",
+    "--calibration-length", "1024",
+    "--sequence-length", "1024",
+    "--rope-components", "1,2,4,8",
+    "--tail-tokens", "128",
+    "--calibration-seed", "123",
+    "--evaluation-seed", "124",
+    "--result-json", "/kaggle/working/qwen3-rorope-shock-layer0.json",
+])
+```
+
+The eight-component result is an implementation invariant and should be nearly
+identical to the source mixer. The one-component result measures the shock of
+the single shared RoPE-head target after PCA concentration, rather than naive
+head averaging. This launcher is a GPU diagnostic; TPU is not required.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional

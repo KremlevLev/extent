@@ -1,0 +1,126 @@
+from __future__ import annotations
+
+import jax
+import jax.numpy as jnp
+import numpy as np
+
+
+def fit_rorope_rotations(keys: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Fit standard RoRoPE head rotations from unrotated normalized keys.
+
+    ``keys`` has shape ``[..., kv_heads, head_dim]`` and uses Qwen's split-half
+    real/imaginary layout. One orthogonal rotation is fitted per RoPE frequency.
+    """
+    keys = np.asarray(keys, dtype=np.float64)
+    if keys.ndim < 3 or keys.shape[-1] % 2:
+        raise ValueError("keys must end in [kv_heads, even_head_dim]")
+    samples = keys.reshape(-1, keys.shape[-2], keys.shape[-1])
+    real, imaginary = np.split(samples, 2, axis=-1)
+    covariance = np.einsum("ngp,nhp->pgh", real, real)
+    covariance += np.einsum("ngp,nhp->pgh", imaginary, imaginary)
+
+    rotations = []
+    eigenvalues = []
+    for matrix in covariance:
+        values, vectors = np.linalg.eigh(matrix)
+        order = np.argsort(values)[::-1]
+        values, vectors = values[order], vectors[:, order]
+        # Eigenvector signs are arbitrary. Canonical signs make artifacts stable.
+        anchors = np.argmax(np.abs(vectors), axis=0)
+        signs = np.sign(vectors[anchors, np.arange(vectors.shape[1])])
+        vectors *= np.where(signs == 0, 1.0, signs)
+        rotations.append(vectors)
+        eigenvalues.append(values)
+    return np.asarray(rotations, dtype=np.float32), np.asarray(
+        eigenvalues, dtype=np.float64
+    )
+
+
+def apply_rorope(
+    query: jax.Array,
+    key: jax.Array,
+    positions: jax.Array,
+    rotations: jax.Array,
+    query_to_kv: jax.Array,
+    rope_components: int,
+    theta: float,
+) -> tuple[jax.Array, jax.Array]:
+    """Rotate KV-head components and retain RoPE on leading PCA components."""
+    kv_heads, head_dim = key.shape[-2:]
+    pairs = head_dim // 2
+    if not 0 < rope_components <= kv_heads:
+        raise ValueError("rope_components must be within the KV-head count")
+    if rotations.shape != (pairs, kv_heads, kv_heads):
+        raise ValueError("rotations have an incompatible shape")
+
+    q_real, q_imaginary = jnp.split(query.astype(jnp.float32), 2, axis=-1)
+    k_real, k_imaginary = jnp.split(key.astype(jnp.float32), 2, axis=-1)
+    q_rotation = rotations[:, query_to_kv, :].transpose(1, 0, 2)
+    q_rotation = q_rotation.transpose(0, 2, 1)
+    q_real = q_real[..., None, :] * q_rotation[None, None, :, :, :]
+    q_imaginary = (
+        q_imaginary[..., None, :] * q_rotation[None, None, :, :, :]
+    )
+    k_real = jnp.einsum("blgp,pgc->blcp", k_real, rotations)
+    k_imaginary = jnp.einsum("blgp,pgc->blcp", k_imaginary, rotations)
+
+    frequencies = jnp.arange(pairs, dtype=jnp.float32)
+    inverse = theta ** (-(2.0 * frequencies) / head_dim)
+    phase = positions.astype(jnp.float32)[..., None] * inverse
+    cosine, sine = jnp.cos(phase), jnp.sin(phase)
+    q_cos = cosine[:, :, None, None, :]
+    q_sin = sine[:, :, None, None, :]
+    k_cos = cosine[:, :, None, :]
+    k_sin = sine[:, :, None, :]
+    q_rotated_real = q_real * q_cos - q_imaginary * q_sin
+    q_rotated_imaginary = q_imaginary * q_cos + q_real * q_sin
+    k_rotated_real = k_real * k_cos - k_imaginary * k_sin
+    k_rotated_imaginary = k_imaginary * k_cos + k_real * k_sin
+    component_mask = jnp.arange(kv_heads) < rope_components
+    q_mask = component_mask[None, None, None, :, None]
+    k_mask = component_mask[None, None, :, None]
+    q_real = jnp.where(q_mask, q_rotated_real, q_real)
+    q_imaginary = jnp.where(q_mask, q_rotated_imaginary, q_imaginary)
+    k_real = jnp.where(k_mask, k_rotated_real, k_real)
+    k_imaginary = jnp.where(k_mask, k_rotated_imaginary, k_imaginary)
+    return (
+        jnp.concatenate((q_real, q_imaginary), axis=-1),
+        jnp.concatenate((k_real, k_imaginary), axis=-1),
+    )
+
+
+def rorope_attend(
+    query: jax.Array,
+    key: jax.Array,
+    value: jax.Array,
+    positions: jax.Array,
+    rotations: jax.Array,
+    query_to_kv: jax.Array,
+    rope_components: int,
+    theta: float,
+    attention_mask: jax.Array | None = None,
+) -> jax.Array:
+    """Reference TransMLA RoRoPE attention before joint KV compression."""
+    query, key = apply_rorope(
+        query,
+        key,
+        positions,
+        rotations,
+        query_to_kv,
+        rope_components,
+        theta,
+    )
+    logits = jnp.einsum(
+        "bqhcd,bkcd->bhqk", query, key, preferred_element_type=jnp.float32
+    ) * (value.shape[-1] ** -0.5)
+    causal = positions[:, None, :, None] >= positions[:, None, None, :]
+    mask = causal
+    if attention_mask is not None:
+        supplied = attention_mask.astype(jnp.bool_)
+        if supplied.ndim == 2:
+            supplied = supplied[:, None, None, :]
+        mask = mask & supplied
+    logits = jnp.where(mask, logits, jnp.finfo(jnp.float32).min)
+    probabilities = jax.nn.softmax(logits, axis=-1)
+    expanded_value = value[:, :, query_to_kv, :]
+    return jnp.einsum("bhqk,bkhd->bqhd", probabilities, expanded_value)
