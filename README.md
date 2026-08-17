@@ -110,6 +110,33 @@ from scripts.sharded_smoke import main as sharded_smoke
 sharded_smoke(["--sequence-length", "8", "--steps", "1"])
 ```
 
+## Kaggle Telegram TPU notification
+
+Create a bot with Telegram's `@BotFather`, open the bot, press **Start**, and
+send it any message. Store the token in Kaggle **Add-ons > Secrets** as
+`TELEGRAM_BOT_TOKEN`; never paste it into a notebook or commit it.
+
+To discover the destination chat id, enable notebook access for that secret and
+run in the notebook process:
+
+```python
+from scripts.telegram_tpu_notifier import main as telegram_tpu_notifier
+telegram_tpu_notifier(["--show-chat-ids"])
+```
+
+Store the printed id as a second Kaggle secret named `TELEGRAM_CHAT_ID`. On the
+next fresh TPU session, after installing requirements, run:
+
+```python
+from scripts.telegram_tpu_notifier import main as telegram_tpu_notifier
+telegram_tpu_notifier(["--message", "v5e-8 experiment session"])
+```
+
+The message is sent only after the current JAX process sees a TPU. This cannot
+notify before Kaggle starts the notebook kernel, because no project code is
+running before that point. Do not launch the notifier through `!python` or
+`%run`; libtpu must stay in the notebook process.
+
 Start real bring-up with `config/hybrid_14b_v5e8.yaml`. Its sequence length is
 deliberately 1024 and micro-batch size is one. Compile a single step and inspect
 HBM before raising sequence length. The analytical model size is approximately

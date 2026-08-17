@@ -230,15 +230,21 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-004 — Full Lion persistent-state HBM probe
 
 - **Commit:** `896b292`
-- **Status:** PENDING TPU v5e-8 run.
+- **Hardware:** one TPU v5e-8 slice
+- **Mesh:** `data=1, fsdp=4, tensor=2`
+- **Status:** PASS.
 - **Command:** `full_preflight(["--initialize-optimizer"])` in the notebook process.
-- **Expected analytical allocation (DERIVED):** approximately 3.418 GiB weights + 3.418 GiB Lion momentum per device, plus tiny scalar state.
-- **Do not record as measured until actual per-device output is captured.**
+- **Parameter allocation (MEASURED):** 3.418 GiB on each of eight devices.
+- **Lion optimizer allocation (MEASURED):** 3.418 GiB on each of eight devices.
+- **Combined persistent allocation (MEASURED):** 6.835 GiB on each of eight devices.
+- **Nominal remaining HBM (DERIVED):** 9.165 GiB/device relative to 16 GiB, before gradients, activations, XLA temporaries, executable buffers, and runtime overhead.
+- **Result (MEASURED):** `optimizer_initialization=PASS`; no gradients, activations, or train step were created.
+- **Interpretation:** weights and sharded BF16 Lion momentum fit with substantial nominal headroom. The result does not prove that a full 14B forward/backward fits.
 
 ## 7. Development milestones
 
-1. **Current:** validate full weights + Lion state on v5e-8.
-2. Correct target scheduling to configurable 7/48 MLA layers while retaining 12/48 as an ablation baseline.
+1. **Completed:** validate full weights + Lion state on v5e-8.
+2. **Current:** correct target scheduling to configurable 7/48 MLA layers while retaining 12/48 as an ablation baseline.
 3. Pin Qwen2.5-14B Base revision and implement streaming checkpoint mapping with per-tensor validation.
 4. Establish exact teacher parity before conversion (logits/NLL on fixed fixtures).
 5. Implement and test GQA-to-MLA conversion baselines.
