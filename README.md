@@ -371,6 +371,31 @@ Fold 1 must reproduce the EXP-015 one-component metrics. Larger folds trade an
 approximation between neighboring RoPE frequencies for a richer PCA subspace,
 without changing the retained RoPE-cache width. TPU is not required.
 
+After selecting the positional transform, compress its seven NoPE key
+components jointly with the original values. The total target cache is fixed at
+576 elements: 128 RoPE plus a rank-448 latent. This probe compares plain
+activation PCA with TransMLA-style BKV balancing:
+
+```python
+from scripts.qwen_balanced_kv_probe import main as qwen_balanced_kv_probe
+qwen_balanced_kv_probe([
+    "--cache-dir", "/kaggle/working/qwen3-layer-parity",
+    "--layer-index", "0",
+    "--calibration-length", "1024",
+    "--sequence-length", "1024",
+    "--latent-rank", "448",
+    "--tail-tokens", "128",
+    "--calibration-seed", "123",
+    "--evaluation-seed", "124",
+    "--svd-seed", "0",
+    "--result-json", "/kaggle/working/qwen3-balanced-kv-probe-layer0.json",
+])
+```
+
+This remains a GPU layer diagnostic. It reports an uncompressed RoRoPE control,
+plain rank-448 activation PCA, and rank-448 BKV-balanced activation PCA. The
+activation basis is not yet a deployable checkpoint mapping.
+
 ## Research caveats
 
 The Qwen -> Mamba map is an initialization hypothesis, not exact functional

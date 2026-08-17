@@ -1,0 +1,112 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "method": "TransMLA_RoRoPE_FreqFold_style_activation_diagnostic",
+  "layer_index": 0,
+  "compute_dtype": "float32",
+  "jax_backend": "gpu",
+  "input_kind": "independent_deterministic_gaussian_calibration_and_evaluation",
+  "calibration_length": 1024,
+  "sequence_length": 1024,
+  "calibration_seed": 123,
+  "evaluation_seed": 124,
+  "tail_tokens": 128,
+  "folds": [
+    1,
+    2,
+    4,
+    8
+  ],
+  "rope_cache_elements_per_token": 128,
+  "variants": {
+    "freqfold_1": {
+      "rope_cache_elements_per_token": 128,
+      "retained_components_per_frequency_group": 1,
+      "positional_energy_fraction": 0.5272641853777813,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.27759383246302605,
+          "mean_abs": 0.012231418149428916,
+          "rmse": 0.015502304604176695,
+          "relative_l2": 0.7157804616304454,
+          "cosine_similarity": 0.7440827109818064
+        },
+        "tail_tokens": {
+          "max_abs": 0.211900494992733,
+          "mean_abs": 0.011784935343291,
+          "rmse": 0.014896458252576001,
+          "relative_l2": 0.8074363648643089,
+          "cosine_similarity": 0.6755983981490384
+        }
+      }
+    },
+    "freqfold_2": {
+      "rope_cache_elements_per_token": 128,
+      "retained_components_per_frequency_group": 2,
+      "positional_energy_fraction": 0.5522340322409811,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.3238758258521557,
+          "mean_abs": 0.012440061845890719,
+          "rmse": 0.015766440492760044,
+          "relative_l2": 0.7279762810966958,
+          "cosine_similarity": 0.7356193184691652
+        },
+        "tail_tokens": {
+          "max_abs": 0.22782062739133835,
+          "mean_abs": 0.011945082430187352,
+          "rmse": 0.01509641111117887,
+          "relative_l2": 0.8182744584941563,
+          "cosine_similarity": 0.6681284714945688
+        }
+      }
+    },
+    "freqfold_4": {
+      "rope_cache_elements_per_token": 128,
+      "retained_components_per_frequency_group": 4,
+      "positional_energy_fraction": 0.5862783553946342,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.3093383312225342,
+          "mean_abs": 0.012631040333019414,
+          "rmse": 0.016015784649842595,
+          "relative_l2": 0.7394891290517869,
+          "cosine_similarity": 0.7270288739047326
+        },
+        "tail_tokens": {
+          "max_abs": 0.2136932834982872,
+          "mean_abs": 0.012086574999082302,
+          "rmse": 0.015273743799246354,
+          "relative_l2": 0.8278864654958921,
+          "cosine_similarity": 0.6583078478220038
+        }
+      }
+    },
+    "freqfold_8": {
+      "rope_cache_elements_per_token": 128,
+      "retained_components_per_frequency_group": 8,
+      "positional_energy_fraction": 0.6282857005892926,
+      "mixer_output": {
+        "all_tokens": {
+          "max_abs": 0.2920108735561371,
+          "mean_abs": 0.012740211245042756,
+          "rmse": 0.01614986702886678,
+          "relative_l2": 0.7456800503118803,
+          "cosine_similarity": 0.7226987118098495
+        },
+        "tail_tokens": {
+          "max_abs": 0.22529564425349236,
+          "mean_abs": 0.012240181985743347,
+          "rmse": 0.01546881822367975,
+          "relative_l2": 0.8384601321669789,
+          "cosine_similarity": 0.6509032346198046
+        }
+      }
+    }
+  },
+  "notes": [
+    "Adjacent source frequencies are jointly PCA-rotated with KV heads.",
+    "The leading fold components retain the group's source frequency slots.",
+    "No BKV-PCA, CARE factorization, or latent KV compression is applied."
+  ]
+}
+

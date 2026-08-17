@@ -421,7 +421,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-016 — Fixed-RoPE-cache FreqFold sweep
 
 - **Implementation commit title:** `feat: add fixed-cache RoRoPE FreqFold sweep`
-- **Status:** harness implemented; Kaggle execution pending.
+- **Status:** completed on a Kaggle GPU runtime.
 - **Frozen RoPE cache:** every variant retains exactly 128 elements/token/layer, equal to one original Qwen3 key head.
 - **Variants:** adjacent-frequency fold sizes `1/2/4/8`. Each group jointly fits PCA over `8 × fold` KV-head/frequency features and retains the leading `fold` components, keeping the total retained positional dimensionality fixed.
 - **Calibration/evaluation:** independent deterministic Gaussian sequences of length 1024 with seeds 123/124, matching EXP-015.
@@ -429,6 +429,23 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Implementation boundary:** this is a FreqFold-style activation diagnostic following TransMLA's joint head/frequency PCA principle. It is not yet claimed numerically identical to the official PyTorch converter. Fold 1 is regression-tested to equal standard one-component RoRoPE.
 - **Compression boundary:** rotated NoPE keys and values are still uncompressed. Balanced joint KV and covariance-aware compression follow only after selecting the positional transform.
 - **Regression suite (MEASURED):** 32 tests passed in 49.68 s. Fold 1 matches the independently implemented standard one-component RoRoPE path within `2e-5` absolute/relative tolerance; a fold-2 shape/finite-output probe also passes.
+- **Fold 1 (MEASURED):** retained positional-energy fraction `0.527264`; all/tail mixer L2 `0.715780/0.807436`; all/tail cosine `0.744083/0.675598`. These reproduce EXP-015.
+- **Folds 2/4/8 (MEASURED):** retained energy rises monotonically to `0.552234/0.586278/0.628286`, but all-token L2 worsens to `0.727976/0.739489/0.745680` and tail L2 worsens to `0.818274/0.827886/0.838460`.
+- **Interpretation:** nearby-frequency mixing increases PCA energy capture but degrades attention fidelity on the held-out sequence. Spectral energy is therefore not a sufficient selection proxy for this Qwen3 layer. Fold 1 is frozen for the next compression diagnostic; folds 2/4/8 remain recorded negative ablations.
+- **Raw artifact:** `results/EXP-016-qwen3-freqfold-sweep-layer0.json`.
+
+### EXP-017 — Cache-matched balanced KV compression probe
+
+- **Implementation commit title:** `feat: add cache-matched balanced KV compression probe`
+- **Status:** harness implemented; Kaggle execution pending.
+- **Frozen positional transform:** standard fold-1 RoRoPE with one 128-element positional component, selected by EXP-015/016.
+- **Frozen total cache:** 576 elements/token/layer: 128 RoPE plus rank-448 latent KV, a 71.875% reduction from the 2048-element Qwen3 GQA cache.
+- **Compared variants:** uncompressed RoRoPE control; rank-448 uncentered activation PCA; rank-448 TransMLA-style BKV-balanced activation PCA.
+- **BKV rule:** measure `alpha = E||K_nope|| / E||V||` on calibration activations, factorize `[K_nope / alpha, V]`, and restore the K scale after reconstruction.
+- **Calibration/evaluation:** independent deterministic Gaussian sequences of length 1024 with seeds 123/124. The PCA basis is fitted only on calibration activations.
+- **Metrics:** calibration joint-reconstruction L2, held-out K/V reconstruction L2, and mixer all-token/tail parity against the original Qwen3 GQA layer.
+- **Boundary:** activation PCA is an oracle-style diagnostic of the compressed activation subspace, not yet a deployable linear weight mapping. It intentionally precedes CARE-style covariance-aware weight mapping and real-text calibration.
+- **Regression suite (MEASURED):** 33 tests passed in 53.63 s. Full-rank activation PCA reconstructs its fixture within `2e-5`, BKV scaling equalizes mean tokenwise K/V norms, and the earlier RoRoPE invariants remain green.
 
 ## 7. Development milestones
 
