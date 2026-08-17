@@ -700,12 +700,19 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-032 — Shock-matched QKVO initializer screen
 
 - **Implementation commit title:** `feat: add shock-matched Qwen-to-Mamba initializers`
-- **Status:** implementation complete; layer-0 screening run pending.
+- **Status:** one-seed layer-0 screen completed on TPU/FP32; paired confirmation pending.
 - **Question:** does the direct QKVO port fail because resized Q/K/V projections have an incompatible scale, or because their directions are intrinsically unhelpful to the new Mamba-3 recurrence?
 - **Controlled arms:** `INIT-A-random`; rejected full-strength `INIT-C-prior-qkvo-port`; `INIT-F-variance-matched-qkvo`, whose x/B/C slices independently match the RMS of the same seed's canonical random slices; and 25%/50% random-to-matched interpolation arms `INIT-G`/`INIT-H`.
 - **Invariant parameters:** all arms start from the same seed-specific random Mamba base. Only x/B/C slices differ; z, dt, A, trap, angle, convolution, and other recurrence parameters remain identical. Output projection calibration and optimizer protocol remain shared by the distillation harness.
-- **Screening rule:** run one paired seed for 20 updates on layer 0. Advance only the best shock-reduced arm to the existing three-seed, 80-step confirmation if it beats random on held-out relative L2. This prevents spending the full layer-18 budget on an unpromising initializer family.
+- **Protocol (MEASURED):** seed `123`, layer 0, sequence length 32, eight calibration windows, 20 disjoint training windows (640 tokens), and four fixed held-out windows. Five arms use the same random base; all runs are finite and `passed=true`.
+- **Step-0 ranking (MEASURED, relative L2 / cosine):** 25% blend `0.865031 / 0.583476`; random `0.886175 / 0.561088`; 50% blend `0.891340 / 0.547838`; variance-matched full port `0.903903 / 0.508205`; direct port `0.903960 / 0.508160`.
+- **Step-20 ranking (MEASURED, relative L2 / cosine):** 25% blend `0.747730 / 0.664355`; 50% blend `0.782923 / 0.625394`; random `0.783389 / 0.624181`; variance-matched full port `0.809520 / 0.603549`; direct port `0.836946 / 0.582954`.
+- **Screening signal:** the 25% blend is 4.55% lower in held-out relative L2 than random at step 20 and improves its own L2 by 13.56% from step 0, versus 11.60% for random. The 50% arm is effectively tied with random at step 20; RMS matching alone improves the direct port but remains worse than random.
+- **Numerical caution:** the winning 25% arm has the largest single observed gradient-norm spike (`35.29` at step 5), although every gradient leaf remains finite. Confirmation must retain finite-gradient diagnostics.
+- **Decision:** advance only `INIT-G-vm-qkvo-blend-0.25` against `INIT-A-random` to the pre-registered three-seed, 80-step layer-0 confirmation. Do not advance INIT-F/H or the direct port.
 - **Interpretation boundary:** interpolation is a targeted mechanism ablation, not automatic layer allocation and not evidence of full-model recovery.
+- **Artifact note:** the producer's free-text notes incorrectly say “both variants” and refer to an 80-step schedule; the structured fields correctly record five variants and a 20-step maximum. Metrics and ranking are unaffected, and the generator is corrected before confirmation.
+- **Raw artifact:** `results/EXP-032-qwen3-mamba3-shock-matched-screen-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 
