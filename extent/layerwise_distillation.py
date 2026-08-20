@@ -31,6 +31,20 @@ def relative_mse(prediction: jax.Array, target: jax.Array) -> jax.Array:
     return numerator / jnp.maximum(denominator, jnp.finfo(jnp.float32).tiny)
 
 
+def apply_parameter_offset(
+    params: optax.Params,
+    offset: optax.Updates,
+    scale: jax.Array | float,
+) -> optax.Params:
+    """Apply a differentiable, externally scheduled parameter-space prior."""
+    return jax.tree.map(
+        lambda parameter, delta: parameter
+        + delta.astype(parameter.dtype) * jnp.asarray(scale, parameter.dtype),
+        params,
+        offset,
+    )
+
+
 def create_layerwise_train_step(
     apply_fn: Callable[[optax.Params, jax.Array], jax.Array],
     tx: optax.GradientTransformation,
@@ -50,6 +64,44 @@ def create_layerwise_train_step(
         updates, opt_state = tx.update(optimizer_grads, opt_state, params)
         params = optax.apply_updates(params, updates)
         metrics = {"loss": loss, **health}
+        return params, opt_state, metrics
+
+    return train_step
+
+
+def create_layerwise_prior_train_step(
+    apply_fn: Callable[[optax.Params, jax.Array], jax.Array],
+    tx: optax.GradientTransformation,
+    *,
+    bf16_gradients: bool,
+) -> Callable:
+    """Build a Lion step whose effective parameters include a decaying prior."""
+
+    @jax.jit
+    def train_step(
+        params,
+        opt_state,
+        inputs,
+        targets,
+        prior_offset,
+        prior_scale,
+    ):
+        def loss_fn(candidate):
+            effective = apply_parameter_offset(
+                candidate, prior_offset, prior_scale
+            )
+            return relative_mse(apply_fn(effective, inputs), targets)
+
+        loss, grads = jax.value_and_grad(loss_fn)(params)
+        health = gradient_health(grads)
+        optimizer_grads = cast_grads_bf16(grads) if bf16_gradients else grads
+        updates, opt_state = tx.update(optimizer_grads, opt_state, params)
+        params = optax.apply_updates(params, updates)
+        metrics = {
+            "loss": loss,
+            "prior_scale": jnp.asarray(prior_scale, jnp.float32),
+            **health,
+        }
         return params, opt_state, metrics
 
     return train_step

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
+from dataclasses import asdict, replace as dataclass_replace
 import json
 from pathlib import Path
 from urllib import request
@@ -9,6 +9,7 @@ from urllib import request
 import jax
 import jax.numpy as jnp
 import numpy as np
+from flax.core import FrozenDict, freeze, unfreeze
 
 from scripts.qwen_mamba3_distill_pilot import (
     _replace_output,
@@ -23,6 +24,8 @@ from extent.calibration_data import (
 from extent.config import Mamba3Config
 from extent.hardware import recommended_compute_dtype
 from extent.layerwise_distillation import (
+    apply_parameter_offset,
+    create_layerwise_prior_train_step,
     create_layerwise_train_step,
     create_teacher_mixer_runner,
 )
@@ -40,6 +43,11 @@ from extent.qwen_source import QWEN3_14B, validate_source_metadata
 from extent.readout_calibration import fit_dual_ridge_readout
 from extent.teacher_activation_cache import load_activation_cache
 from extent.weight_mapping import QwenCheckpointReader
+
+
+TRANSIENT_PRIOR_VARIANT = "INIT-I-transient-vm-qkvo-blend-0.25"
+TRANSIENT_PRIOR_SOURCE = "INIT-G-vm-qkvo-blend-0.25"
+TRANSIENT_PRIOR_BASE = "INIT-A-random"
 
 
 def _read_json(url: str) -> dict:
@@ -122,6 +130,38 @@ def sweep_notes(variants: tuple[str, ...], max_steps: int) -> list[str]:
     ]
 
 
+def linear_prior_scale(completed_steps: int, decay_steps: int) -> float:
+    """Linearly remove the transplant offset after a fixed update budget."""
+    if decay_steps <= 0:
+        raise ValueError("transient prior decay steps must be positive")
+    return max(0.0, 1.0 - completed_steps / decay_steps)
+
+
+def transient_prior_offset(random_params, blended_params):
+    """Return G-minus-A while excluding the independently fitted readout."""
+    offset = jax.tree.map(
+        lambda blended, random: blended.astype(jnp.float32)
+        - random.astype(jnp.float32),
+        blended_params,
+        random_params,
+    )
+    mutable = unfreeze(offset) if isinstance(offset, FrozenDict) else offset
+    mutable["out_proj"] = jax.tree.map(
+        jnp.zeros_like, mutable["out_proj"]
+    )
+    allowed = {"in_proj", "b_norm", "c_norm"}
+    for name, subtree in mutable.items():
+        if name not in allowed and name != "out_proj":
+            if any(
+                np.any(np.asarray(value) != 0)
+                for value in jax.tree.leaves(subtree)
+            ):
+                raise ValueError(
+                    f"unexpected transient-prior difference under {name}"
+                )
+    return freeze(mutable) if isinstance(random_params, FrozenDict) else mutable
+
+
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="Run a paired multi-seed Qwen3-to-Mamba3 distillation sweep."
@@ -146,6 +186,7 @@ def main(argv: list[str] | None = None) -> None:
         "--variants", default="INIT-A-random,INIT-C-prior-qkvo-port"
     )
     parser.add_argument("--seeds", default="123,456,789")
+    parser.add_argument("--transient-prior-steps", type=int, default=20)
     parser.add_argument("--activation-cache-manifest")
     parser.add_argument("--activation-cache-dir")
     parser.add_argument("--result-json")
@@ -164,6 +205,8 @@ def main(argv: list[str] | None = None) -> None:
         raise ValueError("sequence length and window counts must be positive")
     if args.readout_ridge <= 0:
         raise ValueError("readout ridge must be positive")
+    if args.transient_prior_steps <= 0:
+        raise ValueError("transient prior steps must be positive")
     max_steps = checkpoints[-1]
     evaluation_checkpoints = (0, *checkpoints)
     jax.config.update("jax_default_matmul_precision", "high")
@@ -315,6 +358,11 @@ def main(argv: list[str] | None = None) -> None:
         tx,
         bf16_gradients=parameter_dtype == jnp.bfloat16,
     )
+    prior_train_step = create_layerwise_prior_train_step(
+        apply_mamba,
+        tx,
+        bf16_gradients=parameter_dtype == jnp.bfloat16,
+    )
     runs = {}
     passed = True
     trainable_parameters = None
@@ -329,14 +377,27 @@ def main(argv: list[str] | None = None) -> None:
         variants, reports = build_qwen3_to_mamba3_transplant_variants(
             base, arrays, source, mamba_config, args.layer_index
         )
+        if TRANSIENT_PRIOR_VARIANT in variants_to_run:
+            variants[TRANSIENT_PRIOR_VARIANT] = variants[TRANSIENT_PRIOR_SOURCE]
+            reports[TRANSIENT_PRIOR_VARIANT] = dataclass_replace(
+                reports[TRANSIENT_PRIOR_SOURCE],
+                variant=TRANSIENT_PRIOR_VARIANT,
+                description=(
+                    "The 25% variance-matched QKVO offset is applied to a "
+                    "trainable random base and linearly removed during early updates."
+                ),
+                copied_output_projection=False,
+                mimo_channel_rule="transient 25% flat port over random base",
+            )
         unknown = sorted(set(variants_to_run) - set(variants))
         if unknown:
             raise ValueError(f"unknown variants: {unknown}; available={sorted(variants)}")
         seed_results = {}
         for name in variants_to_run:
-            params = variants[name]
+            is_transient = name == TRANSIENT_PRIOR_VARIANT
+            initial_params = variants[name]
             calibration_features = np.asarray(
-                run_features(params, calibration_inputs), dtype=np.float32
+                run_features(initial_params, calibration_inputs), dtype=np.float32
             )
             readout, readout_report = fit_dual_ridge_readout(
                 jnp.asarray(
@@ -345,7 +406,24 @@ def main(argv: list[str] | None = None) -> None:
                 jnp.asarray(calibration_targets.reshape(-1, source.hidden_size)),
                 relative_ridge=args.readout_ridge,
             )
-            params = _replace_output(params, readout, parameter_dtype)
+            params = _replace_output(
+                variants[TRANSIENT_PRIOR_BASE] if is_transient else initial_params,
+                readout,
+                parameter_dtype,
+            )
+            prior_offset = (
+                transient_prior_offset(
+                    variants[TRANSIENT_PRIOR_BASE],
+                    variants[TRANSIENT_PRIOR_SOURCE],
+                )
+                if is_transient
+                else None
+            )
+            initial_effective_params = (
+                apply_parameter_offset(params, prior_offset, 1.0)
+                if is_transient
+                else params
+            )
             trainable_parameters = int(
                 sum(value.size for value in jax.tree.leaves(params))
             )
@@ -353,21 +431,40 @@ def main(argv: list[str] | None = None) -> None:
             metrics_by_checkpoint = {
                 "0": _window_metrics(
                     evaluation_targets,
-                    np.asarray(run_mamba(params, evaluation_inputs), dtype=np.float32),
+                    np.asarray(
+                        run_mamba(initial_effective_params, evaluation_inputs),
+                        dtype=np.float32,
+                    ),
                 )
             }
+            if is_transient:
+                metrics_by_checkpoint["0"]["prior_scale"] = 1.0
             loss_curve = []
             finite = True
             for step in range(1, max_steps + 1):
                 index = training_start + step - 1
-                params, opt_state, metrics = train_step(
-                    params,
-                    opt_state,
-                    normalized[index : index + 1],
-                    jnp.asarray(
-                        teacher_targets[index : index + 1], dtype=compute_dtype
-                    ),
+                targets = jnp.asarray(
+                    teacher_targets[index : index + 1], dtype=compute_dtype
                 )
+                if is_transient:
+                    scale_before = linear_prior_scale(
+                        step - 1, args.transient_prior_steps
+                    )
+                    params, opt_state, metrics = prior_train_step(
+                        params,
+                        opt_state,
+                        normalized[index : index + 1],
+                        targets,
+                        prior_offset,
+                        scale_before,
+                    )
+                else:
+                    params, opt_state, metrics = train_step(
+                        params,
+                        opt_state,
+                        normalized[index : index + 1],
+                        targets,
+                    )
                 jax.block_until_ready(metrics)
                 record = {
                     key: (
@@ -385,13 +482,28 @@ def main(argv: list[str] | None = None) -> None:
                     and bool(np.isfinite(record["loss"]))
                 )
                 if step in checkpoints:
+                    scale_after = (
+                        linear_prior_scale(step, args.transient_prior_steps)
+                        if is_transient
+                        else 0.0
+                    )
+                    effective_params = (
+                        apply_parameter_offset(
+                            params, prior_offset, scale_after
+                        )
+                        if is_transient
+                        else params
+                    )
                     prediction = np.asarray(
-                        run_mamba(params, evaluation_inputs), dtype=np.float32
+                        run_mamba(effective_params, evaluation_inputs),
+                        dtype=np.float32,
                     )
                     finite = finite and bool(np.all(np.isfinite(prediction)))
                     metrics_by_checkpoint[str(step)] = _window_metrics(
                         evaluation_targets, prediction
                     )
+                    if is_transient:
+                        metrics_by_checkpoint[str(step)]["prior_scale"] = scale_after
                     print(
                         f"seed={seed} {name} checkpoint={step} "
                         f"heldout_l2={metrics_by_checkpoint[str(step)]['relative_l2']:.6g} "
@@ -403,6 +515,17 @@ def main(argv: list[str] | None = None) -> None:
                 "readout_calibration": asdict(readout_report),
                 "checkpoints": metrics_by_checkpoint,
                 "loss_curve": loss_curve,
+                "prior_schedule": (
+                    {
+                        "type": "linear_parameter_offset_decay",
+                        "source_variant": TRANSIENT_PRIOR_SOURCE,
+                        "base_variant": TRANSIENT_PRIOR_BASE,
+                        "decay_steps": args.transient_prior_steps,
+                        "excluded_parameter_subtree": "out_proj",
+                    }
+                    if is_transient
+                    else None
+                ),
                 "finite": finite,
             }
             runs[str(seed)] = seed_results
@@ -458,6 +581,7 @@ def main(argv: list[str] | None = None) -> None:
             else None
         ),
         "variants": variants_to_run,
+        "transient_prior_steps": args.transient_prior_steps,
         "runs": runs,
         "aggregate": aggregate,
         "passed": passed,

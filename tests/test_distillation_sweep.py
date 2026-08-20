@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import jax.numpy as jnp
+import numpy as np
 import pytest
+from flax.core import freeze
 
 from scripts.qwen_mamba3_distill_sweep import (
     _parse_unique_ints,
     aggregate_runs,
+    linear_prior_scale,
     sweep_notes,
+    transient_prior_offset,
 )
 
 
@@ -46,3 +51,37 @@ def test_sweep_notes_describe_arbitrary_variant_and_budget_counts():
     assert "all 5 variants" in notes[0]
     assert "20-step optimization schedule" in notes[2]
     assert "80-step" not in " ".join(notes)
+
+
+def test_linear_prior_scale_reaches_zero_at_frozen_decay_step():
+    assert linear_prior_scale(0, 20) == 1.0
+    assert linear_prior_scale(10, 20) == 0.5
+    assert linear_prior_scale(20, 20) == 0.0
+    assert linear_prior_scale(80, 20) == 0.0
+    with pytest.raises(ValueError, match="positive"):
+        linear_prior_scale(0, 0)
+
+
+def test_transient_prior_offset_excludes_independent_output_readout():
+    random = freeze(
+        {
+            "in_proj": {"kernel": jnp.ones((2, 2))},
+            "b_norm": {"scale": jnp.ones((2,))},
+            "c_norm": {"scale": jnp.ones((2,))},
+            "out_proj": {"kernel": jnp.ones((2, 2))},
+            "D": jnp.ones((2,)),
+        }
+    )
+    blended = freeze(
+        {
+            "in_proj": {"kernel": 1.25 * jnp.ones((2, 2))},
+            "b_norm": {"scale": 1.1 * jnp.ones((2,))},
+            "c_norm": {"scale": 0.9 * jnp.ones((2,))},
+            "out_proj": {"kernel": 3.0 * jnp.ones((2, 2))},
+            "D": jnp.ones((2,)),
+        }
+    )
+    offset = transient_prior_offset(random, blended)
+    np.testing.assert_allclose(offset["in_proj"]["kernel"], 0.25)
+    np.testing.assert_allclose(offset["out_proj"]["kernel"], 0.0)
+    np.testing.assert_allclose(offset["D"], 0.0)

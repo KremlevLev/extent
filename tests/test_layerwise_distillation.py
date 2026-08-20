@@ -9,6 +9,8 @@ import optax
 from flax.core import freeze
 
 from extent.layerwise_distillation import (
+    apply_parameter_offset,
+    create_layerwise_prior_train_step,
     create_layerwise_train_step,
     create_teacher_mixer_runner,
     relative_mse,
@@ -39,6 +41,29 @@ def test_layerwise_train_step_updates_parameters_and_reports_finite_gradients():
     jax.block_until_ready(metrics)
     assert bool(metrics["grads_finite"])
     assert np.isfinite(float(metrics["grad_norm"]))
+    assert not np.array_equal(np.asarray(updated["kernel"]), np.asarray(params["kernel"]))
+
+
+def test_transient_prior_step_optimizes_base_through_effective_parameters():
+    params = {"kernel": jnp.eye(2, dtype=jnp.float32)}
+    offset = {"kernel": jnp.ones((2, 2), dtype=jnp.float32)}
+    inputs = jnp.asarray([[1.0, 2.0]], jnp.float32)
+    targets = 2.0 * inputs
+    apply_fn = lambda candidate, value: value @ candidate["kernel"]
+    tx = optax.sgd(learning_rate=1e-2)
+    step = create_layerwise_prior_train_step(
+        apply_fn, tx, bf16_gradients=False
+    )
+    effective = apply_parameter_offset(params, offset, 0.5)
+    np.testing.assert_allclose(
+        effective["kernel"], params["kernel"] + 0.5 * offset["kernel"]
+    )
+    updated, _, metrics = step(
+        params, tx.init(params), inputs, targets, offset, 0.5
+    )
+    jax.block_until_ready(metrics)
+    assert float(metrics["prior_scale"]) == 0.5
+    assert bool(metrics["grads_finite"])
     assert not np.array_equal(np.asarray(updated["kernel"]), np.asarray(params["kernel"]))
 
 

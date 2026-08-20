@@ -114,6 +114,7 @@ Each ablation changes one factor, uses identical data order, optimizer budget, e
 | INIT-F | same | direct INIT-C x/B/C slices RMS-matched to the canonical random base | isolate scale mismatch |
 | INIT-G | same | 25% interpolation from random x/B/C toward INIT-F | weak-prior candidate |
 | INIT-H | same | 50% interpolation from random x/B/C toward INIT-F | interpolation-strength control |
+| INIT-I | same | INIT-G offset over a trainable random base, linearly removed during early updates | transient-prior candidate |
 
 Primary immediate-shock metrics: validation NLL/perplexity before recovery, KL to teacher, layer-output normalized MSE, hidden-state cosine similarity, and logit agreement.
 
@@ -745,6 +746,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** the pre-registered gate fails decisively: INIT-G is neither 1% better nor a two-seed winner. Close fixed 25% QKVO interpolation as a production initializer and retain it only as evidence that a weak prior can briefly accelerate the earliest updates. Do not spend a layer-18 cache regeneration on this arm.
 - **Scale boundary:** 10,240 tokens per run is four times EXP-033 but remains a layerwise diagnostic, not evidence about billion-token Extent-14B recovery.
 - **Raw artifact:** `results/EXP-034-qwen3-mamba3-long-horizon-layer0.json`.
+
+### EXP-035 — Transient QKVO prior screen
+
+- **Implementation commit title:** `feat: add decaying QKVO transplant prior`
+- **Status:** implementation complete; one-seed layer-0 screen pending.
+- **Hypothesis:** the 25% QKVO direction contains useful information during the first updates, but retaining it in the parameter basin harms later recovery. A decaying external offset may preserve the early benefit while allowing the trained base to converge like canonical random initialization.
+- **INIT-I parameter contract:** the trainable parameter tree starts from `INIT-A-random`. The difference `INIT-G - INIT-A` is applied only to x/B/C input-projection regions and copied B/C norm scales; `out_proj` is explicitly excluded and independently ridge-calibrated. The offset scale decays linearly from 1 to 0 over the first 20 completed updates and is exactly zero thereafter.
+- **Screen protocol:** seed `123`; layer 0; sequence length 32; eight calibration, 160 unique training, and 16 fixed held-out windows; checkpoints 0/20/80/160; FP32; arms INIT-A random, static INIT-G, and transient INIT-I on the same random base.
+- **Primary gate:** at step 160, INIT-I must have at least 1% lower held-out relative L2 than INIT-A with finite gradients. Static INIT-G is a negative mechanism control. Earlier checkpoints describe the trajectory but cannot override the primary endpoint.
+- **Promotion rule:** only a passing INIT-I advances to paired seeds `123/456/789` at 320 steps. A failure closes this transient schedule rather than triggering an unregistered decay-duration sweep.
+- **Boundary:** this is a parameter-schedule ablation for one replacement mixer. It neither initializes recurrent dynamics from Qwen nor establishes full-model recovery.
 
 ## 8. Reasoning SFT boundary
 
