@@ -9,6 +9,7 @@ import optax
 from flax.core import freeze
 
 from extent.layerwise_distillation import (
+    create_decoder_aware_train_step,
     apply_parameter_offset,
     create_layerwise_prior_train_step,
     create_layerwise_train_step,
@@ -42,6 +43,56 @@ def test_layerwise_train_step_updates_parameters_and_reports_finite_gradients():
     assert bool(metrics["grads_finite"])
     assert np.isfinite(float(metrics["grad_norm"]))
     assert not np.array_equal(np.asarray(updated["kernel"]), np.asarray(params["kernel"]))
+
+
+def test_decoder_aware_step_reports_both_objectives_and_updates_only_mixer():
+    params = {"kernel": jnp.eye(2, dtype=jnp.float32)}
+    tail_params = {"scale": jnp.asarray(2.0, dtype=jnp.float32)}
+    residual = jnp.asarray([[1.0, -1.0]], dtype=jnp.float32)
+    normalized = jnp.asarray([[2.0, 1.0]], dtype=jnp.float32)
+    mixer_target = jnp.asarray([[0.5, -0.25]], dtype=jnp.float32)
+    apply_mixer = lambda candidate, value: value @ candidate["kernel"]
+    apply_tail = (
+        lambda frozen, residual_value, mixer_value: residual_value
+        + frozen["scale"] * mixer_value
+    )
+    tx = optax.sgd(learning_rate=1e-2)
+    step = create_decoder_aware_train_step(
+        apply_mixer,
+        apply_tail,
+        tx,
+        decoder_loss_weight=1.0,
+        bf16_gradients=False,
+    )
+    updated, _, metrics = step(
+        params,
+        tx.init(params),
+        tail_params,
+        residual,
+        normalized,
+        mixer_target,
+    )
+    jax.block_until_ready(metrics)
+    assert bool(metrics["grads_finite"])
+    assert float(metrics["mixer_loss"]) > 0
+    assert float(metrics["decoder_loss"]) > 0
+    np.testing.assert_allclose(
+        metrics["loss"],
+        0.5 * (metrics["mixer_loss"] + metrics["decoder_loss"]),
+    )
+    assert not np.array_equal(updated["kernel"], params["kernel"])
+    np.testing.assert_array_equal(tail_params["scale"], jnp.asarray(2.0))
+
+
+def test_decoder_aware_step_rejects_negative_decoder_weight():
+    with np.testing.assert_raises_regex(ValueError, "non-negative"):
+        create_decoder_aware_train_step(
+            lambda params, value: value,
+            lambda params, residual, mixer: residual + mixer,
+            optax.sgd(1e-2),
+            decoder_loss_weight=-1.0,
+            bf16_gradients=False,
+        )
 
 
 def test_transient_prior_step_optimizes_base_through_effective_parameters():

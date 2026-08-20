@@ -803,6 +803,18 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** retain the step-1,024 checkpoint as evidence that trainable activation transfer works, not as an accepted production transplant. Before end-to-end or multi-layer scaling, change the objective to include the frozen decoder-tail output (mixer loss plus decoder-output loss) and compare it against mixer-only distillation under the same cache and token budget.
 - **Raw artifact:** `results/EXP-037-qwen3-mamba3-decoder-shock-layer0.json`.
 
+### EXP-038 — Decoder-aware offline Mamba distillation
+
+- **Implementation commit title:** `feat: add decoder-aware Mamba distillation`
+- **Status:** pre-registered; Colab TPU v5e-1 execution pending.
+- **Question:** can training through the frozen Qwen decoder tail recover more downstream behavior than mixer-only activation matching under exactly the same initialization, data order, optimizer, and token budget?
+- **Controlled arms:** `MIXER-ONLY` minimizes mixer relative MSE and exactly reproduces the EXP-036 objective. `JOINT-MIXER-DECODER` minimizes the normalized mean of mixer relative MSE and full decoder-output relative MSE with decoder-loss weight 1.0. Both start from the same seed-123 readout-calibrated parameters and consume the same deterministic window at every update.
+- **Frozen path:** cached Qwen attention output supplies the offline mixer target. Teacher and replacement mixer outputs pass through identical frozen Qwen residual addition, post-attention RMSNorm, and SwiGLU MLP weights. Only Mamba parameters receive gradients.
+- **Data and schedule:** reuse the verified EXP-036 layer-0 cache: eight calibration, 1,024 training, and 16 evaluation windows of length 32; one pass (32,768 unique tokens per arm); BF16; Lion learning rate `3e-5`; checkpoints 0/128/256/512/1024; seeds 123 and 20260820.
+- **Primary endpoint:** held-out decoder-output relative L2 at step 1,024. The joint arm must improve at least 10% over mixer-only, all values must remain finite, and joint mixer-output relative L2 may degrade by no more than 10% versus mixer-only.
+- **Secondary endpoints:** decoder cosine, mixer relative L2/cosine, trajectory crossover, maximum gradient norm, and component training losses. Step-0 outputs must be identical across arms.
+- **Decision rule:** passing promotes decoder-aware activation training as the new layerwise transplant objective and justifies an end-to-end loss-shock experiment. Failure closes this equal-weight formulation; any different weight or schedule requires a new pre-registered ablation rather than post-hoc tuning.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.

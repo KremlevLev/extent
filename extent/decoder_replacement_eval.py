@@ -9,6 +9,28 @@ from flax import linen as nn
 from extent.layers.common import RMSNorm, SwiGLU
 
 
+def qwen3_decoder_tail_params(reader, layer_index: int) -> dict:
+    """Load only the frozen post-attention norm and MLP tensors for one layer."""
+    prefix = f"model.layers.{layer_index}"
+    return {
+        "post_attention_layernorm": {
+            "scale": jnp.asarray(
+                reader.read(f"{prefix}.post_attention_layernorm.weight"),
+                dtype=jnp.float32,
+            )
+        },
+        "mlp": {
+            name: {
+                "kernel": jnp.asarray(
+                    reader.read(f"{prefix}.mlp.{name}.weight").T,
+                    dtype=jnp.float32,
+                )
+            }
+            for name in ("gate_proj", "up_proj", "down_proj")
+        },
+    }
+
+
 class Qwen3DecoderTail(nn.Module):
     """Frozen Qwen residual/MLP path after either attention or a replacement mixer."""
 

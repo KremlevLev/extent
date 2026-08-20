@@ -21,6 +21,7 @@ from extent.decoder_replacement_eval import (
     Qwen3DecoderTail,
     create_batched_replacement_runner,
     create_batched_teacher_tail_runner,
+    qwen3_decoder_tail_params,
 )
 from extent.hardware import recommended_compute_dtype
 from extent.layers.mamba3 import Mamba3MIMO
@@ -37,27 +38,6 @@ from extent.weight_mapping import QwenCheckpointReader
 def _read_json(url: str) -> dict:
     with request.urlopen(url, timeout=30) as response:
         return json.loads(response.read().decode("utf-8"))
-
-
-def _tail_params(reader: QwenCheckpointReader, layer_index: int) -> dict:
-    prefix = f"model.layers.{layer_index}"
-    return {
-        "post_attention_layernorm": {
-            "scale": jnp.asarray(
-                reader.read(f"{prefix}.post_attention_layernorm.weight"),
-                dtype=jnp.float32,
-            )
-        },
-        "mlp": {
-            name: {
-                "kernel": jnp.asarray(
-                    reader.read(f"{prefix}.mlp.{name}.weight").T,
-                    dtype=jnp.float32,
-                )
-            }
-            for name in ("gate_proj", "up_proj", "down_proj")
-        },
-    }
 
 
 def _run_windows(runner, args: tuple, windows: int, batch_windows: int):
@@ -188,7 +168,7 @@ def main(argv: list[str] | None = None) -> None:
         repo_id=QWEN3_14B.repo_id,
         revision=QWEN3_14B.revision,
     )
-    tail_params = _tail_params(
+    tail_params = qwen3_decoder_tail_params(
         QwenCheckpointReader(model_dir), int(manifest["target_layer"])
     )
     tail = Qwen3DecoderTail(
