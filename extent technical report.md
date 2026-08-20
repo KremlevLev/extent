@@ -728,6 +728,19 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Boundary:** this result covers layer 0, sequence length 32, and 2,560 adaptation tokens per seed. It does not establish the behavior of middle layers, long context, or the complete hybrid.
 - **Raw artifact:** `results/EXP-033-qwen3-mamba3-shock-matched-confirm-layer0.json`.
 
+### EXP-034 — Pre-registered long-horizon 25% blend crossover test
+
+- **Status:** protocol frozen; execution pending.
+- **Question:** is the step-20 benefit and step-80 loss of the 25% QKVO blend transient, or does the blend regain an absolute advantage with a four-times-larger layerwise adaptation budget?
+- **Arms and pairing:** `INIT-A-random` versus `INIT-G-vm-qkvo-blend-0.25`, paired within seeds `123/456/789` from the same canonical random base.
+- **Data protocol:** layer 0, sequence length 32, eight calibration windows, 320 unique training windows, and 16 fixed held-out windows placed after the complete training region. This is 10,240 training tokens per arm/seed and 61,440 optimizer-visible tokens across all six runs.
+- **Optimization protocol:** FP32 compute, Lion learning rate `3e-5`, zero weight decay, checkpoints 0/20/80/160/320, one shared 320-step schedule per run, and unchanged readout ridge `1e-2`.
+- **Primary endpoint:** paired held-out relative L2 at step 320. Advancement requires INIT-G to have at least 1% lower aggregate relative L2 than random and win at least two of three paired seeds, with all gradients finite.
+- **Secondary endpoints:** cosine similarity, paired differences at earlier checkpoints, relative recovery from step 0, across-seed variance, and maximum gradient norm. Earlier checkpoints are trajectory diagnostics and cannot override a failed primary endpoint.
+- **Cross-experiment boundary:** checkpoints 20/80 from this 320-step optimizer schedule and later held-out prefix are not numerically interchangeable with EXP-033. Only within-EXP-034 paired comparisons are causal.
+- **Decision rule:** if INIT-G fails the primary endpoint, close fixed 25% interpolation as an initializer family. If it passes, reproduce the same comparison on a true middle-layer activation cache before considering full-model use.
+- **Scale boundary:** 10,240 tokens per run is four times EXP-033 but remains a layerwise diagnostic, not evidence about billion-token Extent-14B recovery.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
