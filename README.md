@@ -18,24 +18,43 @@ Get-Content "$env:USERPROFILE\.ssh\extent_kaggle.pub"
 ```
 
 Add the public line under GitHub repository `Settings -> Deploy keys -> Add
-deploy key`, and leave `Allow write access` unchecked. Store the complete
-private-key file as a Kaggle secret named `EXTENT_DEPLOY_KEY`; never print that
-secret in a notebook. A deploy key is scoped to one repository and is read-only
-by default. In a fresh Kaggle session, clone with:
+deploy key`, and leave `Allow write access` unchecked. Encode the private key
+as one Base64 line and copy it to the clipboard:
+
+```powershell
+[Convert]::ToBase64String(
+    [IO.File]::ReadAllBytes("$env:USERPROFILE\.ssh\extent_kaggle")
+) | Set-Clipboard
+```
+
+Store that clipboard value as a Kaggle secret named
+`EXTENT_DEPLOY_KEY_B64`; never print or decode the secret into notebook output.
+Base64 is transport encoding, not encryption—the Kaggle secret remains the
+security boundary. It avoids multiline-secret corruption that otherwise causes
+OpenSSH `error in libcrypto`. A deploy key is scoped to one repository and is
+read-only by default. In a fresh Kaggle session, clone with:
 
 ```python
 from kaggle_secrets import UserSecretsClient
 from pathlib import Path
+import base64
 import os
 import shlex
 import subprocess
 
-private_key_text = UserSecretsClient().get_secret("EXTENT_DEPLOY_KEY")
+private_key_b64 = UserSecretsClient().get_secret("EXTENT_DEPLOY_KEY_B64")
+private_key_bytes = base64.b64decode(private_key_b64.strip(), validate=True)
+if not private_key_bytes.startswith(b"-----BEGIN OPENSSH PRIVATE KEY-----"):
+    raise ValueError("decoded Kaggle secret is not an OpenSSH private key")
+if not private_key_bytes.rstrip().endswith(b"-----END OPENSSH PRIVATE KEY-----"):
+    raise ValueError("decoded Kaggle secret has a truncated OpenSSH footer")
+private_key_bytes = private_key_bytes.rstrip() + b"\n"
+
 ssh_dir = Path.home() / ".ssh"
 ssh_dir.mkdir(mode=0o700, exist_ok=True)
 private_key = ssh_dir / "extent_kaggle"
 known_hosts = ssh_dir / "known_hosts"
-private_key.write_text(private_key_text.rstrip() + "\n", encoding="utf-8")
+private_key.write_bytes(private_key_bytes)
 private_key.chmod(0o600)
 known_hosts.write_text(
     "github.com ssh-ed25519 "
@@ -43,6 +62,17 @@ known_hosts.write_text(
     encoding="utf-8",
 )
 known_hosts.chmod(0o600)
+
+key_check = subprocess.run(
+    ["ssh-keygen", "-y", "-P", "", "-f", str(private_key)],
+    text=True,
+    capture_output=True,
+)
+if key_check.returncode != 0:
+    raise RuntimeError(
+        "decoded deploy key failed local ssh-keygen validation: "
+        + key_check.stderr.strip()
+    )
 
 git_env = os.environ.copy()
 git_env["GIT_SSH_COMMAND"] = (
