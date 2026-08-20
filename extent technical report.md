@@ -765,6 +765,19 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Boundary:** this is a parameter-schedule ablation for one replacement mixer. It neither initializes recurrent dynamics from Qwen nor establishes full-model recovery.
 - **Raw artifact:** `results/EXP-035-qwen3-mamba3-transient-prior-screen-layer0.json`.
 
+### EXP-036 — Resumable offline Mamba-3 activation distillation
+
+- **Implementation commit title:** `feat: add resumable offline Mamba distillation`
+- **Status:** implementation and local resume-equivalence tests complete; accelerator smoke pending.
+- **Purpose:** separate frozen-Qwen inference from Mamba optimization so the 14B teacher is never resident beside the trainable student and Kaggle/Colab sessions can stop and resume safely.
+- **Producer contract:** the existing streaming activation-cache producer writes normalized mixer inputs and exact Qwen attention targets with shapes, dtypes, split bounds, source revision, and SHA-256 hashes. Teacher weights are needed only in this producer session.
+- **Consumer contract:** `scripts/offline_mamba_distill.py` opens verified NPY artifacts with memory mapping, initializes only one Mamba-3 mixer, calibrates its readout on the frozen calibration split, and trains against cached targets. It does not instantiate Qwen attention or download a Qwen checkpoint.
+- **Resume contract:** every atomic checkpoint contains Mamba parameters, complete Lion optimizer state, completed update count, payload byte size/hash, and an exact compatibility record covering data hashes, pinned source, target layer, Mamba config, dtype, seeds, batch size, schedule, and learning rate. Incompatible resumes fail before training.
+- **Data-order contract:** each optimizer step is mapped to a deterministic shuffled per-epoch cache stream using only the completed step and fixed data seed. No implicit NumPy RNG state is required, so a restarted process consumes the exact next batch.
+- **Local verification:** checkpoint round-trip and corruption/compatibility gates pass; a four-step Lion trajectory is exactly identical between uninterrupted execution and a two-step plus save/reload plus two-step execution.
+- **First accelerator gate:** create a modest layer-0 FP32 cache in a producer-only session, then run the student for multiple bounded invocations with `--resume`. Acceptance requires finite metrics, monotonically advancing checkpoint steps, identical checkpoint compatibility, and a final `status=complete` result mirrored to persistent output.
+- **Scientific boundary:** this experiment validates infrastructure and resumability, not recovery quality. A later pre-registered data-scale experiment must use disjoint held-out text, report unique and optimizer-visible tokens separately, and compare recovery against the established random-initialization curve.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
