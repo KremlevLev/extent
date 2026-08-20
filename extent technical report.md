@@ -109,10 +109,11 @@ Each ablation changes one factor, uses identical data order, optimizer budget, e
 | INIT-A | embeddings, MLPs, norms | random Mamba-3/MLA | lower baseline |
 | INIT-B | embeddings, MLPs, norms, output projections where compatible | otherwise random | projection-only baseline |
 | INIT-C | same | strongest Mamba-in-the-Llama-style Q/K/V/O reuse port | prior-method baseline |
-| INIT-D | same | proposed Mamba-3 SISO transplant | isolate Mamba-3 mapping |
-| INIT-E | same | proposed Mamba-3 MIMO-aware transplant | main method |
-| INIT-F | same | INIT-E without complex/rotation initialization | complex-state ablation |
-| INIT-G | same | INIT-E with copied rather than decomposed MIMO channels | MIMO allocation ablation |
+| INIT-D | same | head-pooled Q/K state projections copied across MIMO channels | SISO-copy control |
+| INIT-E | same | disjoint Q/K head groups assigned to distinct MIMO channels | MIMO-allocation candidate |
+| INIT-F | same | direct INIT-C x/B/C slices RMS-matched to the canonical random base | isolate scale mismatch |
+| INIT-G | same | 25% interpolation from random x/B/C toward INIT-F | weak-prior candidate |
+| INIT-H | same | 50% interpolation from random x/B/C toward INIT-F | interpolation-strength control |
 
 Primary immediate-shock metrics: validation NLL/perplexity before recovery, KL to teacher, layer-output normalized MSE, hidden-state cosine similarity, and logit agreement.
 
