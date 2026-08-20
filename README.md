@@ -5,7 +5,7 @@ path for a parameter-matched Qwen 14B-class hybrid: 34 Mamba-3 MIMO mixers,
 6 MLA mixers, and the Qwen3 SwiGLU MLPs. It targets one TPU v5e-8 slice, but all
 reference code and tests run on CPU.
 
-## Private Kaggle checkout
+## Private Kaggle or Colab checkout
 
 Use a repository-scoped, read-only SSH deploy key for Kaggle. Do not upload a
 personal GitHub SSH key and do not put a token in a clone URL. Generate a
@@ -27,22 +27,39 @@ as one Base64 line and copy it to the clipboard:
 ) | Set-Clipboard
 ```
 
-Store that clipboard value as a Kaggle secret named
-`EXTENT_DEPLOY_KEY_B64`; never print or decode the secret into notebook output.
+Store that clipboard value as a secret named `EXTENT_DEPLOY_KEY_B64`. In
+Kaggle, use the notebook Secrets settings. In Google Colab, use the key icon in
+the left sidebar and enable notebook access for the secret. Never print or
+decode the secret into notebook output.
 Base64 is transport encoding, not encryption—the Kaggle secret remains the
 security boundary. It avoids multiline-secret corruption that otherwise causes
 OpenSSH `error in libcrypto`. A deploy key is scoped to one repository and is
-read-only by default. In a fresh Kaggle session, clone with:
+read-only by default. In a fresh Kaggle or Colab session, clone with:
 
 ```python
-from kaggle_secrets import UserSecretsClient
 from pathlib import Path
 import base64
 import os
 import shlex
 import subprocess
 
-private_key_b64 = UserSecretsClient().get_secret("EXTENT_DEPLOY_KEY_B64")
+try:
+    from google.colab import userdata
+
+    private_key_b64 = userdata.get("EXTENT_DEPLOY_KEY_B64")
+    notebook_workdir = "/content"
+    secret_provider = "google-colab"
+except ImportError:
+    from kaggle_secrets import UserSecretsClient
+
+    private_key_b64 = UserSecretsClient().get_secret("EXTENT_DEPLOY_KEY_B64")
+    notebook_workdir = "/kaggle/working"
+    secret_provider = "kaggle"
+
+if not private_key_b64:
+    raise RuntimeError(
+        f"EXTENT_DEPLOY_KEY_B64 is unavailable from {secret_provider}"
+    )
 private_key_bytes = base64.b64decode(private_key_b64.strip(), validate=True)
 if not private_key_bytes.startswith(b"-----BEGIN OPENSSH PRIVATE KEY-----"):
     raise ValueError("decoded Kaggle secret is not an OpenSSH private key")
@@ -82,7 +99,7 @@ git_env["GIT_SSH_COMMAND"] = (
 )
 subprocess.run(
     ["git", "clone", "git@github.com:KremlevLev/extent.git"],
-    cwd="/kaggle/working",
+    cwd=notebook_workdir,
     env=git_env,
     check=True,
 )
