@@ -730,16 +730,21 @@ Thresholds will be frozen before final experiments after pilot variance is known
 
 ### EXP-034 — Pre-registered long-horizon 25% blend crossover test
 
-- **Status:** protocol frozen; execution pending.
+- **Status:** completed on TPU/FP32; the 25% blend failed the pre-registered primary endpoint and the fixed-interpolation family is closed.
 - **Question:** is the step-20 benefit and step-80 loss of the 25% QKVO blend transient, or does the blend regain an absolute advantage with a four-times-larger layerwise adaptation budget?
 - **Arms and pairing:** `INIT-A-random` versus `INIT-G-vm-qkvo-blend-0.25`, paired within seeds `123/456/789` from the same canonical random base.
 - **Data protocol:** layer 0, sequence length 32, eight calibration windows, 320 unique training windows, and 16 fixed held-out windows placed after the complete training region. This is 10,240 training tokens per arm/seed and 61,440 optimizer-visible tokens across all six runs.
 - **Optimization protocol:** FP32 compute, Lion learning rate `3e-5`, zero weight decay, checkpoints 0/20/80/160/320, one shared 320-step schedule per run, and unchanged readout ridge `1e-2`.
 - **Primary endpoint:** paired held-out relative L2 at step 320. Advancement requires INIT-G to have at least 1% lower aggregate relative L2 than random and win at least two of three paired seeds, with all gradients finite.
 - **Secondary endpoints:** cosine similarity, paired differences at earlier checkpoints, relative recovery from step 0, across-seed variance, and maximum gradient norm. Earlier checkpoints are trajectory diagnostics and cannot override a failed primary endpoint.
+- **Random trajectory (MEASURED):** mean relative L2 at steps 0/20/80/160/320 is `0.863258`, `0.682863`, `0.594978`, `0.567076`, and `0.541133`. Final cosine is `0.841112 +/- 0.001733`; relative recovery from step 0 is 37.23%.
+- **25% blend trajectory (MEASURED):** mean relative L2 is `0.876450`, `0.676399`, `0.655294`, `0.606816`, and `0.572112`. Final cosine is `0.821638 +/- 0.001944`; relative recovery is 34.70%.
+- **Paired result (MEASURED):** the blend wins two of three seeds at step 20 by a small mean margin (`random-minus-blend = +0.006464`). Random then wins all three seeds at steps 80, 160, and 320. At the primary endpoint, `random-minus-blend = -0.030980`; blend L2 is 5.72% worse than random.
+- **Numerical result (MEASURED):** all six runs reach step 320 with finite gradients and `passed=true`. The largest recorded gradient norm is `36.26` for the blend versus `24.74` for its corresponding random control.
 - **Cross-experiment boundary:** checkpoints 20/80 from this 320-step optimizer schedule and later held-out prefix are not numerically interchangeable with EXP-033. Only within-EXP-034 paired comparisons are causal.
-- **Decision rule:** if INIT-G fails the primary endpoint, close fixed 25% interpolation as an initializer family. If it passes, reproduce the same comparison on a true middle-layer activation cache before considering full-model use.
+- **Decision:** the pre-registered gate fails decisively: INIT-G is neither 1% better nor a two-seed winner. Close fixed 25% QKVO interpolation as a production initializer and retain it only as evidence that a weak prior can briefly accelerate the earliest updates. Do not spend a layer-18 cache regeneration on this arm.
 - **Scale boundary:** 10,240 tokens per run is four times EXP-033 but remains a layerwise diagnostic, not evidence about billion-token Extent-14B recovery.
+- **Raw artifact:** `results/EXP-034-qwen3-mamba3-long-horizon-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 
