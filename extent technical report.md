@@ -750,13 +750,20 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-035 — Transient QKVO prior screen
 
 - **Implementation commit title:** `feat: add decaying QKVO transplant prior`
-- **Status:** implementation complete; one-seed layer-0 screen pending.
+- **Status:** one-seed TPU/FP32 screen completed; the pre-registered gate failed and the transient schedule is closed.
 - **Hypothesis:** the 25% QKVO direction contains useful information during the first updates, but retaining it in the parameter basin harms later recovery. A decaying external offset may preserve the early benefit while allowing the trained base to converge like canonical random initialization.
 - **INIT-I parameter contract:** the trainable parameter tree starts from `INIT-A-random`. The difference `INIT-G - INIT-A` is applied only to x/B/C input-projection regions and copied B/C norm scales; `out_proj` is explicitly excluded and independently ridge-calibrated. The offset scale decays linearly from 1 to 0 over the first 20 completed updates and is exactly zero thereafter.
 - **Screen protocol:** seed `123`; layer 0; sequence length 32; eight calibration, 160 unique training, and 16 fixed held-out windows; checkpoints 0/20/80/160; FP32; arms INIT-A random, static INIT-G, and transient INIT-I on the same random base.
 - **Primary gate:** at step 160, INIT-I must have at least 1% lower held-out relative L2 than INIT-A with finite gradients. Static INIT-G is a negative mechanism control. Earlier checkpoints describe the trajectory but cannot override the primary endpoint.
-- **Promotion rule:** only a passing INIT-I advances to paired seeds `123/456/789` at 320 steps. A failure closes this transient schedule rather than triggering an unregistered decay-duration sweep.
+- **Random result (MEASURED):** relative L2 at steps 0/20/80/160 is `0.843208`, `0.691656`, `0.613662`, and `0.587294`; final cosine is `0.809420`.
+- **Static blend result (MEASURED):** relative L2 is `0.847944`, `0.683095`, `0.655684`, and `0.623839`; final cosine is `0.781934`.
+- **Transient result (MEASURED):** relative L2 is `0.847944`, `0.722410`, `0.615610`, and `0.590025`; final cosine is `0.807443`. Recorded prior scale is exactly `1.0` at step 0 and `0.0` at steps 20/80/160.
+- **Mechanism result:** removing the offset eliminates most of the static blend's long-horizon damage: at step 160 transient improves L2 over static by `0.033814`. It does not create a benefit over random; transient remains `0.002732` (0.47%) worse in L2 and also worse in cosine.
+- **Numerical result:** all three runs are finite and `passed=true`. Maximum gradient norms are `20.00` random, `35.28` static, and `28.84` transient.
+- **Decision:** INIT-I fails the frozen 1%-improvement gate. Do not run the three-seed/320-step promotion and do not tune decay duration post hoc. Close direct, variance-matched, fixed-blend, and transient QKV-to-Mamba parameter priors as production initializer candidates. Retain their early-step behavior as negative/mechanistic ablations.
+- **Next method boundary:** subsequent transplantation work must derive Mamba parameters or checkpoints from teacher activation matching, not another hand-designed raw Q/K/V matrix correspondence.
 - **Boundary:** this is a parameter-schedule ablation for one replacement mixer. It neither initializes recurrent dynamics from Qwen nor establishes full-model recovery.
+- **Raw artifact:** `results/EXP-035-qwen3-mamba3-transient-prior-screen-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 
