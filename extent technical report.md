@@ -806,7 +806,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-038 — Decoder-aware offline Mamba distillation
 
 - **Implementation commit title:** `feat: add decoder-aware Mamba distillation`
-- **Status:** pre-registered; Colab TPU v5e-1 execution pending.
+- **Status:** completed on Colab TPU v5e-1; the pre-registered primary gate passes.
 - **Question:** can training through the frozen Qwen decoder tail recover more downstream behavior than mixer-only activation matching under exactly the same initialization, data order, optimizer, and token budget?
 - **Controlled arms:** `MIXER-ONLY` minimizes mixer relative MSE and exactly reproduces the EXP-036 objective. `JOINT-MIXER-DECODER` minimizes the normalized mean of mixer relative MSE and full decoder-output relative MSE with decoder-loss weight 1.0. Both start from the same seed-123 readout-calibrated parameters and consume the same deterministic window at every update.
 - **Frozen path:** cached Qwen attention output supplies the offline mixer target. Teacher and replacement mixer outputs pass through identical frozen Qwen residual addition, post-attention RMSNorm, and SwiGLU MLP weights. Only Mamba parameters receive gradients.
@@ -814,6 +814,14 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Primary endpoint:** held-out decoder-output relative L2 at step 1,024. The joint arm must improve at least 10% over mixer-only, all values must remain finite, and joint mixer-output relative L2 may degrade by no more than 10% versus mixer-only.
 - **Secondary endpoints:** decoder cosine, mixer relative L2/cosine, trajectory crossover, maximum gradient norm, and component training losses. Step-0 outputs must be identical across arms.
 - **Decision rule:** passing promotes decoder-aware activation training as the new layerwise transplant objective and justifies an end-to-end loss-shock experiment. Failure closes this equal-weight formulation; any different weight or schedule requires a new pre-registered ablation rather than post-hoc tuning.
+- **Control reproduction (MEASURED):** mixer-only exactly reproduces EXP-036/037 at the shared checkpoints. Its step-1,024 mixer relative L2 / cosine is `0.537300 / 0.843673`, and decoder relative L2 / cosine is `0.609322 / 0.806318`.
+- **Joint result (MEASURED):** step-1,024 mixer relative L2 / cosine is `0.551648 / 0.836725`, while decoder relative L2 / cosine is `0.545319 / 0.846451`. Relative to the identical step-0 state, joint training reduces decoder L2 by 25.40% and mixer L2 by 29.79%.
+- **Primary-gate result:** joint decoder L2 is 10.504% lower than mixer-only, narrowly exceeding the frozen 10% requirement. Joint mixer L2 is 2.670% worse than mixer-only, safely inside the maximum 10% degradation. All gradients and outputs are finite; `scientific_gate_passed=true` and `passed=true`.
+- **Trajectory (MEASURED):** joint decoder-L2 improvements over mixer-only grow from 5.64% at step 128 to 8.76%, 9.85%, and 10.50% at steps 256/512/1024. The advantage is therefore sustained and increases with the fixed budget rather than arising from a single early checkpoint.
+- **Numerical observation:** maximum gradient norm is `9.1107` joint versus `15.8252` mixer-only, a 42.43% reduction. Final component training losses remain balanced (`0.260418` mixer and `0.271634` decoder), with combined loss `0.266026`.
+- **Decision:** accept equal-weight decoder-aware activation matching as the current layer-0 transplant method. Do not tune its coefficient on this evaluation split. Advance to a frozen, end-to-end Qwen language-model loss-shock experiment that compares original attention, readout-calibrated step 0, mixer-only step 1,024, and joint step 1,024.
+- **Boundary:** this is one layer, one seed, length 32, and a single 32,768-token pass. Passing establishes a useful objective, not full-model recovery, long-context quality, or inference speed.
+- **Raw artifact:** `results/EXP-038-qwen3-mamba3-decoder-aware-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 
