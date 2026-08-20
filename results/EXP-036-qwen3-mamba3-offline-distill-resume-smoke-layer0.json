@@ -1,0 +1,110 @@
+{
+  "status": "in_progress",
+  "method": "resumable_offline_Mamba3_activation_distillation",
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "activation_cache_manifest": "/content/exp036-cache/qwen3-layer0-offline-manifest.json",
+  "resolved_activation_artifacts": {
+    "token_ids": "/content/exp036-cache/qwen3-layer0-activation-cache-token-ids.npy",
+    "residual_input": "/content/exp036-cache/qwen3-layer0-activation-cache-residual-input.npy",
+    "normalized_input": "/content/exp036-cache/qwen3-layer0-activation-cache-normalized-input.npy",
+    "attention_target": "/content/exp036-cache/qwen3-layer0-activation-cache-attention-target.npy"
+  },
+  "target_layer": 0,
+  "sequence_length": 32,
+  "training_windows": 1024,
+  "unique_training_tokens": 32768,
+  "processed_training_tokens": 4096,
+  "step": 128,
+  "total_steps": 1024,
+  "batch_windows": 1,
+  "compute_dtype": "bfloat16",
+  "jax_backend": "tpu",
+  "mamba_config": {
+    "d_state": 64,
+    "expand": 0.75,
+    "head_dim": 64,
+    "groups": 1,
+    "mimo_rank": 4,
+    "rope_fraction": 0.5,
+    "dt_min": 0.001,
+    "dt_max": 0.1,
+    "dt_init_floor": 0.0001,
+    "a_floor": 0.0001,
+    "conv_kernel": 4
+  },
+  "checkpoint": {
+    "format_version": 1,
+    "step": 128,
+    "checkpoint_file": "training_state.msgpack",
+    "checkpoint_bytes": 250738397,
+    "checkpoint_sha256": "2ee7726327a00bfffda60af1cd77911a6687a21fdb4132cb99167f4e95bfe236",
+    "compatibility": {
+      "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+      "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+      "target_layer": 0,
+      "sequence_length": 32,
+      "normalized_input_sha256": "919bde5849de065f94614c748cc2ad073fbca4ec9ce2bbc5c48cd7e7cad5f1ff",
+      "attention_target_sha256": "6d86735392ca5ca8c603ed1ecd49eb5b85eee514bdec26f4bd112ff0aab3d85e",
+      "mamba_config": {
+        "d_state": 64,
+        "expand": 0.75,
+        "head_dim": 64,
+        "groups": 1,
+        "mimo_rank": 4,
+        "rope_fraction": 0.5,
+        "dt_min": 0.001,
+        "dt_max": 0.1,
+        "dt_init_floor": 0.0001,
+        "a_floor": 0.0001,
+        "conv_kernel": 4
+      },
+      "compute_dtype": "bfloat16",
+      "seed": 123,
+      "data_seed": 20260820,
+      "batch_windows": 1,
+      "total_steps": 1024,
+      "learning_rate": 3e-05,
+      "readout_ridge": 0.01
+    }
+  },
+  "history": [
+    {
+      "step": 0,
+      "max_abs": 5.375,
+      "mean_abs": 0.044819289536241855,
+      "rmse": 0.07392043000953823,
+      "relative_l2": 0.785725128663119,
+      "cosine_similarity": 0.6846133118437542
+    },
+    {
+      "step": 64,
+      "max_abs": 4.15625,
+      "mean_abs": 0.037944728807103936,
+      "rmse": 0.059880110331379535,
+      "relative_l2": 0.6364858455019001,
+      "cosine_similarity": 0.7744586307669603
+    },
+    {
+      "step": 128,
+      "max_abs": 4.07421875,
+      "mean_abs": 0.03625518444602856,
+      "rmse": 0.05639883285490306,
+      "relative_l2": 0.5994821755724427,
+      "cosine_similarity": 0.8003965711740976
+    }
+  ],
+  "last_train_metrics": {
+    "grad_norm": 1.0647718906402588,
+    "grads_finite": 1,
+    "loss": 0.3894953429698944,
+    "max_abs_grad": 0.0308837890625,
+    "nonfinite_grad_leaves": 0
+  },
+  "finite": true,
+  "passed": false,
+  "notes": [
+    "No Qwen checkpoint or teacher module is loaded by this process.",
+    "Training examples follow a deterministic per-epoch permutation recoverable from step and data seed.",
+    "A completed checkpoint contains Mamba parameters and Lion optimizer state."
+  ]
+}

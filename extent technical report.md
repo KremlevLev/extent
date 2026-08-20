@@ -777,6 +777,11 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Local verification:** checkpoint round-trip and corruption/compatibility gates pass; a four-step Lion trajectory is exactly identical between uninterrupted execution and a two-step plus save/reload plus two-step execution.
 - **First accelerator gate:** create a modest layer-0 FP32 cache in a producer-only session, then run the student for multiple bounded invocations with `--resume`. Acceptance requires finite metrics, monotonically advancing checkpoint steps, identical checkpoint compatibility, and a final `status=complete` result mirrored to persistent output.
 - **Scientific boundary:** this experiment validates infrastructure and resumability, not recovery quality. A later pre-registered data-scale experiment must use disjoint held-out text, report unique and optimizer-visible tokens separately, and compare recovery against the established random-initialization curve.
+- **Accelerator smoke (MEASURED, partial):** Colab TPU v5e-1, BF16 compute, layer 0, sequence length 32, 1,024 training windows (32,768 unique tokens), and a fixed 1,024-step schedule. Two independent 64-step invocations reach checkpoint step 128 through the resume path; the serialized Mamba-plus-Lion payload is 250,738,397 bytes with SHA-256 `2ee7726327a00bfffda60af1cd77911a6687a21fdb4132cb99167f4e95bfe236`.
+- **Partial trajectory (MEASURED):** held-out relative L2 is `0.785725`, `0.636486`, and `0.599482` at steps 0/64/128, while cosine is `0.684613`, `0.774459`, and `0.800397`. Relative L2 falls by 23.70% from step 0 through step 128.
+- **Numerical result (MEASURED):** step-128 training loss is `0.389495`, gradient norm `1.064772`, maximum absolute gradient `0.030884`, and all gradient leaves are finite.
+- **Interpretation:** producer/consumer separation, checkpoint integrity, Lion restoration, and deterministic continuation now pass on a real TPU. `status=in_progress` and `passed=false` are expected before the frozen 1,024-step endpoint and are not failures.
+- **Raw partial artifact:** `results/EXP-036-qwen3-mamba3-offline-distill-resume-smoke-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 
