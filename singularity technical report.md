@@ -714,6 +714,19 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Artifact note:** the producer's free-text notes incorrectly say “both variants” and refer to an 80-step schedule; the structured fields correctly record five variants and a 20-step maximum. Metrics and ranking are unaffected, and the generator is corrected before confirmation.
 - **Raw artifact:** `results/EXP-032-qwen3-mamba3-shock-matched-screen-layer0.json`.
 
+### EXP-033 — Three-seed confirmation of the 25% QKVO blend
+
+- **Status:** completed on TPU/FP32; the 25% blend is rejected as the final layer-0 initializer at the primary 80-step endpoint.
+- **Protocol:** paired `INIT-A-random` versus `INIT-G-vm-qkvo-blend-0.25`; seeds `123/456/789`; checkpoints 0/20/80; 80 independent training windows (2,560 tokens) and four fixed held-out windows after the maximum-budget region. All runs are finite and `passed=true`.
+- **Random aggregate (MEASURED):** mean held-out relative L2 is `0.771630 +/- 0.041263`, `0.675836 +/- 0.039106`, and `0.597028 +/- 0.010470` at steps 0/20/80. Step-80 cosine is `0.803735 +/- 0.006395`; relative-L2 reduction is 22.52%.
+- **25% blend aggregate (MEASURED):** mean held-out relative L2 is `0.791486 +/- 0.029547`, `0.658893 +/- 0.028574`, and `0.604759 +/- 0.000882` at steps 0/20/80. Step-80 cosine is `0.796979 +/- 0.000785`; relative-L2 reduction is 23.52%.
+- **Paired trajectory (MEASURED):** random wins `3/3` seeds at step 0; the 25% blend wins `3/3` at step 20 with mean random-minus-blend L2 `+0.016943`; random wins `2/3` at step 80 with mean difference `-0.007731`.
+- **Interpretation:** a weak QKVO directional prior reproducibly accelerates early recovery, but the advantage is transient under this schedule. By the pre-registered primary endpoint, it is 1.30% worse than random in mean relative L2 and also worse in cosine. Lower across-seed variance for the blend does not compensate for its worse mean endpoint.
+- **Numerical observation:** every gradient remains finite, but the blend reaches larger maximum per-run gradient norms for seeds 123 and 789 (`35.29` and `36.26`) than their random controls (`20.00` and `24.74`).
+- **Decision:** retain the 25% blend as an early-recovery ablation, not the production initializer. Do not escalate it directly to full-model recovery. The next transplant method must optimize a fixed-budget endpoint rather than only the first 20 updates; learning a gate or staged decay of the prior is a separate hypothesis requiring a new protocol.
+- **Boundary:** this result covers layer 0, sequence length 32, and 2,560 adaptation tokens per seed. It does not establish the behavior of middle layers, long context, or the complete hybrid.
+- **Raw artifact:** `results/EXP-033-qwen3-mamba3-shock-matched-confirm-layer0.json`.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
