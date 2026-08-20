@@ -5,6 +5,63 @@ path for a parameter-matched Qwen 14B-class hybrid: 34 Mamba-3 MIMO mixers,
 6 MLA mixers, and the Qwen3 SwiGLU MLPs. It targets one TPU v5e-8 slice, but all
 reference code and tests run on CPU.
 
+## Private Kaggle checkout
+
+Use a repository-scoped, read-only SSH deploy key for Kaggle. Do not upload a
+personal GitHub SSH key and do not put a token in a clone URL. Generate a
+dedicated key locally (leave its passphrase empty because Kaggle is
+non-interactive):
+
+```powershell
+ssh-keygen -t ed25519 -C "kaggle-extent-readonly" -f "$env:USERPROFILE\.ssh\extent_kaggle"
+Get-Content "$env:USERPROFILE\.ssh\extent_kaggle.pub"
+```
+
+Add the public line under GitHub repository `Settings -> Deploy keys -> Add
+deploy key`, and leave `Allow write access` unchecked. Store the complete
+private-key file as a Kaggle secret named `EXTENT_DEPLOY_KEY`; never print that
+secret in a notebook. A deploy key is scoped to one repository and is read-only
+by default. In a fresh Kaggle session, clone with:
+
+```python
+from kaggle_secrets import UserSecretsClient
+from pathlib import Path
+import os
+import shlex
+import subprocess
+
+private_key_text = UserSecretsClient().get_secret("EXTENT_DEPLOY_KEY")
+ssh_dir = Path.home() / ".ssh"
+ssh_dir.mkdir(mode=0o700, exist_ok=True)
+private_key = ssh_dir / "extent_kaggle"
+known_hosts = ssh_dir / "known_hosts"
+private_key.write_text(private_key_text.rstrip() + "\n", encoding="utf-8")
+private_key.chmod(0o600)
+known_hosts.write_text(
+    "github.com ssh-ed25519 "
+    "AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n",
+    encoding="utf-8",
+)
+known_hosts.chmod(0o600)
+
+git_env = os.environ.copy()
+git_env["GIT_SSH_COMMAND"] = (
+    f"ssh -i {shlex.quote(str(private_key))} -o IdentitiesOnly=yes "
+    f"-o UserKnownHostsFile={shlex.quote(str(known_hosts))} "
+    "-o StrictHostKeyChecking=yes"
+)
+subprocess.run(
+    ["git", "clone", "git@github.com:KremlevLev/extent.git"],
+    cwd="/kaggle/working",
+    env=git_env,
+    check=True,
+)
+```
+
+The pinned `known_hosts` entry is GitHub's published Ed25519 host key. If
+GitHub announces a host-key rotation, update it from the official fingerprint
+page rather than disabling strict host checking.
+
 ## What is implemented
 
 - A reusable Flax `Mamba3MIMO` block with data-dependent decay, the
