@@ -11,30 +11,30 @@ import jax.numpy as jnp
 import numpy as np
 from flax.core import freeze, unfreeze
 
-from singularity.config import HybridConfig
-from singularity.mla_conversion import (
+from extent.config import HybridConfig
+from extent.mla_conversion import (
     convert_qwen3_gqa_to_mla_joint_svd,
     factorize_qwen3_joint_kv,
     qwen3_decoder_common_params,
     qwen3_mla_conversion_config,
 )
-from singularity.layers.common import RMSNorm
-from singularity.layers.mla import MultiHeadLatentAttention
-from singularity.model import HybridDecoderLayer
-from singularity.qwen3_parity import (
+from extent.layers.common import RMSNorm
+from extent.layers.mla import MultiHeadLatentAttention
+from extent.model import HybridDecoderLayer
+from extent.qwen3_parity import (
     ensure_layer_checkpoint,
     jax_layer_params,
     load_layer_arrays,
     parity_metrics,
     required_layer_shards,
 )
-from singularity.qwen3_teacher import (
+from extent.qwen3_teacher import (
     Qwen3DecoderLayer,
     Qwen3GQAAttention,
     Qwen3TeacherConfig,
 )
-from singularity.qwen_source import QWEN3_14B, validate_source_metadata
-from singularity.weight_mapping import QwenCheckpointReader
+from extent.qwen_source import QWEN3_14B, validate_source_metadata
+from extent.weight_mapping import QwenCheckpointReader
 
 
 def _read_json(url: str) -> dict:

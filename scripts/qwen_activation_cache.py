@@ -11,27 +11,27 @@ import jax.numpy as jnp
 import numpy as np
 
 from scripts.qwen_mamba3_distill_pilot import _write_json_with_output_mirror
-from singularity.calibration_data import (
+from extent.calibration_data import (
     WIKITEXT_REPO,
     WIKITEXT_REVISION,
     load_wikitext2_tokens,
 )
-from singularity.hardware import recommended_compute_dtype
-from singularity.layers.common import RMSNorm
-from singularity.qwen3_parity import (
+from extent.hardware import recommended_compute_dtype
+from extent.layers.common import RMSNorm
+from extent.qwen3_parity import (
     ensure_layer_checkpoint,
     jax_attention_params,
     jax_layer_params,
     load_layer_arrays,
     load_mixer_arrays,
 )
-from singularity.qwen3_teacher import (
+from extent.qwen3_teacher import (
     Qwen3DecoderLayer,
     Qwen3GQAAttention,
     Qwen3TeacherConfig,
 )
-from singularity.qwen_source import QWEN3_14B, validate_source_metadata
-from singularity.teacher_activation_cache import (
+from extent.qwen_source import QWEN3_14B, validate_source_metadata
+from extent.teacher_activation_cache import (
     activation_window_layout,
     array_artifact,
     atomic_save_array,
@@ -40,7 +40,7 @@ from singularity.teacher_activation_cache import (
     run_host_data_parallel,
     run_host_microbatches,
 )
-from singularity.weight_mapping import QwenCheckpointReader
+from extent.weight_mapping import QwenCheckpointReader
 
 
 def _read_json(url: str) -> dict:
@@ -148,7 +148,7 @@ def main(argv: list[str] | None = None) -> None:
         "--cache-dir", default="/kaggle/working/qwen3-activation-checkpoint"
     )
     parser.add_argument(
-        "--dataset-cache-dir", default="/kaggle/working/singularity-calibration-cache"
+        "--dataset-cache-dir", default="/kaggle/working/extent-calibration-cache"
     )
     parser.add_argument("--target-layer", type=int, default=0)
     parser.add_argument("--sequence-length", type=int, default=32)

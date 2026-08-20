@@ -7,9 +7,9 @@ import jax.numpy as jnp
 import numpy as np
 from flax.core import freeze
 
-from singularity.config import MLAConfig
-from singularity.qwen3_teacher import Qwen3TeacherConfig
-from singularity.weight_mapping import truncated_svd
+from extent.config import MLAConfig
+from extent.qwen3_teacher import Qwen3TeacherConfig
+from extent.weight_mapping import truncated_svd
 
 
 @dataclass(frozen=True)

@@ -10,8 +10,8 @@ import numpy as np
 from flax import traverse_util
 from flax.core import freeze
 
-from singularity.qwen3_teacher import Qwen3TeacherConfig
-from singularity.weight_mapping import MappingEntry, QwenCheckpointReader, teacher_qwen_mappings
+from extent.qwen3_teacher import Qwen3TeacherConfig
+from extent.weight_mapping import MappingEntry, QwenCheckpointReader, teacher_qwen_mappings
 
 
 @dataclass(frozen=True)

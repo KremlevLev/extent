@@ -4,10 +4,10 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 
-from singularity.config import HybridConfig
-from singularity.layers.common import RMSNorm, SwiGLU, dtype_from_name
-from singularity.layers.mamba3 import Mamba3MIMO
-from singularity.layers.mla import MultiHeadLatentAttention
+from extent.config import HybridConfig
+from extent.layers.common import RMSNorm, SwiGLU, dtype_from_name
+from extent.layers.mamba3 import Mamba3MIMO
+from extent.layers.mla import MultiHeadLatentAttention
 
 
 class HybridDecoderLayer(nn.Module):

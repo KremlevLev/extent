@@ -7,7 +7,7 @@ import jax
 import numpy as np
 from flax import traverse_util
 
-from singularity.sharding import parameter_partition_spec, validate_partition_specs
+from extent.sharding import parameter_partition_spec, validate_partition_specs
 
 
 @dataclass(frozen=True)

@@ -1,8 +1,9 @@
-# Singularity: JAX Mamba-3/MLA hybrid prototype
+# Extent: JAX Mamba-3/MLA hybrid prototype
 
-This repository contains a research bring-up path for a parameter-matched Qwen
-14B-class hybrid: 34 Mamba-3 MIMO mixers, 6 MLA mixers, and the Qwen3 SwiGLU
-MLPs. It targets one TPU v5e-8 slice, but all reference code and tests run on CPU.
+`Extent-14B` is the model built in this repository. It is a research bring-up
+path for a parameter-matched Qwen 14B-class hybrid: 34 Mamba-3 MIMO mixers,
+6 MLA mixers, and the Qwen3 SwiGLU MLPs. It targets one TPU v5e-8 slice, but all
+reference code and tests run on CPU.
 
 ## What is implemented
 
@@ -155,9 +156,9 @@ further full BF16 buffer (roughly 3.4 GiB/device for this model).
 
 ## MaxText boundary
 
-`config/maxtext_mla_v5e8.yml` and `singularity.maxtext_adapter` expose the
+`config/maxtext_mla_v5e8.yml` and `extent.maxtext_adapter` expose the
 upstream MaxText MLA configuration surface. Upstream MaxText does not currently
-provide a Mamba-3 decoder block, so `singularity.model` owns layer scheduling.
+provide a Mamba-3 decoder block, so `extent.model` owns layer scheduling.
 This avoids claiming a drop-in MaxText model that cannot compile; the MLA names
 are kept compatible so its optimized kernel can replace the reference attention
 without another checkpoint conversion.
@@ -221,7 +222,7 @@ PyTorch implementation. This downloads only the shard containing layer 0
 in FP32, and applies frozen error gates:
 
 ```python
-%cd /kaggle/working/singularity
+%cd /kaggle/working/extent
 !pip install -q -r requirements-parity.txt
 
 from scripts.qwen_layer_parity import main as qwen_layer_parity
@@ -401,13 +402,13 @@ prefix and actual Qwen3 embedding rows. Install the small calibration-only
 dependency set once, then run the same cache-matched comparison:
 
 ```python
-%cd /kaggle/working/singularity
+%cd /kaggle/working/extent
 !pip install -q -r requirements-calibration.txt
 
 from scripts.qwen_real_text_kv_probe import main as qwen_real_text_kv_probe
 qwen_real_text_kv_probe([
     "--cache-dir", "/kaggle/working/qwen3-layer-parity",
-    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--dataset-cache-dir", "/kaggle/working/extent-calibration-cache",
     "--layer-index", "0",
     "--calibration-tokens", "8192",
     "--sequence-length", "1024",
@@ -426,13 +427,13 @@ Validate the frozen RoRoPE-BKV recipe through the normal Flax module and its
 explicit compressed-cache interface:
 
 ```python
-%cd /kaggle/working/singularity
+%cd /kaggle/working/extent
 !pip install -q -r requirements-calibration.txt
 
 from scripts.qwen_deployable_mla_parity import main as qwen_deployable_mla_parity
 qwen_deployable_mla_parity([
     "--cache-dir", "/kaggle/working/qwen3-layer-parity",
-    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--dataset-cache-dir", "/kaggle/working/extent-calibration-cache",
     "--layer-index", "0",
     "--calibration-tokens", "8192",
     "--sequence-length", "1024",
@@ -477,13 +478,13 @@ Mamba-in-the-Llama Q/K/V/O port, copied SISO information, and distinct MIMO
 channel allocation:
 
 ```python
-%cd /kaggle/working/singularity
+%cd /kaggle/working/extent
 !pip install -q -r requirements-calibration.txt
 
 from scripts.qwen_mamba3_shock import main as qwen_mamba3_shock
 qwen_mamba3_shock([
     "--cache-dir", "/kaggle/working/qwen3-layer-parity",
-    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--dataset-cache-dir", "/kaggle/working/extent-calibration-cache",
     "--layer-index", "0",
     "--sequence-length", "128",
     "--seed", "123",
@@ -501,13 +502,13 @@ recurrent features can support a teacher-aligned linear readout. Ridge selection
 uses only an internal calibration split; the final 128 tokens remain held out:
 
 ```python
-%cd /kaggle/working/singularity
+%cd /kaggle/working/extent
 !pip install -q -r requirements-calibration.txt
 
 from scripts.qwen_mamba3_readout_probe import main as qwen_mamba3_readout_probe
 qwen_mamba3_readout_probe([
     "--cache-dir", "/kaggle/working/qwen3-layer-parity",
-    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--dataset-cache-dir", "/kaggle/working/extent-calibration-cache",
     "--layer-index", "0",
     "--calibration-tokens", "256",
     "--selection-tokens", "64",
@@ -531,7 +532,7 @@ residual. Re-run it after pulling the latest commit and use a new artifact name:
 from scripts.qwen_mamba3_readout_probe import main as qwen_mamba3_readout_probe
 qwen_mamba3_readout_probe([
     "--cache-dir", "/kaggle/working/qwen3-layer-parity",
-    "--dataset-cache-dir", "/kaggle/working/singularity-calibration-cache",
+    "--dataset-cache-dir", "/kaggle/working/extent-calibration-cache",
     "--layer-index", "0",
     "--calibration-tokens", "256",
     "--selection-tokens", "64",

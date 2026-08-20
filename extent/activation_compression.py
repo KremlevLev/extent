@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from singularity.weight_mapping import truncated_svd
+from extent.weight_mapping import truncated_svd
 
 
 def bkv_balance_ratio(key: np.ndarray, value: np.ndarray) -> float:

@@ -5,11 +5,11 @@ from dataclasses import replace
 from flax import traverse_util
 from types import SimpleNamespace
 
-from singularity import HybridForCausalLM, tiny_config
-from singularity.optimizer import create_lion
-from singularity.hardware import recommended_compute_dtype
-from singularity.sharding import create_v5e_mesh
-from singularity.train_step import initialize_sharded_runtime, shard_host_batch
+from extent import HybridForCausalLM, tiny_config
+from extent.optimizer import create_lion
+from extent.hardware import recommended_compute_dtype
+from extent.sharding import create_v5e_mesh
+from extent.train_step import initialize_sharded_runtime, shard_host_batch
 
 
 def test_t4_uses_safe_fp32_compute_policy():

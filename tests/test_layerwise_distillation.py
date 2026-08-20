@@ -8,13 +8,13 @@ import numpy as np
 import optax
 from flax.core import freeze
 
-from singularity.layerwise_distillation import (
+from extent.layerwise_distillation import (
     create_layerwise_train_step,
     create_teacher_mixer_runner,
     relative_mse,
 )
-from singularity.qwen3_teacher import Qwen3GQAAttention, tiny_qwen3_teacher_config
-from singularity.optimizer import create_lion
+from extent.qwen3_teacher import Qwen3GQAAttention, tiny_qwen3_teacher_config
+from extent.optimizer import create_lion
 from scripts.qwen_mamba3_distill_pilot import (
     _json_default,
     _write_json,

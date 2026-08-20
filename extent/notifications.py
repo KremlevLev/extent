@@ -99,13 +99,13 @@ def accelerator_status_message(devices: Iterable[Any]) -> str:
     """Describe the accelerator JAX actually initialized without rejecting fallbacks."""
     devices = list(devices)
     if not devices:
-        return "Singularity runtime status\nstatus=error\naccelerator=no JAX devices"
+        return "Extent runtime status\nstatus=error\naccelerator=no JAX devices"
     platforms = sorted({str(getattr(device, "platform", "unknown")) for device in devices})
     process_count = len({int(getattr(device, "process_index", 0)) for device in devices})
     accelerator = "+".join(platform.upper() for platform in platforms)
     tpu_active = "tpu" in platforms
     return (
-        "Singularity runtime status\n"
+        "Extent runtime status\n"
         f"status={'TPU ready' if tpu_active else 'TPU not active'}\n"
         f"host={socket.gethostname()}\n"
         f"accelerator={accelerator} devices={len(devices)} processes={process_count}\n"

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from dataclasses import replace
 
-from singularity.qwen3_parity import (
+from extent.qwen3_parity import (
     jax_attention_params,
     jax_layer_params,
     layer_mapping_entries,
@@ -11,8 +11,8 @@ from singularity.qwen3_parity import (
     required_layer_shards,
     torch_layer_state,
 )
-from singularity.qwen3_teacher import Qwen3DecoderLayer, tiny_qwen3_teacher_config
-from singularity.weight_mapping import expected_qwen_shape
+from extent.qwen3_teacher import Qwen3DecoderLayer, tiny_qwen3_teacher_config
+from extent.weight_mapping import expected_qwen_shape
 
 
 def test_one_teacher_layer_has_all_eleven_qwen_tensors():

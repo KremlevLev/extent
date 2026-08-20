@@ -14,8 +14,8 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 
-from singularity.config import Mamba3Config
-from singularity.layers.common import RMSNorm
+from extent.config import Mamba3Config
+from extent.layers.common import RMSNorm
 
 
 # Formula/parameter contract checked against state-spaces/mamba at

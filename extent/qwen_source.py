@@ -52,7 +52,7 @@ QWEN3_14B = QwenSourceSpec(
     total_size_bytes=29_536_614_400,
 )
 
-SOURCE_MARKER = ".singularity_source.json"
+SOURCE_MARKER = ".extent_source.json"
 
 
 @dataclass(frozen=True)

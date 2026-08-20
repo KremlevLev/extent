@@ -1,7 +1,7 @@
 import jax.numpy as jnp
 import numpy as np
 
-from singularity.readout_calibration import fit_dual_ridge_readout
+from extent.readout_calibration import fit_dual_ridge_readout
 from scripts.qwen_mamba3_readout_probe import _fit_residualized_context_readout
 
 

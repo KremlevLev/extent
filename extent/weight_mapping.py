@@ -17,7 +17,7 @@ import numpy as np
 from flax import traverse_util
 from flax.core import FrozenDict, freeze
 
-from singularity.config import HybridConfig
+from extent.config import HybridConfig
 
 
 class QwenShapeConfig(Protocol):

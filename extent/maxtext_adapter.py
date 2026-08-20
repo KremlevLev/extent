@@ -7,7 +7,7 @@ kernel swap mechanical instead of a checkpoint conversion.
 
 from __future__ import annotations
 
-from singularity.config import HybridConfig
+from extent.config import HybridConfig
 
 
 def maxtext_mla_overrides(config: HybridConfig) -> dict[str, object]:

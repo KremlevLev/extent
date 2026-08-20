@@ -3,12 +3,12 @@ import jax.numpy as jnp
 import numpy as np
 from flax import traverse_util
 
-from singularity.qwen3_teacher import (
+from extent.qwen3_teacher import (
     Qwen3ForCausalLM,
     apply_qwen3_rope,
     tiny_qwen3_teacher_config,
 )
-from singularity.weight_mapping import (
+from extent.weight_mapping import (
     expected_qwen_shape,
     teacher_qwen_mappings,
     validate_teacher_mapping_plan,

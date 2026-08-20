@@ -6,7 +6,7 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 
-from singularity.layers.common import RMSNorm, SwiGLU, dtype_from_name
+from extent.layers.common import RMSNorm, SwiGLU, dtype_from_name
 
 
 @dataclass(frozen=True)

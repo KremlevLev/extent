@@ -3,7 +3,7 @@ import sys
 from types import SimpleNamespace
 
 from scripts import telegram_tpu_notifier
-from singularity.notifications import (
+from extent.notifications import (
     accelerator_status_message,
     discover_telegram_chat_ids,
     send_telegram_message,

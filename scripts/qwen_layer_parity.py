@@ -10,7 +10,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from singularity.qwen3_parity import (
+from extent.qwen3_parity import (
     ensure_layer_checkpoint,
     jax_layer_params,
     load_layer_arrays,
@@ -18,9 +18,9 @@ from singularity.qwen3_parity import (
     required_layer_shards,
     torch_layer_state,
 )
-from singularity.qwen3_teacher import Qwen3DecoderLayer, Qwen3TeacherConfig
-from singularity.qwen_source import QWEN3_14B, validate_source_metadata, write_source_marker
-from singularity.weight_mapping import QwenCheckpointReader
+from extent.qwen3_teacher import Qwen3DecoderLayer, Qwen3TeacherConfig
+from extent.qwen_source import QWEN3_14B, validate_source_metadata, write_source_marker
+from extent.weight_mapping import QwenCheckpointReader
 
 
 def _read_json(url: str) -> dict:

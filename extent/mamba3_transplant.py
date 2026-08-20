@@ -8,9 +8,9 @@ import jax.numpy as jnp
 import numpy as np
 from flax.core import FrozenDict, freeze, unfreeze
 
-from singularity.config import Mamba3Config
-from singularity.qwen3_teacher import Qwen3TeacherConfig
-from singularity.weight_mapping import fit_matrix
+from extent.config import Mamba3Config
+from extent.qwen3_teacher import Qwen3TeacherConfig
+from extent.weight_mapping import fit_matrix
 
 
 MAMBA_IN_LLAMA_REFERENCE_COMMIT = "b03f123152eeba5f2ae9d8694f4a001147e0a14c"

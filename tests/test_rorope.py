@@ -1,8 +1,8 @@
 import jax.numpy as jnp
 import numpy as np
 
-from singularity.qwen3_teacher import apply_qwen3_rope
-from singularity.rorope import (
+from extent.qwen3_teacher import apply_qwen3_rope
+from extent.rorope import (
     fit_freqfold_rotations,
     fit_rorope_rotations,
     freqfold_attend,

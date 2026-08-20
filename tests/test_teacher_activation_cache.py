@@ -9,8 +9,8 @@ from scripts.qwen_activation_cache import (
     _create_data_parallel_norm_runner,
     _safe_prune_shards,
 )
-from singularity.layers.common import RMSNorm
-from singularity.teacher_activation_cache import (
+from extent.layers.common import RMSNorm
+from extent.teacher_activation_cache import (
     activation_window_layout,
     array_artifact,
     atomic_save_array,

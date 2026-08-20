@@ -8,7 +8,7 @@ import jax
 import optax
 from jax.sharding import Mesh
 
-from singularity.sharding import (
+from extent.sharding import (
     batch_sharding,
     named_sharding_tree,
     replicated_sharding,

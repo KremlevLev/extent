@@ -7,23 +7,23 @@ from pathlib import Path
 import jax
 import numpy as np
 
-from singularity import HybridForCausalLM
-from singularity.config import load_config
-from singularity.initialization import (
+from extent import HybridForCausalLM
+from extent.config import load_config
+from extent.initialization import (
     ShardedParameters,
     abstract_parameter_tree,
     initialize_sharded_optimizer_state,
     initialize_sharded_parameters,
 )
-from singularity.optimizer import create_lion
-from singularity.preflight import allocated_bytes_by_device, build_preflight_report
-from singularity.qwen_source import (
+from extent.optimizer import create_lion
+from extent.preflight import allocated_bytes_by_device, build_preflight_report
+from extent.qwen_source import (
     QWEN3_14B,
     validate_source_marker,
     validate_source_metadata,
 )
-from singularity.sharding import batch_sharding, create_v5e_mesh
-from singularity.weight_mapping import (
+from extent.sharding import batch_sharding, create_v5e_mesh
+from extent.weight_mapping import (
     QwenCheckpointReader,
     stream_direct_qwen_weights,
     validate_local_direct_shapes,

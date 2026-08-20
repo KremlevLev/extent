@@ -5,11 +5,11 @@ import argparse
 import jax
 import jax.numpy as jnp
 
-from singularity import HybridForCausalLM, tiny_config
-from singularity.estimate import parameter_count, training_state_gib
-from singularity.optimizer import create_lion
-from singularity.sharding import create_v5e_mesh
-from singularity.train_step import create_train_state, make_train_step
+from extent import HybridForCausalLM, tiny_config
+from extent.estimate import parameter_count, training_state_gib
+from extent.optimizer import create_lion
+from extent.sharding import create_v5e_mesh
+from extent.train_step import create_train_state, make_train_step
 
 
 def main(argv: list[str] | None = None) -> None:

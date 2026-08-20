@@ -1,6 +1,6 @@
 import numpy as np
 
-from singularity.activation_compression import (
+from extent.activation_compression import (
     bkv_balance_ratio,
     fit_activation_pca,
     fit_activation_pca_jax,

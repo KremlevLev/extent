@@ -11,23 +11,23 @@ import jax.numpy as jnp
 import numpy as np
 
 from scripts.qwen_mla_shock import _run_layer
-from singularity.calibration_data import (
+from extent.calibration_data import (
     WIKITEXT_REPO,
     WIKITEXT_REVISION,
     load_wikitext2_tokens,
 )
-from singularity.layers.common import RMSNorm
-from singularity.layers.rorope_bkv import Qwen3RoRoPEBKVAttention
-from singularity.qwen3_parity import (
+from extent.layers.common import RMSNorm
+from extent.layers.rorope_bkv import Qwen3RoRoPEBKVAttention
+from extent.qwen3_parity import (
     ensure_layer_checkpoint,
     jax_attention_params,
     load_layer_arrays,
     parity_metrics,
 )
-from singularity.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
-from singularity.qwen_source import QWEN3_14B, validate_source_metadata
-from singularity.rorope_bkv_conversion import map_qwen3_to_rorope_bkv
-from singularity.weight_mapping import QwenCheckpointReader
+from extent.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
+from extent.qwen_source import QWEN3_14B, validate_source_metadata
+from extent.rorope_bkv_conversion import map_qwen3_to_rorope_bkv
+from extent.weight_mapping import QwenCheckpointReader
 
 
 def _read_json(url: str) -> dict:
@@ -41,7 +41,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument("--cache-dir", default="/kaggle/working/qwen3-layer-parity")
     parser.add_argument(
-        "--dataset-cache-dir", default="/kaggle/working/singularity-calibration-cache"
+        "--dataset-cache-dir", default="/kaggle/working/extent-calibration-cache"
     )
     parser.add_argument("--layer-index", type=int, default=0)
     parser.add_argument("--calibration-tokens", type=int, default=8192)

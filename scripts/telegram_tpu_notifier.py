@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 
-from singularity.notifications import (
+from extent.notifications import (
     TelegramNotifierError,
     accelerator_status_message,
     discover_telegram_chat_ids,
@@ -43,7 +43,7 @@ def main(argv: list[str] | None = None, *, enabled: bool = True) -> bool:
         text = accelerator_status_message(jax.devices())
     except Exception as exc:
         text = (
-            "Singularity runtime status\n"
+            "Extent runtime status\n"
             "status=JAX initialization failed\n"
             f"error={type(exc).__name__}: {str(exc)[:600]}"
         )

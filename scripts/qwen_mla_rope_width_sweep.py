@@ -12,22 +12,22 @@ import jax.numpy as jnp
 import numpy as np
 
 from scripts.qwen_mla_shock import _run_layer
-from singularity.layers.common import RMSNorm
-from singularity.layers.mla import MultiHeadLatentAttention
-from singularity.mla_conversion import (
+from extent.layers.common import RMSNorm
+from extent.layers.mla import MultiHeadLatentAttention
+from extent.mla_conversion import (
     convert_qwen3_gqa_to_mla_joint_svd,
     factorize_qwen3_joint_kv,
     qwen3_mla_conversion_config,
 )
-from singularity.qwen3_parity import (
+from extent.qwen3_parity import (
     ensure_layer_checkpoint,
     jax_attention_params,
     load_layer_arrays,
     parity_metrics,
 )
-from singularity.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
-from singularity.qwen_source import QWEN3_14B, validate_source_metadata
-from singularity.weight_mapping import QwenCheckpointReader
+from extent.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
+from extent.qwen_source import QWEN3_14B, validate_source_metadata
+from extent.weight_mapping import QwenCheckpointReader
 
 
 def _read_json(url: str) -> dict:

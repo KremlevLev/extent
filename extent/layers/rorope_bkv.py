@@ -4,9 +4,9 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 
-from singularity.layers.common import RMSNorm
-from singularity.qwen3_teacher import Qwen3TeacherConfig
-from singularity.rorope import apply_rorope
+from extent.layers.common import RMSNorm
+from extent.qwen3_teacher import Qwen3TeacherConfig
+from extent.rorope import apply_rorope
 
 
 class Qwen3RoRoPEBKVAttention(nn.Module):

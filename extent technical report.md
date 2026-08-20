@@ -1,10 +1,10 @@
-# Singularity Technical Report and Experiment Ledger
+# Extent Technical Report and Experiment Ledger
 
-**Working title:** *Singularity: Compute-Efficient Transplantation of Qwen3-14B into a Mamba-3/MLA Hybrid*
+**Working title:** *Extent-14B: Compute-Efficient Transplantation of Qwen3-14B into a Mamba-3/MLA Hybrid*
 
 **Status:** research prototype; no quality or inference claims are established yet.
 
-**Last updated:** 2026-08-17
+**Last updated:** 2026-08-20
 
 This document is the source of truth for the paper. Every number must be marked as one of:
 
@@ -280,7 +280,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 
 ### EXP-007 — Pinned Qwen3-14B metadata and direct-map audit
 
-- **Implementation commit title:** `fix: migrate Singularity source and target to Qwen3-14B`
+- **Implementation commit title:** `fix: migrate Singularity source and target to Qwen3-14B` (historical title, before the Extent rename)
 - **Source:** `Qwen/Qwen3-14B` (not `Qwen3-14B-Base`)
 - **Immutable revision:** `40c069824f4251a91eefaf281ebe4c544efd3e18`
 - **Mode:** metadata-only; no model shards downloaded

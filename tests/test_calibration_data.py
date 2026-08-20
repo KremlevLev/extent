@@ -1,6 +1,6 @@
 import numpy as np
 
-from singularity.calibration_data import pack_tokenized_texts
+from extent.calibration_data import pack_tokenized_texts
 
 
 class _Tokenizer:

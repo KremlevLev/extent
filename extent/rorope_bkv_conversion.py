@@ -8,13 +8,13 @@ import jax.numpy as jnp
 import numpy as np
 from flax.core import freeze
 
-from singularity.activation_compression import (
+from extent.activation_compression import (
     bkv_balance_ratio,
     fit_activation_pca_jax,
 )
-from singularity.layers.common import RMSNorm
-from singularity.qwen3_teacher import Qwen3TeacherConfig
-from singularity.rorope import fit_rorope_rotations, rotate_rorope_key
+from extent.layers.common import RMSNorm
+from extent.qwen3_teacher import Qwen3TeacherConfig
+from extent.rorope import fit_rorope_rotations, rotate_rorope_key
 
 
 @dataclass(frozen=True)

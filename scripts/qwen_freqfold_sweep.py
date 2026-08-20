@@ -12,17 +12,17 @@ import numpy as np
 
 from scripts.qwen_mla_shock import _run_layer
 from scripts.qwen_rorope_shock import _project_qkv
-from singularity.layers.common import RMSNorm
-from singularity.qwen3_parity import (
+from extent.layers.common import RMSNorm
+from extent.qwen3_parity import (
     ensure_layer_checkpoint,
     jax_attention_params,
     load_layer_arrays,
     parity_metrics,
 )
-from singularity.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
-from singularity.qwen_source import QWEN3_14B, validate_source_metadata
-from singularity.rorope import fit_freqfold_rotations, freqfold_attend
-from singularity.weight_mapping import QwenCheckpointReader
+from extent.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
+from extent.qwen_source import QWEN3_14B, validate_source_metadata
+from extent.rorope import fit_freqfold_rotations, freqfold_attend
+from extent.weight_mapping import QwenCheckpointReader
 
 
 def _read_json(url: str) -> dict:

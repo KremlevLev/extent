@@ -10,13 +10,13 @@ import jax
 import optax
 from jax.sharding import Mesh, NamedSharding
 
-from singularity.model import causal_lm_loss
-from singularity.initialization import (
+from extent.model import causal_lm_loss
+from extent.initialization import (
     initialize_sharded_parameters,
     optimizer_state_layout,
 )
-from singularity.optimizer import cast_grads_bf16, gradient_health, gradient_health_tree
-from singularity.sharding import (
+from extent.optimizer import cast_grads_bf16, gradient_health, gradient_health_tree
+from extent.sharding import (
     batch_sharding,
     replicated_sharding,
 )

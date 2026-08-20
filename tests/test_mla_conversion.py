@@ -2,16 +2,16 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from singularity.layers.mla import MultiHeadLatentAttention, apply_partial_rope
-from singularity.mla_conversion import (
+from extent.layers.mla import MultiHeadLatentAttention, apply_partial_rope
+from extent.mla_conversion import (
     convert_qwen3_gqa_to_mla_joint_svd,
     factorize_qwen3_joint_kv,
     partial_rope_indices,
     qwen3_mla_conversion_config,
 )
-from singularity.qwen3_parity import layer_mapping_entries
-from singularity.qwen3_teacher import tiny_qwen3_teacher_config
-from singularity.weight_mapping import expected_qwen_shape
+from extent.qwen3_parity import layer_mapping_entries
+from extent.qwen3_teacher import tiny_qwen3_teacher_config
+from extent.weight_mapping import expected_qwen_shape
 
 
 def _tiny_arrays():

@@ -11,22 +11,22 @@ import jax.numpy as jnp
 import numpy as np
 from flax.core import freeze, unfreeze
 
-from singularity.calibration_data import WIKITEXT_REPO, WIKITEXT_REVISION, load_wikitext2_tokens
-from singularity.config import Mamba3Config
-from singularity.hardware import recommended_compute_dtype
-from singularity.layerwise_distillation import (
+from extent.calibration_data import WIKITEXT_REPO, WIKITEXT_REVISION, load_wikitext2_tokens
+from extent.config import Mamba3Config
+from extent.hardware import recommended_compute_dtype
+from extent.layerwise_distillation import (
     create_layerwise_train_step,
     create_teacher_mixer_runner,
 )
-from singularity.layers.common import RMSNorm
-from singularity.layers.mamba3 import Mamba3MIMO
-from singularity.mamba3_transplant import build_qwen3_to_mamba3_transplant_variants
-from singularity.optimizer import create_lion
-from singularity.qwen3_parity import ensure_layer_checkpoint, jax_layer_params, load_layer_arrays, parity_metrics
-from singularity.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
-from singularity.qwen_source import QWEN3_14B, validate_source_metadata
-from singularity.readout_calibration import fit_dual_ridge_readout
-from singularity.weight_mapping import QwenCheckpointReader
+from extent.layers.common import RMSNorm
+from extent.layers.mamba3 import Mamba3MIMO
+from extent.mamba3_transplant import build_qwen3_to_mamba3_transplant_variants
+from extent.optimizer import create_lion
+from extent.qwen3_parity import ensure_layer_checkpoint, jax_layer_params, load_layer_arrays, parity_metrics
+from extent.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
+from extent.qwen_source import QWEN3_14B, validate_source_metadata
+from extent.readout_calibration import fit_dual_ridge_readout
+from extent.weight_mapping import QwenCheckpointReader
 
 
 def _read_json(url: str) -> dict:
@@ -74,7 +74,7 @@ def _write_json_with_output_mirror(
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="Run a controlled one-layer Qwen3-to-Mamba3 distillation pilot.")
     parser.add_argument("--cache-dir", default="/kaggle/working/qwen3-layer-parity")
-    parser.add_argument("--dataset-cache-dir", default="/kaggle/working/singularity-calibration-cache")
+    parser.add_argument("--dataset-cache-dir", default="/kaggle/working/extent-calibration-cache")
     parser.add_argument("--layer-index", type=int, default=0)
     parser.add_argument("--sequence-length", type=int, default=32)
     parser.add_argument("--calibration-windows", type=int, default=8)

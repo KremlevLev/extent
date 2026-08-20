@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from singularity.qwen_source import QWEN3_14B, write_source_marker
+from extent.qwen_source import QWEN3_14B, write_source_marker
 
 
 def main(argv: list[str] | None = None) -> None:

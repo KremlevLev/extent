@@ -2,13 +2,13 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from singularity import HybridForCausalLM, tiny_config
-from singularity.estimate import parameter_count
-from singularity.layers.mamba3 import Mamba3MIMO, heavy_tail_activation
-from singularity.layers.mla import MultiHeadLatentAttention
-from singularity.optimizer import cast_grads_bf16, create_lion
-from singularity.sharding import create_v5e_mesh, parameter_partition_spec
-from singularity.weight_mapping import fit_matrix, truncated_svd
+from extent import HybridForCausalLM, tiny_config
+from extent.estimate import parameter_count
+from extent.layers.mamba3 import Mamba3MIMO, heavy_tail_activation
+from extent.layers.mla import MultiHeadLatentAttention
+from extent.optimizer import cast_grads_bf16, create_lion
+from extent.sharding import create_v5e_mesh, parameter_partition_spec
+from extent.weight_mapping import fit_matrix, truncated_svd
 
 
 def test_mamba3_shape_jit_and_grad():

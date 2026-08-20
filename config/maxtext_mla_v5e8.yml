@@ -1,5 +1,5 @@
 # Drop-in overrides for the MLA layers. MaxText does not yet supply Mamba-3;
-# singularity.model owns the hybrid decoder and mirrors these projection names.
+# extent.model owns the hybrid decoder and mirrors these projection names.
 attention_type: mla
 base_emb_dim: 5120
 base_num_query_heads: 40

@@ -1,13 +1,13 @@
 import jax.numpy as jnp
 import numpy as np
 
-from singularity.layers.common import RMSNorm
-from singularity.layers.rorope_bkv import Qwen3RoRoPEBKVAttention
-from singularity.qwen3_parity import layer_mapping_entries
-from singularity.qwen3_teacher import tiny_qwen3_teacher_config
-from singularity.rorope import rorope_attend
-from singularity.rorope_bkv_conversion import map_qwen3_to_rorope_bkv
-from singularity.weight_mapping import expected_qwen_shape
+from extent.layers.common import RMSNorm
+from extent.layers.rorope_bkv import Qwen3RoRoPEBKVAttention
+from extent.qwen3_parity import layer_mapping_entries
+from extent.qwen3_teacher import tiny_qwen3_teacher_config
+from extent.rorope import rorope_attend
+from extent.rorope_bkv_conversion import map_qwen3_to_rorope_bkv
+from extent.weight_mapping import expected_qwen_shape
 
 
 def _arrays(source):

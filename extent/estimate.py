@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from singularity.config import HybridConfig
+from extent.config import HybridConfig
 
 
 def parameter_count(config: HybridConfig) -> dict[str, int]:

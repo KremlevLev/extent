@@ -6,8 +6,8 @@ import flax.linen as nn
 import jax
 import jax.numpy as jnp
 
-from singularity.config import MLAConfig
-from singularity.layers.common import RMSNorm
+from extent.config import MLAConfig
+from extent.layers.common import RMSNorm
 
 
 def apply_partial_rope(

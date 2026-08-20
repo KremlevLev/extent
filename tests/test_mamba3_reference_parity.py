@@ -5,8 +5,8 @@ import jax.numpy as jnp
 import numpy as np
 import torch
 
-from singularity.config import tiny_config
-from singularity.layers.mamba3 import (
+from extent.config import tiny_config
+from extent.layers.mamba3 import (
     MAMBA3_REFERENCE_COMMIT,
     Mamba3MIMO,
     mamba3_reference_scan,

@@ -1,11 +1,11 @@
 import jax
 import jax.numpy as jnp
 
-from singularity import HybridForCausalLM, tiny_config
-from singularity.initialization import abstract_parameter_tree, optimizer_state_layout
-from singularity.optimizer import create_lion
-from singularity.preflight import build_preflight_report
-from singularity.sharding import create_v5e_mesh, named_sharding_tree
+from extent import HybridForCausalLM, tiny_config
+from extent.initialization import abstract_parameter_tree, optimizer_state_layout
+from extent.optimizer import create_lion
+from extent.preflight import build_preflight_report
+from extent.sharding import create_v5e_mesh, named_sharding_tree
 
 
 def test_shape_only_preflight_counts_and_memory():

@@ -5,16 +5,16 @@ import numpy as np
 import pytest
 from safetensors.numpy import save_file
 
-from singularity import HybridForCausalLM, tiny_config
-from singularity.config import load_config
-from singularity.qwen_source import (
+from extent import HybridForCausalLM, tiny_config
+from extent.config import load_config
+from extent.qwen_source import (
     QWEN3_14B,
     QwenSourceSpec,
     validate_source_marker,
     validate_source_metadata,
     write_source_marker,
 )
-from singularity.weight_mapping import (
+from extent.weight_mapping import (
     QwenCheckpointReader,
     direct_qwen_mappings,
     expected_qwen_shape,
@@ -106,7 +106,7 @@ def test_source_marker_pins_repo_and_revision(tmp_path):
     )
     write_source_marker(tmp_path, spec)
     validate_source_marker(tmp_path, spec)
-    marker = tmp_path / ".singularity_source.json"
+    marker = tmp_path / ".extent_source.json"
     marker.write_text(json.dumps({"repo_id": "test/qwen", "revision": "wrong"}))
     with pytest.raises(ValueError, match="source marker mismatch"):
         validate_source_marker(tmp_path, spec)

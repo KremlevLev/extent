@@ -8,13 +8,13 @@ import jax.numpy as jnp
 import numpy as np
 from flax import traverse_util
 
-from singularity import HybridForCausalLM, tiny_config
-from singularity.config import load_config
-from singularity.estimate import parameter_count, training_state_gib
-from singularity.hardware import recommended_compute_dtype
-from singularity.optimizer import create_lion
-from singularity.sharding import count_partitioned_arrays, create_v5e_mesh
-from singularity.train_step import initialize_sharded_runtime, shard_host_batch
+from extent import HybridForCausalLM, tiny_config
+from extent.config import load_config
+from extent.estimate import parameter_count, training_state_gib
+from extent.hardware import recommended_compute_dtype
+from extent.optimizer import create_lion
+from extent.sharding import count_partitioned_arrays, create_v5e_mesh
+from extent.train_step import initialize_sharded_runtime, shard_host_batch
 
 
 def main(argv: list[str] | None = None) -> None:

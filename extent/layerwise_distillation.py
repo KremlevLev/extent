@@ -6,7 +6,7 @@ import jax
 import jax.numpy as jnp
 import optax
 
-from singularity.optimizer import cast_grads_bf16, gradient_health
+from extent.optimizer import cast_grads_bf16, gradient_health
 
 
 def create_teacher_mixer_runner(module, positions, attention_mask) -> Callable:

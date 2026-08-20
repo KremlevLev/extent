@@ -5,16 +5,16 @@ import json
 from pathlib import Path
 from urllib import request
 
-from singularity import HybridForCausalLM
-from singularity.config import load_config
-from singularity.initialization import abstract_parameter_tree
-from singularity.qwen_source import (
+from extent import HybridForCausalLM
+from extent.config import load_config
+from extent.initialization import abstract_parameter_tree
+from extent.qwen_source import (
     QWEN3_14B,
     validate_source_marker,
     validate_source_metadata,
 )
-from singularity.qwen3_teacher import Qwen3ForCausalLM, Qwen3TeacherConfig
-from singularity.weight_mapping import (
+from extent.qwen3_teacher import Qwen3ForCausalLM, Qwen3TeacherConfig
+from extent.weight_mapping import (
     QwenCheckpointReader,
     validate_direct_mapping_plan,
     validate_local_direct_shapes,

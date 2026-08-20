@@ -4,15 +4,15 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from singularity import tiny_config
-from singularity.layers.mamba3 import Mamba3MIMO
-from singularity.mamba3_transplant import (
+from extent import tiny_config
+from extent.layers.mamba3 import Mamba3MIMO
+from extent.mamba3_transplant import (
     build_qwen3_to_mamba3_transplant_variants,
     mamba3_projection_slices,
 )
-from singularity.qwen3_parity import layer_mapping_entries
-from singularity.qwen3_teacher import tiny_qwen3_teacher_config
-from singularity.weight_mapping import expected_qwen_shape
+from extent.qwen3_parity import layer_mapping_entries
+from extent.qwen3_teacher import tiny_qwen3_teacher_config
+from extent.weight_mapping import expected_qwen_shape
 
 
 def _arrays(source):
