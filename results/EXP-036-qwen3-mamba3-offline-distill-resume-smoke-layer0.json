@@ -1,5 +1,5 @@
 {
-  "status": "in_progress",
+  "status": "complete",
   "method": "resumable_offline_Mamba3_activation_distillation",
   "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
   "activation_cache_manifest": "/content/exp036-cache/qwen3-layer0-offline-manifest.json",
@@ -13,8 +13,8 @@
   "sequence_length": 32,
   "training_windows": 1024,
   "unique_training_tokens": 32768,
-  "processed_training_tokens": 4096,
-  "step": 128,
+  "processed_training_tokens": 32768,
+  "step": 1024,
   "total_steps": 1024,
   "batch_windows": 1,
   "compute_dtype": "bfloat16",
@@ -34,10 +34,10 @@
   },
   "checkpoint": {
     "format_version": 1,
-    "step": 128,
+    "step": 1024,
     "checkpoint_file": "training_state.msgpack",
     "checkpoint_bytes": 250738397,
-    "checkpoint_sha256": "2ee7726327a00bfffda60af1cd77911a6687a21fdb4132cb99167f4e95bfe236",
+    "checkpoint_sha256": "d0ab8d317cb2a0130d02ab49da7bfe8ed0b2f673f9222eaff12ece617017aea7",
     "compatibility": {
       "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
       "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
@@ -91,20 +91,133 @@
       "rmse": 0.05639883285490306,
       "relative_l2": 0.5994821755724427,
       "cosine_similarity": 0.8003965711740976
+    },
+    {
+      "step": 192,
+      "max_abs": 4.01953125,
+      "mean_abs": 0.03556350885435462,
+      "rmse": 0.05496026267826526,
+      "relative_l2": 0.5841911290108385,
+      "cosine_similarity": 0.8125661077208675
+    },
+    {
+      "step": 256,
+      "max_abs": 3.98046875,
+      "mean_abs": 0.03518112766539052,
+      "rmse": 0.0540437776912112,
+      "relative_l2": 0.574449501638298,
+      "cosine_similarity": 0.8186426460481128
+    },
+    {
+      "step": 320,
+      "max_abs": 3.94140625,
+      "mean_abs": 0.034789063099460324,
+      "rmse": 0.05325990782429966,
+      "relative_l2": 0.5661174850096783,
+      "cosine_similarity": 0.8254726772559189
+    },
+    {
+      "step": 384,
+      "max_abs": 3.78515625,
+      "mean_abs": 0.034568143251842584,
+      "rmse": 0.052404997095325714,
+      "relative_l2": 0.5570303511492305,
+      "cosine_similarity": 0.830722473600538
+    },
+    {
+      "step": 448,
+      "max_abs": 3.71875,
+      "mean_abs": 0.03441206329726896,
+      "rmse": 0.051877119931902735,
+      "relative_l2": 0.5514193671209269,
+      "cosine_similarity": 0.8342325618621367
+    },
+    {
+      "step": 512,
+      "max_abs": 3.703125,
+      "mean_abs": 0.034304627774927085,
+      "rmse": 0.05153299227829778,
+      "relative_l2": 0.547761518473802,
+      "cosine_similarity": 0.8366950338395911
+    },
+    {
+      "step": 576,
+      "max_abs": 3.67578125,
+      "mean_abs": 0.03416426371316321,
+      "rmse": 0.05117398408531415,
+      "relative_l2": 0.5439454995655413,
+      "cosine_similarity": 0.8394427102723436
+    },
+    {
+      "step": 640,
+      "max_abs": 3.640625,
+      "mean_abs": 0.034113514991081326,
+      "rmse": 0.050965018706797705,
+      "relative_l2": 0.5417243362295084,
+      "cosine_similarity": 0.8406674547667665
+    },
+    {
+      "step": 704,
+      "max_abs": 3.6328125,
+      "mean_abs": 0.03406438151684634,
+      "rmse": 0.05082598065282084,
+      "relative_l2": 0.5402464539602096,
+      "cosine_similarity": 0.8420539808019217
+    },
+    {
+      "step": 768,
+      "max_abs": 3.6015625,
+      "mean_abs": 0.0340452093225045,
+      "rmse": 0.05065063285755232,
+      "relative_l2": 0.5383826232305942,
+      "cosine_similarity": 0.8427080171852727
+    },
+    {
+      "step": 832,
+      "max_abs": 3.6328125,
+      "mean_abs": 0.03400403646729113,
+      "rmse": 0.0506178516876672,
+      "relative_l2": 0.5380341811433067,
+      "cosine_similarity": 0.8433101254050366
+    },
+    {
+      "step": 896,
+      "max_abs": 3.625,
+      "mean_abs": 0.033991347224050464,
+      "rmse": 0.05058263005657743,
+      "relative_l2": 0.5376597985725319,
+      "cosine_similarity": 0.8435665233471232
+    },
+    {
+      "step": 960,
+      "max_abs": 3.6171875,
+      "mean_abs": 0.03398930104582574,
+      "rmse": 0.050557030036591,
+      "relative_l2": 0.5373876873443502,
+      "cosine_similarity": 0.8436076611988191
+    },
+    {
+      "step": 1024,
+      "max_abs": 3.6171875,
+      "mean_abs": 0.033983743301937964,
+      "rmse": 0.05054879436513531,
+      "relative_l2": 0.5373001476207134,
+      "cosine_similarity": 0.8436728119486346
     }
   ],
   "last_train_metrics": {
-    "grad_norm": 1.0647718906402588,
+    "grad_norm": 0.5573108196258545,
     "grads_finite": 1,
-    "loss": 0.3894953429698944,
-    "max_abs_grad": 0.0308837890625,
+    "loss": 0.25456857681274414,
+    "max_abs_grad": 0.0595703125,
     "nonfinite_grad_leaves": 0
   },
   "finite": true,
-  "passed": false,
+  "passed": true,
   "notes": [
     "No Qwen checkpoint or teacher module is loaded by this process.",
     "Training examples follow a deterministic per-epoch permutation recoverable from step and data seed.",
     "A completed checkpoint contains Mamba parameters and Lion optimizer state."
   ]
 }
+
