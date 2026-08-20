@@ -788,7 +788,7 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-037 — Downstream decoder shock from the recovered Mamba mixer
 
 - **Implementation commit title:** `feat: add recovered Mamba decoder shock evaluation`
-- **Status:** pre-registered; Colab TPU v5e-1 execution pending.
+- **Status:** completed on Colab TPU v5e-1; recovered Mamba wins both controls, but the pre-registered 20% primary-improvement gate fails.
 - **Question:** does the step-1,024 offline mixer checkpoint reduce functional error after Qwen's residual addition, post-attention RMSNorm, and frozen SwiGLU MLP, or is its mixer-level improvement absorbed or distorted by the decoder tail?
 - **Frozen evaluation data:** the 16 EXP-036 evaluation windows, disjoint from its eight readout-calibration and 1,024 training windows. The cache source revision, normalized-input hash, attention-target hash, sequence length, layer index, dtype, and checkpoint compatibility contract must all match before evaluation.
 - **Controlled arms:** `INIT-A-random` is the exact seed-123 canonical Mamba initialization; `INIT-A-readout-calibrated-step0` differs only by the ridge-fitted output projection used at the start of EXP-036; `OFFLINE-recovered-step1024` restores the complete final mixer parameters. All arms share the exact cached residual inputs and identical frozen Qwen post-attention norm/MLP weights.
@@ -796,6 +796,12 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Primary endpoint:** held-out decoder-output relative L2. The recovered checkpoint must beat both controls and improve decoder L2 by at least 20% relative to the readout-calibrated step-0 arm, with finite outputs. Mixer relative L2 must reproduce the EXP-036 step-0/final ordering within the same cache/dtype path.
 - **Secondary endpoints:** decoder cosine similarity, mixer relative L2/cosine, and the fraction of mixer improvement retained after the decoder tail. No language-model-quality claim is permitted from this single-layer diagnostic.
 - **Decision rule:** passing justifies preserving the activation-trained checkpoint as the current layer-0 transplant and advancing to an end-to-end loss-shock evaluation. Failure means mixer MSE is an inadequate recovery objective and must be changed before scaling tokens, context, or layer count.
+- **Mixer result (MEASURED):** relative L2 / cosine is `1.000087 / 0.002387` for canonical random, `0.785725 / 0.684613` for readout-calibrated step 0, and `0.537300 / 0.843673` for the recovered step-1,024 checkpoint. The recovered metrics exactly reproduce the EXP-036 endpoint on the same held-out cache.
+- **Decoder result (MEASURED):** relative L2 / cosine is `1.457133 / 0.648357` random, `0.730949 / 0.726604` calibrated step 0, and `0.609322 / 0.806318` recovered. Every output is finite and the execution pass flag is true.
+- **Primary-gate result:** recovered decoder L2 improves 16.64% over calibrated step 0 and 58.18% over canonical random. It beats both controls but misses the frozen minimum 20% improvement over calibrated step 0; therefore the scientific gate fails.
+- **Mechanism interpretation:** approximately 52.6% of the relative mixer-L2 improvement over calibrated step 0 survives after the nonlinear frozen decoder tail. Activation matching transfers downstream, but less strongly than required, and final decoder L2 `0.609322` remains far from functional equivalence.
+- **Decision:** retain the step-1,024 checkpoint as evidence that trainable activation transfer works, not as an accepted production transplant. Before end-to-end or multi-layer scaling, change the objective to include the frozen decoder-tail output (mixer loss plus decoder-output loss) and compare it against mixer-only distillation under the same cache and token budget.
+- **Raw artifact:** `results/EXP-037-qwen3-mamba3-decoder-shock-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 

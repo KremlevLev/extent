@@ -1,0 +1,79 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "method": "offline_recovered_Mamba3_full_decoder_shock",
+  "activation_cache_manifest": "/content/exp036-cache/qwen3-layer0-offline-manifest.json",
+  "resolved_activation_artifacts": {
+    "token_ids": "/content/exp036-cache/qwen3-layer0-activation-cache-token-ids.npy",
+    "residual_input": "/content/exp036-cache/qwen3-layer0-activation-cache-residual-input.npy",
+    "normalized_input": "/content/exp036-cache/qwen3-layer0-activation-cache-normalized-input.npy",
+    "attention_target": "/content/exp036-cache/qwen3-layer0-activation-cache-attention-target.npy"
+  },
+  "target_layer": 0,
+  "sequence_length": 32,
+  "evaluation_windows": 16,
+  "compute_dtype": "bfloat16",
+  "jax_backend": "tpu",
+  "checkpoint_step": 1024,
+  "checkpoint_sha256": "d0ab8d317cb2a0130d02ab49da7bfe8ed0b2f673f9222eaff12ece617017aea7",
+  "readout_calibration_relative_l2": 0.08914060890674591,
+  "variants": {
+    "INIT-A-random": {
+      "mixer_output": {
+        "max_abs": 5.2180023193359375,
+        "mean_abs": 0.041386989125437125,
+        "rmse": 0.09408739849927533,
+        "relative_l2": 1.0000866239804374,
+        "cosine_similarity": 0.0023871844179495453
+      },
+      "decoder_output": {
+        "max_abs": 25.1875,
+        "mean_abs": 0.22130608979404442,
+        "rmse": 0.3651904482394473,
+        "relative_l2": 1.457132599269832,
+        "cosine_similarity": 0.6483572138322306
+      },
+      "finite": true
+    },
+    "INIT-A-readout-calibrated-step0": {
+      "mixer_output": {
+        "max_abs": 5.375,
+        "mean_abs": 0.044819289536241855,
+        "rmse": 0.07392043000953823,
+        "relative_l2": 0.785725128663119,
+        "cosine_similarity": 0.6846133118437542
+      },
+      "decoder_output": {
+        "max_abs": 15.3125,
+        "mean_abs": 0.11945171131199625,
+        "rmse": 0.1831924323169881,
+        "relative_l2": 0.7309491974817256,
+        "cosine_similarity": 0.7266035496161989
+      },
+      "finite": true
+    },
+    "OFFLINE-recovered-step1024": {
+      "mixer_output": {
+        "max_abs": 3.6171875,
+        "mean_abs": 0.033983743301937964,
+        "rmse": 0.05054879436513531,
+        "relative_l2": 0.5373001476207134,
+        "cosine_similarity": 0.8436728119486346
+      },
+      "decoder_output": {
+        "max_abs": 7.125,
+        "mean_abs": 0.09603838044338583,
+        "rmse": 0.15270978169077407,
+        "relative_l2": 0.6093215258004392,
+        "cosine_similarity": 0.8063179746250629
+      },
+      "finite": true
+    }
+  },
+  "passed": true,
+  "notes": [
+    "Every arm uses the identical frozen Qwen residual, post-attention RMSNorm, and MLP path.",
+    "Teacher decoder targets are reconstructed from cached exact attention outputs plus frozen Qwen decoder-tail weights.",
+    "The evaluation split is disjoint from readout calibration and offline training windows."
+  ]
+}
+
