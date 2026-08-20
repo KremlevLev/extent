@@ -785,6 +785,18 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Next gate:** preserve the completed mixer checkpoint and inject it into a frozen Qwen decoder-layer evaluation. Compare original attention, canonical random Mamba, readout-calibrated step-0 Mamba, and the step-1,024 offline checkpoint on decoder-output error and language-model loss shock. This determines whether lower mixer L2 transfers through the residual/MLP path before spending compute on longer context or more layers.
 - **Raw artifact:** `results/EXP-036-qwen3-mamba3-offline-distill-resume-smoke-layer0.json`.
 
+### EXP-037 — Downstream decoder shock from the recovered Mamba mixer
+
+- **Implementation commit title:** `feat: add recovered Mamba decoder shock evaluation`
+- **Status:** pre-registered; Colab TPU v5e-1 execution pending.
+- **Question:** does the step-1,024 offline mixer checkpoint reduce functional error after Qwen's residual addition, post-attention RMSNorm, and frozen SwiGLU MLP, or is its mixer-level improvement absorbed or distorted by the decoder tail?
+- **Frozen evaluation data:** the 16 EXP-036 evaluation windows, disjoint from its eight readout-calibration and 1,024 training windows. The cache source revision, normalized-input hash, attention-target hash, sequence length, layer index, dtype, and checkpoint compatibility contract must all match before evaluation.
+- **Controlled arms:** `INIT-A-random` is the exact seed-123 canonical Mamba initialization; `INIT-A-readout-calibrated-step0` differs only by the ridge-fitted output projection used at the start of EXP-036; `OFFLINE-recovered-step1024` restores the complete final mixer parameters. All arms share the exact cached residual inputs and identical frozen Qwen post-attention norm/MLP weights.
+- **Targets:** mixer output is compared with cached frozen-Qwen attention output. Decoder output is reconstructed by applying the same frozen Qwen residual/MLP tail once to the teacher attention target and once to each replacement output.
+- **Primary endpoint:** held-out decoder-output relative L2. The recovered checkpoint must beat both controls and improve decoder L2 by at least 20% relative to the readout-calibrated step-0 arm, with finite outputs. Mixer relative L2 must reproduce the EXP-036 step-0/final ordering within the same cache/dtype path.
+- **Secondary endpoints:** decoder cosine similarity, mixer relative L2/cosine, and the fraction of mixer improvement retained after the decoder tail. No language-model-quality claim is permitted from this single-layer diagnostic.
+- **Decision rule:** passing justifies preserving the activation-trained checkpoint as the current layer-0 transplant and advancing to an end-to-end loss-shock evaluation. Failure means mixer MSE is an inadequate recovery objective and must be changed before scaling tokens, context, or layer count.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
