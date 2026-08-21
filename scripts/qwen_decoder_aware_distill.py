@@ -104,7 +104,11 @@ def _evaluate(
     }
 
 
-def main(argv: list[str] | None = None) -> dict:
+def main(
+    argv: list[str] | None = None,
+    *,
+    return_endpoint_params: bool = False,
+) -> dict | tuple[dict, dict, dict[str, dict]]:
     parser = argparse.ArgumentParser(
         description="Compare mixer-only and decoder-aware offline Mamba distillation."
     )
@@ -245,6 +249,7 @@ def main(argv: list[str] | None = None) -> dict:
         "JOINT-MIXER-DECODER": args.decoder_loss_weight,
     }
     results = {}
+    endpoint_params = {}
     all_finite = True
     for name, decoder_weight in arms.items():
         params = initial_params
@@ -340,6 +345,8 @@ def main(argv: list[str] | None = None) -> dict:
             "max_grad_norm": max_grad_norm,
             "finite": finite,
         }
+        if return_endpoint_params:
+            endpoint_params[name] = params
         all_finite = all_finite and finite
 
     mixer_final = results["MIXER-ONLY"]["evaluations"][str(args.total_steps)]
@@ -407,6 +414,8 @@ def main(argv: list[str] | None = None) -> dict:
         if scientific_gate_passed
         else "DECODER-AWARE-DISTILL-GATE-FAIL"
     )
+    if return_endpoint_params:
+        return result, initial_params, endpoint_params
     return result
 
 
