@@ -826,13 +826,20 @@ Thresholds will be frozen before final experiments after pilot variance is known
 ### EXP-039 — Three-seed decoder-aware confirmation
 
 - **Implementation commit title:** `feat: add multi-seed decoder-aware confirmation`
-- **Status:** pre-registered; Colab TPU v5e-1 execution pending.
+- **Status:** completed on Colab TPU v5e-1; the pre-registered multi-seed confirmation gate passes.
 - **Question:** is the EXP-038 decoder-aware advantage reproducible across initialization seeds, or was its narrow 10.504% gate pass specific to seed 123?
 - **Pairing:** seeds `123/456/789`. Within each seed, mixer-only and equal-weight joint arms start from the identical seed-specific random recurrence plus independently fitted readout, receive the exact same deterministic training-window order, and share all frozen Qwen tail parameters. Across seeds, data, optimizer schedule, and evaluation windows remain fixed.
 - **Data and compute:** the verified EXP-038 cache with eight calibration, 1,024 training, and 16 evaluation windows of length 32; one 32,768-token pass per arm; six optimizer runs and 196,608 optimizer-visible tokens total; BF16; Lion `3e-5`; checkpoints 0/128/256/512/1024.
 - **Primary confirmation gate:** mean paired decoder-L2 improvement of joint over mixer-only at step 1,024 must be at least 10%; joint must win at least two of three paired seeds; mixer-output L2 degradation must not exceed 10% in any seed; step-0 paired outputs must be identical; and every gradient/output must be finite.
 - **Secondary endpoints:** per-seed trajectories, mean and population standard deviation of endpoint decoder L2 and paired improvement, decoder cosine, mixer degradation, and maximum gradient norm. EXP-038 seed 123 is rerun inside this harness rather than copied into the aggregate.
 - **Decision rule:** passing establishes the equal-weight decoder-aware objective as the reproducible layer-0 method and authorizes a streamed end-to-end language-model loss-shock experiment. Failure keeps EXP-038 as a one-seed positive result and blocks full-model escalation until a newly pre-registered objective is tested.
+- **Per-seed endpoint (MEASURED):** mixer-only versus joint decoder relative L2 is `0.609322 → 0.545319` for seed 123, `0.612050 → 0.540556` for seed 456, and `0.608451 → 0.544558` for seed 789. Paired improvements are 10.504%, 11.681%, and 10.501%, respectively; joint wins all three seeds.
+- **Aggregate endpoint (MEASURED):** mixer-only decoder L2 is `0.609941 +/- 0.001534`; joint is `0.543478 +/- 0.002089`. Mean paired improvement is 10.895% with population standard deviation 0.556 percentage points, exceeding the frozen 10% requirement.
+- **Mixer tradeoff (MEASURED):** joint mixer-L2 degradation is 2.670%, 3.222%, and 3.889% across seeds; the maximum 3.889% is well below the per-seed 10% limit. The mean degradation is 3.260%.
+- **Correctness result:** step-0 paired outputs are identical for all seeds; every gradient and evaluation output is finite; all three single-seed execution flags pass; aggregate `scientific_gate_passed=true` and `passed=true`.
+- **Decision:** equal-weight decoder-aware activation matching is accepted as the reproducible layer-0 transplant objective. The next experiment must measure whether this local advantage survives frozen propagation through the complete Qwen3-14B network and improves end-to-end next-token loss relative to mixer-only and calibrated step-0 controls.
+- **Scale boundary:** confirmation covers initialization variance but still uses one data sample, layer 0, sequence length 32, and one 32,768-token pass per arm. It does not establish robustness across layers, corpora, context lengths, or full-model recovery.
+- **Raw artifact:** `results/EXP-039-qwen3-mamba3-multiseed-decoder-aware-layer0.json`.
 
 ## 8. Reasoning SFT boundary
 
