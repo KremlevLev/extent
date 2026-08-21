@@ -104,7 +104,7 @@ def _evaluate(
     }
 
 
-def main(argv: list[str] | None = None) -> None:
+def main(argv: list[str] | None = None) -> dict:
     parser = argparse.ArgumentParser(
         description="Compare mixer-only and decoder-aware offline Mamba distillation."
     )
@@ -407,6 +407,7 @@ def main(argv: list[str] | None = None) -> None:
         if scientific_gate_passed
         else "DECODER-AWARE-DISTILL-GATE-FAIL"
     )
+    return result
 
 
 if __name__ == "__main__":

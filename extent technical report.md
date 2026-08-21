@@ -823,6 +823,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Boundary:** this is one layer, one seed, length 32, and a single 32,768-token pass. Passing establishes a useful objective, not full-model recovery, long-context quality, or inference speed.
 - **Raw artifact:** `results/EXP-038-qwen3-mamba3-decoder-aware-layer0.json`.
 
+### EXP-039 — Three-seed decoder-aware confirmation
+
+- **Implementation commit title:** `feat: add multi-seed decoder-aware confirmation`
+- **Status:** pre-registered; Colab TPU v5e-1 execution pending.
+- **Question:** is the EXP-038 decoder-aware advantage reproducible across initialization seeds, or was its narrow 10.504% gate pass specific to seed 123?
+- **Pairing:** seeds `123/456/789`. Within each seed, mixer-only and equal-weight joint arms start from the identical seed-specific random recurrence plus independently fitted readout, receive the exact same deterministic training-window order, and share all frozen Qwen tail parameters. Across seeds, data, optimizer schedule, and evaluation windows remain fixed.
+- **Data and compute:** the verified EXP-038 cache with eight calibration, 1,024 training, and 16 evaluation windows of length 32; one 32,768-token pass per arm; six optimizer runs and 196,608 optimizer-visible tokens total; BF16; Lion `3e-5`; checkpoints 0/128/256/512/1024.
+- **Primary confirmation gate:** mean paired decoder-L2 improvement of joint over mixer-only at step 1,024 must be at least 10%; joint must win at least two of three paired seeds; mixer-output L2 degradation must not exceed 10% in any seed; step-0 paired outputs must be identical; and every gradient/output must be finite.
+- **Secondary endpoints:** per-seed trajectories, mean and population standard deviation of endpoint decoder L2 and paired improvement, decoder cosine, mixer degradation, and maximum gradient norm. EXP-038 seed 123 is rerun inside this harness rather than copied into the aggregate.
+- **Decision rule:** passing establishes the equal-weight decoder-aware objective as the reproducible layer-0 method and authorizes a streamed end-to-end language-model loss-shock experiment. Failure keeps EXP-038 as a one-seed positive result and blocks full-model escalation until a newly pre-registered objective is tested.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.
