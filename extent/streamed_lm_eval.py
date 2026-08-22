@@ -47,12 +47,12 @@ def hidden_relative_l2(reference: np.ndarray, candidate: np.ndarray) -> float:
     return float(np.linalg.norm((candidate - reference).reshape(-1)) / denominator)
 
 
-def next_token_statistics(
+def next_token_window_statistics(
     logits: jax.Array,
     token_ids: jax.Array,
     valid_windows: jax.Array | None = None,
 ) -> tuple[jax.Array, jax.Array, jax.Array]:
-    """Return summed NLL, token count, and top-1 hits for within-window labels."""
+    """Return per-window NLL sums, label counts, and top-1 hits."""
     if logits.ndim != 3 or token_ids.ndim != 2:
         raise ValueError("logits and token IDs must have batch/sequence axes")
     if logits.shape[:2] != token_ids.shape or token_ids.shape[1] < 2:
@@ -69,13 +69,30 @@ def next_token_statistics(
         valid_windows = jnp.ones((token_ids.shape[0],), dtype=jnp.bool_)
     mask = jnp.broadcast_to(valid_windows[:, None], losses.shape)
     return (
-        jnp.sum(jnp.where(mask, losses, 0.0), dtype=jnp.float32),
-        jnp.sum(mask, dtype=jnp.int32),
-        jnp.sum(jnp.where(mask, correct, False), dtype=jnp.int32),
+        jnp.sum(jnp.where(mask, losses, 0.0), axis=1, dtype=jnp.float32),
+        jnp.sum(mask, axis=1, dtype=jnp.int32),
+        jnp.sum(jnp.where(mask, correct, False), axis=1, dtype=jnp.int32),
     )
 
 
-def create_lm_metrics_runner(norm_module, *, data_parallel_devices=None) -> Callable:
+def next_token_statistics(
+    logits: jax.Array,
+    token_ids: jax.Array,
+    valid_windows: jax.Array | None = None,
+) -> tuple[jax.Array, jax.Array, jax.Array]:
+    """Return summed NLL, token count, and top-1 hits for within-window labels."""
+    losses, counts, correct = next_token_window_statistics(
+        logits, token_ids, valid_windows
+    )
+    return jnp.sum(losses), jnp.sum(counts), jnp.sum(correct)
+
+
+def create_lm_metrics_runner(
+    norm_module,
+    *,
+    data_parallel_devices=None,
+    per_window: bool = False,
+) -> Callable:
     """Compile final RMSNorm + lm_head NLL without returning full logits to host."""
 
     def apply(norm_params, lm_head_kernel, hidden, token_ids, valid_windows):
@@ -86,7 +103,12 @@ def create_lm_metrics_runner(norm_module, *, data_parallel_devices=None) -> Call
             lm_head_kernel,
             preferred_element_type=jnp.bfloat16,
         )
-        return next_token_statistics(logits, token_ids, valid_windows)
+        statistics = (
+            next_token_window_statistics
+            if per_window
+            else next_token_statistics
+        )
+        return statistics(logits, token_ids, valid_windows)
 
     if data_parallel_devices:
         return jax.pmap(
@@ -234,4 +256,65 @@ def aggregate_multiseed_end_to_end(
         "reference_exp040_reproduced": reference_reproduced,
         "reference_exp040_required": reference_required,
         "scientific_gate_passed": passed,
+    }
+
+
+def bootstrap_excess_nll_recovery(
+    *,
+    original_window_nll: list[float],
+    seed_window_nll: Mapping[str, Mapping[str, list[float]]],
+    bootstrap_samples: int = 2000,
+    bootstrap_seed: int = 20260823,
+    confidence: float = 0.95,
+) -> dict:
+    """Paired window bootstrap of mean three-seed excess-NLL recovery."""
+    original = np.asarray(original_window_nll, dtype=np.float64)
+    if original.ndim != 1 or len(original) < 2:
+        raise ValueError("bootstrap requires at least two original windows")
+    if len(seed_window_nll) != 3:
+        raise ValueError("bootstrap requires exactly three seed groups")
+    if bootstrap_samples < 100:
+        raise ValueError("bootstrap_samples must be at least 100")
+    if not 0.0 < confidence < 1.0:
+        raise ValueError("confidence must be in (0, 1)")
+    paired = {}
+    for seed, metrics in seed_window_nll.items():
+        mixer = np.asarray(metrics["mixer_only"], dtype=np.float64)
+        joint = np.asarray(metrics["joint"], dtype=np.float64)
+        if mixer.shape != original.shape or joint.shape != original.shape:
+            raise ValueError("all bootstrap branches must share the window shape")
+        paired[str(seed)] = (mixer, joint)
+    rng = np.random.default_rng(bootstrap_seed)
+    indices = rng.integers(
+        0, len(original), size=(bootstrap_samples, len(original))
+    )
+    original_means = np.mean(original[indices], axis=1)
+    seed_recoveries = []
+    for mixer, joint in paired.values():
+        mixer_means = np.mean(mixer[indices], axis=1)
+        joint_means = np.mean(joint[indices], axis=1)
+        excess = mixer_means - original_means
+        recovery = np.where(
+            excess > 0,
+            (mixer_means - joint_means) / excess,
+            np.nan,
+        )
+        seed_recoveries.append(recovery)
+    mean_recovery = np.nanmean(np.stack(seed_recoveries, axis=1), axis=1)
+    valid = mean_recovery[np.isfinite(mean_recovery)]
+    if len(valid) != bootstrap_samples:
+        raise ValueError("bootstrap produced non-positive mixer excess NLL")
+    alpha = (1.0 - confidence) / 2.0
+    return {
+        "method": "paired_window_percentile_bootstrap",
+        "bootstrap_samples": bootstrap_samples,
+        "bootstrap_seed": bootstrap_seed,
+        "confidence": confidence,
+        "evaluation_windows": len(original),
+        "mean_recovery_bootstrap_mean": float(np.mean(valid)),
+        "mean_recovery_confidence_interval": [
+            float(np.quantile(valid, alpha)),
+            float(np.quantile(valid, 1.0 - alpha)),
+        ],
+        "finite_samples": int(len(valid)),
     }

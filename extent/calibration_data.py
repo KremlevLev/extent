@@ -8,7 +8,11 @@ import numpy as np
 
 WIKITEXT_REPO = "Salesforce/wikitext"
 WIKITEXT_REVISION = "b08601e04326c79dfdd32d625aee71d232d685c3"
-WIKITEXT_TRAIN_FILE = "wikitext-2-raw-v1/train-00000-of-00001.parquet"
+WIKITEXT_FILES = {
+    split: f"wikitext-2-raw-v1/{split}-00000-of-00001.parquet"
+    for split in ("train", "validation", "test")
+}
+WIKITEXT_TRAIN_FILE = WIKITEXT_FILES["train"]
 
 
 def pack_tokenized_texts(
@@ -50,6 +54,7 @@ def load_wikitext2_tokens(
     tokenizer_repo: str,
     tokenizer_revision: str,
     token_offset: int = 0,
+    dataset_split: str = "train",
 ) -> np.ndarray:
     """Load a pinned WikiText-2 train slice with a pinned tokenizer."""
     from huggingface_hub import hf_hub_download
@@ -58,11 +63,15 @@ def load_wikitext2_tokens(
 
     cache_dir = Path(cache_dir)
     cache_dir.mkdir(parents=True, exist_ok=True)
+    if dataset_split not in WIKITEXT_FILES:
+        raise ValueError(
+            f"unsupported WikiText-2 split: {dataset_split}"
+        )
     dataset_file = hf_hub_download(
         repo_id=WIKITEXT_REPO,
         repo_type="dataset",
         revision=WIKITEXT_REVISION,
-        filename=WIKITEXT_TRAIN_FILE,
+        filename=WIKITEXT_FILES[dataset_split],
         cache_dir=cache_dir,
     )
     tokenizer = AutoTokenizer.from_pretrained(

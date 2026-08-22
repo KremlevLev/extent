@@ -116,6 +116,7 @@ def main(
     parser.add_argument("--activation-cache-dir")
     parser.add_argument("--evaluation-cache-manifest")
     parser.add_argument("--evaluation-cache-dir")
+    parser.add_argument("--allow-cross-split-evaluation", action="store_true")
     parser.add_argument("--qwen-cache-dir", default="/content/qwen3-layer0-weights")
     parser.add_argument("--seeds", default="123,456,789")
     parser.add_argument("--data-seed", type=int, default=20260820)
@@ -168,6 +169,8 @@ def main(
             single_args.extend(
                 ["--evaluation-cache-dir", args.evaluation_cache_dir]
             )
+        if args.allow_cross_split_evaluation:
+            single_args.append("--allow-cross-split-evaluation")
         if args.skip_hash_verification:
             single_args.append("--skip-hash-verification")
         print(f"EXP-039 seed={seed} START")

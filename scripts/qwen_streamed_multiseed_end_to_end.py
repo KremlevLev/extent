@@ -45,6 +45,7 @@ from extent.qwen3_teacher import Qwen3DecoderLayer, Qwen3TeacherConfig
 from extent.qwen_source import QWEN3_14B, validate_source_metadata
 from extent.streamed_lm_eval import (
     aggregate_multiseed_end_to_end,
+    bootstrap_excess_nll_recovery,
     create_lm_metrics_runner,
     full_model_shard_last_use,
     hidden_relative_l2,
@@ -155,7 +156,7 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--reference-nll-tolerance", type=float, default=0.02)
     parser.add_argument(
         "--protocol",
-        choices=("exp041", "exp042-fresh"),
+        choices=("exp041", "exp042-fresh", "exp043-validation"),
         default="exp041",
     )
     parser.add_argument("--required-recovery-fraction", type=float)
@@ -187,9 +188,9 @@ def main(argv: list[str] | None = None) -> dict:
     evaluation_arrays = arrays
     evaluation_paths = paths
     evaluation_slice = _slice(manifest["window_layout"], "evaluation")
-    if args.protocol == "exp042-fresh":
+    if args.protocol in {"exp042-fresh", "exp043-validation"}:
         if not args.evaluation_cache_manifest:
-            raise ValueError("EXP-042 requires an external evaluation cache")
+            raise ValueError("the selected protocol requires an external evaluation cache")
         evaluation_manifest, evaluation_arrays, evaluation_paths = (
             load_activation_cache(
                 args.evaluation_cache_manifest,
@@ -197,16 +198,31 @@ def main(argv: list[str] | None = None) -> dict:
                 verify_hashes=not args.skip_hash_verification,
             )
         )
-        evaluation_slice = validate_external_evaluation_cache(
-            manifest,
-            evaluation_manifest,
-            required_token_offset=65_536,
-            required_evaluation_windows=128,
-        )
+        if args.protocol == "exp042-fresh":
+            evaluation_slice = validate_external_evaluation_cache(
+                manifest,
+                evaluation_manifest,
+                required_token_offset=65_536,
+                required_evaluation_windows=128,
+                required_dataset_split="train",
+            )
+        else:
+            evaluation_slice = validate_external_evaluation_cache(
+                manifest,
+                evaluation_manifest,
+                required_token_offset=0,
+                required_evaluation_windows=256,
+                required_dataset_split="validation",
+                allow_cross_split=True,
+            )
     evaluation_windows = evaluation_slice.stop - evaluation_slice.start
     required_recovery = args.required_recovery_fraction
     if required_recovery is None:
-        required_recovery = 0.25 if args.protocol == "exp042-fresh" else 0.10
+        required_recovery = {
+            "exp041": 0.10,
+            "exp042-fresh": 0.25,
+            "exp043-validation": 0.20,
+        }[args.protocol]
     if not 0.0 <= required_recovery <= 1.0:
         raise ValueError("required recovery fraction must be in [0, 1]")
     dtype_decision = recommended_compute_dtype(requested=args.compute_dtype)
@@ -217,7 +233,11 @@ def main(argv: list[str] | None = None) -> dict:
     parallel_devices = devices if args.data_parallel else None
     names = branch_names(seeds, args.total_steps)
 
-    experiment_id = "exp042" if args.protocol == "exp042-fresh" else "exp041"
+    experiment_id = {
+        "exp041": "exp041",
+        "exp042-fresh": "exp042",
+        "exp043-validation": "exp043",
+    }[args.protocol]
     training_json = (
         Path(args.output_dir) / f"{experiment_id}-training-confirmation.json"
     )
@@ -249,6 +269,8 @@ def main(argv: list[str] | None = None) -> dict:
         training_args.extend(
             ["--evaluation-cache-dir", args.evaluation_cache_dir]
         )
+    if args.protocol == "exp043-validation":
+        training_args.append("--allow-cross-split-evaluation")
     if args.skip_hash_verification:
         training_args.append("--skip-hash-verification")
     training_result, initial_by_seed, endpoint_by_seed = train_multiseed(
@@ -444,8 +466,11 @@ def main(argv: list[str] | None = None) -> dict:
         reader.read("lm_head.weight").T, dtype=compute_dtype
     )
     norm = RMSNorm(source.hidden_size, source.rms_norm_eps, jnp.float32)
+    collect_window_nll = args.protocol == "exp043-validation"
     lm_runner = create_lm_metrics_runner(
-        norm, data_parallel_devices=parallel_devices
+        norm,
+        data_parallel_devices=parallel_devices,
+        per_window=collect_window_nll,
     )
     token_ids = np.asarray(
         evaluation_arrays["token_ids"][evaluation_slice], dtype=np.int32
@@ -465,6 +490,7 @@ def main(argv: list[str] | None = None) -> dict:
             devices=parallel_devices,
             per_device_windows=args.per_device_windows,
             compute_dtype=compute_dtype,
+            return_window_nll=collect_window_nll,
         )
     if args.prune_consumed_shards:
         removed_shards.extend(
@@ -486,7 +512,11 @@ def main(argv: list[str] | None = None) -> dict:
     else:
         reproduction = {
             "required": False,
-            "reason": "EXP-042 evaluates a disjoint locked token range",
+            "reason": (
+                "EXP-042 evaluates a disjoint locked token range"
+                if args.protocol == "exp042-fresh"
+                else "EXP-043 evaluates the pinned validation split"
+            ),
             "passed": True,
         }
     per_seed_metrics = {}
@@ -505,22 +535,50 @@ def main(argv: list[str] | None = None) -> dict:
         reference_required=args.protocol == "exp041",
         required_recovery_fraction=required_recovery,
     )
+    bootstrap = None
+    if args.protocol == "exp043-validation":
+        bootstrap = bootstrap_excess_nll_recovery(
+            original_window_nll=lm_metrics["ORIGINAL-CACHED-QWEN"][
+                "window_mean_nll"
+            ],
+            seed_window_nll={
+                str(seed): {
+                    "mixer_only": lm_metrics[
+                        f"SEED-{seed}-MIXER-ONLY-STEP{args.total_steps}"
+                    ]["window_mean_nll"],
+                    "joint": lm_metrics[
+                        f"SEED-{seed}-JOINT-STEP{args.total_steps}"
+                    ]["window_mean_nll"],
+                }
+                for seed in seeds
+            },
+        )
     all_finite = bool(
         training_result["passed"]
         and lm_metrics["ORIGINAL-CACHED-QWEN"]["finite"]
         and aggregate["all_finite"]
     )
-    scientific_gate_passed = bool(
-        training_result["scientific_gate_passed"]
-        and aggregate["scientific_gate_passed"]
-    )
+    if args.protocol == "exp043-validation":
+        scientific_gate_passed = bool(
+            all_finite
+            and aggregate["scientific_gate_passed"]
+            and bootstrap is not None
+            and bootstrap["mean_recovery_confidence_interval"][0] >= 0.10
+        )
+    else:
+        scientific_gate_passed = bool(
+            training_result["scientific_gate_passed"]
+            and aggregate["scientific_gate_passed"]
+        )
     result = {
         "source": source_name,
         "dataset": manifest.get("dataset"),
         "method": (
-            "locked_fresh_text_three_seed_streamed_end_to_end_confirmation"
-            if args.protocol == "exp042-fresh"
-            else "three_seed_streamed_end_to_end_Qwen3_layer0_Mamba_confirmation"
+            {
+                "exp041": "three_seed_streamed_end_to_end_Qwen3_layer0_Mamba_confirmation",
+                "exp042-fresh": "locked_fresh_text_three_seed_streamed_end_to_end_confirmation",
+                "exp043-validation": "cross_split_end_to_end_NLL_adjudication",
+            }[args.protocol]
         ),
         "protocol": args.protocol,
         "activation_cache_manifest": str(
@@ -539,6 +597,9 @@ def main(argv: list[str] | None = None) -> dict:
         },
         "evaluation_token_offset": evaluation_manifest.get("token_offset", 0),
         "evaluation_token_range": evaluation_manifest.get("token_range"),
+        "evaluation_dataset_split": evaluation_manifest.get(
+            "dataset_split", "train"
+        ),
         "reference_exp040_json": (
             str(reference_path.resolve()) if args.protocol == "exp041" else None
         ),
@@ -559,7 +620,12 @@ def main(argv: list[str] | None = None) -> dict:
         "lm_metrics": lm_metrics,
         "reference_reproduction": reproduction,
         "required_recovery_fraction": required_recovery,
+        "required_bootstrap_lower_bound": (
+            0.10 if args.protocol == "exp043-validation" else None
+        ),
+        "local_training_gate_required": args.protocol != "exp043-validation",
         "aggregate": aggregate,
+        "bootstrap": bootstrap,
         "prune_consumed_shards": args.prune_consumed_shards,
         "removed_checkpoint_shards": sorted(set(removed_shards)),
         "scientific_gate_passed": scientific_gate_passed,
@@ -568,9 +634,11 @@ def main(argv: list[str] | None = None) -> dict:
             "The original branch is shared; each seed contributes calibrated, mixer-only, and joint layer-zero branches.",
             "All ten branches stream together through identical frozen Qwen layers 1-39, final norm, and lm_head.",
             (
-                "The external evaluation cache is disjoint from the training cache and locked to tokens [65536, 69632)."
-                if args.protocol == "exp042-fresh"
-                else "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance."
+                {
+                    "exp041": "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance.",
+                    "exp042-fresh": "The external evaluation cache is disjoint from the training cache and locked to tokens [65536, 69632).",
+                    "exp043-validation": "The primary endpoint uses the pinned WikiText-2 validation split; local decoder L2 is diagnostic only.",
+                }[args.protocol]
             ),
             "passed reports numerical execution; scientific_gate_passed also requires the local training and full-depth aggregate gates.",
         ],
@@ -585,9 +653,11 @@ def main(argv: list[str] | None = None) -> dict:
     if not all_finite:
         raise SystemExit("MULTISEED-STREAMED-END-TO-END-NONFINITE")
     label = (
-        "LOCKED-FRESH-TEXT"
-        if args.protocol == "exp042-fresh"
-        else "MULTISEED-STREAMED-END-TO-END"
+        {
+            "exp041": "MULTISEED-STREAMED-END-TO-END",
+            "exp042-fresh": "LOCKED-FRESH-TEXT",
+            "exp043-validation": "CROSS-SPLIT-NLL-ADJUDICATION",
+        }[args.protocol]
     )
     print(f"{label}-{'PASS' if scientific_gate_passed else 'GATE-FAIL'}")
     return result

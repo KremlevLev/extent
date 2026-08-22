@@ -1,6 +1,6 @@
 import numpy as np
 
-from extent.calibration_data import pack_tokenized_texts
+from extent.calibration_data import WIKITEXT_FILES, pack_tokenized_texts
 
 
 class _Tokenizer:
@@ -21,3 +21,9 @@ def test_pack_tokenized_texts_supports_locked_token_offset():
         _Tokenizer(), ["ab", "cd", "ef"], 4, token_offset=3
     )
     np.testing.assert_array_equal(tokens, [99, 100, 99, 101])
+
+
+def test_wikitext_split_files_are_pinned_explicitly():
+    assert WIKITEXT_FILES["validation"] == (
+        "wikitext-2-raw-v1/validation-00000-of-00001.parquet"
+    )

@@ -119,6 +119,7 @@ def main(
     parser.add_argument("--activation-cache-dir")
     parser.add_argument("--evaluation-cache-manifest")
     parser.add_argument("--evaluation-cache-dir")
+    parser.add_argument("--allow-cross-split-evaluation", action="store_true")
     parser.add_argument("--qwen-cache-dir", default="/content/qwen3-layer0-weights")
     parser.add_argument("--total-steps", type=int, default=1024)
     parser.add_argument("--checkpoints", default="0,128,256,512,1024")
@@ -174,7 +175,9 @@ def main(
             )
         )
         evaluation_slice = validate_external_evaluation_cache(
-            manifest, evaluation_manifest
+            manifest,
+            evaluation_manifest,
+            allow_cross_split=args.allow_cross_split_evaluation,
         )
     training_count = training_slice.stop - training_slice.start
     if args.total_steps * args.batch_windows != training_count:

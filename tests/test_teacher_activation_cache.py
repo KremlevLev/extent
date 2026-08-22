@@ -71,6 +71,42 @@ def test_external_evaluation_cache_requires_locked_disjoint_range():
         validate_external_evaluation_cache(training, evaluation)
 
 
+def test_external_evaluation_cache_allows_frozen_cross_split():
+    training = {
+        "source": "qwen",
+        "dataset": "wiki",
+        "dataset_split": "train",
+        "target_layer": 0,
+        "sequence_length": 32,
+        "token_range": [0, 33056],
+    }
+    evaluation = {
+        "source": "qwen",
+        "dataset": "wiki",
+        "dataset_split": "validation",
+        "target_layer": 0,
+        "sequence_length": 32,
+        "evaluation_only": True,
+        "token_offset": 0,
+        "token_range": [0, 8192],
+        "window_layout": {
+            "calibration": [0, 0],
+            "training": [0, 0],
+            "evaluation": [0, 256],
+        },
+    }
+    assert validate_external_evaluation_cache(
+        training,
+        evaluation,
+        required_token_offset=0,
+        required_evaluation_windows=256,
+        required_dataset_split="validation",
+        allow_cross_split=True,
+    ) == slice(0, 256)
+    with pytest.raises(ValueError, match="unauthorized"):
+        validate_external_evaluation_cache(training, evaluation)
+
+
 def test_host_microbatch_runner_preserves_order_and_fp32_output():
     inputs = np.arange(5 * 2 * 3, dtype=np.float32).reshape(5, 2, 3)
     output = run_host_microbatches(

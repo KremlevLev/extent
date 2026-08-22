@@ -6,11 +6,13 @@ import pytest
 
 from extent.streamed_lm_eval import (
     aggregate_multiseed_end_to_end,
+    bootstrap_excess_nll_recovery,
     create_lm_metrics_runner,
     end_to_end_loss_comparison,
     full_model_shard_last_use,
     hidden_relative_l2,
     next_token_statistics,
+    next_token_window_statistics,
 )
 
 
@@ -51,6 +53,12 @@ def test_next_token_statistics_matches_manual_cross_entropy_and_padding():
     np.testing.assert_allclose(loss, expected, rtol=5e-6)
     assert int(count) == 2
     assert int(correct) == 2
+    window_loss, window_count, window_correct = next_token_window_statistics(
+        logits, tokens, jnp.asarray([True, False])
+    )
+    np.testing.assert_allclose(window_loss, [expected, 0.0], rtol=5e-6)
+    np.testing.assert_array_equal(window_count, [2, 0])
+    np.testing.assert_array_equal(window_correct, [2, 0])
 
 
 def test_hidden_relative_l2_and_shape_validation():
@@ -136,3 +144,29 @@ def test_multiseed_end_to_end_gate_requires_reproduction_and_two_wins():
         required_recovery_fraction=0.25,
     )
     assert strict_fresh["scientific_gate_passed"] is False
+
+
+def test_paired_window_bootstrap_is_deterministic_and_detects_recovery():
+    original = [2.0 + index * 0.01 for index in range(32)]
+    seeds = {
+        str(seed): {
+            "mixer_only": [value + 1.0 for value in original],
+            "joint": [value + 0.6 for value in original],
+        }
+        for seed in (123, 456, 789)
+    }
+    first = bootstrap_excess_nll_recovery(
+        original_window_nll=original,
+        seed_window_nll=seeds,
+        bootstrap_samples=200,
+        bootstrap_seed=7,
+    )
+    second = bootstrap_excess_nll_recovery(
+        original_window_nll=original,
+        seed_window_nll=seeds,
+        bootstrap_samples=200,
+        bootstrap_seed=7,
+    )
+    assert first == second
+    np.testing.assert_allclose(first["mean_recovery_bootstrap_mean"], 0.4)
+    assert first["mean_recovery_confidence_interval"][0] > 0.39

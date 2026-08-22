@@ -124,6 +124,7 @@ def _partial_payload(
     storage_dtype: str,
     tokens_sha256: str,
     token_offset: int,
+    dataset_split: str,
     evaluation_only: bool,
     residual_path: Path,
     removed_shards: list[str],
@@ -138,6 +139,7 @@ def _partial_payload(
         "storage_dtype": storage_dtype,
         "tokens_sha256": tokens_sha256,
         "token_offset": token_offset,
+        "dataset_split": dataset_split,
         "evaluation_only": evaluation_only,
         "residual_input_path": str(residual_path.resolve()),
         "removed_checkpoint_shards": removed_shards,
@@ -160,6 +162,11 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--training-windows", type=int, default=80)
     parser.add_argument("--evaluation-windows", type=int, default=4)
     parser.add_argument("--token-offset", type=int, default=0)
+    parser.add_argument(
+        "--dataset-split",
+        choices=("train", "validation", "test"),
+        default="train",
+    )
     parser.add_argument("--evaluation-only", action="store_true")
     parser.add_argument("--microbatch-windows", type=int, default=4)
     parser.add_argument("--data-parallel", action="store_true")
@@ -228,6 +235,7 @@ def main(argv: list[str] | None = None) -> None:
         tokenizer_repo=spec.repo_id,
         tokenizer_revision=spec.revision,
         token_offset=args.token_offset,
+        dataset_split=args.dataset_split,
     ).reshape(layout.total_windows, args.sequence_length)
     atomic_save_array(tokens_path, tokens, np.dtype(np.int32))
     tokens_sha256 = file_sha256(tokens_path)
@@ -264,6 +272,7 @@ def main(argv: list[str] | None = None) -> None:
             "storage_dtype": args.storage_dtype,
             "tokens_sha256": tokens_sha256,
             "token_offset": args.token_offset,
+            "dataset_split": args.dataset_split,
             "evaluation_only": args.evaluation_only,
         }
         mismatches = {
@@ -347,6 +356,7 @@ def main(argv: list[str] | None = None) -> None:
             storage_dtype=args.storage_dtype,
             tokens_sha256=tokens_sha256,
             token_offset=args.token_offset,
+            dataset_split=args.dataset_split,
             evaluation_only=args.evaluation_only,
             residual_path=residual_path,
             removed_shards=removed_shards,
@@ -366,6 +376,7 @@ def main(argv: list[str] | None = None) -> None:
         storage_dtype=args.storage_dtype,
         tokens_sha256=tokens_sha256,
         token_offset=args.token_offset,
+        dataset_split=args.dataset_split,
         evaluation_only=args.evaluation_only,
         residual_path=residual_path,
         removed_shards=removed_shards,
@@ -423,6 +434,7 @@ def main(argv: list[str] | None = None) -> None:
         "method": "streamed_Qwen3_residual_and_attention_activation_cache",
         "target_layer": args.target_layer,
         "sequence_length": args.sequence_length,
+        "dataset_split": args.dataset_split,
         "token_offset": args.token_offset,
         "token_range": [
             args.token_offset,

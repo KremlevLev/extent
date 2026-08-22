@@ -203,6 +203,8 @@ def validate_external_evaluation_cache(
     *,
     required_token_offset: int | None = None,
     required_evaluation_windows: int | None = None,
+    required_dataset_split: str | None = None,
+    allow_cross_split: bool = False,
 ) -> slice:
     """Validate a disjoint evaluation-only cache against a training cache."""
     shared = ("source", "dataset", "target_layer", "sequence_length")
@@ -215,6 +217,12 @@ def validate_external_evaluation_cache(
         raise ValueError(f"training/evaluation cache mismatch: {mismatches}")
     if not evaluation_manifest.get("evaluation_only"):
         raise ValueError("external evaluation cache must be marked evaluation_only")
+    training_split = str(training_manifest.get("dataset_split", "train"))
+    evaluation_split = str(evaluation_manifest.get("dataset_split", "train"))
+    if required_dataset_split is not None and evaluation_split != required_dataset_split:
+        raise ValueError("external evaluation dataset split differs from the frozen protocol")
+    if evaluation_split != training_split and not allow_cross_split:
+        raise ValueError("external evaluation cache uses an unauthorized dataset split")
     layout = evaluation_manifest["window_layout"]
     calibration = slice(*layout["calibration"])
     training = slice(*layout["training"])
@@ -242,7 +250,7 @@ def validate_external_evaluation_cache(
     expected_tokens = evaluation_windows * int(evaluation_manifest["sequence_length"])
     if evaluation_start != offset or evaluation_stop - evaluation_start != expected_tokens:
         raise ValueError("external evaluation token_range is inconsistent with its layout")
-    disjoint = (
+    disjoint = evaluation_split != training_split or (
         evaluation_stop <= int(training_range[0])
         or int(training_range[1]) <= evaluation_start
     )

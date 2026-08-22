@@ -106,10 +106,12 @@ def _run_lm_metrics(
     devices,
     per_device_windows: int,
     compute_dtype,
+    return_window_nll: bool = False,
 ) -> dict:
     total_loss = 0.0
     total_tokens = 0
     total_correct = 0
+    window_nll = []
     if devices:
         device_count = len(devices)
         global_batch = device_count * per_device_windows
@@ -145,9 +147,16 @@ def _run_lm_metrics(
                 shaped_valid,
             )
             jax.block_until_ready((loss, count, correct))
-            total_loss += float(np.sum(np.asarray(loss, dtype=np.float64)))
-            total_tokens += int(np.sum(np.asarray(count, dtype=np.int64)))
-            total_correct += int(np.sum(np.asarray(correct, dtype=np.int64)))
+            loss_values = np.asarray(loss, dtype=np.float64)
+            count_values = np.asarray(count, dtype=np.int64)
+            correct_values = np.asarray(correct, dtype=np.int64)
+            total_loss += float(np.sum(loss_values))
+            total_tokens += int(np.sum(count_values))
+            total_correct += int(np.sum(correct_values))
+            if return_window_nll:
+                valid_losses = loss_values.reshape(-1)[:valid]
+                valid_counts = count_values.reshape(-1)[:valid]
+                window_nll.extend((valid_losses / valid_counts).tolist())
     else:
         for start in range(0, len(hidden), per_device_windows):
             stop = min(start + per_device_windows, len(hidden))
@@ -158,11 +167,16 @@ def _run_lm_metrics(
                 norm_params, lm_head_kernel, batch_hidden, batch_tokens, valid
             )
             jax.block_until_ready((loss, count, correct))
-            total_loss += float(loss)
-            total_tokens += int(count)
-            total_correct += int(correct)
+            loss_values = np.asarray(loss, dtype=np.float64)
+            count_values = np.asarray(count, dtype=np.int64)
+            correct_values = np.asarray(correct, dtype=np.int64)
+            total_loss += float(np.sum(loss_values))
+            total_tokens += int(np.sum(count_values))
+            total_correct += int(np.sum(correct_values))
+            if return_window_nll:
+                window_nll.extend((loss_values / count_values).tolist())
     mean_nll = total_loss / total_tokens
-    return {
+    result = {
         "nll_sum": total_loss,
         "token_count": total_tokens,
         "mean_nll": mean_nll,
@@ -171,6 +185,11 @@ def _run_lm_metrics(
         "top1_correct": total_correct,
         "finite": bool(np.isfinite(mean_nll)),
     }
+    if return_window_nll:
+        if len(window_nll) != len(hidden):
+            raise ValueError("per-window NLL count does not match evaluated windows")
+        result["window_mean_nll"] = window_nll
+    return result
 
 
 def main(argv: list[str] | None = None) -> dict:
