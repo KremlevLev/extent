@@ -318,3 +318,182 @@ def bootstrap_excess_nll_recovery(
         ],
         "finite_samples": int(len(valid)),
     }
+
+
+def aggregate_two_layer_composition(
+    *,
+    original_nll: float,
+    seed_metrics: Mapping[str, Mapping[str, Mapping[str, float | bool]]],
+    maximum_mean_inflation: float = 1.25,
+    maximum_seed_inflation: float = 1.50,
+    required_seed_passes: int = 2,
+) -> dict:
+    """Aggregate the frozen EXP-044 non-additive composition endpoint."""
+    if len(seed_metrics) != 3:
+        raise ValueError("EXP-044 requires exactly three seed metric groups")
+    if maximum_mean_inflation <= 0 or maximum_seed_inflation <= 0:
+        raise ValueError("composition inflation limits must be positive")
+    if not 1 <= required_seed_passes <= len(seed_metrics):
+        raise ValueError("required seed passes must fit the seed count")
+
+    paired = []
+    for seed, metrics in seed_metrics.items():
+        layer0 = metrics["layer0_only"]
+        layer18 = metrics["layer18_only"]
+        both = metrics["layer0_layer18"]
+        layer0_nll = float(layer0["mean_nll"])
+        layer18_nll = float(layer18["mean_nll"])
+        both_nll = float(both["mean_nll"])
+        layer0_excess = layer0_nll - original_nll
+        layer18_excess = layer18_nll - original_nll
+        additive_excess = layer0_excess + layer18_excess
+        both_excess = both_nll - original_nll
+        interaction = both_excess - additive_excess
+        inflation = (
+            both_excess / additive_excess if additive_excess > 0 else None
+        )
+        marginal_layer18 = both_nll - layer0_nll
+        marginal_amplification = (
+            marginal_layer18 / layer18_excess if layer18_excess > 0 else None
+        )
+        finite = bool(
+            layer0["finite"]
+            and layer18["finite"]
+            and both["finite"]
+            and np.isfinite(
+                [layer0_nll, layer18_nll, both_nll, original_nll]
+            ).all()
+        )
+        paired.append(
+            {
+                "seed": int(seed),
+                "layer0_only_mean_nll": layer0_nll,
+                "layer18_only_mean_nll": layer18_nll,
+                "layer0_layer18_mean_nll": both_nll,
+                "layer0_excess_nll": layer0_excess,
+                "layer18_excess_nll": layer18_excess,
+                "additive_expected_excess_nll": additive_excess,
+                "observed_composed_excess_nll": both_excess,
+                "interaction_nll": interaction,
+                "composition_inflation_ratio": inflation,
+                "layer18_marginal_excess_after_layer0": marginal_layer18,
+                "layer18_marginal_amplification": marginal_amplification,
+                "single_layer_excess_positive": (
+                    layer0_excess > 0 and layer18_excess > 0
+                ),
+                "seed_inflation_within_limit": (
+                    inflation is not None
+                    and inflation <= maximum_seed_inflation
+                ),
+                "finite": finite,
+            }
+        )
+
+    valid_inflations = [
+        record["composition_inflation_ratio"]
+        for record in paired
+        if record["composition_inflation_ratio"] is not None
+    ]
+    all_finite = all(record["finite"] for record in paired)
+    all_single_excess_positive = all(
+        record["single_layer_excess_positive"] for record in paired
+    )
+    seed_passes = sum(
+        record["seed_inflation_within_limit"] for record in paired
+    )
+    mean_inflation = (
+        float(np.mean(np.asarray(valid_inflations, dtype=np.float64)))
+        if valid_inflations
+        else None
+    )
+    passed = bool(
+        all_finite
+        and all_single_excess_positive
+        and len(valid_inflations) == len(paired)
+        and mean_inflation is not None
+        and mean_inflation <= maximum_mean_inflation
+        and seed_passes >= required_seed_passes
+    )
+    return {
+        "original_mean_nll": float(original_nll),
+        "paired_endpoints": paired,
+        "composition_inflation_ratio_mean": mean_inflation,
+        "composition_inflation_ratio_std": (
+            float(np.std(np.asarray(valid_inflations, dtype=np.float64)))
+            if valid_inflations
+            else None
+        ),
+        "maximum_allowed_mean_inflation": maximum_mean_inflation,
+        "maximum_allowed_seed_inflation": maximum_seed_inflation,
+        "seed_inflation_passes": seed_passes,
+        "required_seed_inflation_passes": required_seed_passes,
+        "all_single_layer_excess_nll_positive": all_single_excess_positive,
+        "all_finite": all_finite,
+        "scientific_gate_passed": passed,
+    }
+
+
+def bootstrap_two_layer_composition_inflation(
+    *,
+    original_window_nll: list[float],
+    seed_window_nll: Mapping[str, Mapping[str, list[float]]],
+    bootstrap_samples: int = 2000,
+    bootstrap_seed: int = 20260824,
+    confidence: float = 0.95,
+) -> dict:
+    """Paired window bootstrap of mean EXP-044 composition inflation."""
+    original = np.asarray(original_window_nll, dtype=np.float64)
+    if original.ndim != 1 or len(original) < 2:
+        raise ValueError("bootstrap requires at least two original windows")
+    if len(seed_window_nll) != 3:
+        raise ValueError("bootstrap requires exactly three seed groups")
+    if bootstrap_samples < 100:
+        raise ValueError("bootstrap_samples must be at least 100")
+    if not 0.0 < confidence < 1.0:
+        raise ValueError("confidence must be in (0, 1)")
+
+    paired = {}
+    for seed, metrics in seed_window_nll.items():
+        arrays = {
+            name: np.asarray(metrics[name], dtype=np.float64)
+            for name in ("layer0_only", "layer18_only", "layer0_layer18")
+        }
+        if any(value.shape != original.shape for value in arrays.values()):
+            raise ValueError("all bootstrap branches must share the window shape")
+        paired[str(seed)] = arrays
+
+    rng = np.random.default_rng(bootstrap_seed)
+    indices = rng.integers(
+        0, len(original), size=(bootstrap_samples, len(original))
+    )
+    original_means = np.mean(original[indices], axis=1)
+    seed_inflations = []
+    for metrics in paired.values():
+        layer0 = np.mean(metrics["layer0_only"][indices], axis=1)
+        layer18 = np.mean(metrics["layer18_only"][indices], axis=1)
+        both = np.mean(metrics["layer0_layer18"][indices], axis=1)
+        additive = (layer0 - original_means) + (layer18 - original_means)
+        inflation = np.where(
+            additive > 0,
+            (both - original_means) / additive,
+            np.nan,
+        )
+        seed_inflations.append(inflation)
+    mean_inflation = np.nanmean(np.stack(seed_inflations, axis=1), axis=1)
+    valid = mean_inflation[np.isfinite(mean_inflation)]
+    if len(valid) != bootstrap_samples:
+        raise ValueError("bootstrap produced non-positive additive excess NLL")
+    alpha = (1.0 - confidence) / 2.0
+    return {
+        "method": "paired_window_percentile_bootstrap",
+        "bootstrap_samples": bootstrap_samples,
+        "bootstrap_seed": bootstrap_seed,
+        "confidence": confidence,
+        "evaluation_windows": len(original),
+        "mean_inflation_bootstrap_mean": float(np.mean(valid)),
+        "mean_inflation_confidence_interval": [
+            float(np.quantile(valid, alpha)),
+            float(np.quantile(valid, 1.0 - alpha)),
+        ],
+        "finite_samples": int(len(valid)),
+    }

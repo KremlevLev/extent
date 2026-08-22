@@ -42,3 +42,16 @@ The full trainer will checkpoint periodically and on a time-budget stop signal,
 retain at least the latest two validated checkpoints, update a small manifest,
 and send Telegram notifications for start, periodic progress, final save,
 failure, and successful resume.
+# EXP-044: one-shot two-layer composition
+
+Run only on a fresh Kaggle TPU v5e-8 session after installing `requirements-tpu.txt` and restarting the notebook kernel if pip replaced JAX. Do not run `pytest` in a subprocess after JAX has already claimed the TPU.
+
+```python
+from scripts.qwen_two_layer_composition_run import main as exp044
+
+result = exp044([])
+print("EXP-044 scientific gate:", result["scientific_gate_passed"])
+print("result: /kaggle/working/output/exp044-two-layer-composition.json")
+```
+
+The runner creates the layer-0 and layer-18 train/validation activation caches, trains the paired three-seed replacements, evaluates all ten branches, prunes consumed Qwen shards, and writes the final JSON into Kaggle output. Download only `exp044-two-layer-composition.json`; the activation arrays and training intermediates are disposable after the run.

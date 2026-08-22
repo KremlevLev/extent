@@ -5,7 +5,9 @@ import numpy as np
 import pytest
 
 from extent.streamed_lm_eval import (
+    aggregate_two_layer_composition,
     aggregate_multiseed_end_to_end,
+    bootstrap_two_layer_composition_inflation,
     bootstrap_excess_nll_recovery,
     create_lm_metrics_runner,
     end_to_end_loss_comparison,
@@ -170,3 +172,41 @@ def test_paired_window_bootstrap_is_deterministic_and_detects_recovery():
     assert first == second
     np.testing.assert_allclose(first["mean_recovery_bootstrap_mean"], 0.4)
     assert first["mean_recovery_confidence_interval"][0] > 0.39
+
+
+def test_two_layer_composition_gate_and_bootstrap_measure_nonadditivity():
+    original = 2.0
+    seed_metrics = {
+        str(seed): {
+            "layer0_only": {"mean_nll": 2.4, "finite": True},
+            "layer18_only": {"mean_nll": 2.2, "finite": True},
+            "layer0_layer18": {"mean_nll": 2.66, "finite": True},
+        }
+        for seed in (123, 456, 789)
+    }
+    aggregate = aggregate_two_layer_composition(
+        original_nll=original, seed_metrics=seed_metrics
+    )
+    np.testing.assert_allclose(
+        aggregate["composition_inflation_ratio_mean"], 1.1
+    )
+    assert aggregate["seed_inflation_passes"] == 3
+    assert aggregate["scientific_gate_passed"] is True
+
+    original_windows = [2.0 + index * 0.01 for index in range(32)]
+    window_metrics = {
+        str(seed): {
+            "layer0_only": [value + 0.4 for value in original_windows],
+            "layer18_only": [value + 0.2 for value in original_windows],
+            "layer0_layer18": [value + 0.66 for value in original_windows],
+        }
+        for seed in (123, 456, 789)
+    }
+    bootstrap = bootstrap_two_layer_composition_inflation(
+        original_window_nll=original_windows,
+        seed_window_nll=window_metrics,
+        bootstrap_samples=200,
+        bootstrap_seed=11,
+    )
+    np.testing.assert_allclose(bootstrap["mean_inflation_bootstrap_mean"], 1.1)
+    assert bootstrap["mean_inflation_confidence_interval"][1] < 1.11
