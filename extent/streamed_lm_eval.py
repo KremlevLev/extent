@@ -133,3 +133,103 @@ def end_to_end_loss_comparison(
         "required_recovered_excess_fraction": required_recovery_fraction,
         "scientific_gate_passed": passed,
     }
+
+
+def aggregate_multiseed_end_to_end(
+    *,
+    original_nll: float,
+    seed_metrics: Mapping[str, Mapping[str, Mapping[str, float | bool]]],
+    reference_reproduced: bool,
+    required_recovery_fraction: float = 0.10,
+    required_wins: int = 2,
+) -> dict:
+    """Aggregate the frozen three-seed EXP-041 end-to-end gate."""
+    if len(seed_metrics) != 3:
+        raise ValueError("EXP-041 requires exactly three seed metric groups")
+    paired = []
+    for seed, metrics in seed_metrics.items():
+        calibrated = metrics["calibrated"]
+        mixer = metrics["mixer_only"]
+        joint = metrics["joint"]
+        calibrated_nll = float(calibrated["mean_nll"])
+        mixer_nll = float(mixer["mean_nll"])
+        joint_nll = float(joint["mean_nll"])
+        mixer_excess = mixer_nll - original_nll
+        joint_excess = joint_nll - original_nll
+        recovery = (
+            (mixer_excess - joint_excess) / mixer_excess
+            if mixer_excess > 0
+            else None
+        )
+        finite = bool(
+            calibrated["finite"] and mixer["finite"] and joint["finite"]
+        )
+        paired.append(
+            {
+                "seed": int(seed),
+                "calibrated_mean_nll": calibrated_nll,
+                "mixer_only_mean_nll": mixer_nll,
+                "joint_mean_nll": joint_nll,
+                "mixer_only_excess_nll": mixer_excess,
+                "joint_excess_nll": joint_excess,
+                "joint_recovered_mixer_excess_fraction": recovery,
+                "joint_wins_mixer_only": joint_nll < mixer_nll,
+                "joint_wins_calibrated": joint_nll < calibrated_nll,
+                "finite": finite,
+            }
+        )
+    recoveries = [
+        record["joint_recovered_mixer_excess_fraction"] for record in paired
+    ]
+    calibrated_nlls = np.asarray(
+        [record["calibrated_mean_nll"] for record in paired], dtype=np.float64
+    )
+    mixer_nlls = np.asarray(
+        [record["mixer_only_mean_nll"] for record in paired], dtype=np.float64
+    )
+    joint_nlls = np.asarray(
+        [record["joint_mean_nll"] for record in paired], dtype=np.float64
+    )
+    valid_recoveries = [value for value in recoveries if value is not None]
+    all_finite = all(record["finite"] for record in paired)
+    all_mixer_excess_positive = len(valid_recoveries) == len(paired)
+    mixer_wins = sum(record["joint_wins_mixer_only"] for record in paired)
+    calibrated_wins = sum(record["joint_wins_calibrated"] for record in paired)
+    mean_recovery = (
+        float(np.mean(np.asarray(valid_recoveries, dtype=np.float64)))
+        if valid_recoveries
+        else None
+    )
+    passed = bool(
+        all_finite
+        and all_mixer_excess_positive
+        and mixer_wins >= required_wins
+        and calibrated_wins >= required_wins
+        and mean_recovery is not None
+        and mean_recovery >= required_recovery_fraction
+        and reference_reproduced
+    )
+    return {
+        "original_mean_nll": original_nll,
+        "paired_endpoints": paired,
+        "calibrated_mean_nll_mean": float(np.mean(calibrated_nlls)),
+        "calibrated_mean_nll_std": float(np.std(calibrated_nlls)),
+        "mixer_only_mean_nll_mean": float(np.mean(mixer_nlls)),
+        "mixer_only_mean_nll_std": float(np.std(mixer_nlls)),
+        "joint_mean_nll_mean": float(np.mean(joint_nlls)),
+        "joint_mean_nll_std": float(np.std(joint_nlls)),
+        "joint_recovered_mixer_excess_fraction_mean": mean_recovery,
+        "joint_recovered_mixer_excess_fraction_std": (
+            float(np.std(np.asarray(valid_recoveries, dtype=np.float64)))
+            if valid_recoveries
+            else None
+        ),
+        "joint_mixer_only_wins": mixer_wins,
+        "joint_calibrated_wins": calibrated_wins,
+        "required_joint_wins": required_wins,
+        "required_recovered_excess_fraction_mean": required_recovery_fraction,
+        "all_mixer_only_excess_nll_positive": all_mixer_excess_positive,
+        "all_finite": all_finite,
+        "reference_exp040_reproduced": reference_reproduced,
+        "scientific_gate_passed": passed,
+    }

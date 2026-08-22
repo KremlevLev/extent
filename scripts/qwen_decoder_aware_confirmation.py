@@ -104,7 +104,11 @@ def aggregate_confirmation(seed_results: dict[str, dict], total_steps: int) -> d
     }
 
 
-def main(argv: list[str] | None = None) -> dict:
+def main(
+    argv: list[str] | None = None,
+    *,
+    return_endpoint_params: bool = False,
+) -> dict | tuple[dict, dict[str, dict], dict[str, dict[str, dict]]]:
     parser = argparse.ArgumentParser(
         description="Confirm decoder-aware Mamba distillation across three paired seeds."
     )
@@ -130,6 +134,8 @@ def main(argv: list[str] | None = None) -> dict:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     seed_results = {}
+    initial_params_by_seed = {}
+    endpoint_params_by_seed = {}
     for seed in seeds:
         seed_json = output_dir / f"exp039-decoder-aware-seed{seed}.json"
         single_args = [
@@ -155,7 +161,15 @@ def main(argv: list[str] | None = None) -> dict:
         if args.skip_hash_verification:
             single_args.append("--skip-hash-verification")
         print(f"EXP-039 seed={seed} START")
-        seed_results[str(seed)] = run_single_seed(single_args)
+        if return_endpoint_params:
+            seed_result, initial_params, endpoint_params = run_single_seed(
+                single_args, return_endpoint_params=True
+            )
+            seed_results[str(seed)] = seed_result
+            initial_params_by_seed[str(seed)] = initial_params
+            endpoint_params_by_seed[str(seed)] = endpoint_params
+        else:
+            seed_results[str(seed)] = run_single_seed(single_args)
         print(f"EXP-039 seed={seed} DONE")
         jax.clear_caches()
         gc.collect()
@@ -206,6 +220,8 @@ def main(argv: list[str] | None = None) -> dict:
         if aggregate["scientific_gate_passed"]
         else "DECODER-AWARE-CONFIRMATION-GATE-FAIL"
     )
+    if return_endpoint_params:
+        return result, initial_params_by_seed, endpoint_params_by_seed
     return result
 
 

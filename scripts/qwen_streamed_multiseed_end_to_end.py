@@ -1,0 +1,522 @@
+from __future__ import annotations
+
+import argparse
+import gc
+import json
+from pathlib import Path
+
+import jax
+import jax.numpy as jnp
+import numpy as np
+
+from scripts.offline_mamba_distill import _slice
+from scripts.qwen_activation_cache import (
+    _create_data_parallel_decoder_runner,
+    _create_decoder_runner,
+    _safe_prune_shards,
+)
+from scripts.qwen_decoder_aware_confirmation import (
+    main as train_multiseed,
+    parse_seeds,
+)
+from scripts.qwen_decoder_aware_distill import _teacher_decoder_outputs
+from scripts.qwen_mamba3_distill_pilot import _write_json_with_output_mirror
+from scripts.qwen_streamed_end_to_end_shock import (
+    _read_json,
+    _run_lm_metrics,
+    _run_replacement_windows,
+)
+from extent.config import Mamba3Config
+from extent.decoder_replacement_eval import (
+    Qwen3DecoderTail,
+    create_batched_replacement_runner,
+    create_batched_teacher_tail_runner,
+    qwen3_decoder_tail_params,
+)
+from extent.hardware import recommended_compute_dtype
+from extent.layers.common import RMSNorm
+from extent.layers.mamba3 import Mamba3MIMO
+from extent.qwen3_parity import (
+    ensure_layer_checkpoint,
+    jax_layer_params,
+    load_layer_arrays,
+)
+from extent.qwen3_teacher import Qwen3DecoderLayer, Qwen3TeacherConfig
+from extent.qwen_source import QWEN3_14B, validate_source_metadata
+from extent.streamed_lm_eval import (
+    aggregate_multiseed_end_to_end,
+    create_lm_metrics_runner,
+    full_model_shard_last_use,
+    hidden_relative_l2,
+)
+from extent.teacher_activation_cache import (
+    load_activation_cache,
+    run_host_data_parallel,
+    run_host_microbatches,
+)
+from extent.weight_mapping import QwenCheckpointReader
+
+
+def branch_names(seeds: tuple[int, ...], total_steps: int) -> tuple[str, ...]:
+    names = ["ORIGINAL-CACHED-QWEN"]
+    for seed in seeds:
+        names.extend(
+            (
+                f"SEED-{seed}-CALIBRATED-STEP0",
+                f"SEED-{seed}-MIXER-ONLY-STEP{total_steps}",
+                f"SEED-{seed}-JOINT-STEP{total_steps}",
+            )
+        )
+    return tuple(names)
+
+
+def branch_divergence(
+    hidden: np.ndarray,
+    names: tuple[str, ...],
+    windows: int,
+) -> dict[str, float]:
+    values = hidden.reshape(len(names), windows, *hidden.shape[1:])
+    reference = values[0]
+    return {
+        name: hidden_relative_l2(reference, values[index])
+        for index, name in enumerate(names)
+    }
+
+
+def reference_reproduction(
+    reference: dict,
+    lm_metrics: dict[str, dict],
+    *,
+    seed: int,
+    total_steps: int,
+    tolerance: float,
+) -> dict:
+    mappings = {
+        "ORIGINAL-CACHED-QWEN": "ORIGINAL-CACHED-QWEN",
+        "CALIBRATED-STEP0": f"SEED-{seed}-CALIBRATED-STEP0",
+        "MIXER-ONLY-STEP1024": f"SEED-{seed}-MIXER-ONLY-STEP{total_steps}",
+        "JOINT-STEP1024": f"SEED-{seed}-JOINT-STEP{total_steps}",
+    }
+    differences = {}
+    for reference_name, current_name in mappings.items():
+        expected = float(reference["lm_metrics"][reference_name]["mean_nll"])
+        actual = float(lm_metrics[current_name]["mean_nll"])
+        differences[reference_name] = {
+            "reference_mean_nll": expected,
+            "current_mean_nll": actual,
+            "absolute_difference": abs(actual - expected),
+        }
+    passed = all(
+        record["absolute_difference"] <= tolerance
+        for record in differences.values()
+    )
+    return {
+        "seed": seed,
+        "absolute_nll_tolerance": tolerance,
+        "branches": differences,
+        "passed": passed,
+    }
+
+
+def main(argv: list[str] | None = None) -> dict:
+    parser = argparse.ArgumentParser(
+        description="Confirm the streamed Qwen3 layer-0 Mamba NLL advantage across three seeds."
+    )
+    parser.add_argument("--activation-cache-manifest", required=True)
+    parser.add_argument("--activation-cache-dir")
+    parser.add_argument(
+        "--qwen-cache-dir", default="/kaggle/working/qwen3-exp041-weights"
+    )
+    parser.add_argument("--seeds", default="123,456,789")
+    parser.add_argument("--data-seed", type=int, default=20260820)
+    parser.add_argument("--total-steps", type=int, default=1024)
+    parser.add_argument("--batch-windows", type=int, default=1)
+    parser.add_argument("--training-checkpoints", default="0,512,1024")
+    parser.add_argument("--evaluation-batch-windows", type=int, default=1)
+    parser.add_argument("--per-device-windows", type=int, default=1)
+    parser.add_argument("--learning-rate", type=float, default=3e-5)
+    parser.add_argument("--readout-ridge", type=float, default=1e-2)
+    parser.add_argument("--decoder-loss-weight", type=float, default=1.0)
+    parser.add_argument(
+        "--compute-dtype",
+        choices=("auto", "float32", "bfloat16"),
+        default="auto",
+    )
+    parser.add_argument("--data-parallel", action="store_true")
+    parser.add_argument("--prune-consumed-shards", action="store_true")
+    parser.add_argument("--skip-hash-verification", action="store_true")
+    parser.add_argument(
+        "--reference-exp040-json",
+        default="results/EXP-040-qwen3-streamed-end-to-end-layer0.json",
+    )
+    parser.add_argument("--reference-nll-tolerance", type=float, default=0.02)
+    parser.add_argument("--result-json", required=True)
+    parser.add_argument("--output-dir", default="/kaggle/working/output")
+    args = parser.parse_args(argv)
+    seeds = parse_seeds(args.seeds)
+    if args.total_steps != 1024:
+        raise ValueError("EXP-041 requires the frozen 1,024-step protocol")
+    if min(
+        args.batch_windows,
+        args.evaluation_batch_windows,
+        args.per_device_windows,
+    ) < 1:
+        raise ValueError("batch settings must be positive")
+    if args.reference_nll_tolerance < 0:
+        raise ValueError("reference NLL tolerance must be non-negative")
+
+    jax.config.update("jax_default_matmul_precision", "high")
+    manifest, arrays, paths = load_activation_cache(
+        args.activation_cache_manifest,
+        artifact_dir=args.activation_cache_dir,
+        verify_hashes=not args.skip_hash_verification,
+    )
+    source_name = f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}"
+    if manifest.get("source") != source_name or int(manifest["target_layer"]) != 0:
+        raise ValueError("EXP-041 requires the pinned Qwen3 source and layer zero")
+    layout = manifest["window_layout"]
+    evaluation_slice = _slice(layout, "evaluation")
+    evaluation_windows = evaluation_slice.stop - evaluation_slice.start
+    dtype_decision = recommended_compute_dtype(requested=args.compute_dtype)
+    compute_dtype = jnp.dtype(dtype_decision.dtype)
+    devices = list(jax.devices())
+    if args.data_parallel and len(devices) < 2:
+        raise ValueError("--data-parallel requires at least two visible devices")
+    parallel_devices = devices if args.data_parallel else None
+    names = branch_names(seeds, args.total_steps)
+
+    training_json = Path(args.output_dir) / "exp041-training-confirmation.json"
+    training_args = [
+        "--activation-cache-manifest", args.activation_cache_manifest,
+        "--qwen-cache-dir", args.qwen_cache_dir,
+        "--seeds", args.seeds,
+        "--data-seed", str(args.data_seed),
+        "--total-steps", str(args.total_steps),
+        "--checkpoints", args.training_checkpoints,
+        "--batch-windows", str(args.batch_windows),
+        "--evaluation-batch-windows", str(args.evaluation_batch_windows),
+        "--learning-rate", str(args.learning_rate),
+        "--readout-ridge", str(args.readout_ridge),
+        "--decoder-loss-weight", str(args.decoder_loss_weight),
+        "--compute-dtype", args.compute_dtype,
+        "--result-json", str(training_json),
+        "--output-dir", args.output_dir,
+    ]
+    if args.activation_cache_dir:
+        training_args.extend(
+            ["--activation-cache-dir", args.activation_cache_dir]
+        )
+    if args.skip_hash_verification:
+        training_args.append("--skip-hash-verification")
+    training_result, initial_by_seed, endpoint_by_seed = train_multiseed(
+        training_args, return_endpoint_params=True
+    )
+
+    config_payload = _read_json(QWEN3_14B.resolve_url("config.json"))
+    index_payload = _read_json(
+        QWEN3_14B.resolve_url("model.safetensors.index.json")
+    )
+    validate_source_metadata(config_payload, index_payload, QWEN3_14B)
+    source = Qwen3TeacherConfig(
+        param_dtype="float32",
+        compute_dtype=dtype_decision.dtype,
+        remat_policy="none",
+    )
+    mamba = Mamba3MIMO(
+        source.hidden_size,
+        Mamba3Config(),
+        dtype=compute_dtype,
+        param_dtype=compute_dtype,
+    )
+    model_dir, _ = ensure_layer_checkpoint(
+        args.qwen_cache_dir,
+        index_payload["weight_map"],
+        source,
+        0,
+        repo_id=QWEN3_14B.repo_id,
+        revision=QWEN3_14B.revision,
+    )
+    reader = QwenCheckpointReader(model_dir)
+    tail_params = qwen3_decoder_tail_params(reader, 0)
+    tail = Qwen3DecoderTail(
+        source.hidden_size,
+        source.intermediate_size,
+        source.rms_norm_eps,
+        compute_dtype,
+        jnp.float32,
+    )
+    teacher_tail_runner = create_batched_teacher_tail_runner(tail)
+    replacement_runner = create_batched_replacement_runner(mamba, tail)
+    residual_eval = jnp.asarray(
+        arrays["residual_input"][evaluation_slice], dtype=compute_dtype
+    )
+    normalized_eval = jnp.asarray(
+        arrays["normalized_input"][evaluation_slice], dtype=compute_dtype
+    )
+    mixer_eval = jnp.asarray(
+        arrays["attention_target"][evaluation_slice], dtype=compute_dtype
+    )
+    layer0_outputs = [
+        _teacher_decoder_outputs(
+            teacher_tail_runner,
+            tail_params,
+            residual_eval,
+            mixer_eval,
+            args.evaluation_batch_windows,
+        )
+    ]
+    for seed in seeds:
+        seed_key = str(seed)
+        layer0_outputs.extend(
+            (
+                _run_replacement_windows(
+                    replacement_runner,
+                    initial_by_seed[seed_key],
+                    tail_params,
+                    residual_eval,
+                    normalized_eval,
+                    args.evaluation_batch_windows,
+                ),
+                _run_replacement_windows(
+                    replacement_runner,
+                    endpoint_by_seed[seed_key]["MIXER-ONLY"],
+                    tail_params,
+                    residual_eval,
+                    normalized_eval,
+                    args.evaluation_batch_windows,
+                ),
+                _run_replacement_windows(
+                    replacement_runner,
+                    endpoint_by_seed[seed_key]["JOINT-MIXER-DECODER"],
+                    tail_params,
+                    residual_eval,
+                    normalized_eval,
+                    args.evaluation_batch_windows,
+                ),
+            )
+        )
+    hidden = np.concatenate(layer0_outputs, axis=0)
+    divergence = {
+        "0": branch_divergence(hidden, names, evaluation_windows)
+    }
+    del (
+        layer0_outputs,
+        initial_by_seed,
+        endpoint_by_seed,
+        tail_params,
+        residual_eval,
+        normalized_eval,
+        mixer_eval,
+        mamba,
+        tail,
+        teacher_tail_runner,
+        replacement_runner,
+    )
+    jax.clear_caches()
+    gc.collect()
+
+    last_use = full_model_shard_last_use(
+        index_payload["weight_map"], source.num_layers
+    )
+    removed_shards = []
+    if args.prune_consumed_shards:
+        removed_shards.extend(_safe_prune_shards(model_dir, last_use, 0))
+    positions = jnp.arange(
+        int(manifest["sequence_length"]), dtype=jnp.int32
+    )[None]
+    attention_mask = jnp.ones(
+        (1, int(manifest["sequence_length"])), dtype=jnp.bool_
+    )
+    decoder = Qwen3DecoderLayer(source)
+    layer_runner = (
+        _create_data_parallel_decoder_runner(
+            decoder, positions, attention_mask, devices
+        )
+        if args.data_parallel
+        else _create_decoder_runner(decoder, positions, attention_mask)
+    )
+    divergence_layers = {9, 19, 29, 39}
+    for layer_index in range(1, source.num_layers):
+        print(f"streaming_decoder_layer={layer_index}/{source.num_layers - 1}")
+        ensure_layer_checkpoint(
+            model_dir,
+            index_payload["weight_map"],
+            source,
+            layer_index,
+            repo_id=QWEN3_14B.repo_id,
+            revision=QWEN3_14B.revision,
+        )
+        reader = QwenCheckpointReader(model_dir)
+        layer_arrays = load_layer_arrays(reader, source, layer_index)
+        layer_params = jax_layer_params(layer_arrays, source, layer_index)
+        hidden = (
+            run_host_data_parallel(
+                layer_runner,
+                layer_params,
+                hidden,
+                args.per_device_windows,
+                len(devices),
+                input_dtype=compute_dtype,
+            )
+            if args.data_parallel
+            else run_host_microbatches(
+                layer_runner,
+                layer_params,
+                hidden,
+                args.evaluation_batch_windows,
+                input_dtype=compute_dtype,
+            )
+        )
+        if not np.all(np.isfinite(hidden)):
+            raise FloatingPointError(
+                f"non-finite streamed residual after layer {layer_index}"
+            )
+        if layer_index in divergence_layers:
+            divergence[str(layer_index)] = branch_divergence(
+                hidden, names, evaluation_windows
+            )
+        del layer_params, layer_arrays, reader
+        gc.collect()
+        if args.prune_consumed_shards:
+            removed_shards.extend(
+                _safe_prune_shards(model_dir, last_use, layer_index)
+            )
+
+    from huggingface_hub import hf_hub_download
+
+    for tensor_name in ("model.norm.weight", "lm_head.weight"):
+        hf_hub_download(
+            repo_id=QWEN3_14B.repo_id,
+            revision=QWEN3_14B.revision,
+            filename=index_payload["weight_map"][tensor_name],
+            local_dir=model_dir,
+        )
+    reader = QwenCheckpointReader(model_dir)
+    norm_params = {
+        "scale": jnp.asarray(
+            reader.read("model.norm.weight"), dtype=jnp.float32
+        )
+    }
+    lm_head_kernel = jnp.asarray(
+        reader.read("lm_head.weight").T, dtype=compute_dtype
+    )
+    norm = RMSNorm(source.hidden_size, source.rms_norm_eps, jnp.float32)
+    lm_runner = create_lm_metrics_runner(
+        norm, data_parallel_devices=parallel_devices
+    )
+    token_ids = np.asarray(
+        arrays["token_ids"][evaluation_slice], dtype=np.int32
+    )
+    branch_values = hidden.reshape(
+        len(names), evaluation_windows, *hidden.shape[1:]
+    )
+    lm_metrics = {}
+    for branch_index, name in enumerate(names):
+        print(f"evaluating_lm_head={name}")
+        lm_metrics[name] = _run_lm_metrics(
+            lm_runner,
+            norm_params,
+            lm_head_kernel,
+            branch_values[branch_index],
+            token_ids,
+            devices=parallel_devices,
+            per_device_windows=args.per_device_windows,
+            compute_dtype=compute_dtype,
+        )
+    if args.prune_consumed_shards:
+        removed_shards.extend(
+            _safe_prune_shards(model_dir, last_use, source.num_layers)
+        )
+
+    reference_path = Path(args.reference_exp040_json)
+    reference = json.loads(reference_path.read_text(encoding="utf-8"))
+    if reference.get("source") != source_name or not reference.get("passed"):
+        raise ValueError("reference EXP-040 artifact is incompatible or invalid")
+    reproduction = reference_reproduction(
+        reference,
+        lm_metrics,
+        seed=seeds[0],
+        total_steps=args.total_steps,
+        tolerance=args.reference_nll_tolerance,
+    )
+    per_seed_metrics = {}
+    for seed in seeds:
+        per_seed_metrics[str(seed)] = {
+            "calibrated": lm_metrics[f"SEED-{seed}-CALIBRATED-STEP0"],
+            "mixer_only": lm_metrics[
+                f"SEED-{seed}-MIXER-ONLY-STEP{args.total_steps}"
+            ],
+            "joint": lm_metrics[f"SEED-{seed}-JOINT-STEP{args.total_steps}"],
+        }
+    aggregate = aggregate_multiseed_end_to_end(
+        original_nll=lm_metrics["ORIGINAL-CACHED-QWEN"]["mean_nll"],
+        seed_metrics=per_seed_metrics,
+        reference_reproduced=reproduction["passed"],
+    )
+    all_finite = bool(
+        training_result["passed"]
+        and lm_metrics["ORIGINAL-CACHED-QWEN"]["finite"]
+        and aggregate["all_finite"]
+    )
+    scientific_gate_passed = bool(
+        training_result["scientific_gate_passed"]
+        and aggregate["scientific_gate_passed"]
+    )
+    result = {
+        "source": source_name,
+        "dataset": manifest.get("dataset"),
+        "method": "three_seed_streamed_end_to_end_Qwen3_layer0_Mamba_confirmation",
+        "activation_cache_manifest": str(
+            Path(args.activation_cache_manifest).resolve()
+        ),
+        "resolved_activation_artifacts": {
+            name: str(path) for name, path in paths.items()
+        },
+        "reference_exp040_json": str(reference_path.resolve()),
+        "target_layer": 0,
+        "sequence_length": int(manifest["sequence_length"]),
+        "evaluation_windows": evaluation_windows,
+        "evaluation_tokens_per_branch": evaluation_windows
+        * (int(manifest["sequence_length"]) - 1),
+        "seeds": list(seeds),
+        "branches": list(names),
+        "training_result": training_result,
+        "compute_dtype": dtype_decision.dtype,
+        "jax_backend": jax.default_backend(),
+        "visible_devices": [str(device) for device in devices],
+        "data_parallel": args.data_parallel,
+        "per_device_windows": args.per_device_windows,
+        "hidden_relative_l2_to_original": divergence,
+        "lm_metrics": lm_metrics,
+        "reference_reproduction": reproduction,
+        "aggregate": aggregate,
+        "prune_consumed_shards": args.prune_consumed_shards,
+        "removed_checkpoint_shards": sorted(set(removed_shards)),
+        "scientific_gate_passed": scientific_gate_passed,
+        "passed": all_finite,
+        "notes": [
+            "The original branch is shared; each seed contributes calibrated, mixer-only, and joint layer-zero branches.",
+            "All ten branches stream together through identical frozen Qwen layers 1-39, final norm, and lm_head.",
+            "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance.",
+            "passed reports numerical execution; scientific_gate_passed also requires the local training and full-depth aggregate gates.",
+        ],
+    }
+    mirror = _write_json_with_output_mirror(
+        Path(args.result_json), result, args.output_dir
+    )
+    print(json.dumps(result, indent=2))
+    print(f"result_json={Path(args.result_json).resolve()}")
+    if mirror:
+        print(f"output_json={mirror.resolve()}")
+    if not all_finite:
+        raise SystemExit("MULTISEED-STREAMED-END-TO-END-NONFINITE")
+    print(
+        "MULTISEED-STREAMED-END-TO-END-PASS"
+        if scientific_gate_passed
+        else "MULTISEED-STREAMED-END-TO-END-GATE-FAIL"
+    )
+    return result
+
+
+if __name__ == "__main__":
+    main()

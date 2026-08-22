@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from extent.streamed_lm_eval import (
+    aggregate_multiseed_end_to_end,
     create_lm_metrics_runner,
     end_to_end_loss_comparison,
     full_model_shard_last_use,
@@ -93,3 +94,37 @@ def test_lm_metrics_runner_reduces_logits_on_device():
     np.testing.assert_allclose(loss, expected, rtol=5e-6)
     assert int(count) == 2
     assert int(correct) == 2
+
+
+def test_multiseed_end_to_end_gate_requires_reproduction_and_two_wins():
+    seed_metrics = {
+        "123": {
+            "calibrated": {"mean_nll": 3.0, "finite": True},
+            "mixer_only": {"mean_nll": 2.5, "finite": True},
+            "joint": {"mean_nll": 2.2, "finite": True},
+        },
+        "456": {
+            "calibrated": {"mean_nll": 3.1, "finite": True},
+            "mixer_only": {"mean_nll": 2.4, "finite": True},
+            "joint": {"mean_nll": 2.3, "finite": True},
+        },
+        "789": {
+            "calibrated": {"mean_nll": 3.2, "finite": True},
+            "mixer_only": {"mean_nll": 2.3, "finite": True},
+            "joint": {"mean_nll": 2.4, "finite": True},
+        },
+    }
+    aggregate = aggregate_multiseed_end_to_end(
+        original_nll=2.0,
+        seed_metrics=seed_metrics,
+        reference_reproduced=True,
+    )
+    assert aggregate["joint_mixer_only_wins"] == 2
+    assert aggregate["joint_calibrated_wins"] == 3
+    assert aggregate["scientific_gate_passed"] is True
+    failed = aggregate_multiseed_end_to_end(
+        original_nll=2.0,
+        seed_metrics=seed_metrics,
+        reference_reproduced=False,
+    )
+    assert failed["scientific_gate_passed"] is False
