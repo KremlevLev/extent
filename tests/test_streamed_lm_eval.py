@@ -128,3 +128,11 @@ def test_multiseed_end_to_end_gate_requires_reproduction_and_two_wins():
         reference_reproduced=False,
     )
     assert failed["scientific_gate_passed"] is False
+    strict_fresh = aggregate_multiseed_end_to_end(
+        original_nll=2.0,
+        seed_metrics=seed_metrics,
+        reference_reproduced=False,
+        reference_required=False,
+        required_recovery_fraction=0.25,
+    )
+    assert strict_fresh["scientific_gate_passed"] is False

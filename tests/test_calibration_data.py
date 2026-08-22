@@ -14,3 +14,10 @@ class _Tokenizer:
 def test_pack_tokenized_texts_skips_blanks_adds_eos_and_truncates():
     tokens = pack_tokenized_texts(_Tokenizer(), ["", "ab", " ", "cd"], 5)
     np.testing.assert_array_equal(tokens, [97, 98, 99, 99, 100])
+
+
+def test_pack_tokenized_texts_supports_locked_token_offset():
+    tokens = pack_tokenized_texts(
+        _Tokenizer(), ["ab", "cd", "ef"], 4, token_offset=3
+    )
+    np.testing.assert_array_equal(tokens, [99, 100, 99, 101])

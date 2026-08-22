@@ -114,6 +114,8 @@ def main(
     )
     parser.add_argument("--activation-cache-manifest", required=True)
     parser.add_argument("--activation-cache-dir")
+    parser.add_argument("--evaluation-cache-manifest")
+    parser.add_argument("--evaluation-cache-dir")
     parser.add_argument("--qwen-cache-dir", default="/content/qwen3-layer0-weights")
     parser.add_argument("--seeds", default="123,456,789")
     parser.add_argument("--data-seed", type=int, default=20260820)
@@ -158,6 +160,14 @@ def main(
             single_args.extend(
                 ["--activation-cache-dir", args.activation_cache_dir]
             )
+        if args.evaluation_cache_manifest:
+            single_args.extend(
+                ["--evaluation-cache-manifest", args.evaluation_cache_manifest]
+            )
+        if args.evaluation_cache_dir:
+            single_args.extend(
+                ["--evaluation-cache-dir", args.evaluation_cache_dir]
+            )
         if args.skip_hash_verification:
             single_args.append("--skip-hash-verification")
         print(f"EXP-039 seed={seed} START")
@@ -181,6 +191,9 @@ def main(
         "dataset": first["dataset"],
         "method": "three_seed_decoder_aware_Mamba3_confirmation",
         "activation_cache_manifest": first["activation_cache_manifest"],
+        "evaluation_cache_manifest": first["evaluation_cache_manifest"],
+        "evaluation_windows": first["evaluation_windows"],
+        "evaluation_token_offset": first["evaluation_token_offset"],
         "target_layer": first["target_layer"],
         "sequence_length": first["sequence_length"],
         "seeds": list(seeds),

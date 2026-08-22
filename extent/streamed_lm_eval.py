@@ -140,6 +140,7 @@ def aggregate_multiseed_end_to_end(
     original_nll: float,
     seed_metrics: Mapping[str, Mapping[str, Mapping[str, float | bool]]],
     reference_reproduced: bool,
+    reference_required: bool = True,
     required_recovery_fraction: float = 0.10,
     required_wins: int = 2,
 ) -> dict:
@@ -207,7 +208,7 @@ def aggregate_multiseed_end_to_end(
         and calibrated_wins >= required_wins
         and mean_recovery is not None
         and mean_recovery >= required_recovery_fraction
-        and reference_reproduced
+        and (reference_reproduced or not reference_required)
     )
     return {
         "original_mean_nll": original_nll,
@@ -231,5 +232,6 @@ def aggregate_multiseed_end_to_end(
         "all_mixer_only_excess_nll_positive": all_mixer_excess_positive,
         "all_finite": all_finite,
         "reference_exp040_reproduced": reference_reproduced,
+        "reference_exp040_required": reference_required,
         "scientific_gate_passed": passed,
     }

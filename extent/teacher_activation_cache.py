@@ -23,8 +23,17 @@ def activation_window_layout(
     calibration_windows: int,
     training_windows: int,
     evaluation_windows: int,
+    *,
+    allow_evaluation_only: bool = False,
 ) -> ActivationWindowLayout:
-    if min(calibration_windows, training_windows, evaluation_windows) < 1:
+    if allow_evaluation_only:
+        if calibration_windows != 0 or training_windows != 0:
+            raise ValueError(
+                "evaluation-only cache requires zero calibration and training windows"
+            )
+        if evaluation_windows < 1:
+            raise ValueError("evaluation-only cache requires evaluation windows")
+    elif min(calibration_windows, training_windows, evaluation_windows) < 1:
         raise ValueError("activation-cache window counts must be positive")
     training_start = calibration_windows
     evaluation_start = training_start + training_windows
@@ -186,3 +195,57 @@ def load_activation_cache(
         arrays[name] = value
         paths[name] = path.resolve()
     return manifest, arrays, paths
+
+
+def validate_external_evaluation_cache(
+    training_manifest: Mapping,
+    evaluation_manifest: Mapping,
+    *,
+    required_token_offset: int | None = None,
+    required_evaluation_windows: int | None = None,
+) -> slice:
+    """Validate a disjoint evaluation-only cache against a training cache."""
+    shared = ("source", "dataset", "target_layer", "sequence_length")
+    mismatches = {
+        key: (training_manifest.get(key), evaluation_manifest.get(key))
+        for key in shared
+        if training_manifest.get(key) != evaluation_manifest.get(key)
+    }
+    if mismatches:
+        raise ValueError(f"training/evaluation cache mismatch: {mismatches}")
+    if not evaluation_manifest.get("evaluation_only"):
+        raise ValueError("external evaluation cache must be marked evaluation_only")
+    layout = evaluation_manifest["window_layout"]
+    calibration = slice(*layout["calibration"])
+    training = slice(*layout["training"])
+    evaluation = slice(*layout["evaluation"])
+    if calibration.start != calibration.stop or training.start != training.stop:
+        raise ValueError("external evaluation cache must not contain train/calibration windows")
+    evaluation_windows = evaluation.stop - evaluation.start
+    if evaluation_windows < 1:
+        raise ValueError("external evaluation cache has no evaluation windows")
+    if (
+        required_evaluation_windows is not None
+        and evaluation_windows != required_evaluation_windows
+    ):
+        raise ValueError(
+            "external evaluation window count differs from the frozen protocol"
+        )
+    offset = int(evaluation_manifest.get("token_offset", -1))
+    if required_token_offset is not None and offset != required_token_offset:
+        raise ValueError("external evaluation token offset differs from the frozen protocol")
+    training_range = training_manifest.get("token_range")
+    evaluation_range = evaluation_manifest.get("token_range")
+    if not training_range or not evaluation_range:
+        raise ValueError("cache manifests must record token_range provenance")
+    evaluation_start, evaluation_stop = map(int, evaluation_range)
+    expected_tokens = evaluation_windows * int(evaluation_manifest["sequence_length"])
+    if evaluation_start != offset or evaluation_stop - evaluation_start != expected_tokens:
+        raise ValueError("external evaluation token_range is inconsistent with its layout")
+    disjoint = (
+        evaluation_stop <= int(training_range[0])
+        or int(training_range[1]) <= evaluation_start
+    )
+    if not disjoint:
+        raise ValueError("external evaluation token range overlaps the training cache")
+    return evaluation

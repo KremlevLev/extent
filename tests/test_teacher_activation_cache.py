@@ -18,6 +18,7 @@ from extent.teacher_activation_cache import (
     load_activation_cache,
     run_host_data_parallel,
     run_host_microbatches,
+    validate_external_evaluation_cache,
 )
 
 
@@ -29,6 +30,45 @@ def test_activation_window_layout_is_disjoint_and_exhaustive():
     assert layout.total_windows == 92
     with pytest.raises(ValueError, match="positive"):
         activation_window_layout(8, 0, 4)
+    evaluation = activation_window_layout(
+        0, 0, 128, allow_evaluation_only=True
+    )
+    assert evaluation.calibration == slice(0, 0)
+    assert evaluation.training == slice(0, 0)
+    assert evaluation.evaluation == slice(0, 128)
+    with pytest.raises(ValueError, match="zero calibration"):
+        activation_window_layout(1, 0, 128, allow_evaluation_only=True)
+
+
+def test_external_evaluation_cache_requires_locked_disjoint_range():
+    training = {
+        "source": "qwen",
+        "dataset": "wiki",
+        "target_layer": 0,
+        "sequence_length": 32,
+        "token_range": [0, 33536],
+    }
+    evaluation = {
+        **{key: training[key] for key in ("source", "dataset", "target_layer", "sequence_length")},
+        "evaluation_only": True,
+        "token_offset": 65536,
+        "token_range": [65536, 69632],
+        "window_layout": {
+            "calibration": [0, 0],
+            "training": [0, 0],
+            "evaluation": [0, 128],
+        },
+    }
+    assert validate_external_evaluation_cache(
+        training,
+        evaluation,
+        required_token_offset=65536,
+        required_evaluation_windows=128,
+    ) == slice(0, 128)
+    evaluation["token_offset"] = 33000
+    evaluation["token_range"] = [33000, 37096]
+    with pytest.raises(ValueError, match="overlaps"):
+        validate_external_evaluation_cache(training, evaluation)
 
 
 def test_host_microbatch_runner_preserves_order_and_fp32_output():

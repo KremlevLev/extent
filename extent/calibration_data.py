@@ -15,10 +15,14 @@ def pack_tokenized_texts(
     tokenizer,
     texts: Iterable[str],
     total_tokens: int,
+    *,
+    token_offset: int = 0,
 ) -> np.ndarray:
     """Pack non-empty documents with EOS separators deterministically."""
     if total_tokens < 1:
         raise ValueError("total_tokens must be positive")
+    if token_offset < 0:
+        raise ValueError("token_offset must be non-negative")
     eos = tokenizer.eos_token_id
     if eos is None:
         raise ValueError("tokenizer must define eos_token_id")
@@ -28,9 +32,15 @@ def pack_tokenized_texts(
             continue
         pieces.extend(tokenizer(text, add_special_tokens=False)["input_ids"])
         pieces.append(int(eos))
-        if len(pieces) >= total_tokens:
-            return np.asarray(pieces[:total_tokens], dtype=np.int32)
-    raise ValueError(f"dataset supplied only {len(pieces)} of {total_tokens} tokens")
+        required = token_offset + total_tokens
+        if len(pieces) >= required:
+            return np.asarray(
+                pieces[token_offset:required], dtype=np.int32
+            )
+    raise ValueError(
+        f"dataset supplied only {len(pieces)} of {token_offset + total_tokens} "
+        "required prefix tokens"
+    )
 
 
 def load_wikitext2_tokens(
@@ -39,8 +49,9 @@ def load_wikitext2_tokens(
     *,
     tokenizer_repo: str,
     tokenizer_revision: str,
+    token_offset: int = 0,
 ) -> np.ndarray:
-    """Load a pinned WikiText-2 train prefix with a pinned tokenizer."""
+    """Load a pinned WikiText-2 train slice with a pinned tokenizer."""
     from huggingface_hub import hf_hub_download
     import pyarrow.parquet as parquet
     from transformers import AutoTokenizer
@@ -61,4 +72,6 @@ def load_wikitext2_tokens(
         trust_remote_code=False,
     )
     texts = parquet.read_table(dataset_file, columns=["text"])["text"].to_pylist()
-    return pack_tokenized_texts(tokenizer, texts, total_tokens)
+    return pack_tokenized_texts(
+        tokenizer, texts, total_tokens, token_offset=token_offset
+    )

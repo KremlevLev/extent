@@ -32,7 +32,10 @@ from extent.qwen3_parity import ensure_layer_checkpoint
 from extent.qwen3_teacher import Qwen3TeacherConfig
 from extent.qwen_source import QWEN3_14B, validate_source_metadata
 from extent.readout_calibration import fit_dual_ridge_readout
-from extent.teacher_activation_cache import load_activation_cache
+from extent.teacher_activation_cache import (
+    load_activation_cache,
+    validate_external_evaluation_cache,
+)
 from extent.weight_mapping import QwenCheckpointReader
 
 
@@ -114,6 +117,8 @@ def main(
     )
     parser.add_argument("--activation-cache-manifest", required=True)
     parser.add_argument("--activation-cache-dir")
+    parser.add_argument("--evaluation-cache-manifest")
+    parser.add_argument("--evaluation-cache-dir")
     parser.add_argument("--qwen-cache-dir", default="/content/qwen3-layer0-weights")
     parser.add_argument("--total-steps", type=int, default=1024)
     parser.add_argument("--checkpoints", default="0,128,256,512,1024")
@@ -157,6 +162,20 @@ def main(
     calibration_slice = _slice(layout, "calibration")
     training_slice = _slice(layout, "training")
     evaluation_slice = _slice(layout, "evaluation")
+    evaluation_manifest = manifest
+    evaluation_arrays = arrays
+    evaluation_paths = paths
+    if args.evaluation_cache_manifest:
+        evaluation_manifest, evaluation_arrays, evaluation_paths = (
+            load_activation_cache(
+                args.evaluation_cache_manifest,
+                artifact_dir=args.evaluation_cache_dir,
+                verify_hashes=not args.skip_hash_verification,
+            )
+        )
+        evaluation_slice = validate_external_evaluation_cache(
+            manifest, evaluation_manifest
+        )
     training_count = training_slice.stop - training_slice.start
     if args.total_steps * args.batch_windows != training_count:
         raise ValueError(
@@ -227,13 +246,13 @@ def main(
     replacement_runner = create_batched_replacement_runner(mamba, tail)
 
     residual_eval = jnp.asarray(
-        arrays["residual_input"][evaluation_slice], dtype=compute_dtype
+        evaluation_arrays["residual_input"][evaluation_slice], dtype=compute_dtype
     )
     normalized_eval = jnp.asarray(
-        arrays["normalized_input"][evaluation_slice], dtype=compute_dtype
+        evaluation_arrays["normalized_input"][evaluation_slice], dtype=compute_dtype
     )
     mixer_eval = jnp.asarray(
-        arrays["attention_target"][evaluation_slice], dtype=compute_dtype
+        evaluation_arrays["attention_target"][evaluation_slice], dtype=compute_dtype
     )
     mixer_eval_np = np.asarray(mixer_eval, dtype=np.float32)
     decoder_eval_np = _teacher_decoder_outputs(
@@ -366,6 +385,16 @@ def main(
         "method": "paired_mixer_only_vs_decoder_aware_Mamba3_distillation",
         "activation_cache_manifest": str(Path(args.activation_cache_manifest).resolve()),
         "resolved_activation_artifacts": {name: str(path) for name, path in paths.items()},
+        "evaluation_cache_manifest": (
+            str(Path(args.evaluation_cache_manifest).resolve())
+            if args.evaluation_cache_manifest
+            else None
+        ),
+        "resolved_evaluation_artifacts": {
+            name: str(path) for name, path in evaluation_paths.items()
+        },
+        "evaluation_windows": evaluation_slice.stop - evaluation_slice.start,
+        "evaluation_token_offset": evaluation_manifest.get("token_offset", 0),
         "target_layer": int(manifest["target_layer"]),
         "sequence_length": int(manifest["sequence_length"]),
         "training_windows": training_count,

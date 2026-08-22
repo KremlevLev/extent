@@ -123,6 +123,8 @@ def _partial_payload(
     compute_dtype: str,
     storage_dtype: str,
     tokens_sha256: str,
+    token_offset: int,
+    evaluation_only: bool,
     residual_path: Path,
     removed_shards: list[str],
 ) -> dict:
@@ -135,6 +137,8 @@ def _partial_payload(
         "compute_dtype": compute_dtype,
         "storage_dtype": storage_dtype,
         "tokens_sha256": tokens_sha256,
+        "token_offset": token_offset,
+        "evaluation_only": evaluation_only,
         "residual_input_path": str(residual_path.resolve()),
         "removed_checkpoint_shards": removed_shards,
     }
@@ -155,6 +159,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--calibration-windows", type=int, default=8)
     parser.add_argument("--training-windows", type=int, default=80)
     parser.add_argument("--evaluation-windows", type=int, default=4)
+    parser.add_argument("--token-offset", type=int, default=0)
+    parser.add_argument("--evaluation-only", action="store_true")
     parser.add_argument("--microbatch-windows", type=int, default=4)
     parser.add_argument("--data-parallel", action="store_true")
     parser.add_argument("--per-device-windows", type=int, default=2)
@@ -175,8 +181,13 @@ def main(argv: list[str] | None = None) -> None:
         raise ValueError("target-layer must be in [0, 40)")
     if min(args.sequence_length, args.microbatch_windows, args.per_device_windows) < 1:
         raise ValueError("sequence-length and batch sizes must be positive")
+    if args.token_offset < 0:
+        raise ValueError("token-offset must be non-negative")
     layout = activation_window_layout(
-        args.calibration_windows, args.training_windows, args.evaluation_windows
+        args.calibration_windows,
+        args.training_windows,
+        args.evaluation_windows,
+        allow_evaluation_only=args.evaluation_only,
     )
     jax.config.update("jax_default_matmul_precision", "high")
     dtype_decision = recommended_compute_dtype(requested=args.compute_dtype)
@@ -216,6 +227,7 @@ def main(argv: list[str] | None = None) -> None:
         args.dataset_cache_dir,
         tokenizer_repo=spec.repo_id,
         tokenizer_revision=spec.revision,
+        token_offset=args.token_offset,
     ).reshape(layout.total_windows, args.sequence_length)
     atomic_save_array(tokens_path, tokens, np.dtype(np.int32))
     tokens_sha256 = file_sha256(tokens_path)
@@ -251,6 +263,8 @@ def main(argv: list[str] | None = None) -> None:
             "compute_dtype": dtype_decision.dtype,
             "storage_dtype": args.storage_dtype,
             "tokens_sha256": tokens_sha256,
+            "token_offset": args.token_offset,
+            "evaluation_only": args.evaluation_only,
         }
         mismatches = {
             key: (resume.get(key), value)
@@ -332,6 +346,8 @@ def main(argv: list[str] | None = None) -> None:
             compute_dtype=dtype_decision.dtype,
             storage_dtype=args.storage_dtype,
             tokens_sha256=tokens_sha256,
+            token_offset=args.token_offset,
+            evaluation_only=args.evaluation_only,
             residual_path=residual_path,
             removed_shards=removed_shards,
         )
@@ -349,6 +365,8 @@ def main(argv: list[str] | None = None) -> None:
         compute_dtype=dtype_decision.dtype,
         storage_dtype=args.storage_dtype,
         tokens_sha256=tokens_sha256,
+        token_offset=args.token_offset,
+        evaluation_only=args.evaluation_only,
         residual_path=residual_path,
         removed_shards=removed_shards,
     )
@@ -405,6 +423,12 @@ def main(argv: list[str] | None = None) -> None:
         "method": "streamed_Qwen3_residual_and_attention_activation_cache",
         "target_layer": args.target_layer,
         "sequence_length": args.sequence_length,
+        "token_offset": args.token_offset,
+        "token_range": [
+            args.token_offset,
+            args.token_offset + layout.total_windows * args.sequence_length,
+        ],
+        "evaluation_only": args.evaluation_only,
         "window_layout": {
             "calibration": [layout.calibration.start, layout.calibration.stop],
             "training": [layout.training.start, layout.training.stop],

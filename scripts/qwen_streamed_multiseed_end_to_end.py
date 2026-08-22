@@ -53,6 +53,7 @@ from extent.teacher_activation_cache import (
     load_activation_cache,
     run_host_data_parallel,
     run_host_microbatches,
+    validate_external_evaluation_cache,
 )
 from extent.weight_mapping import QwenCheckpointReader
 
@@ -124,6 +125,8 @@ def main(argv: list[str] | None = None) -> dict:
     )
     parser.add_argument("--activation-cache-manifest", required=True)
     parser.add_argument("--activation-cache-dir")
+    parser.add_argument("--evaluation-cache-manifest")
+    parser.add_argument("--evaluation-cache-dir")
     parser.add_argument(
         "--qwen-cache-dir", default="/kaggle/working/qwen3-exp041-weights"
     )
@@ -150,6 +153,12 @@ def main(argv: list[str] | None = None) -> dict:
         default="results/EXP-040-qwen3-streamed-end-to-end-layer0.json",
     )
     parser.add_argument("--reference-nll-tolerance", type=float, default=0.02)
+    parser.add_argument(
+        "--protocol",
+        choices=("exp041", "exp042-fresh"),
+        default="exp041",
+    )
+    parser.add_argument("--required-recovery-fraction", type=float)
     parser.add_argument("--result-json", required=True)
     parser.add_argument("--output-dir", default="/kaggle/working/output")
     args = parser.parse_args(argv)
@@ -174,9 +183,32 @@ def main(argv: list[str] | None = None) -> dict:
     source_name = f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}"
     if manifest.get("source") != source_name or int(manifest["target_layer"]) != 0:
         raise ValueError("EXP-041 requires the pinned Qwen3 source and layer zero")
-    layout = manifest["window_layout"]
-    evaluation_slice = _slice(layout, "evaluation")
+    evaluation_manifest = manifest
+    evaluation_arrays = arrays
+    evaluation_paths = paths
+    evaluation_slice = _slice(manifest["window_layout"], "evaluation")
+    if args.protocol == "exp042-fresh":
+        if not args.evaluation_cache_manifest:
+            raise ValueError("EXP-042 requires an external evaluation cache")
+        evaluation_manifest, evaluation_arrays, evaluation_paths = (
+            load_activation_cache(
+                args.evaluation_cache_manifest,
+                artifact_dir=args.evaluation_cache_dir,
+                verify_hashes=not args.skip_hash_verification,
+            )
+        )
+        evaluation_slice = validate_external_evaluation_cache(
+            manifest,
+            evaluation_manifest,
+            required_token_offset=65_536,
+            required_evaluation_windows=128,
+        )
     evaluation_windows = evaluation_slice.stop - evaluation_slice.start
+    required_recovery = args.required_recovery_fraction
+    if required_recovery is None:
+        required_recovery = 0.25 if args.protocol == "exp042-fresh" else 0.10
+    if not 0.0 <= required_recovery <= 1.0:
+        raise ValueError("required recovery fraction must be in [0, 1]")
     dtype_decision = recommended_compute_dtype(requested=args.compute_dtype)
     compute_dtype = jnp.dtype(dtype_decision.dtype)
     devices = list(jax.devices())
@@ -185,7 +217,10 @@ def main(argv: list[str] | None = None) -> dict:
     parallel_devices = devices if args.data_parallel else None
     names = branch_names(seeds, args.total_steps)
 
-    training_json = Path(args.output_dir) / "exp041-training-confirmation.json"
+    experiment_id = "exp042" if args.protocol == "exp042-fresh" else "exp041"
+    training_json = (
+        Path(args.output_dir) / f"{experiment_id}-training-confirmation.json"
+    )
     training_args = [
         "--activation-cache-manifest", args.activation_cache_manifest,
         "--qwen-cache-dir", args.qwen_cache_dir,
@@ -205,6 +240,14 @@ def main(argv: list[str] | None = None) -> dict:
     if args.activation_cache_dir:
         training_args.extend(
             ["--activation-cache-dir", args.activation_cache_dir]
+        )
+    if args.evaluation_cache_manifest:
+        training_args.extend(
+            ["--evaluation-cache-manifest", args.evaluation_cache_manifest]
+        )
+    if args.evaluation_cache_dir:
+        training_args.extend(
+            ["--evaluation-cache-dir", args.evaluation_cache_dir]
         )
     if args.skip_hash_verification:
         training_args.append("--skip-hash-verification")
@@ -248,13 +291,13 @@ def main(argv: list[str] | None = None) -> dict:
     teacher_tail_runner = create_batched_teacher_tail_runner(tail)
     replacement_runner = create_batched_replacement_runner(mamba, tail)
     residual_eval = jnp.asarray(
-        arrays["residual_input"][evaluation_slice], dtype=compute_dtype
+        evaluation_arrays["residual_input"][evaluation_slice], dtype=compute_dtype
     )
     normalized_eval = jnp.asarray(
-        arrays["normalized_input"][evaluation_slice], dtype=compute_dtype
+        evaluation_arrays["normalized_input"][evaluation_slice], dtype=compute_dtype
     )
     mixer_eval = jnp.asarray(
-        arrays["attention_target"][evaluation_slice], dtype=compute_dtype
+        evaluation_arrays["attention_target"][evaluation_slice], dtype=compute_dtype
     )
     layer0_outputs = [
         _teacher_decoder_outputs(
@@ -405,7 +448,7 @@ def main(argv: list[str] | None = None) -> dict:
         norm, data_parallel_devices=parallel_devices
     )
     token_ids = np.asarray(
-        arrays["token_ids"][evaluation_slice], dtype=np.int32
+        evaluation_arrays["token_ids"][evaluation_slice], dtype=np.int32
     )
     branch_values = hidden.reshape(
         len(names), evaluation_windows, *hidden.shape[1:]
@@ -429,16 +472,23 @@ def main(argv: list[str] | None = None) -> dict:
         )
 
     reference_path = Path(args.reference_exp040_json)
-    reference = json.loads(reference_path.read_text(encoding="utf-8"))
-    if reference.get("source") != source_name or not reference.get("passed"):
-        raise ValueError("reference EXP-040 artifact is incompatible or invalid")
-    reproduction = reference_reproduction(
-        reference,
-        lm_metrics,
-        seed=seeds[0],
-        total_steps=args.total_steps,
-        tolerance=args.reference_nll_tolerance,
-    )
+    if args.protocol == "exp041":
+        reference = json.loads(reference_path.read_text(encoding="utf-8"))
+        if reference.get("source") != source_name or not reference.get("passed"):
+            raise ValueError("reference EXP-040 artifact is incompatible or invalid")
+        reproduction = reference_reproduction(
+            reference,
+            lm_metrics,
+            seed=seeds[0],
+            total_steps=args.total_steps,
+            tolerance=args.reference_nll_tolerance,
+        )
+    else:
+        reproduction = {
+            "required": False,
+            "reason": "EXP-042 evaluates a disjoint locked token range",
+            "passed": True,
+        }
     per_seed_metrics = {}
     for seed in seeds:
         per_seed_metrics[str(seed)] = {
@@ -452,6 +502,8 @@ def main(argv: list[str] | None = None) -> dict:
         original_nll=lm_metrics["ORIGINAL-CACHED-QWEN"]["mean_nll"],
         seed_metrics=per_seed_metrics,
         reference_reproduced=reproduction["passed"],
+        reference_required=args.protocol == "exp041",
+        required_recovery_fraction=required_recovery,
     )
     all_finite = bool(
         training_result["passed"]
@@ -465,14 +517,31 @@ def main(argv: list[str] | None = None) -> dict:
     result = {
         "source": source_name,
         "dataset": manifest.get("dataset"),
-        "method": "three_seed_streamed_end_to_end_Qwen3_layer0_Mamba_confirmation",
+        "method": (
+            "locked_fresh_text_three_seed_streamed_end_to_end_confirmation"
+            if args.protocol == "exp042-fresh"
+            else "three_seed_streamed_end_to_end_Qwen3_layer0_Mamba_confirmation"
+        ),
+        "protocol": args.protocol,
         "activation_cache_manifest": str(
             Path(args.activation_cache_manifest).resolve()
         ),
         "resolved_activation_artifacts": {
             name: str(path) for name, path in paths.items()
         },
-        "reference_exp040_json": str(reference_path.resolve()),
+        "evaluation_cache_manifest": (
+            str(Path(args.evaluation_cache_manifest).resolve())
+            if args.evaluation_cache_manifest
+            else None
+        ),
+        "resolved_evaluation_artifacts": {
+            name: str(path) for name, path in evaluation_paths.items()
+        },
+        "evaluation_token_offset": evaluation_manifest.get("token_offset", 0),
+        "evaluation_token_range": evaluation_manifest.get("token_range"),
+        "reference_exp040_json": (
+            str(reference_path.resolve()) if args.protocol == "exp041" else None
+        ),
         "target_layer": 0,
         "sequence_length": int(manifest["sequence_length"]),
         "evaluation_windows": evaluation_windows,
@@ -489,6 +558,7 @@ def main(argv: list[str] | None = None) -> dict:
         "hidden_relative_l2_to_original": divergence,
         "lm_metrics": lm_metrics,
         "reference_reproduction": reproduction,
+        "required_recovery_fraction": required_recovery,
         "aggregate": aggregate,
         "prune_consumed_shards": args.prune_consumed_shards,
         "removed_checkpoint_shards": sorted(set(removed_shards)),
@@ -497,7 +567,11 @@ def main(argv: list[str] | None = None) -> dict:
         "notes": [
             "The original branch is shared; each seed contributes calibrated, mixer-only, and joint layer-zero branches.",
             "All ten branches stream together through identical frozen Qwen layers 1-39, final norm, and lm_head.",
-            "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance.",
+            (
+                "The external evaluation cache is disjoint from the training cache and locked to tokens [65536, 69632)."
+                if args.protocol == "exp042-fresh"
+                else "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance."
+            ),
             "passed reports numerical execution; scientific_gate_passed also requires the local training and full-depth aggregate gates.",
         ],
     }
@@ -510,11 +584,12 @@ def main(argv: list[str] | None = None) -> dict:
         print(f"output_json={mirror.resolve()}")
     if not all_finite:
         raise SystemExit("MULTISEED-STREAMED-END-TO-END-NONFINITE")
-    print(
-        "MULTISEED-STREAMED-END-TO-END-PASS"
-        if scientific_gate_passed
-        else "MULTISEED-STREAMED-END-TO-END-GATE-FAIL"
+    label = (
+        "LOCKED-FRESH-TEXT"
+        if args.protocol == "exp042-fresh"
+        else "MULTISEED-STREAMED-END-TO-END"
     )
+    print(f"{label}-{'PASS' if scientific_gate_passed else 'GATE-FAIL'}")
     return result
 
 
