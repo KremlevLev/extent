@@ -1,0 +1,976 @@
+{
+  "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+  "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+  "method": "three_seed_streamed_end_to_end_Qwen3_layer0_Mamba_confirmation",
+  "activation_cache_manifest": "/kaggle/working/output/exp041-cache-manifest.json",
+  "resolved_activation_artifacts": {
+    "token_ids": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-token-ids.npy",
+    "residual_input": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-residual-input.npy",
+    "normalized_input": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-normalized-input.npy",
+    "attention_target": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-attention-target.npy"
+  },
+  "reference_exp040_json": "/kaggle/working/extent/results/EXP-040-qwen3-streamed-end-to-end-layer0.json",
+  "target_layer": 0,
+  "sequence_length": 32,
+  "evaluation_windows": 16,
+  "evaluation_tokens_per_branch": 496,
+  "seeds": [
+    123,
+    456,
+    789
+  ],
+  "branches": [
+    "ORIGINAL-CACHED-QWEN",
+    "SEED-123-CALIBRATED-STEP0",
+    "SEED-123-MIXER-ONLY-STEP1024",
+    "SEED-123-JOINT-STEP1024",
+    "SEED-456-CALIBRATED-STEP0",
+    "SEED-456-MIXER-ONLY-STEP1024",
+    "SEED-456-JOINT-STEP1024",
+    "SEED-789-CALIBRATED-STEP0",
+    "SEED-789-MIXER-ONLY-STEP1024",
+    "SEED-789-JOINT-STEP1024"
+  ],
+  "training_result": {
+    "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+    "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+    "method": "three_seed_decoder_aware_Mamba3_confirmation",
+    "activation_cache_manifest": "/kaggle/working/output/exp041-cache-manifest.json",
+    "target_layer": 0,
+    "sequence_length": 32,
+    "seeds": [
+      123,
+      456,
+      789
+    ],
+    "data_seed": 20260820,
+    "total_steps_per_arm": 1024,
+    "unique_training_tokens_per_arm": 32768,
+    "optimizer_visible_tokens_total": 196608,
+    "checkpoints": [
+      0,
+      512,
+      1024
+    ],
+    "compute_dtype": "bfloat16",
+    "jax_backend": "tpu",
+    "learning_rate": 3e-05,
+    "readout_ridge": 0.01,
+    "decoder_loss_weight": 1.0,
+    "seed_results": {
+      "123": {
+        "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+        "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+        "method": "paired_mixer_only_vs_decoder_aware_Mamba3_distillation",
+        "activation_cache_manifest": "/kaggle/working/output/exp041-cache-manifest.json",
+        "resolved_activation_artifacts": {
+          "token_ids": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-token-ids.npy",
+          "residual_input": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-residual-input.npy",
+          "normalized_input": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-normalized-input.npy",
+          "attention_target": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-attention-target.npy"
+        },
+        "target_layer": 0,
+        "sequence_length": 32,
+        "training_windows": 1024,
+        "unique_training_tokens_per_arm": 32768,
+        "total_steps": 1024,
+        "batch_windows": 1,
+        "checkpoints": [
+          0,
+          512,
+          1024
+        ],
+        "compute_dtype": "bfloat16",
+        "jax_backend": "tpu",
+        "seed": 123,
+        "data_seed": 20260820,
+        "learning_rate": 3e-05,
+        "readout_ridge": 0.01,
+        "readout_calibration_relative_l2": 0.08914961665868759,
+        "mamba_config": {
+          "d_state": 64,
+          "expand": 0.75,
+          "head_dim": 64,
+          "groups": 1,
+          "mimo_rank": 4,
+          "rope_fraction": 0.5,
+          "dt_min": 0.001,
+          "dt_max": 0.1,
+          "dt_init_floor": 0.0001,
+          "a_floor": 0.0001,
+          "conv_kernel": 4
+        },
+        "arms": {
+          "MIXER-ONLY": {
+            "decoder_loss_weight": 0.0,
+            "evaluations": {
+              "0": {
+                "mixer_output": {
+                  "max_abs": 5.375,
+                  "mean_abs": 0.04481861601544144,
+                  "rmse": 0.07391165812886297,
+                  "relative_l2": 0.7857142508353889,
+                  "cosine_similarity": 0.6845712120752018
+                },
+                "decoder_output": {
+                  "max_abs": 15.4375,
+                  "mean_abs": 0.11946677410574491,
+                  "rmse": 0.18321088522434428,
+                  "relative_l2": 0.7309644893259635,
+                  "cosine_similarity": 0.7265938794283457
+                },
+                "finite": true
+              },
+              "512": {
+                "mixer_output": {
+                  "max_abs": 3.69140625,
+                  "mean_abs": 0.034273084687442966,
+                  "rmse": 0.05138386246812571,
+                  "relative_l2": 0.546233625739836,
+                  "cosine_similarity": 0.8376913165620308
+                },
+                "decoder_output": {
+                  "max_abs": 8.0,
+                  "mean_abs": 0.09727613419356551,
+                  "rmse": 0.15439597029357247,
+                  "relative_l2": 0.6160003617767126,
+                  "cosine_similarity": 0.7990750756129442
+                },
+                "finite": true
+              },
+              "1024": {
+                "mixer_output": {
+                  "max_abs": 3.6015625,
+                  "mean_abs": 0.033947121883680834,
+                  "rmse": 0.050374288900504424,
+                  "relative_l2": 0.5355014035244479,
+                  "cosine_similarity": 0.8447989432061083
+                },
+                "decoder_output": {
+                  "max_abs": 7.0,
+                  "mean_abs": 0.09603877770041533,
+                  "rmse": 0.1527014960839362,
+                  "relative_l2": 0.6092398438423873,
+                  "cosine_similarity": 0.8067652203584457
+                },
+                "finite": true
+              }
+            },
+            "last_train_metrics": {
+              "decoder_loss": 0.32620707154273987,
+              "grad_norm": 0.5431017279624939,
+              "grads_finite": 1,
+              "loss": 0.25255680084228516,
+              "max_abs_grad": 0.02294921875,
+              "mixer_loss": 0.25255680084228516,
+              "nonfinite_grad_leaves": 0
+            },
+            "max_grad_norm": 15.825891494750977,
+            "finite": true
+          },
+          "JOINT-MIXER-DECODER": {
+            "decoder_loss_weight": 1.0,
+            "evaluations": {
+              "0": {
+                "mixer_output": {
+                  "max_abs": 5.375,
+                  "mean_abs": 0.04481861601544144,
+                  "rmse": 0.07391165812886297,
+                  "relative_l2": 0.7857142508353889,
+                  "cosine_similarity": 0.6845712120752018
+                },
+                "decoder_output": {
+                  "max_abs": 15.4375,
+                  "mean_abs": 0.11946677410574491,
+                  "rmse": 0.18321088522434428,
+                  "relative_l2": 0.7309644893259635,
+                  "cosine_similarity": 0.7265938794283457
+                },
+                "finite": true
+              },
+              "512": {
+                "mixer_output": {
+                  "max_abs": 3.421875,
+                  "mean_abs": 0.03463032013269975,
+                  "rmse": 0.05233335838370795,
+                  "relative_l2": 0.5563271954265326,
+                  "cosine_similarity": 0.8340803571013129
+                },
+                "decoder_output": {
+                  "max_abs": 6.46875,
+                  "mean_abs": 0.08962848458043612,
+                  "rmse": 0.1391695565982422,
+                  "relative_l2": 0.5552508724794792,
+                  "cosine_similarity": 0.8391664705489935
+                },
+                "finite": true
+              },
+              "1024": {
+                "mixer_output": {
+                  "max_abs": 3.3203125,
+                  "mean_abs": 0.03442207454654354,
+                  "rmse": 0.05177248322663952,
+                  "relative_l2": 0.5503648396222578,
+                  "cosine_similarity": 0.8375423845016665
+                },
+                "decoder_output": {
+                  "max_abs": 6.4375,
+                  "mean_abs": 0.08803405775780071,
+                  "rmse": 0.1366542583821607,
+                  "relative_l2": 0.5452154770728738,
+                  "cosine_similarity": 0.8466654180481289
+                },
+                "finite": true
+              }
+            },
+            "last_train_metrics": {
+              "decoder_loss": 0.27119511365890503,
+              "grad_norm": 0.3532636761665344,
+              "grads_finite": 1,
+              "loss": 0.26507216691970825,
+              "max_abs_grad": 0.00848388671875,
+              "mixer_loss": 0.25894924998283386,
+              "nonfinite_grad_leaves": 0
+            },
+            "max_grad_norm": 9.110679626464844,
+            "finite": true
+          }
+        },
+        "comparison": {
+          "decoder_relative_l2_improvement_fraction": 0.10508893569028761,
+          "mixer_relative_l2_degradation_fraction": 0.027756110441513264,
+          "required_decoder_improvement_fraction": 0.1,
+          "maximum_allowed_mixer_degradation_fraction": 0.1
+        },
+        "scientific_gate_passed": true,
+        "passed": true,
+        "notes": [
+          "Both arms start from identical readout-calibrated Mamba parameters and consume identical batches.",
+          "The joint objective is the normalized mean of mixer and decoder relative MSE when decoder-loss-weight is one.",
+          "The frozen Qwen decoder tail is shared and is never optimized.",
+          "passed reports numerical execution; scientific_gate_passed reports the pre-registered quality threshold."
+        ]
+      },
+      "456": {
+        "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+        "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+        "method": "paired_mixer_only_vs_decoder_aware_Mamba3_distillation",
+        "activation_cache_manifest": "/kaggle/working/output/exp041-cache-manifest.json",
+        "resolved_activation_artifacts": {
+          "token_ids": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-token-ids.npy",
+          "residual_input": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-residual-input.npy",
+          "normalized_input": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-normalized-input.npy",
+          "attention_target": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-attention-target.npy"
+        },
+        "target_layer": 0,
+        "sequence_length": 32,
+        "training_windows": 1024,
+        "unique_training_tokens_per_arm": 32768,
+        "total_steps": 1024,
+        "batch_windows": 1,
+        "checkpoints": [
+          0,
+          512,
+          1024
+        ],
+        "compute_dtype": "bfloat16",
+        "jax_backend": "tpu",
+        "seed": 456,
+        "data_seed": 20260820,
+        "learning_rate": 3e-05,
+        "readout_ridge": 0.01,
+        "readout_calibration_relative_l2": 0.08515371382236481,
+        "mamba_config": {
+          "d_state": 64,
+          "expand": 0.75,
+          "head_dim": 64,
+          "groups": 1,
+          "mimo_rank": 4,
+          "rope_fraction": 0.5,
+          "dt_min": 0.001,
+          "dt_max": 0.1,
+          "dt_init_floor": 0.0001,
+          "a_floor": 0.0001,
+          "conv_kernel": 4
+        },
+        "arms": {
+          "MIXER-ONLY": {
+            "decoder_loss_weight": 0.0,
+            "evaluations": {
+              "0": {
+                "mixer_output": {
+                  "max_abs": 10.25,
+                  "mean_abs": 0.04428452636219493,
+                  "rmse": 0.07425061116619168,
+                  "relative_l2": 0.7893174744476745,
+                  "cosine_similarity": 0.6872287601033978
+                },
+                "decoder_output": {
+                  "max_abs": 14.8125,
+                  "mean_abs": 0.11622400135836912,
+                  "rmse": 0.17792415144863993,
+                  "relative_l2": 0.7098717761401283,
+                  "cosine_similarity": 0.7338517265535041
+                },
+                "finite": true
+              },
+              "512": {
+                "mixer_output": {
+                  "max_abs": 3.7578125,
+                  "mean_abs": 0.034244895593836214,
+                  "rmse": 0.051533520883742204,
+                  "relative_l2": 0.5478245621750911,
+                  "cosine_similarity": 0.836597816029044
+                },
+                "decoder_output": {
+                  "max_abs": 8.5,
+                  "mean_abs": 0.09713954590725819,
+                  "rmse": 0.15455428767521726,
+                  "relative_l2": 0.6166320075650275,
+                  "cosine_similarity": 0.797704264455406
+                },
+                "finite": true
+              },
+              "1024": {
+                "mixer_output": {
+                  "max_abs": 3.67578125,
+                  "mean_abs": 0.0338833930754102,
+                  "rmse": 0.05035584775905797,
+                  "relative_l2": 0.5353053658762208,
+                  "cosine_similarity": 0.8447870585779579
+                },
+                "decoder_output": {
+                  "max_abs": 8.125,
+                  "mean_abs": 0.09619868141727075,
+                  "rmse": 0.15340011123546488,
+                  "relative_l2": 0.6120271392961876,
+                  "cosine_similarity": 0.803588015066577
+                },
+                "finite": true
+              }
+            },
+            "last_train_metrics": {
+              "decoder_loss": 0.3232608437538147,
+              "grad_norm": 0.4995691478252411,
+              "grads_finite": 1,
+              "loss": 0.2522352635860443,
+              "max_abs_grad": 0.01287841796875,
+              "mixer_loss": 0.2522352635860443,
+              "nonfinite_grad_leaves": 0
+            },
+            "max_grad_norm": 23.97710418701172,
+            "finite": true
+          },
+          "JOINT-MIXER-DECODER": {
+            "decoder_loss_weight": 1.0,
+            "evaluations": {
+              "0": {
+                "mixer_output": {
+                  "max_abs": 10.25,
+                  "mean_abs": 0.04428452636219493,
+                  "rmse": 0.07425061116619168,
+                  "relative_l2": 0.7893174744476745,
+                  "cosine_similarity": 0.6872287601033978
+                },
+                "decoder_output": {
+                  "max_abs": 14.8125,
+                  "mean_abs": 0.11622400135836912,
+                  "rmse": 0.17792415144863993,
+                  "relative_l2": 0.7098717761401283,
+                  "cosine_similarity": 0.7338517265535041
+                },
+                "finite": true
+              },
+              "512": {
+                "mixer_output": {
+                  "max_abs": 3.4375,
+                  "mean_abs": 0.034619802171302824,
+                  "rmse": 0.052603021066528824,
+                  "relative_l2": 0.5591938313291053,
+                  "cosine_similarity": 0.8306417069683915
+                },
+                "decoder_output": {
+                  "max_abs": 6.03125,
+                  "mean_abs": 0.08952070004527997,
+                  "rmse": 0.13829520468703402,
+                  "relative_l2": 0.551762432382239,
+                  "cosine_similarity": 0.8417388388110345
+                },
+                "finite": true
+              },
+              "1024": {
+                "mixer_output": {
+                  "max_abs": 3.3515625,
+                  "mean_abs": 0.03437922710750265,
+                  "rmse": 0.052049383514175825,
+                  "relative_l2": 0.553308414526211,
+                  "cosine_similarity": 0.8350763459862368
+                },
+                "decoder_output": {
+                  "max_abs": 6.0,
+                  "mean_abs": 0.08752873120565088,
+                  "rmse": 0.1354524996644432,
+                  "relative_l2": 0.5404207677065949,
+                  "cosine_similarity": 0.8501111493702824
+                },
+                "finite": true
+              }
+            },
+            "last_train_metrics": {
+              "decoder_loss": 0.2690848708152771,
+              "grad_norm": 0.37670814990997314,
+              "grads_finite": 1,
+              "loss": 0.26571983098983765,
+              "max_abs_grad": 0.00859140232205391,
+              "mixer_loss": 0.2623548209667206,
+              "nonfinite_grad_leaves": 0
+            },
+            "max_grad_norm": 13.573714256286621,
+            "finite": true
+          }
+        },
+        "comparison": {
+          "decoder_relative_l2_improvement_fraction": 0.11699868680976769,
+          "mixer_relative_l2_degradation_fraction": 0.033631362204863666,
+          "required_decoder_improvement_fraction": 0.1,
+          "maximum_allowed_mixer_degradation_fraction": 0.1
+        },
+        "scientific_gate_passed": true,
+        "passed": true,
+        "notes": [
+          "Both arms start from identical readout-calibrated Mamba parameters and consume identical batches.",
+          "The joint objective is the normalized mean of mixer and decoder relative MSE when decoder-loss-weight is one.",
+          "The frozen Qwen decoder tail is shared and is never optimized.",
+          "passed reports numerical execution; scientific_gate_passed reports the pre-registered quality threshold."
+        ]
+      },
+      "789": {
+        "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+        "dataset": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3",
+        "method": "paired_mixer_only_vs_decoder_aware_Mamba3_distillation",
+        "activation_cache_manifest": "/kaggle/working/output/exp041-cache-manifest.json",
+        "resolved_activation_artifacts": {
+          "token_ids": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-token-ids.npy",
+          "residual_input": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-residual-input.npy",
+          "normalized_input": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-normalized-input.npy",
+          "attention_target": "/kaggle/working/exp041-cache/qwen3-layer0-activation-cache-attention-target.npy"
+        },
+        "target_layer": 0,
+        "sequence_length": 32,
+        "training_windows": 1024,
+        "unique_training_tokens_per_arm": 32768,
+        "total_steps": 1024,
+        "batch_windows": 1,
+        "checkpoints": [
+          0,
+          512,
+          1024
+        ],
+        "compute_dtype": "bfloat16",
+        "jax_backend": "tpu",
+        "seed": 789,
+        "data_seed": 20260820,
+        "learning_rate": 3e-05,
+        "readout_ridge": 0.01,
+        "readout_calibration_relative_l2": 0.08801499754190445,
+        "mamba_config": {
+          "d_state": 64,
+          "expand": 0.75,
+          "head_dim": 64,
+          "groups": 1,
+          "mimo_rank": 4,
+          "rope_fraction": 0.5,
+          "dt_min": 0.001,
+          "dt_max": 0.1,
+          "dt_init_floor": 0.0001,
+          "a_floor": 0.0001,
+          "conv_kernel": 4
+        },
+        "arms": {
+          "MIXER-ONLY": {
+            "decoder_loss_weight": 0.0,
+            "evaluations": {
+              "0": {
+                "mixer_output": {
+                  "max_abs": 5.5,
+                  "mean_abs": 0.047169036803887995,
+                  "rmse": 0.07694910162633059,
+                  "relative_l2": 0.8180036447210827,
+                  "cosine_similarity": 0.6489734017640016
+                },
+                "decoder_output": {
+                  "max_abs": 13.9375,
+                  "mean_abs": 0.12212607468250454,
+                  "rmse": 0.18404349927468677,
+                  "relative_l2": 0.7342864060525213,
+                  "cosine_similarity": 0.7294403655712339
+                },
+                "finite": true
+              },
+              "512": {
+                "mixer_output": {
+                  "max_abs": 3.515625,
+                  "mean_abs": 0.03436793859658579,
+                  "rmse": 0.05105452936983939,
+                  "relative_l2": 0.542732666416962,
+                  "cosine_similarity": 0.8399181973175199
+                },
+                "decoder_output": {
+                  "max_abs": 6.875,
+                  "mean_abs": 0.09705636570829057,
+                  "rmse": 0.1535873562288333,
+                  "relative_l2": 0.6127741988433798,
+                  "cosine_similarity": 0.8043169032543811
+                },
+                "finite": true
+              },
+              "1024": {
+                "mixer_output": {
+                  "max_abs": 3.421875,
+                  "mean_abs": 0.033992995653576975,
+                  "rmse": 0.0498883806750343,
+                  "relative_l2": 0.5303359800037853,
+                  "cosine_similarity": 0.84818355117923
+                },
+                "decoder_output": {
+                  "max_abs": 6.8125,
+                  "mean_abs": 0.09603441822500418,
+                  "rmse": 0.15252572876144677,
+                  "relative_l2": 0.6085385772611668,
+                  "cosine_similarity": 0.8100644574658837
+                },
+                "finite": true
+              }
+            },
+            "last_train_metrics": {
+              "decoder_loss": 0.32439911365509033,
+              "grad_norm": 0.5077243447303772,
+              "grads_finite": 1,
+              "loss": 0.24941465258598328,
+              "max_abs_grad": 0.01611328125,
+              "mixer_loss": 0.24941465258598328,
+              "nonfinite_grad_leaves": 0
+            },
+            "max_grad_norm": 23.487133026123047,
+            "finite": true
+          },
+          "JOINT-MIXER-DECODER": {
+            "decoder_loss_weight": 1.0,
+            "evaluations": {
+              "0": {
+                "mixer_output": {
+                  "max_abs": 5.5,
+                  "mean_abs": 0.047169036803887995,
+                  "rmse": 0.07694910162633059,
+                  "relative_l2": 0.8180036447210827,
+                  "cosine_similarity": 0.6489734017640016
+                },
+                "decoder_output": {
+                  "max_abs": 13.9375,
+                  "mean_abs": 0.12212607468250454,
+                  "rmse": 0.18404349927468677,
+                  "relative_l2": 0.7342864060525213,
+                  "cosine_similarity": 0.7294403655712339
+                },
+                "finite": true
+              },
+              "512": {
+                "mixer_output": {
+                  "max_abs": 3.296875,
+                  "mean_abs": 0.03470625045195695,
+                  "rmse": 0.052341006704481365,
+                  "relative_l2": 0.5564085005247914,
+                  "cosine_similarity": 0.833649717323776
+                },
+                "decoder_output": {
+                  "max_abs": 6.4375,
+                  "mean_abs": 0.08951346361790531,
+                  "rmse": 0.13895482602532389,
+                  "relative_l2": 0.5543941525123021,
+                  "cosine_similarity": 0.8407917318044823
+                },
+                "finite": true
+              },
+              "1024": {
+                "mixer_output": {
+                  "max_abs": 3.1953125,
+                  "mean_abs": 0.034492562760847625,
+                  "rmse": 0.05188952125055421,
+                  "relative_l2": 0.5516090065860008,
+                  "cosine_similarity": 0.8376283070517789
+                },
+                "decoder_output": {
+                  "max_abs": 6.4375,
+                  "mean_abs": 0.0879004644069628,
+                  "rmse": 0.1364535693434248,
+                  "relative_l2": 0.5444147792293298,
+                  "cosine_similarity": 0.8472290018196669
+                },
+                "finite": true
+              }
+            },
+            "last_train_metrics": {
+              "decoder_loss": 0.27315762639045715,
+              "grad_norm": 0.33996930718421936,
+              "grads_finite": 1,
+              "loss": 0.26571929454803467,
+              "max_abs_grad": 0.00775146484375,
+              "mixer_loss": 0.25828099250793457,
+              "nonfinite_grad_leaves": 0
+            },
+            "max_grad_norm": 13.129934310913086,
+            "finite": true
+          }
+        },
+        "comparison": {
+          "decoder_relative_l2_improvement_fraction": 0.10537343141076978,
+          "mixer_relative_l2_degradation_fraction": 0.04011235779639838,
+          "required_decoder_improvement_fraction": 0.1,
+          "maximum_allowed_mixer_degradation_fraction": 0.1
+        },
+        "scientific_gate_passed": true,
+        "passed": true,
+        "notes": [
+          "Both arms start from identical readout-calibrated Mamba parameters and consume identical batches.",
+          "The joint objective is the normalized mean of mixer and decoder relative MSE when decoder-loss-weight is one.",
+          "The frozen Qwen decoder tail is shared and is never optimized.",
+          "passed reports numerical execution; scientific_gate_passed reports the pre-registered quality threshold."
+        ]
+      }
+    },
+    "aggregate": {
+      "paired_endpoints": [
+        {
+          "seed": 123,
+          "mixer_only_decoder_relative_l2": 0.6092398438423873,
+          "joint_decoder_relative_l2": 0.5452154770728738,
+          "decoder_improvement_fraction": 0.10508893569028761,
+          "mixer_only_mixer_relative_l2": 0.5355014035244479,
+          "joint_mixer_relative_l2": 0.5503648396222578,
+          "mixer_degradation_fraction": 0.027756110441513264,
+          "joint_wins_decoder": true,
+          "step0_identical": true,
+          "finite": true
+        },
+        {
+          "seed": 456,
+          "mixer_only_decoder_relative_l2": 0.6120271392961876,
+          "joint_decoder_relative_l2": 0.5404207677065949,
+          "decoder_improvement_fraction": 0.11699868680976769,
+          "mixer_only_mixer_relative_l2": 0.5353053658762208,
+          "joint_mixer_relative_l2": 0.553308414526211,
+          "mixer_degradation_fraction": 0.033631362204863666,
+          "joint_wins_decoder": true,
+          "step0_identical": true,
+          "finite": true
+        },
+        {
+          "seed": 789,
+          "mixer_only_decoder_relative_l2": 0.6085385772611668,
+          "joint_decoder_relative_l2": 0.5444147792293298,
+          "decoder_improvement_fraction": 0.10537343141076978,
+          "mixer_only_mixer_relative_l2": 0.5303359800037853,
+          "joint_mixer_relative_l2": 0.5516090065860008,
+          "mixer_degradation_fraction": 0.04011235779639838,
+          "joint_wins_decoder": true,
+          "step0_identical": true,
+          "finite": true
+        }
+      ],
+      "mixer_only_decoder_relative_l2_mean": 0.6099351867999139,
+      "mixer_only_decoder_relative_l2_std": 0.0015066834747182265,
+      "joint_decoder_relative_l2_mean": 0.5433503413362661,
+      "joint_decoder_relative_l2_std": 0.0020971537056866706,
+      "decoder_improvement_fraction_mean": 0.1091536846369417,
+      "decoder_improvement_fraction_std": 0.0055484699856492925,
+      "mixer_degradation_fraction_mean": 0.033833276814258434,
+      "mixer_degradation_fraction_max": 0.04011235779639838,
+      "joint_decoder_wins": 3,
+      "required_joint_decoder_wins": 2,
+      "required_decoder_improvement_fraction_mean": 0.1,
+      "maximum_allowed_mixer_degradation_per_seed": 0.1,
+      "step0_identical_all_seeds": true,
+      "all_finite": true,
+      "scientific_gate_passed": true
+    },
+    "scientific_gate_passed": true,
+    "passed": true,
+    "notes": [
+      "Every seed is a paired mixer-only versus joint run from the same seed-specific calibrated base.",
+      "All seeds share the frozen cache, data order, optimizer schedule, and decoder tail.",
+      "passed reports numerical execution; scientific_gate_passed reports the frozen multi-seed threshold."
+    ]
+  },
+  "compute_dtype": "bfloat16",
+  "jax_backend": "tpu",
+  "visible_devices": [
+    "TPU_0(process=0,(0,0,0,0))",
+    "TPU_1(process=0,(1,0,0,0))",
+    "TPU_2(process=0,(0,1,0,0))",
+    "TPU_3(process=0,(1,1,0,0))",
+    "TPU_4(process=0,(0,2,0,0))",
+    "TPU_5(process=0,(1,2,0,0))",
+    "TPU_6(process=0,(0,3,0,0))",
+    "TPU_7(process=0,(1,3,0,0))"
+  ],
+  "data_parallel": true,
+  "per_device_windows": 2,
+  "hidden_relative_l2_to_original": {
+    "0": {
+      "ORIGINAL-CACHED-QWEN": 0.0,
+      "SEED-123-CALIBRATED-STEP0": 0.7309709787368774,
+      "SEED-123-MIXER-ONLY-STEP1024": 0.6092433929443359,
+      "SEED-123-JOINT-STEP1024": 0.5452210903167725,
+      "SEED-456-CALIBRATED-STEP0": 0.709877610206604,
+      "SEED-456-MIXER-ONLY-STEP1024": 0.6120308041572571,
+      "SEED-456-JOINT-STEP1024": 0.5404266715049744,
+      "SEED-789-CALIBRATED-STEP0": 0.7342939376831055,
+      "SEED-789-MIXER-ONLY-STEP1024": 0.6085419654846191,
+      "SEED-789-JOINT-STEP1024": 0.5444204211235046
+    },
+    "9": {
+      "ORIGINAL-CACHED-QWEN": 0.0,
+      "SEED-123-CALIBRATED-STEP0": 0.705306887626648,
+      "SEED-123-MIXER-ONLY-STEP1024": 0.5936779975891113,
+      "SEED-123-JOINT-STEP1024": 0.5429456830024719,
+      "SEED-456-CALIBRATED-STEP0": 0.670123279094696,
+      "SEED-456-MIXER-ONLY-STEP1024": 0.5818300247192383,
+      "SEED-456-JOINT-STEP1024": 0.4937968850135803,
+      "SEED-789-CALIBRATED-STEP0": 0.5857616662979126,
+      "SEED-789-MIXER-ONLY-STEP1024": 0.5710474848747253,
+      "SEED-789-JOINT-STEP1024": 0.48033878207206726
+    },
+    "19": {
+      "ORIGINAL-CACHED-QWEN": 0.0,
+      "SEED-123-CALIBRATED-STEP0": 0.670945942401886,
+      "SEED-123-MIXER-ONLY-STEP1024": 0.578299880027771,
+      "SEED-123-JOINT-STEP1024": 0.526776134967804,
+      "SEED-456-CALIBRATED-STEP0": 0.6521169543266296,
+      "SEED-456-MIXER-ONLY-STEP1024": 0.558842122554779,
+      "SEED-456-JOINT-STEP1024": 0.4706628918647766,
+      "SEED-789-CALIBRATED-STEP0": 0.5671074390411377,
+      "SEED-789-MIXER-ONLY-STEP1024": 0.5483015179634094,
+      "SEED-789-JOINT-STEP1024": 0.4584193527698517
+    },
+    "29": {
+      "ORIGINAL-CACHED-QWEN": 0.0,
+      "SEED-123-CALIBRATED-STEP0": 0.6663112640380859,
+      "SEED-123-MIXER-ONLY-STEP1024": 0.5739012956619263,
+      "SEED-123-JOINT-STEP1024": 0.5210680961608887,
+      "SEED-456-CALIBRATED-STEP0": 0.6470093131065369,
+      "SEED-456-MIXER-ONLY-STEP1024": 0.5554597973823547,
+      "SEED-456-JOINT-STEP1024": 0.4657048285007477,
+      "SEED-789-CALIBRATED-STEP0": 0.5670137405395508,
+      "SEED-789-MIXER-ONLY-STEP1024": 0.5446739196777344,
+      "SEED-789-JOINT-STEP1024": 0.4540434181690216
+    },
+    "39": {
+      "ORIGINAL-CACHED-QWEN": 0.0,
+      "SEED-123-CALIBRATED-STEP0": 0.7132354974746704,
+      "SEED-123-MIXER-ONLY-STEP1024": 0.6233492493629456,
+      "SEED-123-JOINT-STEP1024": 0.521281361579895,
+      "SEED-456-CALIBRATED-STEP0": 0.7226333022117615,
+      "SEED-456-MIXER-ONLY-STEP1024": 0.6317943334579468,
+      "SEED-456-JOINT-STEP1024": 0.4954906404018402,
+      "SEED-789-CALIBRATED-STEP0": 0.7245180606842041,
+      "SEED-789-MIXER-ONLY-STEP1024": 0.6425977945327759,
+      "SEED-789-JOINT-STEP1024": 0.49367111921310425
+    }
+  },
+  "lm_metrics": {
+    "ORIGINAL-CACHED-QWEN": {
+      "nll_sum": 1901.4319152832031,
+      "token_count": 496,
+      "mean_nll": 3.833532087264522,
+      "perplexity": 46.225522807305865,
+      "top1_accuracy": 0.37298387096774194,
+      "top1_correct": 185,
+      "finite": true
+    },
+    "SEED-123-CALIBRATED-STEP0": {
+      "nll_sum": 3459.2149353027344,
+      "token_count": 496,
+      "mean_nll": 6.9742236598845455,
+      "perplexity": 1068.7271713521989,
+      "top1_accuracy": 0.1350806451612903,
+      "top1_correct": 67,
+      "finite": true
+    },
+    "SEED-123-MIXER-ONLY-STEP1024": {
+      "nll_sum": 2735.2696838378906,
+      "token_count": 496,
+      "mean_nll": 5.514656620640909,
+      "perplexity": 248.30469989836143,
+      "top1_accuracy": 0.19959677419354838,
+      "top1_correct": 99,
+      "finite": true
+    },
+    "SEED-123-JOINT-STEP1024": {
+      "nll_sum": 2405.6272583007812,
+      "token_count": 496,
+      "mean_nll": 4.850054956251575,
+      "perplexity": 127.74741017193314,
+      "top1_accuracy": 0.2540322580645161,
+      "top1_correct": 126,
+      "finite": true
+    },
+    "SEED-456-CALIBRATED-STEP0": {
+      "nll_sum": 3523.3995971679688,
+      "token_count": 496,
+      "mean_nll": 7.103628220096711,
+      "perplexity": 1216.372344600999,
+      "top1_accuracy": 0.14516129032258066,
+      "top1_correct": 72,
+      "finite": true
+    },
+    "SEED-456-MIXER-ONLY-STEP1024": {
+      "nll_sum": 2718.1143951416016,
+      "token_count": 496,
+      "mean_nll": 5.480069345043551,
+      "perplexity": 239.86334013131673,
+      "top1_accuracy": 0.21774193548387097,
+      "top1_correct": 108,
+      "finite": true
+    },
+    "SEED-456-JOINT-STEP1024": {
+      "nll_sum": 2388.7952575683594,
+      "token_count": 496,
+      "mean_nll": 4.81611947090395,
+      "perplexity": 123.4849727965483,
+      "top1_accuracy": 0.2862903225806452,
+      "top1_correct": 142,
+      "finite": true
+    },
+    "SEED-789-CALIBRATED-STEP0": {
+      "nll_sum": 3806.6386108398438,
+      "token_count": 496,
+      "mean_nll": 7.674674618628718,
+      "perplexity": 2153.122985594668,
+      "top1_accuracy": 0.13306451612903225,
+      "top1_correct": 66,
+      "finite": true
+    },
+    "SEED-789-MIXER-ONLY-STEP1024": {
+      "nll_sum": 2695.4673461914062,
+      "token_count": 496,
+      "mean_nll": 5.434409972160093,
+      "perplexity": 229.15759901611221,
+      "top1_accuracy": 0.20766129032258066,
+      "top1_correct": 103,
+      "finite": true
+    },
+    "SEED-789-JOINT-STEP1024": {
+      "nll_sum": 2323.995315551758,
+      "token_count": 496,
+      "mean_nll": 4.685474426515641,
+      "perplexity": 108.36166976447707,
+      "top1_accuracy": 0.2782258064516129,
+      "top1_correct": 138,
+      "finite": true
+    }
+  },
+  "reference_reproduction": {
+    "seed": 123,
+    "absolute_nll_tolerance": 0.02,
+    "branches": {
+      "ORIGINAL-CACHED-QWEN": {
+        "reference_mean_nll": 3.8358606215446227,
+        "current_mean_nll": 3.833532087264522,
+        "absolute_difference": 0.0023285342801004916
+      },
+      "CALIBRATED-STEP0": {
+        "reference_mean_nll": 6.973307732612856,
+        "current_mean_nll": 6.9742236598845455,
+        "absolute_difference": 0.0009159272716896538
+      },
+      "MIXER-ONLY-STEP1024": {
+        "reference_mean_nll": 5.510823542071927,
+        "current_mean_nll": 5.514656620640909,
+        "absolute_difference": 0.0038330785689817404
+      },
+      "JOINT-STEP1024": {
+        "reference_mean_nll": 4.833501462013491,
+        "current_mean_nll": 4.850054956251575,
+        "absolute_difference": 0.016553494238084276
+      }
+    },
+    "passed": true
+  },
+  "aggregate": {
+    "original_mean_nll": 3.833532087264522,
+    "paired_endpoints": [
+      {
+        "seed": 123,
+        "calibrated_mean_nll": 6.9742236598845455,
+        "mixer_only_mean_nll": 5.514656620640909,
+        "joint_mean_nll": 4.850054956251575,
+        "mixer_only_excess_nll": 1.6811245333763867,
+        "joint_excess_nll": 1.0165228689870527,
+        "joint_recovered_mixer_excess_fraction": 0.39533160762013364,
+        "joint_wins_mixer_only": true,
+        "joint_wins_calibrated": true,
+        "finite": true
+      },
+      {
+        "seed": 456,
+        "calibrated_mean_nll": 7.103628220096711,
+        "mixer_only_mean_nll": 5.480069345043551,
+        "joint_mean_nll": 4.81611947090395,
+        "mixer_only_excess_nll": 1.6465372577790292,
+        "joint_excess_nll": 0.9825873836394279,
+        "joint_recovered_mixer_excess_fraction": 0.40324011558364964,
+        "joint_wins_mixer_only": true,
+        "joint_wins_calibrated": true,
+        "finite": true
+      },
+      {
+        "seed": 789,
+        "calibrated_mean_nll": 7.674674618628718,
+        "mixer_only_mean_nll": 5.434409972160093,
+        "joint_mean_nll": 4.685474426515641,
+        "mixer_only_excess_nll": 1.6008778848955711,
+        "joint_excess_nll": 0.8519423392511185,
+        "joint_recovered_mixer_excess_fraction": 0.46782802905251414,
+        "joint_wins_mixer_only": true,
+        "joint_wins_calibrated": true,
+        "finite": true
+      }
+    ],
+    "calibrated_mean_nll_mean": 7.2508421662033244,
+    "calibrated_mean_nll_std": 0.3043154567742911,
+    "mixer_only_mean_nll_mean": 5.476378645948184,
+    "mixer_only_mean_nll_std": 0.03286433825045318,
+    "joint_mean_nll_mean": 4.783882951223721,
+    "joint_mean_nll_std": 0.07095107512861937,
+    "joint_recovered_mixer_excess_fraction_mean": 0.4221332507520991,
+    "joint_recovered_mixer_excess_fraction_std": 0.03247199508802733,
+    "joint_mixer_only_wins": 3,
+    "joint_calibrated_wins": 3,
+    "required_joint_wins": 2,
+    "required_recovered_excess_fraction_mean": 0.1,
+    "all_mixer_only_excess_nll_positive": true,
+    "all_finite": true,
+    "reference_exp040_reproduced": true,
+    "scientific_gate_passed": true
+  },
+  "prune_consumed_shards": true,
+  "removed_checkpoint_shards": [
+    "model-00001-of-00008.safetensors",
+    "model-00002-of-00008.safetensors",
+    "model-00003-of-00008.safetensors",
+    "model-00004-of-00008.safetensors",
+    "model-00005-of-00008.safetensors",
+    "model-00006-of-00008.safetensors",
+    "model-00007-of-00008.safetensors",
+    "model-00008-of-00008.safetensors"
+  ],
+  "scientific_gate_passed": true,
+  "passed": true,
+  "notes": [
+    "The original branch is shared; each seed contributes calibrated, mixer-only, and joint layer-zero branches.",
+    "All ten branches stream together through identical frozen Qwen layers 1-39, final norm, and lm_head.",
+    "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance.",
+    "passed reports numerical execution; scientific_gate_passed also requires the local training and full-depth aggregate gates."
+  ]
+}
+
