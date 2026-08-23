@@ -283,6 +283,8 @@ def main(argv: list[str] | None = None) -> dict:
             "exp042-fresh",
             "exp043-validation",
             "exp045-depth-objective",
+            "exp046-depth-objective",
+            "exp047-context-transfer",
         ),
         default="exp041",
     )
@@ -292,6 +294,9 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--endpoint-checkpoint-dir")
     parser.add_argument("--resume-endpoints", action="store_true")
     parser.add_argument("--stage-manifest")
+    parser.add_argument("--training-result-json")
+    parser.add_argument("--endpoint-source-evaluation-manifest")
+    parser.add_argument("--endpoint-source-experiment")
     args = parser.parse_args(argv)
     seeds = parse_seeds(args.seeds)
     if args.total_steps != 1024:
@@ -306,15 +311,26 @@ def main(argv: list[str] | None = None) -> dict:
         raise ValueError("reference NLL tolerance must be non-negative")
     if not 0 <= args.target_layer < 40:
         raise ValueError("target-layer must be in [0, 40)")
-    if args.protocol != "exp045-depth-objective" and args.target_layer != 0:
+    if args.protocol not in {
+        "exp045-depth-objective",
+        "exp046-depth-objective",
+        "exp047-context-transfer",
+    } and args.target_layer != 0:
         raise ValueError("legacy streamed protocols are frozen to layer zero")
 
     jax.config.update("jax_default_matmul_precision", "high")
-    manifest, arrays, paths = load_activation_cache(
-        args.activation_cache_manifest,
-        artifact_dir=args.activation_cache_dir,
-        verify_hashes=not args.skip_hash_verification,
-    )
+    context_transfer = args.protocol == "exp047-context-transfer"
+    if context_transfer:
+        manifest = json.loads(
+            Path(args.activation_cache_manifest).read_text(encoding="utf-8")
+        )
+        arrays, paths = {}, {}
+    else:
+        manifest, arrays, paths = load_activation_cache(
+            args.activation_cache_manifest,
+            artifact_dir=args.activation_cache_dir,
+            verify_hashes=not args.skip_hash_verification,
+        )
     source_name = f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}"
     if (
         manifest.get("source") != source_name
@@ -329,6 +345,8 @@ def main(argv: list[str] | None = None) -> dict:
         "exp042-fresh",
         "exp043-validation",
         "exp045-depth-objective",
+        "exp046-depth-objective",
+        "exp047-context-transfer",
     }:
         if not args.evaluation_cache_manifest:
             raise ValueError("the selected protocol requires an external evaluation cache")
@@ -347,6 +365,17 @@ def main(argv: list[str] | None = None) -> dict:
                 required_evaluation_windows=128,
                 required_dataset_split="train",
             )
+        elif args.protocol == "exp047-context-transfer":
+            evaluation_slice = validate_external_evaluation_cache(
+                manifest,
+                evaluation_manifest,
+                required_token_offset=0,
+                required_dataset_split="validation",
+                allow_cross_split=True,
+                allow_sequence_length_mismatch=True,
+            )
+            if evaluation_manifest.get("token_range") != [0, 8192]:
+                raise ValueError("EXP-047 requires the frozen 8,192-token range")
         else:
             evaluation_slice = validate_external_evaluation_cache(
                 manifest,
@@ -357,6 +386,7 @@ def main(argv: list[str] | None = None) -> dict:
                 allow_cross_split=True,
             )
     evaluation_windows = evaluation_slice.stop - evaluation_slice.start
+    evaluation_sequence_length = int(evaluation_manifest["sequence_length"])
     required_recovery = args.required_recovery_fraction
     if required_recovery is None:
         required_recovery = {
@@ -364,6 +394,8 @@ def main(argv: list[str] | None = None) -> dict:
             "exp042-fresh": 0.25,
             "exp043-validation": 0.20,
             "exp045-depth-objective": 0.0,
+            "exp046-depth-objective": 0.0,
+            "exp047-context-transfer": 0.0,
         }[args.protocol]
     if not 0.0 <= required_recovery <= 1.0:
         raise ValueError("required recovery fraction must be in [0, 1]")
@@ -373,7 +405,12 @@ def main(argv: list[str] | None = None) -> dict:
     if args.data_parallel and len(devices) < 2:
         raise ValueError("--data-parallel requires at least two visible devices")
     parallel_devices = devices if args.data_parallel else None
-    objective_comparison = args.protocol == "exp045-depth-objective"
+    objective_comparison = args.protocol in {
+        "exp045-depth-objective",
+        "exp046-depth-objective",
+        "exp047-context-transfer",
+    }
+    stage_experiment = args.protocol if objective_comparison else "legacy"
     names = branch_names(
         seeds,
         args.total_steps,
@@ -385,10 +422,30 @@ def main(argv: list[str] | None = None) -> dict:
         "exp042-fresh": "exp042",
         "exp043-validation": "exp043",
         "exp045-depth-objective": f"exp045-layer{args.target_layer}",
+        "exp046-depth-objective": f"exp046-layer{args.target_layer}",
+        "exp047-context-transfer": (
+            args.endpoint_source_experiment
+            or f"exp045-layer{args.target_layer}"
+        ),
     }[args.protocol]
-    training_json = (
-        Path(args.output_dir) / f"{experiment_id}-training-confirmation.json"
-    )
+    if context_transfer:
+        if not all(
+            (
+                args.training_result_json,
+                args.endpoint_checkpoint_dir,
+                args.endpoint_source_evaluation_manifest,
+                args.endpoint_source_experiment,
+            )
+        ):
+            raise ValueError(
+                "EXP-047 requires training result, endpoint checkpoint, "
+                "source evaluation manifest, and source experiment"
+            )
+        training_json = Path(args.training_result_json)
+    else:
+        training_json = (
+            Path(args.output_dir) / f"{experiment_id}-training-confirmation.json"
+        )
     training_args = [
         "--activation-cache-manifest", args.activation_cache_manifest,
         "--qwen-cache-dir", args.qwen_cache_dir,
@@ -439,7 +496,11 @@ def main(argv: list[str] | None = None) -> dict:
             Path(args.activation_cache_manifest)
         ),
         "evaluation_manifest_sha256": file_sha256(
-            Path(args.evaluation_cache_manifest)
+            Path(
+                args.endpoint_source_evaluation_manifest
+                if context_transfer
+                else args.evaluation_cache_manifest
+            )
         ) if args.evaluation_cache_manifest else None,
         "seeds": list(seeds),
         "data_seed": args.data_seed,
@@ -454,14 +515,14 @@ def main(argv: list[str] | None = None) -> dict:
     restored = False
     if (
         objective_comparison
-        and args.resume_endpoints
+        and (args.resume_endpoints or context_transfer)
         and checkpoint_dir is not None
         and training_json.exists()
         and (checkpoint_dir / "checkpoint.json").exists()
     ):
         training_result = json.loads(training_json.read_text(encoding="utf-8"))
         if not training_result.get("passed"):
-            raise ValueError("saved EXP-045 training result is not numerically valid")
+            raise ValueError("saved objective training result is not numerically valid")
         endpoint_by_seed, checkpoint_metadata = restore_endpoint_checkpoint(
             checkpoint_dir,
             expected_compatibility=compatibility,
@@ -473,6 +534,8 @@ def main(argv: list[str] | None = None) -> dict:
             f"sha256={checkpoint_metadata['checkpoint_sha256']}"
         )
     else:
+        if context_transfer:
+            raise ValueError("EXP-047 cannot retrain missing source endpoints")
         training_result, initial_by_seed, endpoint_by_seed = train_multiseed(
             training_args, return_endpoint_params=True
         )
@@ -488,10 +551,15 @@ def main(argv: list[str] | None = None) -> dict:
                 f"sha256={checkpoint_metadata['checkpoint_sha256']}"
             )
     if objective_comparison and args.stage_manifest:
+        stage_suffix = (
+            f"layer{args.target_layer}-seq{evaluation_sequence_length}"
+            if context_transfer
+            else f"layer{args.target_layer}"
+        )
         update_stage_manifest(
             args.stage_manifest,
-            experiment="exp045-depth-objective",
-            stage=f"endpoints-layer{args.target_layer}",
+            experiment=stage_experiment,
+            stage=f"endpoints-{stage_suffix}",
             status="completed",
             details={
                 "restored": restored,
@@ -505,8 +573,8 @@ def main(argv: list[str] | None = None) -> dict:
         )
         update_stage_manifest(
             args.stage_manifest,
-            experiment="exp045-depth-objective",
-            stage=f"streamed-evaluation-layer{args.target_layer}",
+            experiment=stage_experiment,
+            stage=f"streamed-evaluation-{stage_suffix}",
             status="running",
             details={"restart_boundary": f"decoder-layer-{args.target_layer}"},
         )
@@ -639,10 +707,10 @@ def main(argv: list[str] | None = None) -> dict:
             _safe_prune_shards(model_dir, last_use, args.target_layer)
         )
     positions = jnp.arange(
-        int(manifest["sequence_length"]), dtype=jnp.int32
+        evaluation_sequence_length, dtype=jnp.int32
     )[None]
     attention_mask = jnp.ones(
-        (1, int(manifest["sequence_length"])), dtype=jnp.bool_
+        (1, evaluation_sequence_length), dtype=jnp.bool_
     )
     decoder = Qwen3DecoderLayer(source)
     layer_runner = (
@@ -867,6 +935,8 @@ def main(argv: list[str] | None = None) -> dict:
                 "exp042-fresh": "locked_fresh_text_three_seed_streamed_end_to_end_confirmation",
                 "exp043-validation": "cross_split_end_to_end_NLL_adjudication",
                 "exp045-depth-objective": "depth_aware_counterfactual_objective_comparison",
+                "exp046-depth-objective": "depth_generalization_counterfactual_objective_comparison",
+                "exp047-context-transfer": "zero_shot_context_transfer_of_recovered_Mamba_objectives",
             }[args.protocol]
         ),
         "protocol": args.protocol,
@@ -893,10 +963,11 @@ def main(argv: list[str] | None = None) -> dict:
             str(reference_path.resolve()) if args.protocol == "exp041" else None
         ),
         "target_layer": args.target_layer,
-        "sequence_length": int(manifest["sequence_length"]),
+        "training_sequence_length": int(manifest["sequence_length"]),
+        "sequence_length": evaluation_sequence_length,
         "evaluation_windows": evaluation_windows,
         "evaluation_tokens_per_branch": evaluation_windows
-        * (int(manifest["sequence_length"]) - 1),
+        * (evaluation_sequence_length - 1),
         "seeds": list(seeds),
         "branches": list(names),
         "training_result": training_result,
@@ -942,6 +1013,8 @@ def main(argv: list[str] | None = None) -> dict:
                     "exp042-fresh": "The external evaluation cache is disjoint from the training cache and locked to tokens [65536, 69632).",
                     "exp043-validation": "The primary endpoint uses the pinned WikiText-2 validation split; local decoder L2 is diagnostic only.",
                     "exp045-depth-objective": "The primary endpoint compares counterfactual contribution matching against both controls on pinned validation windows.",
+                    "exp046-depth-objective": "The primary endpoint extends the frozen objective comparison to additional decoder depths.",
+                    "exp047-context-transfer": "Endpoints trained only at sequence length 32 are evaluated without updates on the frozen 8,192-token validation prefix.",
                 }[args.protocol]
             ),
             "passed reports numerical execution; scientific_gate_passed also requires the local training and full-depth aggregate gates.",
@@ -957,8 +1030,8 @@ def main(argv: list[str] | None = None) -> dict:
     if objective_comparison and args.stage_manifest:
         update_stage_manifest(
             args.stage_manifest,
-            experiment="exp045-depth-objective",
-            stage=f"streamed-evaluation-layer{args.target_layer}",
+            experiment=stage_experiment,
+            stage=f"streamed-evaluation-{stage_suffix}",
             status="completed",
             details={
                 "result_json": str(Path(args.result_json).resolve()),
@@ -973,6 +1046,8 @@ def main(argv: list[str] | None = None) -> dict:
             "exp042-fresh": "LOCKED-FRESH-TEXT",
             "exp043-validation": "CROSS-SPLIT-NLL-ADJUDICATION",
             "exp045-depth-objective": "DEPTH-OBJECTIVE-COMPARISON",
+            "exp046-depth-objective": "DEPTH-GENERALIZATION-COMPARISON",
+            "exp047-context-transfer": "CONTEXT-TRANSFER-COMPARISON",
         }[args.protocol]
     )
     print(f"{label}-{'PASS' if scientific_gate_passed else 'GATE-FAIL'}")

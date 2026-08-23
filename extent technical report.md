@@ -982,6 +982,36 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Disk-failure correction:** the original runner retained earlier Qwen shards during the layer-18 stream in an attempt to reuse them for layer 0. The corrected runner prunes every shard after its last use during cache construction and both end-to-end passes. In `auto` mode it additionally places transient Qwen shards under `/dev/shm` only when that mounted RAM filesystem reports at least 36 GiB free; otherwise it uses bounded disk streaming. Endpoint and stage manifests are now recorded before streamed evaluation begins.
 - **Partial raw artifacts:** `results/EXP-045-stage-manifest-interrupted.json`, `results/EXP-045-layer18-endpoint-checkpoint.json`, and `results/EXP-045-layer18-training-interrupted.json`.
 
+### EXP-046 — Additional-depth objective generalization
+
+- **Implementation commit title:** `feat: add resilient TPU experiment campaign`
+- **Status:** pre-registered; execution pending. Layer choices, budgets, estimands, and gates are frozen before execution.
+- **Question:** does the EXP-045 objective ranking generalize beyond the originally selected early/middle pair, or is its behavior specific to layers 0 and 18?
+- **Frozen layers:** layers 9 and 29. Together with EXP-045 layers 0 and 18, these form a four-point depth profile spanning early, early-middle, late-middle, and late decoder positions. These layers are not selected after inspecting new objective results.
+- **Training protocol:** identical to EXP-045: sequence length 32, eight calibration windows, 1,024 training windows, seeds `123/456/789`, one 32,768-token pass per arm, BF16 Lion at `3e-5`, ridge `1e-2`, and paired `MIXER-ONLY`, `JOINT-MIXER-DECODER`, and `COUNTERFACTUAL-CONTRIBUTION` arms.
+- **Evaluation protocol:** official WikiText-2 validation range `[0,8192)`, 256 length-32 windows and 7,936 next-token labels per branch. Every replacement is evaluated independently from its original-Qwen residual input and streams through the identical frozen suffix, final norm, and LM head.
+- **Per-layer gate:** identical to EXP-045: counterfactual matching must have lower mean NLL than both controls, win against each control in at least two of three seeds, and have a paired-bootstrap 95% upper bound below zero against each control. All numerical and provenance checks must pass. Overall EXP-046 passes only if both layers 9 and 29 pass.
+- **Decision rule:** a joint EXP-045/046 pass supports a depth-invariant objective. Mixed results motivate an explicit depth-conditioned allocation rule. Failure at the added depths rejects a universal counterfactual objective even if the original pair passes.
+
+### EXP-047 — Zero-shot context transfer of recovered endpoints
+
+- **Implementation commit title:** `feat: add resilient TPU experiment campaign`
+- **Status:** pre-registered; execution pending. This experiment runs only after numerically valid EXP-045/046 endpoints have been durably recorded.
+- **Question:** do endpoints trained exclusively on length-32 windows preserve their relative objective ranking when evaluated at longer contexts without any additional optimization?
+- **Frozen scope:** EXP-045 layers 0 and 18; sequence lengths `64`, `128`, and `256`; all three objective arms and seeds `123/456/789`. EXP-046 layers are excluded to keep the campaign within the cloud-session budget while retaining an early/deep comparison.
+- **Token-control protocol:** every context length covers the identical official WikiText-2 validation token range `[0,8192)`: 128 windows at length 64, 64 windows at length 128, and 32 windows at length 256. Thus token count and text are fixed while segmentation and recurrent/attention horizon change. Endpoints receive no context-specific fitting.
+- **Primary cell estimands:** mean paired NLL differences of counterfactual matching versus mixer-only and decoder-aware matching for each of the six `layer x context` cells. Counterfactual regret is `NLL(counterfactual) - min(NLL(mixer-only), NLL(decoder-aware))`.
+- **Scientific gate:** all six cells must be finite; counterfactual matching must be the best arm in at least five of six cells; and maximum counterfactual regret over all cells must not exceed `0.02` NLL. Per-cell paired bootstrap intervals are reported as uncertainty diagnostics. This gate measures ranking transfer, not absolute equivalence to original Qwen.
+- **Boundary:** all contexts remain short relative to the intended final long-context model and reuse the objective-selection validation split. EXP-047 can reject immediate context transfer but cannot establish 32K+ context quality or serve as untouched final evaluation.
+
+### Cloud TPU campaign protocol
+
+- **Campaign contents:** run EXP-045, EXP-046, and EXP-047 sequentially in one TPU v5e-8 allocation. Completed experiment and cell JSONs are restart boundaries; a rerun skips every numerically valid result.
+- **Failure containment:** every cache and endpoint is written atomically with hash/provenance checks. Qwen shards are pruned after last use; completed depth-cache arrays are removed before context evaluation; each completed context cache is removed after its result; and large endpoint payloads are removed only after every dependent context cell has completed. Final scientific JSONs and checkpoint metadata remain.
+- **Resource policy:** transient Qwen weights use `/dev/shm` only if the mounted RAM filesystem exposes at least 36 GiB free; otherwise bounded disk streaming is used. The campaign never assumes that total host RAM is automatically mounted as a filesystem.
+- **Notification policy:** when enabled, Telegram receives exactly a campaign-start notification and a final notification. Normal completion reports numerical and scientific status. A caught exception writes `extent-tpu-campaign-failure.json`, marks the exact failed stage, and sends the error type/stage. External hard termination of the VM cannot execute a final callback and is outside this guarantee.
+- **Artifact policy:** the primary handoff is `extent-tpu-campaign.json`; individual EXP/cell JSONs and stage manifests remain for audit. Regenerable activation arrays and completed endpoint payloads are intentionally excluded from final cloud output after all dependent measurements finish.
+
 ## 8. Reasoning SFT boundary
 
 “Claude-like reasoning” is not part of the architecture-recovery claim. It should be a later experiment with explicit data provenance, permissions, filtering, and a frozen pre-SFT checkpoint. Otherwise architecture recovery and behavior imitation become confounded. Prefer reproducible/open reasoning datasets or lawfully generated teacher traces, and evaluate reasoning improvements separately from retained base capabilities.

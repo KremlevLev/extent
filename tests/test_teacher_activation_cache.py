@@ -107,6 +107,44 @@ def test_external_evaluation_cache_allows_frozen_cross_split():
         validate_external_evaluation_cache(training, evaluation)
 
 
+def test_external_evaluation_cache_can_freeze_tokens_across_context_lengths():
+    training = {
+        "source": "qwen",
+        "dataset": "wiki",
+        "dataset_split": "train",
+        "target_layer": 18,
+        "sequence_length": 32,
+        "token_range": [0, 33056],
+    }
+    evaluation = {
+        "source": "qwen",
+        "dataset": "wiki",
+        "dataset_split": "validation",
+        "target_layer": 18,
+        "sequence_length": 128,
+        "evaluation_only": True,
+        "token_offset": 0,
+        "token_range": [0, 8192],
+        "window_layout": {
+            "calibration": [0, 0],
+            "training": [0, 0],
+            "evaluation": [0, 64],
+        },
+    }
+    with pytest.raises(ValueError, match="mismatch"):
+        validate_external_evaluation_cache(
+            training, evaluation, allow_cross_split=True
+        )
+    assert validate_external_evaluation_cache(
+        training,
+        evaluation,
+        required_token_offset=0,
+        required_dataset_split="validation",
+        allow_cross_split=True,
+        allow_sequence_length_mismatch=True,
+    ) == slice(0, 64)
+
+
 def test_host_microbatch_runner_preserves_order_and_fp32_output():
     inputs = np.arange(5 * 2 * 3, dtype=np.float32).reshape(5, 2, 3)
     output = run_host_microbatches(

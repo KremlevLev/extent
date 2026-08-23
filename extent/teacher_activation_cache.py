@@ -205,9 +205,12 @@ def validate_external_evaluation_cache(
     required_evaluation_windows: int | None = None,
     required_dataset_split: str | None = None,
     allow_cross_split: bool = False,
+    allow_sequence_length_mismatch: bool = False,
 ) -> slice:
     """Validate a disjoint evaluation-only cache against a training cache."""
-    shared = ("source", "dataset", "target_layer", "sequence_length")
+    shared = ["source", "dataset", "target_layer"]
+    if not allow_sequence_length_mismatch:
+        shared.append("sequence_length")
     mismatches = {
         key: (training_manifest.get(key), evaluation_manifest.get(key))
         for key in shared

@@ -97,10 +97,11 @@ def _cache_arguments(
     compute_dtype: str,
     storage_dtype: str,
     per_device_windows: int,
+    experiment: str = "exp045",
 ) -> tuple[list[str], Path, Path]:
     role = "validation" if evaluation_only else "train"
-    artifact_dir = output_dir / f"exp045-layer{layer}-{role}-cache"
-    manifest = artifact_dir / f"exp045-layer{layer}-{role}-manifest.json"
+    artifact_dir = output_dir / f"{experiment}-layer{layer}-{role}-cache"
+    manifest = artifact_dir / f"{experiment}-layer{layer}-{role}-manifest.json"
     arguments = [
         "--cache-dir", qwen_cache_dir,
         "--dataset-cache-dir", dataset_cache_dir,
@@ -139,7 +140,9 @@ def _cache_arguments(
     return arguments, manifest, artifact_dir
 
 
-def _valid_completed_result(path: Path, layer: int) -> dict | None:
+def _valid_completed_result(
+    path: Path, layer: int, protocol: str = "exp045-depth-objective"
+) -> dict | None:
     if not path.exists():
         return None
     try:
@@ -149,7 +152,7 @@ def _valid_completed_result(path: Path, layer: int) -> dict | None:
     expected_source = f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}"
     if (
         result.get("source") != expected_source
-        or result.get("protocol") != "exp045-depth-objective"
+        or result.get("protocol") != protocol
         or int(result.get("target_layer", -1)) != layer
         or not result.get("passed")
     ):
@@ -182,6 +185,13 @@ def main(argv: list[str] | None = None) -> dict:
         "--result-json",
         default="/kaggle/working/output/exp045-depth-objective.json",
     )
+    parser.add_argument(
+        "--experiment", choices=("exp045", "exp046"), default="exp045"
+    )
+    parser.add_argument(
+        "--target-layers",
+        help="comma-separated layers; defaults to 0,18 for EXP-045 and 9,29 for EXP-046",
+    )
     parser.add_argument("--seeds", default="123,456,789")
     parser.add_argument("--compute-dtype", default="bfloat16")
     parser.add_argument("--storage-dtype", default="float16")
@@ -197,6 +207,18 @@ def main(argv: list[str] | None = None) -> dict:
         raise ValueError("EXP-045 one-shot runner requires exactly eight TPU devices")
     if min(args.per_device_windows, args.bootstrap_samples) < 1:
         raise ValueError("window and bootstrap counts must be positive")
+    target_layers = tuple(
+        int(value.strip())
+        for value in (
+            args.target_layers
+            or ("0,18" if args.experiment == "exp045" else "9,29")
+        ).split(",")
+    )
+    if len(target_layers) != 2 or len(set(target_layers)) != 2:
+        raise ValueError("depth experiment requires exactly two distinct layers")
+    if min(target_layers) < 0 or max(target_layers) >= 40:
+        raise ValueError("target layers must be in [0, 40)")
+    experiment_protocol = f"{args.experiment}-depth-objective"
 
     qwen_cache_dir, qwen_cache_storage = resolve_qwen_cache_dir(
         args.qwen_cache_dir, args.qwen_cache_storage
@@ -211,11 +233,11 @@ def main(argv: list[str] | None = None) -> dict:
     if args.resume_source_output_dir:
         staged = stage_saved_output(args.resume_source_output_dir, output_dir)
         print(f"saved_output_stage={json.dumps(staged, sort_keys=True)}")
-    stage_manifest = output_dir / "exp045-stage-manifest.json"
+    stage_manifest = output_dir / f"{args.experiment}-stage-manifest.json"
     manifests: dict[tuple[int, str], Path] = {}
     artifact_dirs: dict[tuple[int, str], Path] = {}
     for evaluation_only in (False, True):
-        for layer in TARGET_LAYERS:
+        for layer in target_layers:
             cache_args, manifest, artifact_dir = _cache_arguments(
                 layer=layer,
                 evaluation_only=evaluation_only,
@@ -225,6 +247,7 @@ def main(argv: list[str] | None = None) -> dict:
                 compute_dtype=args.compute_dtype,
                 storage_dtype=args.storage_dtype,
                 per_device_windows=args.per_device_windows,
+                experiment=args.experiment,
             )
             role = "validation" if evaluation_only else "train"
             reused = False
@@ -246,7 +269,7 @@ def main(argv: list[str] | None = None) -> dict:
             artifact_dirs[(layer, role)] = artifact_dir
             update_stage_manifest(
                 stage_manifest,
-                experiment="exp045-depth-objective",
+                experiment=experiment_protocol,
                 stage=f"cache-layer{layer}-{role}",
                 status="completed",
                 details={"manifest": str(manifest.resolve()), "reused": reused},
@@ -257,9 +280,13 @@ def main(argv: list[str] | None = None) -> dict:
     layer_results = {}
     # Layer 18 runs first and leaves its downloaded later-layer shards available.
     # Layer 0 then consumes the full checkpoint and safely prunes it at the end.
-    for layer in (18, 0):
-        layer_json = output_dir / f"exp045-layer{layer}-result.json"
-        completed = _valid_completed_result(layer_json, layer) if args.resume else None
+    for layer in tuple(sorted(target_layers, reverse=True)):
+        layer_json = output_dir / f"{args.experiment}-layer{layer}-result.json"
+        completed = (
+            _valid_completed_result(layer_json, layer, experiment_protocol)
+            if args.resume
+            else None
+        )
         if completed is not None:
             print(f"depth_objective_layer={layer} RESUME-PASS")
             layer_results[str(layer)] = completed
@@ -271,7 +298,7 @@ def main(argv: list[str] | None = None) -> dict:
             "--evaluation-cache-dir", str(artifact_dirs[(layer, "validation")]),
             "--qwen-cache-dir", qwen_cache_dir,
             "--target-layer", str(layer),
-            "--protocol", "exp045-depth-objective",
+            "--protocol", experiment_protocol,
             "--seeds", args.seeds,
             "--compute-dtype", args.compute_dtype,
             "--data-parallel",
@@ -279,10 +306,10 @@ def main(argv: list[str] | None = None) -> dict:
             "--bootstrap-samples", str(args.bootstrap_samples),
             "--bootstrap-seed", str(args.bootstrap_seed + layer),
             "--endpoint-checkpoint-dir", str(
-                output_dir / f"exp045-layer{layer}-endpoints"
+                output_dir / f"{args.experiment}-layer{layer}-endpoints"
             ),
             "--result-json", str(layer_json),
-            "--output-dir", str(output_dir / f"exp045-layer{layer}"),
+            "--output-dir", str(output_dir / f"{args.experiment}-layer{layer}"),
             "--stage-manifest", str(stage_manifest),
             "--prune-consumed-shards",
         ]
@@ -294,7 +321,7 @@ def main(argv: list[str] | None = None) -> dict:
         layer_results[str(layer)] = run_layer(arguments)
         update_stage_manifest(
             stage_manifest,
-            experiment="exp045-depth-objective",
+            experiment=experiment_protocol,
             stage=f"end-to-end-layer{layer}",
             status="completed",
             details={
@@ -318,8 +345,10 @@ def main(argv: list[str] | None = None) -> dict:
     result = {
         "source": f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}",
         "method": "cross_depth_counterfactual_contribution_objective",
-        "protocol": "exp045-layer0-layer18",
-        "target_layers": list(TARGET_LAYERS),
+        "protocol": f"{args.experiment}-" + "-".join(
+            f"layer{layer}" for layer in target_layers
+        ),
+        "target_layers": list(target_layers),
         "seeds": [int(value) for value in args.seeds.split(",")],
         "qwen_cache_storage": qwen_cache_storage,
         "qwen_cache_dir": qwen_cache_dir,
@@ -339,6 +368,16 @@ def main(argv: list[str] | None = None) -> dict:
     print(f"result_json={Path(args.result_json).resolve()}")
     if mirror:
         print(f"output_json={mirror.resolve()}")
+    update_stage_manifest(
+        stage_manifest,
+        experiment=experiment_protocol,
+        stage="final",
+        status="completed",
+        details={
+            "result_json": str(Path(args.result_json).resolve()),
+            "scientific_gate_passed": scientific_gate_passed,
+        },
+    )
     print(
         "DEPTH-OBJECTIVE-COMPARISON-PASS"
         if scientific_gate_passed
