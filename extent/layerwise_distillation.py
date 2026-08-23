@@ -123,6 +123,76 @@ def create_decoder_aware_train_step(
     return train_step
 
 
+def create_counterfactual_contribution_train_step(
+    apply_mixer: Callable[[optax.Params, jax.Array], jax.Array],
+    apply_decoder_tail: Callable[[optax.Params, jax.Array, jax.Array], jax.Array],
+    tx: optax.GradientTransformation,
+    *,
+    mixer_loss_weight: float,
+    bf16_gradients: bool,
+) -> Callable:
+    """Match the mixer's causal contribution after removing the residual baseline.
+
+    A deep decoder block's full output is dominated by its residual stream.  Matching
+    ``tail(residual, mixer)`` can therefore report a tiny error even when the mixer is
+    poor.  This objective instead matches the counterfactual difference between the
+    real mixer and a zero-mixer intervention while keeping the Qwen tail frozen.
+    """
+    if mixer_loss_weight < 0:
+        raise ValueError("mixer loss weight must be non-negative")
+    weight = jnp.asarray(mixer_loss_weight, dtype=jnp.float32)
+    normalization = jnp.asarray(1.0 + mixer_loss_weight, dtype=jnp.float32)
+
+    @jax.jit
+    def train_step(
+        params,
+        opt_state,
+        tail_params,
+        residual_inputs,
+        normalized_inputs,
+        mixer_targets,
+    ):
+        zero_mixer = jnp.zeros_like(mixer_targets)
+        baseline = jax.lax.stop_gradient(
+            apply_decoder_tail(tail_params, residual_inputs, zero_mixer)
+        )
+        teacher_output = jax.lax.stop_gradient(
+            apply_decoder_tail(tail_params, residual_inputs, mixer_targets)
+        )
+        teacher_contribution = teacher_output - baseline
+
+        def loss_fn(candidate):
+            mixer_predictions = apply_mixer(candidate, normalized_inputs)
+            decoder_predictions = apply_decoder_tail(
+                tail_params, residual_inputs, mixer_predictions
+            )
+            student_contribution = decoder_predictions - baseline
+            contribution_loss = relative_mse(
+                student_contribution, teacher_contribution
+            )
+            mixer_loss = relative_mse(mixer_predictions, mixer_targets)
+            objective = (
+                contribution_loss + weight * mixer_loss
+            ) / normalization
+            return objective, (mixer_loss, contribution_loss)
+
+        (loss, (mixer_loss, contribution_loss)), grads = jax.value_and_grad(
+            loss_fn, has_aux=True
+        )(params)
+        health = gradient_health(grads)
+        optimizer_grads = cast_grads_bf16(grads) if bf16_gradients else grads
+        updates, opt_state = tx.update(optimizer_grads, opt_state, params)
+        params = optax.apply_updates(params, updates)
+        return params, opt_state, {
+            "loss": loss,
+            "mixer_loss": mixer_loss,
+            "contribution_loss": contribution_loss,
+            **health,
+        }
+
+    return train_step
+
+
 def create_layerwise_prior_train_step(
     apply_fn: Callable[[optax.Params, jax.Array], jax.Array],
     tx: optax.GradientTransformation,

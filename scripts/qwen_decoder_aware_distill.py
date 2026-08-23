@@ -24,7 +24,10 @@ from extent.decoder_replacement_eval import (
     qwen3_decoder_tail_params,
 )
 from extent.hardware import recommended_compute_dtype
-from extent.layerwise_distillation import create_decoder_aware_train_step
+from extent.layerwise_distillation import (
+    create_counterfactual_contribution_train_step,
+    create_decoder_aware_train_step,
+)
 from extent.layers.mamba3 import Mamba3MIMO
 from extent.offline_distillation import deterministic_batch_indices
 from extent.optimizer import create_lion
@@ -74,6 +77,7 @@ def _teacher_decoder_outputs(
 
 def _evaluate(
     runner,
+    teacher_runner,
     params,
     tail_params,
     residual_inputs,
@@ -84,6 +88,7 @@ def _evaluate(
 ) -> dict:
     mixer_predictions = []
     decoder_predictions = []
+    baseline_predictions = []
     for start in range(0, len(residual_inputs), batch_windows):
         stop = min(start + batch_windows, len(residual_inputs))
         mixer, decoder = runner(
@@ -95,11 +100,23 @@ def _evaluate(
         jax.block_until_ready((mixer, decoder))
         mixer_predictions.append(np.asarray(mixer, dtype=np.float32))
         decoder_predictions.append(np.asarray(decoder, dtype=np.float32))
+        baseline = teacher_runner(
+            tail_params,
+            residual_inputs[start:stop],
+            jnp.zeros_like(mixer_targets[start:stop]),
+        )
+        baseline_predictions.append(np.asarray(baseline, dtype=np.float32))
     mixer_predictions = np.concatenate(mixer_predictions)
     decoder_predictions = np.concatenate(decoder_predictions)
+    baseline_predictions = np.concatenate(baseline_predictions)
+    teacher_contribution = decoder_targets - baseline_predictions
+    student_contribution = decoder_predictions - baseline_predictions
     return {
         "mixer_output": _window_metrics(mixer_targets, mixer_predictions),
         "decoder_output": _window_metrics(decoder_targets, decoder_predictions),
+        "counterfactual_contribution": _window_metrics(
+            teacher_contribution, student_contribution
+        ),
         "finite": bool(
             np.all(np.isfinite(mixer_predictions))
             and np.all(np.isfinite(decoder_predictions))
@@ -128,6 +145,8 @@ def main(
     parser.add_argument("--learning-rate", type=float, default=3e-5)
     parser.add_argument("--readout-ridge", type=float, default=1e-2)
     parser.add_argument("--decoder-loss-weight", type=float, default=1.0)
+    parser.add_argument("--contribution-mixer-weight", type=float, default=1.0)
+    parser.add_argument("--include-contribution-arm", action="store_true")
     parser.add_argument("--seed", type=int, default=123)
     parser.add_argument("--data-seed", type=int, default=20260820)
     parser.add_argument("--result-json", required=True)
@@ -147,6 +166,8 @@ def main(
         raise ValueError("step, batch, learning-rate, and ridge values must be positive")
     if args.decoder_loss_weight <= 0:
         raise ValueError("decoder-loss-weight must be positive for the joint arm")
+    if args.contribution_mixer_weight < 0:
+        raise ValueError("contribution-mixer-weight must be non-negative")
     if min(args.seed, args.data_seed) < 0:
         raise ValueError("seeds must be non-negative")
     checkpoint_steps = _checkpoint_steps(args.checkpoints, args.total_steps)
@@ -267,13 +288,18 @@ def main(
     )
 
     arms = {
-        "MIXER-ONLY": 0.0,
-        "JOINT-MIXER-DECODER": args.decoder_loss_weight,
+        "MIXER-ONLY": ("decoder", 0.0),
+        "JOINT-MIXER-DECODER": ("decoder", args.decoder_loss_weight),
     }
+    if args.include_contribution_arm:
+        arms["COUNTERFACTUAL-CONTRIBUTION"] = (
+            "contribution",
+            args.contribution_mixer_weight,
+        )
     results = {}
     endpoint_params = {}
     all_finite = True
-    for name, decoder_weight in arms.items():
+    for name, (objective_kind, objective_weight) in arms.items():
         params = initial_params
         tx = create_lion(
             learning_rate=args.learning_rate,
@@ -283,16 +309,26 @@ def main(
             max_grad_norm=1.0,
         )
         opt_state = tx.init(params)
-        train_step = create_decoder_aware_train_step(
-            apply_mixer,
-            apply_tail,
-            tx,
-            decoder_loss_weight=decoder_weight,
-            bf16_gradients=compute_dtype == jnp.bfloat16,
-        )
+        if objective_kind == "contribution":
+            train_step = create_counterfactual_contribution_train_step(
+                apply_mixer,
+                apply_tail,
+                tx,
+                mixer_loss_weight=objective_weight,
+                bf16_gradients=compute_dtype == jnp.bfloat16,
+            )
+        else:
+            train_step = create_decoder_aware_train_step(
+                apply_mixer,
+                apply_tail,
+                tx,
+                decoder_loss_weight=objective_weight,
+                bf16_gradients=compute_dtype == jnp.bfloat16,
+            )
         evaluations = {
             "0": _evaluate(
                 replacement_runner,
+                teacher_runner,
                 params,
                 tail_params,
                 residual_eval,
@@ -345,6 +381,7 @@ def main(
             if completed_step in checkpoint_steps:
                 evaluation = _evaluate(
                     replacement_runner,
+                    teacher_runner,
                     params,
                     tail_params,
                     residual_eval,
@@ -361,7 +398,8 @@ def main(
                     f"decoder_l2={evaluation['decoder_output']['relative_l2']:.6g}"
                 )
         results[name] = {
-            "decoder_loss_weight": decoder_weight,
+            "objective_kind": objective_kind,
+            "objective_weight": objective_weight,
             "evaluations": evaluations,
             "last_train_metrics": last_train_metrics,
             "max_grad_norm": max_grad_norm,
@@ -412,6 +450,9 @@ def main(
         "data_seed": args.data_seed,
         "learning_rate": args.learning_rate,
         "readout_ridge": args.readout_ridge,
+        "decoder_loss_weight": args.decoder_loss_weight,
+        "contribution_mixer_weight": args.contribution_mixer_weight,
+        "include_contribution_arm": args.include_contribution_arm,
         "readout_calibration_relative_l2": float(
             readout_report.calibration_relative_l2
         ),
@@ -426,9 +467,10 @@ def main(
         "scientific_gate_passed": scientific_gate_passed,
         "passed": all_finite,
         "notes": [
-            "Both arms start from identical readout-calibrated Mamba parameters and consume identical batches.",
+            "All arms start from identical readout-calibrated Mamba parameters and consume identical batches.",
             "The joint objective is the normalized mean of mixer and decoder relative MSE when decoder-loss-weight is one.",
             "The frozen Qwen decoder tail is shared and is never optimized.",
+            "The counterfactual arm subtracts the frozen zero-mixer decoder output before matching the teacher contribution.",
             "passed reports numerical execution; scientific_gate_passed reports the pre-registered quality threshold.",
         ],
     }

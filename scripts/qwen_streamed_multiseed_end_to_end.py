@@ -34,6 +34,10 @@ from extent.decoder_replacement_eval import (
     qwen3_decoder_tail_params,
 )
 from extent.hardware import recommended_compute_dtype
+from extent.endpoint_checkpoint import (
+    restore_endpoint_checkpoint,
+    save_endpoint_checkpoint,
+)
 from extent.layers.common import RMSNorm
 from extent.layers.mamba3 import Mamba3MIMO
 from extent.qwen3_parity import (
@@ -51,6 +55,7 @@ from extent.streamed_lm_eval import (
     hidden_relative_l2,
 )
 from extent.teacher_activation_cache import (
+    file_sha256,
     load_activation_cache,
     run_host_data_parallel,
     run_host_microbatches,
@@ -59,17 +64,129 @@ from extent.teacher_activation_cache import (
 from extent.weight_mapping import QwenCheckpointReader
 
 
-def branch_names(seeds: tuple[int, ...], total_steps: int) -> tuple[str, ...]:
+def branch_names(
+    seeds: tuple[int, ...],
+    total_steps: int,
+    *,
+    include_contribution: bool = False,
+) -> tuple[str, ...]:
     names = ["ORIGINAL-CACHED-QWEN"]
     for seed in seeds:
-        names.extend(
-            (
-                f"SEED-{seed}-CALIBRATED-STEP0",
-                f"SEED-{seed}-MIXER-ONLY-STEP{total_steps}",
-                f"SEED-{seed}-JOINT-STEP{total_steps}",
+        if include_contribution:
+            names.extend(
+                (
+                    f"SEED-{seed}-MIXER-ONLY-STEP{total_steps}",
+                    f"SEED-{seed}-JOINT-STEP{total_steps}",
+                    f"SEED-{seed}-CONTRIBUTION-STEP{total_steps}",
+                )
             )
-        )
+        else:
+            names.extend(
+                (
+                    f"SEED-{seed}-CALIBRATED-STEP0",
+                    f"SEED-{seed}-MIXER-ONLY-STEP{total_steps}",
+                    f"SEED-{seed}-JOINT-STEP{total_steps}",
+                )
+            )
     return tuple(names)
+
+
+def aggregate_depth_objectives(
+    original_nll: float,
+    seed_metrics: dict[str, dict[str, dict]],
+) -> dict:
+    """Compare objective endpoints without unstable ratios around zero shock."""
+    records = []
+    for seed, metrics in seed_metrics.items():
+        mixer = float(metrics["mixer_only"]["mean_nll"])
+        joint = float(metrics["joint"]["mean_nll"])
+        contribution = float(metrics["contribution"]["mean_nll"])
+        records.append(
+            {
+                "seed": int(seed),
+                "mixer_only_excess_nll": mixer - original_nll,
+                "joint_excess_nll": joint - original_nll,
+                "contribution_excess_nll": contribution - original_nll,
+                "contribution_minus_mixer_nll": contribution - mixer,
+                "contribution_minus_joint_nll": contribution - joint,
+                "contribution_beats_mixer": contribution < mixer,
+                "contribution_beats_joint": contribution < joint,
+            }
+        )
+    delta_mixer = np.asarray(
+        [record["contribution_minus_mixer_nll"] for record in records]
+    )
+    delta_joint = np.asarray(
+        [record["contribution_minus_joint_nll"] for record in records]
+    )
+    return {
+        "per_seed": records,
+        "mean_contribution_minus_mixer_nll": float(np.mean(delta_mixer)),
+        "mean_contribution_minus_joint_nll": float(np.mean(delta_joint)),
+        "contribution_wins_vs_mixer": int(np.sum(delta_mixer < 0)),
+        "contribution_wins_vs_joint": int(np.sum(delta_joint < 0)),
+        "all_finite": bool(
+            np.all(np.isfinite(delta_mixer)) and np.all(np.isfinite(delta_joint))
+        ),
+    }
+
+
+def bootstrap_depth_objective_deltas(
+    seed_window_nll: dict[str, dict[str, list[float]]],
+    *,
+    samples: int,
+    seed: int,
+) -> dict:
+    if samples < 1:
+        raise ValueError("bootstrap samples must be positive")
+    arrays = {
+        key: {name: np.asarray(values, np.float64) for name, values in arms.items()}
+        for key, arms in seed_window_nll.items()
+    }
+    required_arms = {"mixer_only", "joint", "contribution"}
+    if not arrays or any(set(values) != required_arms for values in arrays.values()):
+        raise ValueError("each seed must provide all three objective arms")
+    all_lengths = {
+        len(array)
+        for values in arrays.values()
+        for array in values.values()
+    }
+    window_counts = {len(values["contribution"]) for values in arrays.values()}
+    if (
+        len(window_counts) != 1
+        or len(all_lengths) != 1
+        or not window_counts
+        or min(window_counts) < 2
+    ):
+        raise ValueError("all seeds must share at least two paired windows")
+    windows = window_counts.pop()
+    rng = np.random.default_rng(seed)
+    mixer_deltas = np.empty(samples, np.float64)
+    joint_deltas = np.empty(samples, np.float64)
+    for index in range(samples):
+        selected = rng.integers(0, windows, size=windows)
+        mixer_deltas[index] = np.mean(
+            [
+                np.mean(values["contribution"][selected] - values["mixer_only"][selected])
+                for values in arrays.values()
+            ]
+        )
+        joint_deltas[index] = np.mean(
+            [
+                np.mean(values["contribution"][selected] - values["joint"][selected])
+                for values in arrays.values()
+            ]
+        )
+    return {
+        "samples": samples,
+        "seed": seed,
+        "contribution_minus_mixer_95ci": [
+            float(value) for value in np.percentile(mixer_deltas, [2.5, 97.5])
+        ],
+        "contribution_minus_joint_95ci": [
+            float(value) for value in np.percentile(joint_deltas, [2.5, 97.5])
+        ],
+    }
 
 
 def branch_divergence(
@@ -141,6 +258,10 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--learning-rate", type=float, default=3e-5)
     parser.add_argument("--readout-ridge", type=float, default=1e-2)
     parser.add_argument("--decoder-loss-weight", type=float, default=1.0)
+    parser.add_argument("--contribution-mixer-weight", type=float, default=1.0)
+    parser.add_argument("--target-layer", type=int, default=0)
+    parser.add_argument("--bootstrap-samples", type=int, default=2000)
+    parser.add_argument("--bootstrap-seed", type=int, default=20260826)
     parser.add_argument(
         "--compute-dtype",
         choices=("auto", "float32", "bfloat16"),
@@ -156,12 +277,19 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--reference-nll-tolerance", type=float, default=0.02)
     parser.add_argument(
         "--protocol",
-        choices=("exp041", "exp042-fresh", "exp043-validation"),
+        choices=(
+            "exp041",
+            "exp042-fresh",
+            "exp043-validation",
+            "exp045-depth-objective",
+        ),
         default="exp041",
     )
     parser.add_argument("--required-recovery-fraction", type=float)
     parser.add_argument("--result-json", required=True)
     parser.add_argument("--output-dir", default="/kaggle/working/output")
+    parser.add_argument("--endpoint-checkpoint-dir")
+    parser.add_argument("--resume-endpoints", action="store_true")
     args = parser.parse_args(argv)
     seeds = parse_seeds(args.seeds)
     if args.total_steps != 1024:
@@ -174,6 +302,10 @@ def main(argv: list[str] | None = None) -> dict:
         raise ValueError("batch settings must be positive")
     if args.reference_nll_tolerance < 0:
         raise ValueError("reference NLL tolerance must be non-negative")
+    if not 0 <= args.target_layer < 40:
+        raise ValueError("target-layer must be in [0, 40)")
+    if args.protocol != "exp045-depth-objective" and args.target_layer != 0:
+        raise ValueError("legacy streamed protocols are frozen to layer zero")
 
     jax.config.update("jax_default_matmul_precision", "high")
     manifest, arrays, paths = load_activation_cache(
@@ -182,13 +314,20 @@ def main(argv: list[str] | None = None) -> dict:
         verify_hashes=not args.skip_hash_verification,
     )
     source_name = f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}"
-    if manifest.get("source") != source_name or int(manifest["target_layer"]) != 0:
-        raise ValueError("EXP-041 requires the pinned Qwen3 source and layer zero")
+    if (
+        manifest.get("source") != source_name
+        or int(manifest["target_layer"]) != args.target_layer
+    ):
+        raise ValueError("activation cache source or target layer does not match")
     evaluation_manifest = manifest
     evaluation_arrays = arrays
     evaluation_paths = paths
     evaluation_slice = _slice(manifest["window_layout"], "evaluation")
-    if args.protocol in {"exp042-fresh", "exp043-validation"}:
+    if args.protocol in {
+        "exp042-fresh",
+        "exp043-validation",
+        "exp045-depth-objective",
+    }:
         if not args.evaluation_cache_manifest:
             raise ValueError("the selected protocol requires an external evaluation cache")
         evaluation_manifest, evaluation_arrays, evaluation_paths = (
@@ -222,6 +361,7 @@ def main(argv: list[str] | None = None) -> dict:
             "exp041": 0.10,
             "exp042-fresh": 0.25,
             "exp043-validation": 0.20,
+            "exp045-depth-objective": 0.0,
         }[args.protocol]
     if not 0.0 <= required_recovery <= 1.0:
         raise ValueError("required recovery fraction must be in [0, 1]")
@@ -231,12 +371,18 @@ def main(argv: list[str] | None = None) -> dict:
     if args.data_parallel and len(devices) < 2:
         raise ValueError("--data-parallel requires at least two visible devices")
     parallel_devices = devices if args.data_parallel else None
-    names = branch_names(seeds, args.total_steps)
+    objective_comparison = args.protocol == "exp045-depth-objective"
+    names = branch_names(
+        seeds,
+        args.total_steps,
+        include_contribution=objective_comparison,
+    )
 
     experiment_id = {
         "exp041": "exp041",
         "exp042-fresh": "exp042",
         "exp043-validation": "exp043",
+        "exp045-depth-objective": f"exp045-layer{args.target_layer}",
     }[args.protocol]
     training_json = (
         Path(args.output_dir) / f"{experiment_id}-training-confirmation.json"
@@ -253,6 +399,7 @@ def main(argv: list[str] | None = None) -> dict:
         "--learning-rate", str(args.learning_rate),
         "--readout-ridge", str(args.readout_ridge),
         "--decoder-loss-weight", str(args.decoder_loss_weight),
+        "--contribution-mixer-weight", str(args.contribution_mixer_weight),
         "--compute-dtype", args.compute_dtype,
         "--result-json", str(training_json),
         "--output-dir", args.output_dir,
@@ -271,11 +418,73 @@ def main(argv: list[str] | None = None) -> dict:
         )
     if args.protocol == "exp043-validation":
         training_args.append("--allow-cross-split-evaluation")
+    if objective_comparison:
+        training_args.extend(
+            ["--allow-cross-split-evaluation", "--include-contribution-arm"]
+        )
     if args.skip_hash_verification:
         training_args.append("--skip-hash-verification")
-    training_result, initial_by_seed, endpoint_by_seed = train_multiseed(
-        training_args, return_endpoint_params=True
+    checkpoint_dir = (
+        Path(args.endpoint_checkpoint_dir)
+        if args.endpoint_checkpoint_dir
+        else None
     )
+    compatibility = {
+        "source": source_name,
+        "experiment": experiment_id,
+        "target_layer": args.target_layer,
+        "activation_manifest_sha256": file_sha256(
+            Path(args.activation_cache_manifest)
+        ),
+        "evaluation_manifest_sha256": file_sha256(
+            Path(args.evaluation_cache_manifest)
+        ) if args.evaluation_cache_manifest else None,
+        "seeds": list(seeds),
+        "data_seed": args.data_seed,
+        "total_steps": args.total_steps,
+        "training_checkpoints": args.training_checkpoints,
+        "learning_rate": args.learning_rate,
+        "readout_ridge": args.readout_ridge,
+        "decoder_loss_weight": args.decoder_loss_weight,
+        "contribution_mixer_weight": args.contribution_mixer_weight,
+        "compute_dtype": dtype_decision.dtype,
+    }
+    restored = False
+    if (
+        objective_comparison
+        and args.resume_endpoints
+        and checkpoint_dir is not None
+        and training_json.exists()
+        and (checkpoint_dir / "checkpoint.json").exists()
+    ):
+        training_result = json.loads(training_json.read_text(encoding="utf-8"))
+        if not training_result.get("passed"):
+            raise ValueError("saved EXP-045 training result is not numerically valid")
+        endpoint_by_seed, checkpoint_metadata = restore_endpoint_checkpoint(
+            checkpoint_dir,
+            expected_compatibility=compatibility,
+        )
+        initial_by_seed = {}
+        restored = True
+        print(
+            "training_endpoints=RESUME-PASS "
+            f"sha256={checkpoint_metadata['checkpoint_sha256']}"
+        )
+    else:
+        training_result, initial_by_seed, endpoint_by_seed = train_multiseed(
+            training_args, return_endpoint_params=True
+        )
+        checkpoint_metadata = None
+        if objective_comparison and checkpoint_dir is not None:
+            checkpoint_metadata = save_endpoint_checkpoint(
+                checkpoint_dir,
+                endpoint_by_seed,
+                compatibility=compatibility,
+            )
+            print(
+                "training_endpoints=CHECKPOINT-PASS "
+                f"sha256={checkpoint_metadata['checkpoint_sha256']}"
+            )
 
     config_payload = _read_json(QWEN3_14B.resolve_url("config.json"))
     index_payload = _read_json(
@@ -297,12 +506,12 @@ def main(argv: list[str] | None = None) -> dict:
         args.qwen_cache_dir,
         index_payload["weight_map"],
         source,
-        0,
+        args.target_layer,
         repo_id=QWEN3_14B.repo_id,
         revision=QWEN3_14B.revision,
     )
     reader = QwenCheckpointReader(model_dir)
-    tail_params = qwen3_decoder_tail_params(reader, 0)
+    tail_params = qwen3_decoder_tail_params(reader, args.target_layer)
     tail = Qwen3DecoderTail(
         source.hidden_size,
         source.intermediate_size,
@@ -332,8 +541,8 @@ def main(argv: list[str] | None = None) -> dict:
     ]
     for seed in seeds:
         seed_key = str(seed)
-        layer0_outputs.extend(
-            (
+        if not objective_comparison:
+            layer0_outputs.append(
                 _run_replacement_windows(
                     replacement_runner,
                     initial_by_seed[seed_key],
@@ -341,7 +550,10 @@ def main(argv: list[str] | None = None) -> dict:
                     residual_eval,
                     normalized_eval,
                     args.evaluation_batch_windows,
-                ),
+                )
+            )
+        layer0_outputs.extend(
+            (
                 _run_replacement_windows(
                     replacement_runner,
                     endpoint_by_seed[seed_key]["MIXER-ONLY"],
@@ -360,9 +572,22 @@ def main(argv: list[str] | None = None) -> dict:
                 ),
             )
         )
+        if objective_comparison:
+            layer0_outputs.append(
+                _run_replacement_windows(
+                    replacement_runner,
+                    endpoint_by_seed[seed_key]["COUNTERFACTUAL-CONTRIBUTION"],
+                    tail_params,
+                    residual_eval,
+                    normalized_eval,
+                    args.evaluation_batch_windows,
+                )
+            )
     hidden = np.concatenate(layer0_outputs, axis=0)
     divergence = {
-        "0": branch_divergence(hidden, names, evaluation_windows)
+        str(args.target_layer): branch_divergence(
+            hidden, names, evaluation_windows
+        )
     }
     del (
         layer0_outputs,
@@ -385,7 +610,9 @@ def main(argv: list[str] | None = None) -> dict:
     )
     removed_shards = []
     if args.prune_consumed_shards:
-        removed_shards.extend(_safe_prune_shards(model_dir, last_use, 0))
+        removed_shards.extend(
+            _safe_prune_shards(model_dir, last_use, args.target_layer)
+        )
     positions = jnp.arange(
         int(manifest["sequence_length"]), dtype=jnp.int32
     )[None]
@@ -401,7 +628,7 @@ def main(argv: list[str] | None = None) -> dict:
         else _create_decoder_runner(decoder, positions, attention_mask)
     )
     divergence_layers = {9, 19, 29, 39}
-    for layer_index in range(1, source.num_layers):
+    for layer_index in range(args.target_layer + 1, source.num_layers):
         print(f"streaming_decoder_layer={layer_index}/{source.num_layers - 1}")
         ensure_layer_checkpoint(
             model_dir,
@@ -466,7 +693,10 @@ def main(argv: list[str] | None = None) -> dict:
         reader.read("lm_head.weight").T, dtype=compute_dtype
     )
     norm = RMSNorm(source.hidden_size, source.rms_norm_eps, jnp.float32)
-    collect_window_nll = args.protocol == "exp043-validation"
+    collect_window_nll = args.protocol in {
+        "exp043-validation",
+        "exp045-depth-objective",
+    }
     lm_runner = create_lm_metrics_runner(
         norm,
         data_parallel_devices=parallel_devices,
@@ -515,7 +745,7 @@ def main(argv: list[str] | None = None) -> dict:
             "reason": (
                 "EXP-042 evaluates a disjoint locked token range"
                 if args.protocol == "exp042-fresh"
-                else "EXP-043 evaluates the pinned validation split"
+                else "This protocol evaluates the pinned validation split"
             ),
             "passed": True,
         }
@@ -528,13 +758,23 @@ def main(argv: list[str] | None = None) -> dict:
             ],
             "joint": lm_metrics[f"SEED-{seed}-JOINT-STEP{args.total_steps}"],
         }
-    aggregate = aggregate_multiseed_end_to_end(
-        original_nll=lm_metrics["ORIGINAL-CACHED-QWEN"]["mean_nll"],
-        seed_metrics=per_seed_metrics,
-        reference_reproduced=reproduction["passed"],
-        reference_required=args.protocol == "exp041",
-        required_recovery_fraction=required_recovery,
-    )
+        if objective_comparison:
+            per_seed_metrics[str(seed)]["contribution"] = lm_metrics[
+                f"SEED-{seed}-CONTRIBUTION-STEP{args.total_steps}"
+            ]
+    if objective_comparison:
+        aggregate = aggregate_depth_objectives(
+            lm_metrics["ORIGINAL-CACHED-QWEN"]["mean_nll"],
+            per_seed_metrics,
+        )
+    else:
+        aggregate = aggregate_multiseed_end_to_end(
+            original_nll=lm_metrics["ORIGINAL-CACHED-QWEN"]["mean_nll"],
+            seed_metrics=per_seed_metrics,
+            reference_reproduced=reproduction["passed"],
+            reference_required=args.protocol == "exp041",
+            required_recovery_fraction=required_recovery,
+        )
     bootstrap = None
     if args.protocol == "exp043-validation":
         bootstrap = bootstrap_excess_nll_recovery(
@@ -553,12 +793,35 @@ def main(argv: list[str] | None = None) -> dict:
                 for seed in seeds
             },
         )
+    elif objective_comparison:
+        bootstrap = bootstrap_depth_objective_deltas(
+            {
+                str(seed): {
+                    arm: per_seed_metrics[str(seed)][arm]["window_mean_nll"]
+                    for arm in ("mixer_only", "joint", "contribution")
+                }
+                for seed in seeds
+            },
+            samples=args.bootstrap_samples,
+            seed=args.bootstrap_seed,
+        )
     all_finite = bool(
         training_result["passed"]
         and lm_metrics["ORIGINAL-CACHED-QWEN"]["finite"]
         and aggregate["all_finite"]
     )
-    if args.protocol == "exp043-validation":
+    if objective_comparison:
+        scientific_gate_passed = bool(
+            all_finite
+            and aggregate["mean_contribution_minus_mixer_nll"] < 0
+            and aggregate["mean_contribution_minus_joint_nll"] < 0
+            and aggregate["contribution_wins_vs_mixer"] >= 2
+            and aggregate["contribution_wins_vs_joint"] >= 2
+            and bootstrap is not None
+            and bootstrap["contribution_minus_mixer_95ci"][1] < 0
+            and bootstrap["contribution_minus_joint_95ci"][1] < 0
+        )
+    elif args.protocol == "exp043-validation":
         scientific_gate_passed = bool(
             all_finite
             and aggregate["scientific_gate_passed"]
@@ -578,6 +841,7 @@ def main(argv: list[str] | None = None) -> dict:
                 "exp041": "three_seed_streamed_end_to_end_Qwen3_layer0_Mamba_confirmation",
                 "exp042-fresh": "locked_fresh_text_three_seed_streamed_end_to_end_confirmation",
                 "exp043-validation": "cross_split_end_to_end_NLL_adjudication",
+                "exp045-depth-objective": "depth_aware_counterfactual_objective_comparison",
             }[args.protocol]
         ),
         "protocol": args.protocol,
@@ -603,7 +867,7 @@ def main(argv: list[str] | None = None) -> dict:
         "reference_exp040_json": (
             str(reference_path.resolve()) if args.protocol == "exp041" else None
         ),
-        "target_layer": 0,
+        "target_layer": args.target_layer,
         "sequence_length": int(manifest["sequence_length"]),
         "evaluation_windows": evaluation_windows,
         "evaluation_tokens_per_branch": evaluation_windows
@@ -611,6 +875,8 @@ def main(argv: list[str] | None = None) -> dict:
         "seeds": list(seeds),
         "branches": list(names),
         "training_result": training_result,
+        "endpoint_checkpoint": checkpoint_metadata,
+        "training_endpoints_restored": restored,
         "compute_dtype": dtype_decision.dtype,
         "jax_backend": jax.default_backend(),
         "visible_devices": [str(device) for device in devices],
@@ -623,7 +889,19 @@ def main(argv: list[str] | None = None) -> dict:
         "required_bootstrap_lower_bound": (
             0.10 if args.protocol == "exp043-validation" else None
         ),
-        "local_training_gate_required": args.protocol != "exp043-validation",
+        "local_training_gate_required": args.protocol not in {
+            "exp043-validation",
+            "exp045-depth-objective",
+        },
+        "objective_gate": (
+            {
+                "required_wins_per_control": 2,
+                "required_mean_delta_sign": "negative",
+                "required_bootstrap_upper_sign": "negative",
+            }
+            if objective_comparison
+            else None
+        ),
         "aggregate": aggregate,
         "bootstrap": bootstrap,
         "prune_consumed_shards": args.prune_consumed_shards,
@@ -631,13 +909,14 @@ def main(argv: list[str] | None = None) -> dict:
         "scientific_gate_passed": scientific_gate_passed,
         "passed": all_finite,
         "notes": [
-            "The original branch is shared; each seed contributes calibrated, mixer-only, and joint layer-zero branches.",
-            "All ten branches stream together through identical frozen Qwen layers 1-39, final norm, and lm_head.",
+            "The original branch is shared; every objective arm uses an identical calibrated start and paired batches within each seed.",
+            "All branches stream together from the target replacement through identical frozen later Qwen layers, final norm, and lm_head.",
             (
                 {
                     "exp041": "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance.",
                     "exp042-fresh": "The external evaluation cache is disjoint from the training cache and locked to tokens [65536, 69632).",
                     "exp043-validation": "The primary endpoint uses the pinned WikiText-2 validation split; local decoder L2 is diagnostic only.",
+                    "exp045-depth-objective": "The primary endpoint compares counterfactual contribution matching against both controls on pinned validation windows.",
                 }[args.protocol]
             ),
             "passed reports numerical execution; scientific_gate_passed also requires the local training and full-depth aggregate gates.",
@@ -657,6 +936,7 @@ def main(argv: list[str] | None = None) -> dict:
             "exp041": "MULTISEED-STREAMED-END-TO-END",
             "exp042-fresh": "LOCKED-FRESH-TEXT",
             "exp043-validation": "CROSS-SPLIT-NLL-ADJUDICATION",
+            "exp045-depth-objective": "DEPTH-OBJECTIVE-COMPARISON",
         }[args.protocol]
     )
     print(f"{label}-{'PASS' if scientific_gate_passed else 'GATE-FAIL'}")

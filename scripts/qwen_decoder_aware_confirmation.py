@@ -127,6 +127,8 @@ def main(
     parser.add_argument("--learning-rate", type=float, default=3e-5)
     parser.add_argument("--readout-ridge", type=float, default=1e-2)
     parser.add_argument("--decoder-loss-weight", type=float, default=1.0)
+    parser.add_argument("--contribution-mixer-weight", type=float, default=1.0)
+    parser.add_argument("--include-contribution-arm", action="store_true")
     parser.add_argument("--compute-dtype", choices=("auto", "float32", "bfloat16"), default="auto")
     parser.add_argument("--skip-hash-verification", action="store_true")
     parser.add_argument("--result-json", required=True)
@@ -151,6 +153,7 @@ def main(
             "--learning-rate", str(args.learning_rate),
             "--readout-ridge", str(args.readout_ridge),
             "--decoder-loss-weight", str(args.decoder_loss_weight),
+            "--contribution-mixer-weight", str(args.contribution_mixer_weight),
             "--seed", str(seed),
             "--data-seed", str(args.data_seed),
             "--compute-dtype", args.compute_dtype,
@@ -173,6 +176,8 @@ def main(
             single_args.append("--allow-cross-split-evaluation")
         if args.skip_hash_verification:
             single_args.append("--skip-hash-verification")
+        if args.include_contribution_arm:
+            single_args.append("--include-contribution-arm")
         print(f"EXP-039 seed={seed} START")
         if return_endpoint_params:
             seed_result, initial_params, endpoint_params = run_single_seed(
@@ -204,7 +209,9 @@ def main(
         "total_steps_per_arm": args.total_steps,
         "unique_training_tokens_per_arm": first["unique_training_tokens_per_arm"],
         "optimizer_visible_tokens_total": (
-            first["unique_training_tokens_per_arm"] * 2 * len(seeds)
+            first["unique_training_tokens_per_arm"]
+            * (3 if args.include_contribution_arm else 2)
+            * len(seeds)
         ),
         "checkpoints": first["checkpoints"],
         "compute_dtype": first["compute_dtype"],
@@ -212,12 +219,14 @@ def main(
         "learning_rate": args.learning_rate,
         "readout_ridge": args.readout_ridge,
         "decoder_loss_weight": args.decoder_loss_weight,
+        "contribution_mixer_weight": args.contribution_mixer_weight,
+        "include_contribution_arm": args.include_contribution_arm,
         "seed_results": seed_results,
         "aggregate": aggregate,
         "scientific_gate_passed": aggregate["scientific_gate_passed"],
         "passed": aggregate["all_finite"],
         "notes": [
-            "Every seed is a paired mixer-only versus joint run from the same seed-specific calibrated base.",
+            "Every seed uses identical calibrated starts and batches for every enabled objective arm.",
             "All seeds share the frozen cache, data order, optimizer schedule, and decoder tail.",
             "passed reports numerical execution; scientific_gate_passed reports the frozen multi-seed threshold.",
         ],
