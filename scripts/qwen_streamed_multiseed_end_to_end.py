@@ -38,6 +38,7 @@ from extent.endpoint_checkpoint import (
     restore_endpoint_checkpoint,
     save_endpoint_checkpoint,
 )
+from extent.experiment_stage import update_stage_manifest
 from extent.layers.common import RMSNorm
 from extent.layers.mamba3 import Mamba3MIMO
 from extent.qwen3_parity import (
@@ -290,6 +291,7 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--output-dir", default="/kaggle/working/output")
     parser.add_argument("--endpoint-checkpoint-dir")
     parser.add_argument("--resume-endpoints", action="store_true")
+    parser.add_argument("--stage-manifest")
     args = parser.parse_args(argv)
     seeds = parse_seeds(args.seeds)
     if args.total_steps != 1024:
@@ -485,6 +487,29 @@ def main(argv: list[str] | None = None) -> dict:
                 "training_endpoints=CHECKPOINT-PASS "
                 f"sha256={checkpoint_metadata['checkpoint_sha256']}"
             )
+    if objective_comparison and args.stage_manifest:
+        update_stage_manifest(
+            args.stage_manifest,
+            experiment="exp045-depth-objective",
+            stage=f"endpoints-layer{args.target_layer}",
+            status="completed",
+            details={
+                "restored": restored,
+                "checkpoint_sha256": checkpoint_metadata[
+                    "checkpoint_sha256"
+                ] if checkpoint_metadata else None,
+                "checkpoint_bytes": checkpoint_metadata[
+                    "checkpoint_bytes"
+                ] if checkpoint_metadata else None,
+            },
+        )
+        update_stage_manifest(
+            args.stage_manifest,
+            experiment="exp045-depth-objective",
+            stage=f"streamed-evaluation-layer{args.target_layer}",
+            status="running",
+            details={"restart_boundary": f"decoder-layer-{args.target_layer}"},
+        )
 
     config_payload = _read_json(QWEN3_14B.resolve_url("config.json"))
     index_payload = _read_json(
@@ -929,6 +954,17 @@ def main(argv: list[str] | None = None) -> dict:
     print(f"result_json={Path(args.result_json).resolve()}")
     if mirror:
         print(f"output_json={mirror.resolve()}")
+    if objective_comparison and args.stage_manifest:
+        update_stage_manifest(
+            args.stage_manifest,
+            experiment="exp045-depth-objective",
+            stage=f"streamed-evaluation-layer{args.target_layer}",
+            status="completed",
+            details={
+                "result_json": str(Path(args.result_json).resolve()),
+                "scientific_gate_passed": scientific_gate_passed,
+            },
+        )
     if not all_finite:
         raise SystemExit("MULTISEED-STREAMED-END-TO-END-NONFINITE")
     label = (

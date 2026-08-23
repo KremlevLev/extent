@@ -3,7 +3,9 @@ from __future__ import annotations
 import argparse
 import gc
 import json
+import os
 from pathlib import Path
+import shutil
 
 import jax
 
@@ -16,6 +18,73 @@ from extent.teacher_activation_cache import load_activation_cache
 
 
 TARGET_LAYERS = (0, 18)
+RAM_CACHE_MINIMUM_FREE_BYTES = 36 * 1024**3
+
+
+def resolve_qwen_cache_dir(
+    requested: str,
+    storage: str,
+    *,
+    ram_root: Path = Path("/dev/shm"),
+) -> tuple[str, str]:
+    """Choose RAM-backed storage only when the mounted filesystem can hold Qwen."""
+    if storage not in {"auto", "disk", "ram"}:
+        raise ValueError("qwen cache storage must be auto, disk, or ram")
+    ram_available = False
+    if ram_root.exists():
+        try:
+            ram_available = (
+                shutil.disk_usage(ram_root).free >= RAM_CACHE_MINIMUM_FREE_BYTES
+            )
+        except OSError:
+            ram_available = False
+    if storage == "ram" and not ram_available:
+        raise ValueError(
+            "RAM Qwen cache requested but /dev/shm has less than 36 GiB free"
+        )
+    if storage == "ram" or (storage == "auto" and ram_available):
+        return str(ram_root / "extent-qwen3-exp045-weights"), "ram"
+    return requested, "disk"
+
+
+def stage_saved_output(source: str | Path, target: str | Path) -> dict:
+    """Reuse immutable Kaggle Notebook Output without copying large artifacts."""
+    source_root = Path(source).resolve()
+    target_root = Path(target).resolve()
+    if not (source_root / "exp045-stage-manifest.json").exists():
+        raise ValueError("resume source does not contain EXP-045 output")
+    if source_root == target_root:
+        return {"source": str(source_root), "linked": [], "copied_json": []}
+    target_root.mkdir(parents=True, exist_ok=True)
+    linked = []
+    immutable_names = [
+        f"exp045-layer{layer}-{role}-cache"
+        for layer in TARGET_LAYERS
+        for role in ("train", "validation")
+    ] + [f"exp045-layer{layer}-endpoints" for layer in TARGET_LAYERS]
+    for name in immutable_names:
+        source_path = source_root / name
+        target_path = target_root / name
+        if not source_path.exists() or target_path.exists():
+            continue
+        os.symlink(source_path, target_path, target_is_directory=True)
+        linked.append(name)
+    copied_json = []
+    immutable_roots = {source_root / name for name in immutable_names}
+    for source_path in source_root.rglob("*.json"):
+        if any(root in source_path.parents for root in immutable_roots):
+            continue
+        relative = source_path.relative_to(source_root)
+        target_path = target_root / relative
+        if not target_path.exists():
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source_path, target_path)
+            copied_json.append(str(relative))
+    return {
+        "source": str(source_root),
+        "linked": linked,
+        "copied_json": copied_json,
+    }
 
 
 def _cache_arguments(
@@ -42,6 +111,7 @@ def _cache_arguments(
         "--per-device-windows", str(per_device_windows),
         "--compute-dtype", compute_dtype,
         "--storage-dtype", storage_dtype,
+        "--prune-consumed-shards",
         "--output-dir", str(artifact_dir),
         "--result-json", str(manifest),
     ]
@@ -95,9 +165,19 @@ def main(argv: list[str] | None = None) -> dict:
         "--qwen-cache-dir", default="/kaggle/working/qwen3-exp045-weights"
     )
     parser.add_argument(
+        "--qwen-cache-storage",
+        choices=("auto", "disk", "ram"),
+        default="auto",
+        help="use /dev/shm when it exposes at least 36 GiB free (default: auto)",
+    )
+    parser.add_argument(
         "--dataset-cache-dir", default="/kaggle/working/extent-dataset-cache"
     )
     parser.add_argument("--output-dir", default="/kaggle/working/output")
+    parser.add_argument(
+        "--resume-source-output-dir",
+        help="read-only output directory attached from a previous Kaggle version",
+    )
     parser.add_argument(
         "--result-json",
         default="/kaggle/working/output/exp045-depth-objective.json",
@@ -118,8 +198,19 @@ def main(argv: list[str] | None = None) -> dict:
     if min(args.per_device_windows, args.bootstrap_samples) < 1:
         raise ValueError("window and bootstrap counts must be positive")
 
+    qwen_cache_dir, qwen_cache_storage = resolve_qwen_cache_dir(
+        args.qwen_cache_dir, args.qwen_cache_storage
+    )
+    print(
+        f"qwen_cache_storage={qwen_cache_storage} "
+        f"qwen_cache_dir={qwen_cache_dir}"
+    )
+
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    if args.resume_source_output_dir:
+        staged = stage_saved_output(args.resume_source_output_dir, output_dir)
+        print(f"saved_output_stage={json.dumps(staged, sort_keys=True)}")
     stage_manifest = output_dir / "exp045-stage-manifest.json"
     manifests: dict[tuple[int, str], Path] = {}
     artifact_dirs: dict[tuple[int, str], Path] = {}
@@ -128,7 +219,7 @@ def main(argv: list[str] | None = None) -> dict:
             cache_args, manifest, artifact_dir = _cache_arguments(
                 layer=layer,
                 evaluation_only=evaluation_only,
-                qwen_cache_dir=args.qwen_cache_dir,
+                qwen_cache_dir=qwen_cache_dir,
                 dataset_cache_dir=args.dataset_cache_dir,
                 output_dir=output_dir,
                 compute_dtype=args.compute_dtype,
@@ -178,7 +269,7 @@ def main(argv: list[str] | None = None) -> dict:
             "--activation-cache-dir", str(artifact_dirs[(layer, "train")]),
             "--evaluation-cache-manifest", str(manifests[(layer, "validation")]),
             "--evaluation-cache-dir", str(artifact_dirs[(layer, "validation")]),
-            "--qwen-cache-dir", args.qwen_cache_dir,
+            "--qwen-cache-dir", qwen_cache_dir,
             "--target-layer", str(layer),
             "--protocol", "exp045-depth-objective",
             "--seeds", args.seeds,
@@ -192,9 +283,9 @@ def main(argv: list[str] | None = None) -> dict:
             ),
             "--result-json", str(layer_json),
             "--output-dir", str(output_dir / f"exp045-layer{layer}"),
+            "--stage-manifest", str(stage_manifest),
+            "--prune-consumed-shards",
         ]
-        if layer == 0:
-            arguments.append("--prune-consumed-shards")
         if args.resume:
             arguments.append("--resume-endpoints")
         if args.skip_hash_verification:
@@ -230,6 +321,8 @@ def main(argv: list[str] | None = None) -> dict:
         "protocol": "exp045-layer0-layer18",
         "target_layers": list(TARGET_LAYERS),
         "seeds": [int(value) for value in args.seeds.split(",")],
+        "qwen_cache_storage": qwen_cache_storage,
+        "qwen_cache_dir": qwen_cache_dir,
         "layer_results": layer_results,
         "scientific_gate_passed": scientific_gate_passed,
         "passed": all_finite,

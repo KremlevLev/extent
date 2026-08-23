@@ -1,0 +1,27 @@
+{
+  "format_version": 1,
+  "checkpoint_kind": "mamba_endpoint_parameters",
+  "checkpoint_file": "endpoint_params.msgpack",
+  "checkpoint_bytes": 1128322561,
+  "checkpoint_sha256": "7a037406c88463d00f3a7c441f23ea3e58198f40ad415d9ee55e2df2bca0c847",
+  "compatibility": {
+    "source": "Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18",
+    "experiment": "exp045-layer18",
+    "target_layer": 18,
+    "activation_manifest_sha256": "b62d770f7c8d690fc78a91e65a74ac0cbf08dc7512a98298f8d4092414dc563c",
+    "evaluation_manifest_sha256": "d14da603cb09f3f3e8bbbef277d0e375629174ed120306d1427b0d44278c53fd",
+    "seeds": [
+      123,
+      456,
+      789
+    ],
+    "data_seed": 20260820,
+    "total_steps": 1024,
+    "training_checkpoints": "0,512,1024",
+    "learning_rate": 3e-05,
+    "readout_ridge": 0.01,
+    "decoder_loss_weight": 1.0,
+    "contribution_mixer_weight": 1.0,
+    "compute_dtype": "bfloat16"
+  }
+}

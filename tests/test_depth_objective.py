@@ -2,7 +2,12 @@ from __future__ import annotations
 
 import numpy as np
 
-from scripts.qwen_depth_objective_run import _cache_arguments
+from scripts.qwen_depth_objective_run import (
+    RAM_CACHE_MINIMUM_FREE_BYTES,
+    _cache_arguments,
+    resolve_qwen_cache_dir,
+    stage_saved_output,
+)
 from scripts.qwen_streamed_multiseed_end_to_end import (
     aggregate_depth_objectives,
     bootstrap_depth_objective_deltas,
@@ -68,3 +73,43 @@ def test_exp045_cache_protocol_is_frozen(tmp_path):
     assert arguments[arguments.index("--evaluation-windows") + 1] == "256"
     assert arguments[arguments.index("--sequence-length") + 1] == "32"
     assert "--evaluation-only" in arguments
+    assert "--prune-consumed-shards" in arguments
+
+
+def test_exp045_qwen_cache_falls_back_when_ramdisk_is_too_small(
+    tmp_path, monkeypatch
+):
+    usage = type(
+        "Usage", (), {"free": RAM_CACHE_MINIMUM_FREE_BYTES - 1}
+    )()
+    monkeypatch.setattr(
+        "scripts.qwen_depth_objective_run.shutil.disk_usage",
+        lambda path: usage,
+    )
+    path, storage = resolve_qwen_cache_dir(
+        "disk-cache", "auto", ram_root=tmp_path
+    )
+    assert path == "disk-cache"
+    assert storage == "disk"
+
+
+def test_exp045_qwen_cache_uses_large_ramdisk(tmp_path, monkeypatch):
+    usage = type(
+        "Usage", (), {"free": RAM_CACHE_MINIMUM_FREE_BYTES}
+    )()
+    monkeypatch.setattr(
+        "scripts.qwen_depth_objective_run.shutil.disk_usage",
+        lambda path: usage,
+    )
+    path, storage = resolve_qwen_cache_dir(
+        "disk-cache", "auto", ram_root=tmp_path
+    )
+    assert path == str(tmp_path / "extent-qwen3-exp045-weights")
+    assert storage == "ram"
+
+
+def test_exp045_saved_output_requires_stage_manifest(tmp_path):
+    source = tmp_path / "saved"
+    source.mkdir()
+    with np.testing.assert_raises_regex(ValueError, "does not contain EXP-045"):
+        stage_saved_output(source, tmp_path / "working")

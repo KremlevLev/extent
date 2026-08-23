@@ -1,0 +1,40 @@
+{
+  "format_version": 1,
+  "experiment": "exp045-depth-objective",
+  "stages": {
+    "cache-layer0-train": {
+      "status": "completed",
+      "updated_at_utc": "2026-08-23T13:54:29.954547+00:00",
+      "details": {
+        "manifest": "/kaggle/working/output/exp045-layer0-train-cache/exp045-layer0-train-manifest.json",
+        "reused": false
+      }
+    },
+    "cache-layer18-train": {
+      "status": "completed",
+      "updated_at_utc": "2026-08-23T14:02:41.506125+00:00",
+      "details": {
+        "manifest": "/kaggle/working/output/exp045-layer18-train-cache/exp045-layer18-train-manifest.json",
+        "reused": false
+      }
+    },
+    "cache-layer0-validation": {
+      "status": "completed",
+      "updated_at_utc": "2026-08-23T14:02:46.582009+00:00",
+      "details": {
+        "manifest": "/kaggle/working/output/exp045-layer0-validation-cache/exp045-layer0-validation-manifest.json",
+        "reused": false
+      }
+    },
+    "cache-layer18-validation": {
+      "status": "completed",
+      "updated_at_utc": "2026-08-23T14:07:05.863219+00:00",
+      "details": {
+        "manifest": "/kaggle/working/output/exp045-layer18-validation-cache/exp045-layer18-validation-manifest.json",
+        "reused": false
+      }
+    }
+  },
+  "current_stage": "cache-layer18-validation",
+  "status": "running"
+}
