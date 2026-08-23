@@ -8,6 +8,8 @@ import jax
 
 from scripts.qwen_activation_cache import main as build_activation_cache
 from scripts.qwen_two_layer_composition import main as run_composition
+from extent.experiment_stage import update_stage_manifest
+from extent.teacher_activation_cache import load_activation_cache
 
 
 def _cache_arguments(
@@ -87,6 +89,12 @@ def main(argv: list[str] | None = None) -> dict:
     )
     parser.add_argument("--per-device-windows", type=int, default=1)
     parser.add_argument("--skip-hash-verification", action="store_true")
+    parser.add_argument(
+        "--resume",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="reuse verified caches and endpoint checkpoints (default: enabled)",
+    )
     args = parser.parse_args(argv)
     if args.per_device_windows < 1:
         raise ValueError("per-device-windows must be positive")
@@ -95,6 +103,7 @@ def main(argv: list[str] | None = None) -> dict:
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    stage_manifest = output_dir / "exp044-stage-manifest.json"
     manifests: dict[tuple[int, str], Path] = {}
     artifact_dirs: dict[tuple[int, str], Path] = {}
     for evaluation_only in (False, True):
@@ -110,10 +119,43 @@ def main(argv: list[str] | None = None) -> dict:
                 per_device_windows=args.per_device_windows,
             )
             role = "validation" if evaluation_only else "train"
-            print(f"building_activation_cache=layer{layer}-{role} START")
-            build_activation_cache(cache_args)
+            stage_name = f"cache-layer{layer}-{role}"
+            cache_reused = False
+            if args.resume and manifest.exists():
+                try:
+                    load_activation_cache(
+                        manifest,
+                        artifact_dir=artifact_dir,
+                        verify_hashes=not args.skip_hash_verification,
+                    )
+                    cache_reused = True
+                    print(f"building_activation_cache=layer{layer}-{role} RESUME-PASS")
+                except (FileNotFoundError, ValueError) as exc:
+                    print(
+                        f"building_activation_cache=layer{layer}-{role} "
+                        f"RESUME-REJECTED reason={exc}"
+                    )
+            if not cache_reused:
+                update_stage_manifest(
+                    stage_manifest,
+                    experiment="exp044-layer0-layer18",
+                    stage=stage_name,
+                    status="running",
+                )
+                print(f"building_activation_cache=layer{layer}-{role} START")
+                build_activation_cache(cache_args)
             manifests[(layer, role)] = manifest
             artifact_dirs[(layer, role)] = artifact_dir
+            update_stage_manifest(
+                stage_manifest,
+                experiment="exp044-layer0-layer18",
+                stage=stage_name,
+                status="completed",
+                details={
+                    "manifest": str(manifest.resolve()),
+                    "reused": cache_reused,
+                },
+            )
             print(f"building_activation_cache=layer{layer}-{role} DONE")
             jax.clear_caches()
             gc.collect()
@@ -134,7 +176,10 @@ def main(argv: list[str] | None = None) -> dict:
         "--per-device-windows", str(args.per_device_windows),
         "--result-json", args.result_json,
         "--output-dir", str(output_dir),
+        "--stage-manifest", str(stage_manifest),
     ]
+    if args.resume:
+        composition_args.append("--resume")
     if args.skip_hash_verification:
         composition_args.append("--skip-hash-verification")
     return run_composition(composition_args)

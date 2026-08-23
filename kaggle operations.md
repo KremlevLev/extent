@@ -55,3 +55,5 @@ print("result: /kaggle/working/output/exp044-two-layer-composition.json")
 ```
 
 The runner creates the layer-0 and layer-18 train/validation activation caches, trains the paired three-seed replacements, evaluates all ten branches, prunes consumed Qwen shards, and writes the final JSON into Kaggle output. Download only `exp044-two-layer-composition.json`; the activation arrays and training intermediates are disposable after the run.
+
+EXP-044 resume is enabled by default. Completed caches are verified by content hash, and trained endpoint bundles are restored only when their full compatibility contract matches. If streamed evaluation hangs, cancel only the running cell and execute the same `exp044([])` call again in the same Kaggle session. Look for `RESUME-PASS` for all four caches and both training layers; the rerun will then restart only the streamed decoder evaluation. Progress is recorded in `/kaggle/working/output/exp044-stage-manifest.json`, while endpoint weights live under `/kaggle/working/output/exp044-endpoints/`.

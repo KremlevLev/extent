@@ -34,6 +34,11 @@ from extent.decoder_replacement_eval import (
     create_batched_teacher_tail_runner,
     qwen3_decoder_tail_params,
 )
+from extent.endpoint_checkpoint import (
+    restore_endpoint_checkpoint,
+    save_endpoint_checkpoint,
+)
+from extent.experiment_stage import update_stage_manifest
 from extent.hardware import recommended_compute_dtype
 from extent.layers.common import RMSNorm
 from extent.layers.mamba3 import Mamba3MIMO
@@ -52,6 +57,7 @@ from extent.streamed_lm_eval import (
     hidden_relative_l2,
 )
 from extent.teacher_activation_cache import (
+    file_sha256,
     load_activation_cache,
     run_host_data_parallel,
     run_host_microbatches,
@@ -131,9 +137,40 @@ def _train_layer(
     compute_dtype: str,
     skip_hash_verification: bool,
     output_dir: Path,
-) -> tuple[dict, dict[str, dict[str, dict]]]:
+    resume: bool,
+) -> tuple[dict, dict[str, dict[str, dict]], dict]:
     layer_output = output_dir / f"layer{layer}-training"
     result_json = layer_output / f"exp044-layer{layer}-training.json"
+    endpoint_dir = output_dir / "exp044-endpoints" / f"layer{layer}"
+    compatibility = {
+        "source": f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}",
+        "experiment": "exp044-layer0-layer18",
+        "target_layer": layer,
+        "activation_manifest_sha256": file_sha256(Path(activation_manifest)),
+        "evaluation_manifest_sha256": file_sha256(Path(evaluation_manifest)),
+        "seeds": [int(value) for value in seeds.split(",")],
+        "data_seed": data_seed,
+        "total_steps": total_steps,
+        "checkpoints": checkpoints,
+        "batch_windows": batch_windows,
+        "evaluation_batch_windows": evaluation_batch_windows,
+        "learning_rate": learning_rate,
+        "readout_ridge": readout_ridge,
+        "decoder_loss_weight": decoder_loss_weight,
+        "compute_dtype": compute_dtype,
+    }
+    if resume and result_json.exists() and (endpoint_dir / "checkpoint.json").exists():
+        training = json.loads(result_json.read_text(encoding="utf-8"))
+        if not training.get("passed") or int(training.get("target_layer", -1)) != layer:
+            raise ValueError(f"invalid completed training result for layer {layer}")
+        endpoints, metadata = restore_endpoint_checkpoint(
+            endpoint_dir, expected_compatibility=compatibility
+        )
+        print(
+            f"training_replacement_layer={layer} RESUME-PASS "
+            f"sha256={metadata['checkpoint_sha256']}"
+        )
+        return training, endpoints, metadata
     arguments = [
         "--activation-cache-manifest", activation_manifest,
         "--evaluation-cache-manifest", evaluation_manifest,
@@ -162,10 +199,19 @@ def _train_layer(
     training, _, endpoints = train_multiseed(
         arguments, return_endpoint_params=True
     )
+    metadata = save_endpoint_checkpoint(
+        endpoint_dir,
+        endpoints,
+        compatibility=compatibility,
+    )
     print(f"training_replacement_layer={layer} DONE")
+    print(
+        f"endpoint_checkpoint_layer={layer} "
+        f"sha256={metadata['checkpoint_sha256']}"
+    )
     jax.clear_caches()
     gc.collect()
-    return training, endpoints
+    return training, endpoints, metadata
 
 
 def main(argv: list[str] | None = None) -> dict:
@@ -201,6 +247,7 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--data-parallel", action="store_true")
     parser.add_argument("--prune-consumed-shards", action="store_true")
     parser.add_argument("--skip-hash-verification", action="store_true")
+    parser.add_argument("--resume", action="store_true")
     parser.add_argument("--stream-parity-tolerance", type=float, default=0.01)
     parser.add_argument("--bootstrap-samples", type=int, default=2000)
     parser.add_argument("--bootstrap-seed", type=int, default=20260824)
@@ -209,6 +256,7 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--maximum-bootstrap-upper", type=float, default=1.50)
     parser.add_argument("--result-json", required=True)
     parser.add_argument("--output-dir", default="/kaggle/working/output")
+    parser.add_argument("--stage-manifest")
     args = parser.parse_args(argv)
     seeds = parse_seeds(args.seeds)
     if args.total_steps != 1024:
@@ -306,9 +354,14 @@ def main(argv: list[str] | None = None) -> dict:
 
     training_results = {}
     endpoint_params = {}
+    endpoint_checkpoints = {}
     for layer in TARGET_LAYERS:
         spec = cache_specs[layer]
-        training_results[str(layer)], endpoint_params[str(layer)] = _train_layer(
+        (
+            training_results[str(layer)],
+            endpoint_params[str(layer)],
+            endpoint_checkpoints[str(layer)],
+        ) = _train_layer(
             layer=layer,
             activation_manifest=spec[0],
             activation_dir=spec[1],
@@ -324,9 +377,34 @@ def main(argv: list[str] | None = None) -> dict:
             learning_rate=args.learning_rate,
             readout_ridge=args.readout_ridge,
             decoder_loss_weight=args.decoder_loss_weight,
-            compute_dtype=args.compute_dtype,
+            compute_dtype=dtype_decision.dtype,
             skip_hash_verification=args.skip_hash_verification,
             output_dir=output_dir,
+            resume=args.resume,
+        )
+        if args.stage_manifest:
+            update_stage_manifest(
+                args.stage_manifest,
+                experiment="exp044-layer0-layer18",
+                stage=f"training-layer{layer}",
+                status="completed",
+                details={
+                    "checkpoint_sha256": endpoint_checkpoints[str(layer)][
+                        "checkpoint_sha256"
+                    ],
+                    "checkpoint_bytes": endpoint_checkpoints[str(layer)][
+                        "checkpoint_bytes"
+                    ],
+                },
+            )
+
+    if args.stage_manifest:
+        update_stage_manifest(
+            args.stage_manifest,
+            experiment="exp044-layer0-layer18",
+            stage="streamed-evaluation",
+            status="running",
+            details={"restart_boundary": "decoder-layer-0"},
         )
 
     config_payload = _read_json(QWEN3_14B.resolve_url("config.json"))
@@ -725,6 +803,7 @@ def main(argv: list[str] | None = None) -> dict:
         "seeds": list(seeds),
         "branches": list(names),
         "training_results": training_results,
+        "endpoint_checkpoints": endpoint_checkpoints,
         "compute_dtype": dtype_decision.dtype,
         "jax_backend": jax.default_backend(),
         "visible_devices": [str(device) for device in devices],
@@ -761,6 +840,17 @@ def main(argv: list[str] | None = None) -> dict:
         print(f"output_json={mirror.resolve()}")
     if not all_finite:
         raise SystemExit("TWO-LAYER-COMPOSITION-NONFINITE")
+    if args.stage_manifest:
+        update_stage_manifest(
+            args.stage_manifest,
+            experiment="exp044-layer0-layer18",
+            stage="final",
+            status="completed",
+            details={
+                "result_json": str(Path(args.result_json).resolve()),
+                "scientific_gate_passed": scientific_gate_passed,
+            },
+        )
     print(
         "TWO-LAYER-COMPOSITION-PASS"
         if scientific_gate_passed
