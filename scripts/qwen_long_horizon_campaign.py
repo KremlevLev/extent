@@ -14,6 +14,7 @@ import numpy as np
 
 from scripts.qwen_depth_objective_run import main as run_depth_objective
 from scripts.qwen_mamba3_distill_pilot import _write_json_with_output_mirror
+from extent.artifact_summary import write_compact_summary
 from extent.experiment_stage import update_stage_manifest
 from extent.notifications import TelegramNotifierError, send_telegram_message
 from extent.qwen_source import QWEN3_14B
@@ -118,6 +119,8 @@ def aggregate_long_horizon(
     *,
     bootstrap_samples: int,
     bootstrap_seed: int,
+    short_step: int = 1024,
+    long_step: int = 4096,
 ) -> dict:
     layers = []
     all_finite = bool(short_result.get("passed") and long_result.get("passed"))
@@ -131,10 +134,10 @@ def aggregate_long_horizon(
             long_windows = {}
             for seed in SEEDS:
                 short_metrics = short_layer["lm_metrics"][
-                    f"SEED-{seed}-{branch}-STEP1024"
+                    f"SEED-{seed}-{branch}-STEP{short_step}"
                 ]
                 long_metrics = long_layer["lm_metrics"][
-                    f"SEED-{seed}-{branch}-STEP4096"
+                    f"SEED-{seed}-{branch}-STEP{long_step}"
                 ]
                 short_nll = float(short_metrics["mean_nll"])
                 long_nll = float(long_metrics["mean_nll"])
@@ -372,6 +375,12 @@ def main(argv: list[str] | None = None) -> dict:
         mirror = _write_json_with_output_mirror(
             Path(args.result_json), result, str(output_dir)
         )
+        summary_artifacts = write_compact_summary(
+            result,
+            artifact_path=args.result_json,
+            output_dir=output_dir,
+        )
+        print(f"compact_summary={json.dumps(summary_artifacts, sort_keys=True)}")
         update_stage_manifest(
             stage_manifest,
             experiment="exp048-long-horizon",

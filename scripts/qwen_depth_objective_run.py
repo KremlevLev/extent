@@ -188,7 +188,14 @@ def main(argv: list[str] | None = None) -> dict:
     )
     parser.add_argument(
         "--experiment",
-        choices=("exp045", "exp046", "exp048-short", "exp048-long"),
+        choices=(
+            "exp045",
+            "exp046",
+            "exp048-short",
+            "exp048-long",
+            "exp049-short",
+            "exp049-long",
+        ),
         default="exp045",
     )
     parser.add_argument(
@@ -216,6 +223,10 @@ def main(argv: list[str] | None = None) -> dict:
         raise ValueError("EXP-048 short arm requires exactly 1,024 steps")
     if args.experiment == "exp048-long" and args.total_steps != 4096:
         raise ValueError("EXP-048 long arm requires exactly 4,096 steps")
+    if args.experiment == "exp049-short" and args.total_steps != 2048:
+        raise ValueError("EXP-049 short arm requires exactly 2,048 steps")
+    if args.experiment == "exp049-long" and args.total_steps != 8192:
+        raise ValueError("EXP-049 long arm requires exactly 8,192 steps")
     target_layers = tuple(
         int(value.strip())
         for value in (
@@ -227,14 +238,20 @@ def main(argv: list[str] | None = None) -> dict:
             )
         ).split(",")
     )
-    if len(target_layers) != 2 or len(set(target_layers)) != 2:
-        raise ValueError("depth experiment requires exactly two distinct layers")
+    if not 1 <= len(target_layers) <= 2 or len(set(target_layers)) != len(
+        target_layers
+    ):
+        raise ValueError("depth experiment requires one or two distinct layers")
     if min(target_layers) < 0 or max(target_layers) >= 40:
         raise ValueError("target layers must be in [0, 40)")
     experiment_protocol = (
         "exp048-long-horizon"
         if args.experiment.startswith("exp048-")
-        else f"{args.experiment}-depth-objective"
+        else (
+            "exp049-extended-horizon"
+            if args.experiment.startswith("exp049-")
+            else f"{args.experiment}-depth-objective"
+        )
     )
 
     qwen_cache_dir, qwen_cache_storage = resolve_qwen_cache_dir(

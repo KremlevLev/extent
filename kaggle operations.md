@@ -74,3 +74,28 @@ print("result: /kaggle/working/output/extent-long-horizon-campaign.json")
 The runner sends one Telegram message at start and one on completion or caught failure. Each completed budget and layer is a restart boundary. It writes raw LM metrics before aggregation and removes large NPY/endpoint payloads only after their complete result JSON exists. If a recoverable Python exception occurs in an interactive session, call `run_long_horizon([])` again without deleting output. For a new Kaggle session with no attached prior output, the campaign necessarily starts fresh.
 
 The only file required for handoff is `/kaggle/working/output/extent-long-horizon-campaign.json`. On failure, retrieve `/kaggle/working/output/extent-long-horizon-campaign-failure.json` plus `/kaggle/working/output/exp048-campaign-stage-manifest.json`; do not download multi-gigabyte endpoint payloads.
+
+## Compact artifact handoff
+
+New campaigns automatically create `*-summary.json` and `*-summary.md`. Send the Markdown summary by default; retain the full JSON only as the auditable raw artifact. Existing full artifacts can be summarized without an accelerator:
+
+```python
+from scripts.summarize_experiment_json import main as summarize
+
+summarize(["/kaggle/working/output/extent-long-horizon-campaign.json"])
+```
+
+## EXP-049: extended-horizon scaling campaign
+
+Run as one cloud `Save Version` job on a fresh TPU v5e-8 session. Expected duration is approximately 6--7 hours. It performs the 2,048-versus-8,192-step comparison sequentially for layers 18 and 0, so only one large activation cache occupies working disk at a time.
+
+```python
+from scripts.qwen_extended_horizon_campaign import main as run_extended_horizon
+
+result = run_extended_horizon([])
+print("EXP-049 numerical pass:", result["passed"])
+print("EXP-049 scientific gate:", result["scientific_gate_passed"])
+print("summary: /kaggle/working/output/extent-extended-horizon-campaign-summary.md")
+```
+
+For handoff, download only `extent-extended-horizon-campaign-summary.md` and optionally its small `-summary.json` companion. Keep `extent-extended-horizon-campaign.json` in Kaggle output for audit; do not download NPY caches or endpoint payloads. On failure, retrieve `extent-extended-horizon-campaign-failure.json` and `exp049-campaign-stage-manifest.json`.
