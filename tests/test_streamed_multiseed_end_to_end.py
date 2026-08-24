@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from scripts.qwen_streamed_multiseed_end_to_end import (
     branch_names,
+    collect_per_seed_lm_metrics,
+    protocol_collects_window_nll,
     reference_reproduction,
 )
 
@@ -19,6 +21,51 @@ def test_multiseed_branch_order_is_frozen():
         "SEED-789-MIXER-ONLY-STEP1024",
         "SEED-789-JOINT-STEP1024",
     )
+
+
+def test_objective_metric_collection_does_not_require_calibrated_branch():
+    metrics = {
+        "SEED-123-MIXER-ONLY-STEP1024": {"mean_nll": 2.0},
+        "SEED-123-JOINT-STEP1024": {"mean_nll": 1.8},
+        "SEED-123-CONTRIBUTION-STEP1024": {"mean_nll": 1.6},
+    }
+    collected = collect_per_seed_lm_metrics(
+        metrics,
+        (123,),
+        1024,
+        objective_comparison=True,
+    )
+    assert set(collected["123"]) == {
+        "mixer_only",
+        "joint",
+        "contribution",
+    }
+
+
+def test_legacy_metric_collection_keeps_calibrated_branch():
+    metrics = {
+        "SEED-123-CALIBRATED-STEP0": {"mean_nll": 2.2},
+        "SEED-123-MIXER-ONLY-STEP1024": {"mean_nll": 2.0},
+        "SEED-123-JOINT-STEP1024": {"mean_nll": 1.8},
+    }
+    collected = collect_per_seed_lm_metrics(
+        metrics,
+        (123,),
+        1024,
+        objective_comparison=False,
+    )
+    assert set(collected["123"]) == {"calibrated", "mixer_only", "joint"}
+
+
+def test_every_bootstrapped_campaign_protocol_collects_window_nll():
+    for protocol in (
+        "exp043-validation",
+        "exp045-depth-objective",
+        "exp046-depth-objective",
+        "exp047-context-transfer",
+    ):
+        assert protocol_collects_window_nll(protocol)
+    assert not protocol_collects_window_nll("exp041")
 
 
 def test_reference_reproduction_applies_absolute_nll_tolerance():

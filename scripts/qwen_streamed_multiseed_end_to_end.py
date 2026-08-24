@@ -92,6 +92,44 @@ def branch_names(
     return tuple(names)
 
 
+def collect_per_seed_lm_metrics(
+    lm_metrics: dict[str, dict],
+    seeds: tuple[int, ...],
+    total_steps: int,
+    *,
+    objective_comparison: bool,
+) -> dict[str, dict[str, dict]]:
+    """Collect only the branches that the selected protocol evaluated."""
+    per_seed_metrics: dict[str, dict[str, dict]] = {}
+    for seed in seeds:
+        metrics = {
+            "mixer_only": lm_metrics[
+                f"SEED-{seed}-MIXER-ONLY-STEP{total_steps}"
+            ],
+            "joint": lm_metrics[f"SEED-{seed}-JOINT-STEP{total_steps}"],
+        }
+        if objective_comparison:
+            metrics["contribution"] = lm_metrics[
+                f"SEED-{seed}-CONTRIBUTION-STEP{total_steps}"
+            ]
+        else:
+            metrics["calibrated"] = lm_metrics[
+                f"SEED-{seed}-CALIBRATED-STEP0"
+            ]
+        per_seed_metrics[str(seed)] = metrics
+    return per_seed_metrics
+
+
+def protocol_collects_window_nll(protocol: str) -> bool:
+    """Return whether paired bootstrap inputs must be retained per window."""
+    return protocol in {
+        "exp043-validation",
+        "exp045-depth-objective",
+        "exp046-depth-objective",
+        "exp047-context-transfer",
+    }
+
+
 def aggregate_depth_objectives(
     original_nll: float,
     seed_metrics: dict[str, dict[str, dict]],
@@ -786,10 +824,7 @@ def main(argv: list[str] | None = None) -> dict:
         reader.read("lm_head.weight").T, dtype=compute_dtype
     )
     norm = RMSNorm(source.hidden_size, source.rms_norm_eps, jnp.float32)
-    collect_window_nll = args.protocol in {
-        "exp043-validation",
-        "exp045-depth-objective",
-    }
+    collect_window_nll = protocol_collects_window_nll(args.protocol)
     lm_runner = create_lm_metrics_runner(
         norm,
         data_parallel_devices=parallel_devices,
@@ -815,6 +850,27 @@ def main(argv: list[str] | None = None) -> dict:
             compute_dtype=compute_dtype,
             return_window_nll=collect_window_nll,
         )
+    raw_metrics_path = Path(args.result_json).with_name(
+        f"{Path(args.result_json).stem}-lm-metrics.json"
+    )
+    raw_metrics_payload = {
+        "source": source_name,
+        "protocol": args.protocol,
+        "target_layer": args.target_layer,
+        "sequence_length": evaluation_sequence_length,
+        "evaluation_windows": evaluation_windows,
+        "branches": list(names),
+        "lm_metrics": lm_metrics,
+        "complete": True,
+    }
+    raw_metrics_mirror = _write_json_with_output_mirror(
+        raw_metrics_path,
+        raw_metrics_payload,
+        args.output_dir,
+    )
+    print(f"raw_lm_metrics_json={raw_metrics_path.resolve()}")
+    if raw_metrics_mirror:
+        print(f"raw_lm_metrics_output_json={raw_metrics_mirror.resolve()}")
     if args.prune_consumed_shards:
         removed_shards.extend(
             _safe_prune_shards(model_dir, last_use, source.num_layers)
@@ -842,19 +898,12 @@ def main(argv: list[str] | None = None) -> dict:
             ),
             "passed": True,
         }
-    per_seed_metrics = {}
-    for seed in seeds:
-        per_seed_metrics[str(seed)] = {
-            "calibrated": lm_metrics[f"SEED-{seed}-CALIBRATED-STEP0"],
-            "mixer_only": lm_metrics[
-                f"SEED-{seed}-MIXER-ONLY-STEP{args.total_steps}"
-            ],
-            "joint": lm_metrics[f"SEED-{seed}-JOINT-STEP{args.total_steps}"],
-        }
-        if objective_comparison:
-            per_seed_metrics[str(seed)]["contribution"] = lm_metrics[
-                f"SEED-{seed}-CONTRIBUTION-STEP{args.total_steps}"
-            ]
+    per_seed_metrics = collect_per_seed_lm_metrics(
+        lm_metrics,
+        seeds,
+        args.total_steps,
+        objective_comparison=objective_comparison,
+    )
     if objective_comparison:
         aggregate = aggregate_depth_objectives(
             lm_metrics["ORIGINAL-CACHED-QWEN"]["mean_nll"],
