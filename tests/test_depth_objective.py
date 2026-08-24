@@ -76,6 +76,24 @@ def test_exp045_cache_protocol_is_frozen(tmp_path):
     assert "--prune-consumed-shards" in arguments
 
 
+def test_exp048_cache_uses_requested_unique_training_window_budget(tmp_path):
+    arguments, manifest, artifact_dir = _cache_arguments(
+        layer=18,
+        evaluation_only=False,
+        qwen_cache_dir="weights",
+        dataset_cache_dir="dataset",
+        output_dir=tmp_path,
+        compute_dtype="bfloat16",
+        storage_dtype="float16",
+        per_device_windows=1,
+        experiment="exp048-long",
+        training_windows=4096,
+    )
+    assert manifest.name == "exp048-long-layer18-train-manifest.json"
+    assert artifact_dir.name == "exp048-long-layer18-train-cache"
+    assert arguments[arguments.index("--training-windows") + 1] == "4096"
+
+
 def test_exp045_qwen_cache_falls_back_when_ramdisk_is_too_small(
     tmp_path, monkeypatch
 ):

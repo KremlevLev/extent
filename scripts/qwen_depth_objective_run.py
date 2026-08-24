@@ -98,6 +98,7 @@ def _cache_arguments(
     storage_dtype: str,
     per_device_windows: int,
     experiment: str = "exp045",
+    training_windows: int = 1024,
 ) -> tuple[list[str], Path, Path]:
     role = "validation" if evaluation_only else "train"
     artifact_dir = output_dir / f"{experiment}-layer{layer}-{role}-cache"
@@ -132,7 +133,7 @@ def _cache_arguments(
             [
                 "--dataset-split", "train",
                 "--calibration-windows", "8",
-                "--training-windows", "1024",
+                "--training-windows", str(training_windows),
                 "--evaluation-windows", "4",
                 "--token-offset", "0",
             ]
@@ -186,13 +187,17 @@ def main(argv: list[str] | None = None) -> dict:
         default="/kaggle/working/output/exp045-depth-objective.json",
     )
     parser.add_argument(
-        "--experiment", choices=("exp045", "exp046"), default="exp045"
+        "--experiment",
+        choices=("exp045", "exp046", "exp048-short", "exp048-long"),
+        default="exp045",
     )
     parser.add_argument(
         "--target-layers",
         help="comma-separated layers; defaults to 0,18 for EXP-045 and 9,29 for EXP-046",
     )
     parser.add_argument("--seeds", default="123,456,789")
+    parser.add_argument("--total-steps", type=int, default=1024)
+    parser.add_argument("--training-checkpoints", default="0,512,1024")
     parser.add_argument("--compute-dtype", default="bfloat16")
     parser.add_argument("--storage-dtype", default="float16")
     parser.add_argument("--per-device-windows", type=int, default=1)
@@ -205,20 +210,32 @@ def main(argv: list[str] | None = None) -> dict:
     args = parser.parse_args(argv)
     if len(jax.devices()) != 8:
         raise ValueError("EXP-045 one-shot runner requires exactly eight TPU devices")
-    if min(args.per_device_windows, args.bootstrap_samples) < 1:
+    if min(args.per_device_windows, args.bootstrap_samples, args.total_steps) < 1:
         raise ValueError("window and bootstrap counts must be positive")
+    if args.experiment == "exp048-short" and args.total_steps != 1024:
+        raise ValueError("EXP-048 short arm requires exactly 1,024 steps")
+    if args.experiment == "exp048-long" and args.total_steps != 4096:
+        raise ValueError("EXP-048 long arm requires exactly 4,096 steps")
     target_layers = tuple(
         int(value.strip())
         for value in (
             args.target_layers
-            or ("0,18" if args.experiment == "exp045" else "9,29")
+            or (
+                "9,29"
+                if args.experiment == "exp046"
+                else "0,18"
+            )
         ).split(",")
     )
     if len(target_layers) != 2 or len(set(target_layers)) != 2:
         raise ValueError("depth experiment requires exactly two distinct layers")
     if min(target_layers) < 0 or max(target_layers) >= 40:
         raise ValueError("target layers must be in [0, 40)")
-    experiment_protocol = f"{args.experiment}-depth-objective"
+    experiment_protocol = (
+        "exp048-long-horizon"
+        if args.experiment.startswith("exp048-")
+        else f"{args.experiment}-depth-objective"
+    )
 
     qwen_cache_dir, qwen_cache_storage = resolve_qwen_cache_dir(
         args.qwen_cache_dir, args.qwen_cache_storage
@@ -248,6 +265,7 @@ def main(argv: list[str] | None = None) -> dict:
                 storage_dtype=args.storage_dtype,
                 per_device_windows=args.per_device_windows,
                 experiment=args.experiment,
+                training_windows=args.total_steps,
             )
             role = "validation" if evaluation_only else "train"
             reused = False
@@ -300,6 +318,8 @@ def main(argv: list[str] | None = None) -> dict:
             "--target-layer", str(layer),
             "--protocol", experiment_protocol,
             "--seeds", args.seeds,
+            "--total-steps", str(args.total_steps),
+            "--training-checkpoints", args.training_checkpoints,
             "--compute-dtype", args.compute_dtype,
             "--data-parallel",
             "--per-device-windows", str(args.per_device_windows),
@@ -350,6 +370,10 @@ def main(argv: list[str] | None = None) -> dict:
         ),
         "target_layers": list(target_layers),
         "seeds": [int(value) for value in args.seeds.split(",")],
+        "total_steps_per_arm": args.total_steps,
+        "training_checkpoints": [
+            int(value) for value in args.training_checkpoints.split(",")
+        ],
         "qwen_cache_storage": qwen_cache_storage,
         "qwen_cache_dir": qwen_cache_dir,
         "layer_results": layer_results,

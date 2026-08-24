@@ -127,6 +127,7 @@ def protocol_collects_window_nll(protocol: str) -> bool:
         "exp045-depth-objective",
         "exp046-depth-objective",
         "exp047-context-transfer",
+        "exp048-long-horizon",
     }
 
 
@@ -323,6 +324,7 @@ def main(argv: list[str] | None = None) -> dict:
             "exp045-depth-objective",
             "exp046-depth-objective",
             "exp047-context-transfer",
+            "exp048-long-horizon",
         ),
         default="exp041",
     )
@@ -337,8 +339,11 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--endpoint-source-experiment")
     args = parser.parse_args(argv)
     seeds = parse_seeds(args.seeds)
-    if args.total_steps != 1024:
-        raise ValueError("EXP-041 requires the frozen 1,024-step protocol")
+    if args.protocol == "exp048-long-horizon":
+        if args.total_steps not in {1024, 4096}:
+            raise ValueError("EXP-048 requires 1,024 or 4,096 training steps")
+    elif args.total_steps != 1024:
+        raise ValueError("the selected protocol requires exactly 1,024 steps")
     if min(
         args.batch_windows,
         args.evaluation_batch_windows,
@@ -353,6 +358,7 @@ def main(argv: list[str] | None = None) -> dict:
         "exp045-depth-objective",
         "exp046-depth-objective",
         "exp047-context-transfer",
+        "exp048-long-horizon",
     } and args.target_layer != 0:
         raise ValueError("legacy streamed protocols are frozen to layer zero")
 
@@ -385,6 +391,7 @@ def main(argv: list[str] | None = None) -> dict:
         "exp045-depth-objective",
         "exp046-depth-objective",
         "exp047-context-transfer",
+        "exp048-long-horizon",
     }:
         if not args.evaluation_cache_manifest:
             raise ValueError("the selected protocol requires an external evaluation cache")
@@ -434,6 +441,7 @@ def main(argv: list[str] | None = None) -> dict:
             "exp045-depth-objective": 0.0,
             "exp046-depth-objective": 0.0,
             "exp047-context-transfer": 0.0,
+            "exp048-long-horizon": 0.0,
         }[args.protocol]
     if not 0.0 <= required_recovery <= 1.0:
         raise ValueError("required recovery fraction must be in [0, 1]")
@@ -447,6 +455,7 @@ def main(argv: list[str] | None = None) -> dict:
         "exp045-depth-objective",
         "exp046-depth-objective",
         "exp047-context-transfer",
+        "exp048-long-horizon",
     }
     stage_experiment = args.protocol if objective_comparison else "legacy"
     names = branch_names(
@@ -464,6 +473,9 @@ def main(argv: list[str] | None = None) -> dict:
         "exp047-context-transfer": (
             args.endpoint_source_experiment
             or f"exp045-layer{args.target_layer}"
+        ),
+        "exp048-long-horizon": (
+            f"exp048-step{args.total_steps}-layer{args.target_layer}"
         ),
     }[args.protocol]
     if context_transfer:
@@ -986,6 +998,7 @@ def main(argv: list[str] | None = None) -> dict:
                 "exp045-depth-objective": "depth_aware_counterfactual_objective_comparison",
                 "exp046-depth-objective": "depth_generalization_counterfactual_objective_comparison",
                 "exp047-context-transfer": "zero_shot_context_transfer_of_recovered_Mamba_objectives",
+                "exp048-long-horizon": "long_horizon_transplant_scaling_comparison",
             }[args.protocol]
         ),
         "protocol": args.protocol,
@@ -1037,6 +1050,9 @@ def main(argv: list[str] | None = None) -> dict:
         "local_training_gate_required": args.protocol not in {
             "exp043-validation",
             "exp045-depth-objective",
+            "exp046-depth-objective",
+            "exp047-context-transfer",
+            "exp048-long-horizon",
         },
         "objective_gate": (
             {
@@ -1064,6 +1080,7 @@ def main(argv: list[str] | None = None) -> dict:
                     "exp045-depth-objective": "The primary endpoint compares counterfactual contribution matching against both controls on pinned validation windows.",
                     "exp046-depth-objective": "The primary endpoint extends the frozen objective comparison to additional decoder depths.",
                     "exp047-context-transfer": "Endpoints trained only at sequence length 32 are evaluated without updates on the frozen 8,192-token validation prefix.",
+                    "exp048-long-horizon": "The short and long arms use the same frozen protocol except for one-pass unique-token budget and its pre-registered Lion schedule.",
                 }[args.protocol]
             ),
             "passed reports numerical execution; scientific_gate_passed also requires the local training and full-depth aggregate gates.",
@@ -1097,6 +1114,7 @@ def main(argv: list[str] | None = None) -> dict:
             "exp045-depth-objective": "DEPTH-OBJECTIVE-COMPARISON",
             "exp046-depth-objective": "DEPTH-GENERALIZATION-COMPARISON",
             "exp047-context-transfer": "CONTEXT-TRANSFER-COMPARISON",
+            "exp048-long-horizon": "LONG-HORIZON-OBJECTIVE-COMPARISON",
         }[args.protocol]
     )
     print(f"{label}-{'PASS' if scientific_gate_passed else 'GATE-FAIL'}")

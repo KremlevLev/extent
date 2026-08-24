@@ -63,6 +63,7 @@ def test_every_bootstrapped_campaign_protocol_collects_window_nll():
         "exp045-depth-objective",
         "exp046-depth-objective",
         "exp047-context-transfer",
+        "exp048-long-horizon",
     ):
         assert protocol_collects_window_nll(protocol)
     assert not protocol_collects_window_nll("exp041")
