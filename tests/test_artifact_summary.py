@@ -65,3 +65,19 @@ def test_compact_summary_writes_json_and_markdown(tmp_path):
     assert outputs["summary_json"] == str(summary_json.resolve())
     assert summary_json.exists()
     assert summary_md.exists()
+
+
+def test_compact_summary_includes_depth_trend():
+    payload = _payload()
+    payload["aggregate"]["depth_trend"] = {
+        "arms": {
+            "joint": {
+                "nll_delta_per_layer_index_slope": 0.01,
+                "slope_95ci": [0.005, 0.015],
+            }
+        },
+        "scientific_gate_passed": True,
+    }
+    summary = build_compact_summary(payload)
+    assert summary["depth_trend"]["scientific_gate_passed"]
+    assert "Depth trend" in render_summary_markdown(summary)

@@ -99,3 +99,18 @@ print("summary: /kaggle/working/output/extent-extended-horizon-campaign-summary.
 ```
 
 For handoff, download only `extent-extended-horizon-campaign-summary.md` and optionally its small `-summary.json` companion. Keep `extent-extended-horizon-campaign.json` in Kaggle output for audit; do not download NPY caches or endpoint payloads. On failure, retrieve `extent-extended-horizon-campaign-failure.json` and `exp049-campaign-stage-manifest.json`.
+
+## EXP-050: depth-scaling atlas
+
+Run as one cloud `Save Version` job on a fresh TPU v5e-8 session. The measured-work estimate is approximately 6.5 hours: 2,048-versus-8,192-step comparisons at layers 6, 12, and 29, with three seeds and all three objective arms. Each layer is completed and pruned before the next one.
+
+```python
+from scripts.qwen_depth_scaling_atlas_campaign import main as run_depth_atlas
+
+result = run_depth_atlas([])
+print("EXP-050 numerical pass:", result["passed"])
+print("EXP-050 depth-trend gate:", result["scientific_gate_passed"])
+print("summary: /kaggle/working/output/extent-depth-scaling-atlas-summary.md")
+```
+
+For normal handoff, download only `extent-depth-scaling-atlas-summary.md`. Keep the full `extent-depth-scaling-atlas.json` in Kaggle output for audit. On failure retrieve `extent-depth-scaling-atlas-failure.json` and `exp050-campaign-stage-manifest.json`.

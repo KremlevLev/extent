@@ -103,6 +103,8 @@ def build_compact_summary(payload: dict) -> dict:
             "primary_arm"
         )
         summary["scale_layers"] = scale_layers
+        if payload.get("aggregate", {}).get("depth_trend"):
+            summary["depth_trend"] = payload["aggregate"]["depth_trend"]
     depth_results = _compact_depth_results(payload)
     if depth_results:
         summary["depth_results"] = depth_results
@@ -157,6 +159,19 @@ def render_summary_markdown(summary: dict) -> str:
                     f"| {metrics.get('long_wins')}/3 |"
                 )
             lines.append("")
+    if summary.get("depth_trend"):
+        trend = summary["depth_trend"]
+        lines.extend(["", "## Depth trend", ""])
+        for arm, metrics in trend.get("arms", {}).items():
+            interval = metrics["slope_95ci"]
+            lines.append(
+                f"- {arm}: slope `{metrics['nll_delta_per_layer_index_slope']:.8f}` "
+                f"with 95% CI `[{interval[0]:.8f}, {interval[1]:.8f}]`."
+            )
+        lines.append(
+            "- Depth-trend scientific gate: "
+            f"`{trend.get('scientific_gate_passed')}`"
+        )
     if summary.get("depth_results"):
         lines.extend(["", "## Depth objective results", ""])
         lines.append("| Experiment | Layer | Gate | Contribution−Mixer | Contribution−Joint |")

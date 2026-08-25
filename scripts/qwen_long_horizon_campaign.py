@@ -121,18 +121,21 @@ def aggregate_long_horizon(
     bootstrap_seed: int,
     short_step: int = 1024,
     long_step: int = 4096,
+    target_layers: tuple[int, ...] = TARGET_LAYERS,
+    seeds: tuple[int, ...] = SEEDS,
+    arm_branches: dict[str, str] = ARM_BRANCHES,
 ) -> dict:
     layers = []
     all_finite = bool(short_result.get("passed") and long_result.get("passed"))
-    for layer in TARGET_LAYERS:
+    for layer in target_layers:
         short_layer = short_result["layer_results"][str(layer)]
         long_layer = long_result["layer_results"][str(layer)]
         arm_results = {}
-        for arm_index, (arm, branch) in enumerate(ARM_BRANCHES.items()):
+        for arm_index, (arm, branch) in enumerate(arm_branches.items()):
             per_seed = []
             short_windows = {}
             long_windows = {}
-            for seed in SEEDS:
+            for seed in seeds:
                 short_metrics = short_layer["lm_metrics"][
                     f"SEED-{seed}-{branch}-STEP{short_step}"
                 ]
@@ -181,7 +184,7 @@ def aggregate_long_horizon(
         )
     scientific_gate_passed = bool(
         all_finite
-        and len(layers) == len(TARGET_LAYERS)
+        and len(layers) == len(target_layers)
         and all(layer["primary_joint_gate_passed"] for layer in layers)
     )
     return {

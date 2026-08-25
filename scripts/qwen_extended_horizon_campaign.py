@@ -25,7 +25,7 @@ from extent.notifications import TelegramNotifierError, send_telegram_message
 from extent.qwen_source import QWEN3_14B
 
 
-BUDGETS = {
+EXP049_BUDGETS = {
     "short": {
         "experiment": "exp049-short",
         "steps": 2048,
@@ -38,6 +38,21 @@ BUDGETS = {
         "checkpoints": "0,2048,4096,8192",
         "minimum_free_gib": 11,
     },
+}
+EXP049_CONFIG = {
+    "experiment_id": "exp049-extended-horizon",
+    "display_name": "EXP-049 extended horizon",
+    "method": "paired_multiseed_extended_horizon_transplant_scaling",
+    "protocol": "exp049-short2048-vs-long8192-layer0-layer18",
+    "target_layers": TARGET_LAYERS,
+    "budgets": EXP049_BUDGETS,
+    "stage_manifest": "exp049-campaign-stage-manifest.json",
+    "failure_json": "extent-extended-horizon-campaign-failure.json",
+    "default_result_json": (
+        "/kaggle/working/output/extent-extended-horizon-campaign.json"
+    ),
+    "default_qwen_cache_dir": "/kaggle/working/qwen3-exp049-weights",
+    "default_bootstrap_seed": 20260828,
 }
 
 
@@ -85,7 +100,7 @@ def _require_disk_headroom(output_dir: Path, minimum_free_gib: int) -> None:
     print(f"disk_free_gib={free / 1024**3:.3f} required_gib={minimum_free_gib}")
     if free < minimum_free_gib * 1024**3:
         raise RuntimeError(
-            f"EXP-049 requires at least {minimum_free_gib} GiB free before layer"
+            f"extended-horizon campaign requires at least {minimum_free_gib} GiB free before layer"
         )
 
 
@@ -123,17 +138,22 @@ def _prune_completed_layer(
 def _combine_budget_layers(
     budget: str,
     layer_results: dict[str, dict],
+    *,
+    budgets: dict = EXP049_BUDGETS,
+    target_layers: tuple[int, ...] = TARGET_LAYERS,
 ) -> dict:
-    protocol = BUDGETS[budget]
+    protocol = budgets[budget]
     layers = {
         layer: result["layer_results"][layer]
         for layer, result in layer_results.items()
     }
     passed = all(result.get("passed") for result in layer_results.values())
     return {
-        "protocol": f"{protocol['experiment']}-layer0-layer18",
+        "protocol": f"{protocol['experiment']}-" + "-".join(
+            f"layer{layer}" for layer in target_layers
+        ),
         "total_steps_per_arm": protocol["steps"],
-        "target_layers": list(TARGET_LAYERS),
+        "target_layers": list(target_layers),
         "layer_results": layers,
         "scientific_gate_passed": bool(
             passed
@@ -146,17 +166,26 @@ def _combine_budget_layers(
     }
 
 
-def main(argv: list[str] | None = None) -> dict:
+def main(
+    argv: list[str] | None = None,
+    *,
+    campaign_config: dict | None = None,
+) -> dict:
+    campaign = EXP049_CONFIG if campaign_config is None else campaign_config
+    budgets = campaign["budgets"]
+    target_layers = tuple(campaign["target_layers"])
     parser = argparse.ArgumentParser(
-        description="Run EXP-049 at 2,048 and 8,192 one-pass recovery steps."
+        description=(
+            f"Run {campaign['display_name']} at paired one-pass recovery budgets."
+        )
     )
     parser.add_argument("--output-dir", default="/kaggle/working/output")
     parser.add_argument(
         "--result-json",
-        default="/kaggle/working/output/extent-extended-horizon-campaign.json",
+        default=campaign["default_result_json"],
     )
     parser.add_argument(
-        "--qwen-cache-dir", default="/kaggle/working/qwen3-exp049-weights"
+        "--qwen-cache-dir", default=campaign["default_qwen_cache_dir"]
     )
     parser.add_argument(
         "--qwen-cache-storage", choices=("auto", "disk", "ram"), default="auto"
@@ -168,7 +197,11 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--storage-dtype", default="float16")
     parser.add_argument("--per-device-windows", type=int, default=1)
     parser.add_argument("--bootstrap-samples", type=int, default=2000)
-    parser.add_argument("--bootstrap-seed", type=int, default=20260828)
+    parser.add_argument(
+        "--bootstrap-seed",
+        type=int,
+        default=campaign["default_bootstrap_seed"],
+    )
     parser.add_argument(
         "--telegram", action=argparse.BooleanOptionalAction, default=True
     )
@@ -179,13 +212,13 @@ def main(argv: list[str] | None = None) -> dict:
 
     devices = list(jax.devices())
     if len(devices) != 8 or any(device.platform != "tpu" for device in devices):
-        raise ValueError("EXP-049 requires exactly eight TPU devices")
+        raise ValueError(f"{campaign['display_name']} requires exactly eight TPU devices")
     if min(args.per_device_windows, args.bootstrap_samples) < 1:
         raise ValueError("window and bootstrap settings must be positive")
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    stage_manifest = output_dir / "exp049-campaign-stage-manifest.json"
+    stage_manifest = output_dir / campaign["stage_manifest"]
     started = _utc_now()
     start_notification = _safe_notify(
         args.telegram,
@@ -193,11 +226,11 @@ def main(argv: list[str] | None = None) -> dict:
         "status=started\n"
         f"host={socket.gethostname()}\n"
         f"devices={len(devices)}\n"
-        "experiment=EXP-049 extended horizon (2048 vs 8192 steps)",
+        f"experiment={campaign['display_name']} (2048 vs 8192 steps)",
     )
     update_stage_manifest(
         stage_manifest,
-        experiment="exp049-extended-horizon",
+        experiment=campaign["experiment_id"],
         stage="campaign",
         status="running",
         details={"started_at_utc": started},
@@ -207,12 +240,13 @@ def main(argv: list[str] | None = None) -> dict:
     removed_payloads = []
     current_stage = "startup"
     try:
-        for budget, protocol in BUDGETS.items():
+        for budget, protocol in budgets.items():
             per_layer = {}
-            for layer in sorted(TARGET_LAYERS, reverse=True):
-                current_stage = f"exp049-{budget}-layer{layer}"
+            for layer in sorted(target_layers, reverse=True):
+                current_stage = f"{campaign['experiment_id']}-{budget}-layer{layer}"
                 result_path = (
-                    output_dir / f"exp049-{budget}-layer{layer}-depth-result.json"
+                    output_dir
+                    / f"{campaign['experiment_id']}-{budget}-layer{layer}-result.json"
                 )
                 completed = (
                     _read_completed_layer(
@@ -260,30 +294,46 @@ def main(argv: list[str] | None = None) -> dict:
                 )
                 update_stage_manifest(
                     stage_manifest,
-                    experiment="exp049-extended-horizon",
+                    experiment=campaign["experiment_id"],
                     stage=f"budget-{budget}-layer{layer}",
                     status="completed",
                     details={"result_json": str(result_path.resolve())},
                 )
                 jax.clear_caches()
                 gc.collect()
-            budget_results[budget] = _combine_budget_layers(budget, per_layer)
+            budget_results[budget] = _combine_budget_layers(
+                budget,
+                per_layer,
+                budgets=budgets,
+                target_layers=target_layers,
+            )
 
         aggregate = aggregate_long_horizon(
             budget_results["short"],
             budget_results["long"],
             bootstrap_samples=args.bootstrap_samples,
             bootstrap_seed=args.bootstrap_seed,
-            short_step=BUDGETS["short"]["steps"],
-            long_step=BUDGETS["long"]["steps"],
+            short_step=budgets["short"]["steps"],
+            long_step=budgets["long"]["steps"],
+            target_layers=target_layers,
         )
+        if campaign.get("aggregate_transform") is not None:
+            aggregate = campaign["aggregate_transform"](
+                aggregate,
+                budget_results,
+                bootstrap_samples=args.bootstrap_samples,
+                bootstrap_seed=args.bootstrap_seed,
+                short_step=budgets["short"]["steps"],
+                long_step=budgets["long"]["steps"],
+                target_layers=target_layers,
+            )
         result = {
             "source": f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}",
-            "method": "paired_multiseed_extended_horizon_transplant_scaling",
-            "protocol": "exp049-short2048-vs-long8192-layer0-layer18",
+            "method": campaign["method"],
+            "protocol": campaign["protocol"],
             "started_at_utc": started,
             "completed_at_utc": _utc_now(),
-            "target_layers": list(TARGET_LAYERS),
+            "target_layers": list(target_layers),
             "seeds": list(SEEDS),
             "short_unique_tokens_per_arm": 2048 * 32,
             "long_unique_tokens_per_arm": 8192 * 32,
@@ -291,7 +341,7 @@ def main(argv: list[str] | None = None) -> dict:
             * 32
             * len(SEEDS)
             * len(ARM_BRANCHES)
-            * len(TARGET_LAYERS),
+            * len(target_layers),
             "budget_results": budget_results,
             "aggregate": aggregate,
             "removed_regenerable_payloads": removed_payloads,
@@ -315,7 +365,7 @@ def main(argv: list[str] | None = None) -> dict:
         )
         update_stage_manifest(
             stage_manifest,
-            experiment="exp049-extended-horizon",
+            experiment=campaign["experiment_id"],
             stage="final",
             status="completed",
             details={
@@ -329,7 +379,7 @@ def main(argv: list[str] | None = None) -> dict:
             args.telegram,
             "Extent TPU campaign\n"
             "status=completed\n"
-            "experiment=EXP-049\n"
+            f"experiment={campaign['display_name']}\n"
             f"numerical_pass={result['passed']}\n"
             f"scientific_gate={result['scientific_gate_passed']}",
         )
@@ -341,7 +391,7 @@ def main(argv: list[str] | None = None) -> dict:
         return result
     except BaseException as exc:
         failure = {
-            "experiment": "exp049-extended-horizon",
+            "experiment": campaign["experiment_id"],
             "status": "failed",
             "failed_stage": current_stage,
             "error_type": type(exc).__name__,
@@ -350,11 +400,11 @@ def main(argv: list[str] | None = None) -> dict:
             "started_at_utc": started,
             "failed_at_utc": _utc_now(),
         }
-        failure_path = output_dir / "extent-extended-horizon-campaign-failure.json"
+        failure_path = output_dir / campaign["failure_json"]
         _write_json_with_output_mirror(failure_path, failure, str(output_dir))
         update_stage_manifest(
             stage_manifest,
-            experiment="exp049-extended-horizon",
+            experiment=campaign["experiment_id"],
             stage=current_stage,
             status="failed",
             details={"error_type": type(exc).__name__, "error": str(exc)},

@@ -195,6 +195,8 @@ def main(argv: list[str] | None = None) -> dict:
             "exp048-long",
             "exp049-short",
             "exp049-long",
+            "exp050-short",
+            "exp050-long",
         ),
         default="exp045",
     )
@@ -227,6 +229,10 @@ def main(argv: list[str] | None = None) -> dict:
         raise ValueError("EXP-049 short arm requires exactly 2,048 steps")
     if args.experiment == "exp049-long" and args.total_steps != 8192:
         raise ValueError("EXP-049 long arm requires exactly 8,192 steps")
+    if args.experiment == "exp050-short" and args.total_steps != 2048:
+        raise ValueError("EXP-050 short arm requires exactly 2,048 steps")
+    if args.experiment == "exp050-long" and args.total_steps != 8192:
+        raise ValueError("EXP-050 long arm requires exactly 8,192 steps")
     target_layers = tuple(
         int(value.strip())
         for value in (
@@ -250,7 +256,11 @@ def main(argv: list[str] | None = None) -> dict:
         else (
             "exp049-extended-horizon"
             if args.experiment.startswith("exp049-")
-            else f"{args.experiment}-depth-objective"
+            else (
+                "exp050-depth-scaling-atlas"
+                if args.experiment.startswith("exp050-")
+                else f"{args.experiment}-depth-objective"
+            )
         )
     )
 
