@@ -65,6 +65,59 @@ from extent.teacher_activation_cache import (
 from extent.weight_mapping import QwenCheckpointReader
 
 
+OBJECTIVE_COMPARISON_PROTOCOLS = frozenset(
+    {
+        "exp045-depth-objective",
+        "exp046-depth-objective",
+        "exp047-context-transfer",
+        "exp048-long-horizon",
+        "exp049-extended-horizon",
+        "exp050-depth-scaling-atlas",
+        "exp051-progressive-composition",
+    }
+)
+EXTERNAL_EVALUATION_PROTOCOLS = OBJECTIVE_COMPARISON_PROTOCOLS | {
+    "exp042-fresh",
+    "exp043-validation",
+}
+PROTOCOL_METHODS = {
+    "exp041": "three_seed_streamed_end_to_end_Qwen3_layer0_Mamba_confirmation",
+    "exp042-fresh": "locked_fresh_text_three_seed_streamed_end_to_end_confirmation",
+    "exp043-validation": "cross_split_end_to_end_NLL_adjudication",
+    "exp045-depth-objective": "depth_aware_counterfactual_objective_comparison",
+    "exp046-depth-objective": "depth_generalization_counterfactual_objective_comparison",
+    "exp047-context-transfer": "zero_shot_context_transfer_of_recovered_Mamba_objectives",
+    "exp048-long-horizon": "long_horizon_transplant_scaling_comparison",
+    "exp049-extended-horizon": "extended_horizon_transplant_scaling_comparison",
+    "exp050-depth-scaling-atlas": "depth_scaling_atlas_objective_comparison",
+    "exp051-progressive-composition": "progressive_composition_standalone_objective_comparison",
+}
+PROTOCOL_NOTES = {
+    "exp041": "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance.",
+    "exp042-fresh": "The external evaluation cache is disjoint from the training cache and locked to tokens [65536, 69632).",
+    "exp043-validation": "The primary endpoint uses the pinned WikiText-2 validation split; local decoder L2 is diagnostic only.",
+    "exp045-depth-objective": "The primary endpoint compares counterfactual contribution matching against both controls on pinned validation windows.",
+    "exp046-depth-objective": "The primary endpoint extends the frozen objective comparison to additional decoder depths.",
+    "exp047-context-transfer": "Endpoints trained only at sequence length 32 are evaluated without updates on the frozen 8,192-token validation prefix.",
+    "exp048-long-horizon": "The short and long arms use the same frozen protocol except for one-pass unique-token budget and its pre-registered Lion schedule.",
+    "exp049-extended-horizon": "The 2,048-step and 8,192-step arms test whether the depth-dependent scaling sign persists at a larger one-pass recovery budget.",
+    "exp050-depth-scaling-atlas": "Three new decoder depths test whether long-budget benefit decays systematically with layer index.",
+    "exp051-progressive-composition": "Standalone JOINT endpoints provide paired additive controls for the frozen 2/4/8-layer composition test.",
+}
+PROTOCOL_LABELS = {
+    "exp041": "MULTISEED-STREAMED-END-TO-END",
+    "exp042-fresh": "LOCKED-FRESH-TEXT",
+    "exp043-validation": "CROSS-SPLIT-NLL-ADJUDICATION",
+    "exp045-depth-objective": "DEPTH-OBJECTIVE-COMPARISON",
+    "exp046-depth-objective": "DEPTH-GENERALIZATION-COMPARISON",
+    "exp047-context-transfer": "CONTEXT-TRANSFER-COMPARISON",
+    "exp048-long-horizon": "LONG-HORIZON-OBJECTIVE-COMPARISON",
+    "exp049-extended-horizon": "EXTENDED-HORIZON-OBJECTIVE-COMPARISON",
+    "exp050-depth-scaling-atlas": "DEPTH-SCALING-ATLAS-COMPARISON",
+    "exp051-progressive-composition": "PROGRESSIVE-COMPOSITION-STANDALONE",
+}
+
+
 def branch_names(
     seeds: tuple[int, ...],
     total_steps: int,
@@ -122,16 +175,7 @@ def collect_per_seed_lm_metrics(
 
 def protocol_collects_window_nll(protocol: str) -> bool:
     """Return whether paired bootstrap inputs must be retained per window."""
-    return protocol in {
-        "exp043-validation",
-        "exp045-depth-objective",
-        "exp046-depth-objective",
-        "exp047-context-transfer",
-        "exp048-long-horizon",
-        "exp049-extended-horizon",
-        "exp050-depth-scaling-atlas",
-        "exp051-progressive-composition",
-    }
+    return protocol == "exp043-validation" or protocol in OBJECTIVE_COMPARISON_PROTOCOLS
 
 
 def aggregate_depth_objectives(
@@ -320,18 +364,7 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--reference-nll-tolerance", type=float, default=0.02)
     parser.add_argument(
         "--protocol",
-        choices=(
-            "exp041",
-            "exp042-fresh",
-            "exp043-validation",
-            "exp045-depth-objective",
-            "exp046-depth-objective",
-            "exp047-context-transfer",
-            "exp048-long-horizon",
-            "exp049-extended-horizon",
-            "exp050-depth-scaling-atlas",
-            "exp051-progressive-composition",
-        ),
+        choices=tuple(PROTOCOL_METHODS),
         default="exp041",
     )
     parser.add_argument("--required-recovery-fraction", type=float)
@@ -369,15 +402,10 @@ def main(argv: list[str] | None = None) -> dict:
         raise ValueError("reference NLL tolerance must be non-negative")
     if not 0 <= args.target_layer < 40:
         raise ValueError("target-layer must be in [0, 40)")
-    if args.protocol not in {
-        "exp045-depth-objective",
-        "exp046-depth-objective",
-        "exp047-context-transfer",
-        "exp048-long-horizon",
-        "exp049-extended-horizon",
-        "exp050-depth-scaling-atlas",
-        "exp051-progressive-composition",
-    } and args.target_layer != 0:
+    if (
+        args.protocol not in OBJECTIVE_COMPARISON_PROTOCOLS
+        and args.target_layer != 0
+    ):
         raise ValueError("legacy streamed protocols are frozen to layer zero")
 
     jax.config.update("jax_default_matmul_precision", "high")
@@ -403,16 +431,7 @@ def main(argv: list[str] | None = None) -> dict:
     evaluation_arrays = arrays
     evaluation_paths = paths
     evaluation_slice = _slice(manifest["window_layout"], "evaluation")
-    if args.protocol in {
-        "exp042-fresh",
-        "exp043-validation",
-        "exp045-depth-objective",
-        "exp046-depth-objective",
-        "exp047-context-transfer",
-        "exp048-long-horizon",
-        "exp049-extended-horizon",
-        "exp050-depth-scaling-atlas",
-    }:
+    if args.protocol in EXTERNAL_EVALUATION_PROTOCOLS:
         if not args.evaluation_cache_manifest:
             raise ValueError("the selected protocol requires an external evaluation cache")
         evaluation_manifest, evaluation_arrays, evaluation_paths = (
@@ -474,15 +493,7 @@ def main(argv: list[str] | None = None) -> dict:
     if args.data_parallel and len(devices) < 2:
         raise ValueError("--data-parallel requires at least two visible devices")
     parallel_devices = devices if args.data_parallel else None
-    objective_comparison = args.protocol in {
-        "exp045-depth-objective",
-        "exp046-depth-objective",
-        "exp047-context-transfer",
-        "exp048-long-horizon",
-        "exp049-extended-horizon",
-        "exp050-depth-scaling-atlas",
-        "exp051-progressive-composition",
-    }
+    objective_comparison = args.protocol in OBJECTIVE_COMPARISON_PROTOCOLS
     stage_experiment = args.protocol if objective_comparison else "legacy"
     names = branch_names(
         seeds,
@@ -1025,20 +1036,7 @@ def main(argv: list[str] | None = None) -> dict:
     result = {
         "source": source_name,
         "dataset": manifest.get("dataset"),
-        "method": (
-            {
-                "exp041": "three_seed_streamed_end_to_end_Qwen3_layer0_Mamba_confirmation",
-                "exp042-fresh": "locked_fresh_text_three_seed_streamed_end_to_end_confirmation",
-                "exp043-validation": "cross_split_end_to_end_NLL_adjudication",
-                "exp045-depth-objective": "depth_aware_counterfactual_objective_comparison",
-                "exp046-depth-objective": "depth_generalization_counterfactual_objective_comparison",
-                "exp047-context-transfer": "zero_shot_context_transfer_of_recovered_Mamba_objectives",
-                "exp048-long-horizon": "long_horizon_transplant_scaling_comparison",
-                "exp049-extended-horizon": "extended_horizon_transplant_scaling_comparison",
-                "exp050-depth-scaling-atlas": "depth_scaling_atlas_objective_comparison",
-                "exp051-progressive-composition": "progressive_composition_standalone_objective_comparison",
-            }[args.protocol]
-        ),
+        "method": PROTOCOL_METHODS[args.protocol],
         "protocol": args.protocol,
         "activation_cache_manifest": str(
             Path(args.activation_cache_manifest).resolve()
@@ -1085,15 +1083,10 @@ def main(argv: list[str] | None = None) -> dict:
         "required_bootstrap_lower_bound": (
             0.10 if args.protocol == "exp043-validation" else None
         ),
-        "local_training_gate_required": args.protocol not in {
-            "exp043-validation",
-            "exp045-depth-objective",
-            "exp046-depth-objective",
-            "exp047-context-transfer",
-            "exp048-long-horizon",
-            "exp049-extended-horizon",
-            "exp050-depth-scaling-atlas",
-        },
+        "local_training_gate_required": (
+            args.protocol != "exp043-validation"
+            and args.protocol not in OBJECTIVE_COMPARISON_PROTOCOLS
+        ),
         "objective_gate": (
             {
                 "required_wins_per_control": 2,
@@ -1112,19 +1105,7 @@ def main(argv: list[str] | None = None) -> dict:
         "notes": [
             "The original branch is shared; every objective arm uses an identical calibrated start and paired batches within each seed.",
             "All branches stream together from the target replacement through identical frozen later Qwen layers, final norm, and lm_head.",
-            (
-                {
-                    "exp041": "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance.",
-                    "exp042-fresh": "The external evaluation cache is disjoint from the training cache and locked to tokens [65536, 69632).",
-                    "exp043-validation": "The primary endpoint uses the pinned WikiText-2 validation split; local decoder L2 is diagnostic only.",
-                    "exp045-depth-objective": "The primary endpoint compares counterfactual contribution matching against both controls on pinned validation windows.",
-                    "exp046-depth-objective": "The primary endpoint extends the frozen objective comparison to additional decoder depths.",
-                    "exp047-context-transfer": "Endpoints trained only at sequence length 32 are evaluated without updates on the frozen 8,192-token validation prefix.",
-                    "exp048-long-horizon": "The short and long arms use the same frozen protocol except for one-pass unique-token budget and its pre-registered Lion schedule.",
-                    "exp049-extended-horizon": "The 2,048-step and 8,192-step arms test whether the depth-dependent scaling sign persists at a larger one-pass recovery budget.",
-                    "exp050-depth-scaling-atlas": "Three new decoder depths test whether long-budget benefit decays systematically with layer index.",
-                }[args.protocol]
-            ),
+            PROTOCOL_NOTES[args.protocol],
             "passed reports numerical execution; scientific_gate_passed also requires the local training and full-depth aggregate gates.",
         ],
     }
@@ -1148,19 +1129,7 @@ def main(argv: list[str] | None = None) -> dict:
         )
     if not all_finite:
         raise SystemExit("MULTISEED-STREAMED-END-TO-END-NONFINITE")
-    label = (
-        {
-            "exp041": "MULTISEED-STREAMED-END-TO-END",
-            "exp042-fresh": "LOCKED-FRESH-TEXT",
-            "exp043-validation": "CROSS-SPLIT-NLL-ADJUDICATION",
-            "exp045-depth-objective": "DEPTH-OBJECTIVE-COMPARISON",
-            "exp046-depth-objective": "DEPTH-GENERALIZATION-COMPARISON",
-            "exp047-context-transfer": "CONTEXT-TRANSFER-COMPARISON",
-            "exp048-long-horizon": "LONG-HORIZON-OBJECTIVE-COMPARISON",
-            "exp049-extended-horizon": "EXTENDED-HORIZON-OBJECTIVE-COMPARISON",
-            "exp050-depth-scaling-atlas": "DEPTH-SCALING-ATLAS-COMPARISON",
-        }[args.protocol]
-    )
+    label = PROTOCOL_LABELS[args.protocol]
     print(f"{label}-{'PASS' if scientific_gate_passed else 'GATE-FAIL'}")
     return result
 

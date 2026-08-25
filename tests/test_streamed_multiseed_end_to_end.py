@@ -1,6 +1,11 @@
 from __future__ import annotations
 
 from scripts.qwen_streamed_multiseed_end_to_end import (
+    EXTERNAL_EVALUATION_PROTOCOLS,
+    OBJECTIVE_COMPARISON_PROTOCOLS,
+    PROTOCOL_LABELS,
+    PROTOCOL_METHODS,
+    PROTOCOL_NOTES,
     branch_names,
     collect_per_seed_lm_metrics,
     protocol_collects_window_nll,
@@ -70,6 +75,13 @@ def test_every_bootstrapped_campaign_protocol_collects_window_nll():
     ):
         assert protocol_collects_window_nll(protocol)
     assert not protocol_collects_window_nll("exp041")
+
+
+def test_protocol_registries_are_complete_for_exp051():
+    assert set(PROTOCOL_METHODS) == set(PROTOCOL_NOTES) == set(PROTOCOL_LABELS)
+    assert OBJECTIVE_COMPARISON_PROTOCOLS <= EXTERNAL_EVALUATION_PROTOCOLS
+    assert "exp051-progressive-composition" in OBJECTIVE_COMPARISON_PROTOCOLS
+    assert "exp051-progressive-composition" in EXTERNAL_EVALUATION_PROTOCOLS
 
 
 def test_reference_reproduction_applies_absolute_nll_tolerance():
