@@ -66,6 +66,7 @@ def test_every_bootstrapped_campaign_protocol_collects_window_nll():
         "exp048-long-horizon",
         "exp049-extended-horizon",
         "exp050-depth-scaling-atlas",
+        "exp051-progressive-composition",
     ):
         assert protocol_collects_window_nll(protocol)
     assert not protocol_collects_window_nll("exp041")

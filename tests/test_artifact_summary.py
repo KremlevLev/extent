@@ -81,3 +81,32 @@ def test_compact_summary_includes_depth_trend():
     summary = build_compact_summary(payload)
     assert summary["depth_trend"]["scientific_gate_passed"]
     assert "Depth trend" in render_summary_markdown(summary)
+
+
+def test_compact_summary_includes_progressive_composition_table():
+    payload = _payload()
+    payload["aggregate"] = {
+        "primary_replacement_count": 8,
+        "baseline_reproduction": {
+            "passed": True,
+            "maximum_absolute_mean_nll_difference": 0.001,
+        },
+        "stages": [
+            {
+                "replacement_count": 8,
+                "layers": [0, 6, 12, 18, 23, 29, 34, 39],
+                "additive_expected_excess_nll_mean": 0.2,
+                "observed_composed_excess_nll_mean": 0.22,
+                "interaction_nll_mean": 0.02,
+                "composition_inflation_ratio_mean": 1.1,
+                "seed_inflation_passes": 3,
+                "bootstrap": {"mean_inflation_ratio_95ci": [1.0, 1.2]},
+                "scientific_gate_passed": True,
+            }
+        ],
+    }
+    summary = build_compact_summary(payload)
+    assert summary["progressive_composition"]["primary_replacement_count"] == 8
+    rendered = render_summary_markdown(summary)
+    assert "Progressive composition" in rendered
+    assert "0,6,12,18,23,29,34,39" in rendered

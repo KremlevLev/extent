@@ -114,3 +114,20 @@ print("summary: /kaggle/working/output/extent-depth-scaling-atlas-summary.md")
 ```
 
 For normal handoff, download only `extent-depth-scaling-atlas-summary.md`. Keep the full `extent-depth-scaling-atlas.json` in Kaggle output for audit. On failure retrieve `extent-depth-scaling-atlas-failure.json` and `exp050-campaign-stage-manifest.json`.
+
+## EXP-051: progressive 2/4/8-layer composition
+
+Run as one cloud `Save Version` job on a fresh TPU v5e-8 session. The campaign trains eight standalone Mamba endpoints with the frozen asymmetric schedule (8,192 steps for layer 0 and 2,048 for all other layers), then evaluates nested 2/4/8-layer JOINT compositions. The expected target is 5--8 hours; measured time may vary with Kaggle compilation and downloads.
+
+```python
+from scripts.qwen_progressive_composition_campaign import main as run_progressive
+
+result = run_progressive([])
+print("EXP-051 numerical pass:", result["passed"])
+print("EXP-051 eight-layer gate:", result["scientific_gate_passed"])
+print("summary: /kaggle/working/output/extent-progressive-composition-campaign-summary.md")
+```
+
+Use this single call; do not run `pytest` or initialize JAX in another process after the notebook has claimed the TPU. Start and final Telegram messages are enabled by default. A failed scientific gate still finishes normally and writes the summary.
+
+For handoff, download only `extent-progressive-composition-campaign-summary.md`. Keep the full campaign JSON in Kaggle Output only if convenient; the runner deletes multi-gigabyte caches and endpoint payloads after the final measurements. On a caught failure retrieve `extent-progressive-composition-failure.json` and `exp051-campaign-stage-manifest.json`. In an interactive session, rerun the identical `run_progressive([])` call to reuse completed layer boundaries.

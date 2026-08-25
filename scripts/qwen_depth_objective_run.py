@@ -197,6 +197,8 @@ def main(argv: list[str] | None = None) -> dict:
             "exp049-long",
             "exp050-short",
             "exp050-long",
+            "exp051-short",
+            "exp051-long",
         ),
         default="exp045",
     )
@@ -210,6 +212,7 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--compute-dtype", default="bfloat16")
     parser.add_argument("--storage-dtype", default="float16")
     parser.add_argument("--per-device-windows", type=int, default=1)
+    parser.add_argument("--evaluation-batch-windows", type=int, default=1)
     parser.add_argument("--bootstrap-samples", type=int, default=2000)
     parser.add_argument("--bootstrap-seed", type=int, default=20260826)
     parser.add_argument("--skip-hash-verification", action="store_true")
@@ -219,7 +222,12 @@ def main(argv: list[str] | None = None) -> dict:
     args = parser.parse_args(argv)
     if len(jax.devices()) != 8:
         raise ValueError("EXP-045 one-shot runner requires exactly eight TPU devices")
-    if min(args.per_device_windows, args.bootstrap_samples, args.total_steps) < 1:
+    if min(
+        args.per_device_windows,
+        args.evaluation_batch_windows,
+        args.bootstrap_samples,
+        args.total_steps,
+    ) < 1:
         raise ValueError("window and bootstrap counts must be positive")
     if args.experiment == "exp048-short" and args.total_steps != 1024:
         raise ValueError("EXP-048 short arm requires exactly 1,024 steps")
@@ -233,6 +241,10 @@ def main(argv: list[str] | None = None) -> dict:
         raise ValueError("EXP-050 short arm requires exactly 2,048 steps")
     if args.experiment == "exp050-long" and args.total_steps != 8192:
         raise ValueError("EXP-050 long arm requires exactly 8,192 steps")
+    if args.experiment == "exp051-short" and args.total_steps != 2048:
+        raise ValueError("EXP-051 short recovery requires exactly 2,048 steps")
+    if args.experiment == "exp051-long" and args.total_steps != 8192:
+        raise ValueError("EXP-051 long recovery requires exactly 8,192 steps")
     target_layers = tuple(
         int(value.strip())
         for value in (
@@ -259,7 +271,11 @@ def main(argv: list[str] | None = None) -> dict:
             else (
                 "exp050-depth-scaling-atlas"
                 if args.experiment.startswith("exp050-")
-                else f"{args.experiment}-depth-objective"
+                else (
+                    "exp051-progressive-composition"
+                    if args.experiment.startswith("exp051-")
+                    else f"{args.experiment}-depth-objective"
+                )
             )
         )
     )
@@ -349,6 +365,7 @@ def main(argv: list[str] | None = None) -> dict:
             "--training-checkpoints", args.training_checkpoints,
             "--compute-dtype", args.compute_dtype,
             "--data-parallel",
+            "--evaluation-batch-windows", str(args.evaluation_batch_windows),
             "--per-device-windows", str(args.per_device_windows),
             "--bootstrap-samples", str(args.bootstrap_samples),
             "--bootstrap-seed", str(args.bootstrap_seed + layer),

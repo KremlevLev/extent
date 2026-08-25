@@ -82,6 +82,38 @@ def _compact_depth_results(payload: dict) -> list[dict]:
     return compact
 
 
+def _compact_progressive_stages(payload: dict) -> list[dict]:
+    compact = []
+    for stage in payload.get("aggregate", {}).get("stages", []):
+        bootstrap = stage.get("bootstrap", {})
+        compact.append(
+            {
+                "replacement_count": stage.get("replacement_count"),
+                "layers": stage.get("layers"),
+                "additive_expected_excess_nll_mean": stage.get(
+                    "additive_expected_excess_nll_mean"
+                ),
+                "observed_composed_excess_nll_mean": stage.get(
+                    "observed_composed_excess_nll_mean"
+                ),
+                "interaction_nll_mean": stage.get("interaction_nll_mean"),
+                "composition_inflation_ratio_mean": stage.get(
+                    "composition_inflation_ratio_mean"
+                ),
+                "seed_inflation_passes": stage.get(
+                    "seed_inflation_passes"
+                ),
+                "mean_inflation_ratio_95ci": bootstrap.get(
+                    "mean_inflation_ratio_95ci"
+                ),
+                "scientific_gate_passed": stage.get(
+                    "scientific_gate_passed"
+                ),
+            }
+        )
+    return compact
+
+
 def build_compact_summary(payload: dict) -> dict:
     """Reduce a full campaign artifact to its scientific decision surface."""
     summary: dict[str, Any] = {
@@ -108,6 +140,17 @@ def build_compact_summary(payload: dict) -> dict:
     depth_results = _compact_depth_results(payload)
     if depth_results:
         summary["depth_results"] = depth_results
+    progressive = _compact_progressive_stages(payload)
+    if progressive:
+        summary["progressive_composition"] = {
+            "primary_replacement_count": payload.get("aggregate", {}).get(
+                "primary_replacement_count"
+            ),
+            "baseline_reproduction": payload.get("aggregate", {}).get(
+                "baseline_reproduction"
+            ),
+            "stages": progressive,
+        }
     context = payload.get("context_aggregate")
     if context:
         summary["context_transfer"] = {
@@ -183,6 +226,44 @@ def render_summary_markdown(summary: dict) -> str:
                 f"| {result['mean_contribution_minus_mixer_nll']:.8f} "
                 f"| {result['mean_contribution_minus_joint_nll']:.8f} |"
             )
+    progressive = summary.get("progressive_composition")
+    if progressive:
+        lines.extend(["", "## Progressive composition", ""])
+        lines.append(
+            "| Replacements | Layers | Additive excess | Observed excess "
+            "| Interaction | Inflation | 95% CI | Seed passes | Gate |"
+        )
+        lines.append("|---:|---|---:|---:|---:|---:|---:|---:|---:|")
+        for stage in progressive["stages"]:
+            interval = stage.get("mean_inflation_ratio_95ci") or [None, None]
+            interval_text = (
+                f"[{interval[0]:.4f}, {interval[1]:.4f}]"
+                if interval[0] is not None and interval[1] is not None
+                else "n/a"
+            )
+            inflation = stage.get("composition_inflation_ratio_mean")
+            inflation_text = f"{inflation:.4f}" if inflation is not None else "n/a"
+            lines.append(
+                f"| {stage['replacement_count']} "
+                f"| {','.join(str(layer) for layer in stage['layers'])} "
+                f"| {stage['additive_expected_excess_nll_mean']:.8f} "
+                f"| {stage['observed_composed_excess_nll_mean']:.8f} "
+                f"| {stage['interaction_nll_mean']:.8f} "
+                f"| {inflation_text} | {interval_text} "
+                f"| {stage['seed_inflation_passes']}/3 "
+                f"| {stage['scientific_gate_passed']} |"
+            )
+        baseline = progressive.get("baseline_reproduction") or {}
+        lines.append("")
+        lines.append(
+            "- Original-Qwen reproduction: "
+            f"`{baseline.get('passed')}`; maximum |ΔNLL| "
+            f"`{baseline.get('maximum_absolute_mean_nll_difference')}`."
+        )
+        lines.append(
+            "- Primary replacement count: "
+            f"`{progressive.get('primary_replacement_count')}`."
+        )
     context = summary.get("context_transfer")
     if context:
         lines.extend(
@@ -198,13 +279,14 @@ def render_summary_markdown(summary: dict) -> str:
                 f"`{context['maximum_allowed_contribution_regret_nll']:.8f}`)",
             ]
         )
-    lines.extend(
-        [
-            "",
-            "Negative long-minus-short NLL means the larger recovery budget is better.",
-            "",
-        ]
-    )
+    if summary.get("scale_layers"):
+        lines.extend(
+            [
+                "",
+                "Negative long-minus-short NLL means the larger recovery budget is better.",
+            ]
+        )
+    lines.append("")
     return "\n".join(lines)
 
 
