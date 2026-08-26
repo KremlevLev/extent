@@ -220,3 +220,24 @@ print(
 The runner prioritizes layer 18, then layer 0; within each seed it records random, Apple bridge, combined bridge+orientation, MOHAWK orientation, and direct-QKVO controls. It writes a partial JSON after every completed arm and stops cleanly at the 3.5-hour deadline. Telegram reports start, normal completion, deadline-partial completion, or a caught failure.
 
 Download only `extent-bridge-ablation-campaign-summary.md`. If the screen ends at the deadline, also download `extent-bridge-ablation-campaign.json`; the completed arms remain scientifically usable and `complete=false` prevents accidental treatment as the full protocol. On failure download `extent-bridge-ablation-campaign-failure.json` and `exp054-campaign-stage-manifest.json`. Do not download NPY caches or Qwen shards.
+
+## EXP-055: stabilized partial-RoPE bridge confirmation
+
+Run this as the first JAX use in a fresh Kaggle TPU v5e-8 `Save Version` process after cloning the current commit and installing `requirements-tpu.txt`. Do not run EXP-054 again and do not call `jax.devices()`, `pytest`, `%run`, or another Python process first.
+
+```python
+from scripts.qwen_stabilized_bridge_campaign import main as run_stabilized_bridge
+
+result = run_stabilized_bridge([])
+print("EXP-055 status:", result["status"])
+print("EXP-055 numerical pass:", result["passed"])
+print("EXP-055 complete:", result["complete"])
+print("EXP-055 primary arm:", result["aggregate"]["primary_arm"])
+print("EXP-055 primary gate:", result["aggregate"]["screening_gate_passed"])
+print(
+    "summary: /kaggle/working/output/"
+    "extent-stabilized-bridge-campaign-summary.md"
+)
+```
+
+The locked runner uses partial RoPE `0.5`, cosine-only bridge fitting, 256 initializer updates, and 4,096 matched recovery steps per arm. It has a 3.4-hour internal deadline and sends Telegram start/final/failure notifications. Download both `extent-stabilized-bridge-campaign-summary.md` and the small `extent-stabilized-bridge-campaign.json`; the full JSON is required to audit bridge stability. On failure retrieve `exp055-campaign-failure.json` and `exp055-campaign-stage-manifest.json`. Do not download activation arrays or Qwen shards.

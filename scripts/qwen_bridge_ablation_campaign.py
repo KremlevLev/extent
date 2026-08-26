@@ -48,10 +48,13 @@ def _cache_arguments(
     compute_dtype: str,
     storage_dtype: str,
     per_device_windows: int,
+    artifact_prefix: str = "exp054",
+    recovery_steps: int = RECOVERY_STEPS,
+    validation_windows: int = VALIDATION_WINDOWS,
 ) -> tuple[list[str], Path, Path]:
     role = "validation" if evaluation_only else "train"
-    artifact_dir = output_dir / f"exp054-layer{layer}-{role}-cache"
-    manifest = artifact_dir / f"exp054-layer{layer}-{role}-manifest.json"
+    artifact_dir = output_dir / f"{artifact_prefix}-layer{layer}-{role}-cache"
+    manifest = artifact_dir / f"{artifact_prefix}-layer{layer}-{role}-manifest.json"
     arguments = [
         "--cache-dir", qwen_cache_dir,
         "--dataset-cache-dir", dataset_cache_dir,
@@ -74,7 +77,7 @@ def _cache_arguments(
                 "--evaluation-only",
                 "--calibration-windows", "0",
                 "--training-windows", "0",
-                "--evaluation-windows", str(VALIDATION_WINDOWS),
+                "--evaluation-windows", str(validation_windows),
                 "--token-offset", "0",
             ]
         )
@@ -83,7 +86,7 @@ def _cache_arguments(
             [
                 "--dataset-split", "train",
                 "--calibration-windows", "8",
-                "--training-windows", str(RECOVERY_STEPS),
+                "--training-windows", str(recovery_steps),
                 "--evaluation-windows", "4",
                 "--token-offset", "0",
             ]
@@ -101,14 +104,16 @@ def _valid_cache(manifest: Path, directory: Path, layer: int) -> bool:
     return int(payload.get("target_layer", -1)) == layer and bool(payload.get("passed"))
 
 
-def _valid_layer_result(path: Path, layer: int) -> dict | None:
+def _valid_layer_result(
+    path: Path, layer: int, *, layer_protocol: str = PROTOCOL
+) -> dict | None:
     if not path.exists():
         return None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return None
-    if payload.get("protocol") != PROTOCOL or int(payload.get("target_layer", -1)) != layer:
+    if payload.get("protocol") != layer_protocol or int(payload.get("target_layer", -1)) != layer:
         return None
     return payload
 
@@ -117,7 +122,7 @@ def _prune_cache_arrays(directory: Path, output_dir: Path) -> list[str]:
     root = output_dir.resolve()
     candidate = directory.resolve()
     if root not in candidate.parents:
-        raise ValueError("refusing to prune outside EXP-054 output")
+        raise ValueError("refusing to prune outside bridge-campaign output")
     removed = []
     if candidate.exists():
         for path in candidate.glob("*.npy"):
@@ -128,7 +133,7 @@ def _prune_cache_arrays(directory: Path, output_dir: Path) -> list[str]:
 
 def render_summary(result: dict) -> str:
     lines = [
-        "# EXP-054 attention bridge initialization screen",
+        f"# {result.get('experiment_name', 'EXP-054 attention bridge initialization screen')}",
         "",
         f"- Status: `{result['status']}`",
         f"- Numerical pass: `{result['passed']}`",
@@ -161,7 +166,7 @@ def render_summary(result: dict) -> str:
 
 def main(argv: list[str] | None = None) -> dict:
     parser = argparse.ArgumentParser(
-        description="Run the time-bounded resilient EXP-054 TPU campaign."
+        description="Run a time-bounded resilient bridge TPU campaign."
     )
     parser.add_argument("--output-dir", default="/kaggle/working/output")
     parser.add_argument(
@@ -181,6 +186,24 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--storage-dtype", default="float16")
     parser.add_argument("--per-device-windows", type=int, default=4)
     parser.add_argument("--evaluation-batch-windows", type=int, default=4)
+    parser.add_argument("--artifact-prefix", default="exp054")
+    parser.add_argument("--campaign-protocol", default=CAMPAIGN_PROTOCOL)
+    parser.add_argument("--layer-protocol", default=PROTOCOL)
+    parser.add_argument("--experiment-name", default="EXP-054 bridge initialization")
+    parser.add_argument(
+        "--summary-filename",
+        default="extent-bridge-ablation-campaign-summary.md",
+    )
+    parser.add_argument("--recovery-steps", type=int, default=RECOVERY_STEPS)
+    parser.add_argument("--checkpoints", default="0,256,512,1024")
+    parser.add_argument("--bridge-steps", type=int, default=128)
+    parser.add_argument("--bridge-learning-rate", type=float, default=1e-3)
+    parser.add_argument("--bridge-matrix-loss-weight", type=float, default=0.1)
+    parser.add_argument("--bridge-rope-fraction", type=float, default=1.0)
+    parser.add_argument("--orientation-steps", type=int, default=128)
+    parser.add_argument(
+        "--primary-arm", default="BRIDGE-PLUS-ORIENTATION", choices=ARM_ORDER[1:]
+    )
     parser.add_argument("--max-wall-hours", type=float, default=3.5)
     parser.add_argument(
         "--telegram", action=argparse.BooleanOptionalAction, default=True
@@ -189,15 +212,26 @@ def main(argv: list[str] | None = None) -> dict:
         "--resume", action=argparse.BooleanOptionalAction, default=True
     )
     args = parser.parse_args(argv)
+    log_prefix = args.artifact_prefix
     if min(
         args.per_device_windows,
         args.evaluation_batch_windows,
         args.max_wall_hours,
+        args.recovery_steps,
+        args.bridge_steps,
+        args.orientation_steps,
     ) <= 0:
         raise ValueError("batch settings and max-wall-hours must be positive")
+    checkpoints = tuple(
+        sorted({int(value.strip()) for value in args.checkpoints.split(",")})
+    )
+    if not checkpoints or checkpoints[0] != 0 or checkpoints[-1] != args.recovery_steps:
+        raise ValueError("checkpoints must include zero and recovery-steps")
+    if not args.artifact_prefix or not args.campaign_protocol or not args.layer_protocol:
+        raise ValueError("artifact and protocol names must be non-empty")
     devices = list(jax.devices())
     if len(devices) != 8 or any(device.platform != "tpu" for device in devices):
-        raise ValueError("EXP-054 requires exactly eight TPU devices")
+        raise ValueError("bridge campaign requires exactly eight TPU devices")
 
     started_monotonic = time.monotonic()
     deadline = started_monotonic + args.max_wall_hours * 3600
@@ -205,7 +239,7 @@ def main(argv: list[str] | None = None) -> dict:
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     result_path = Path(args.result_json)
-    stage_manifest = output_dir / "exp054-campaign-stage-manifest.json"
+    stage_manifest = output_dir / f"{args.artifact_prefix}-campaign-stage-manifest.json"
     qwen_cache_dir, qwen_storage = resolve_qwen_cache_dir(
         args.qwen_cache_dir, args.qwen_cache_storage
     )
@@ -214,12 +248,12 @@ def main(argv: list[str] | None = None) -> dict:
         "Extent TPU campaign\n"
         "status=started\n"
         f"host={socket.gethostname()}\n"
-        "experiment=EXP-054 Apple bridge + MOHAWK orientation\n"
+        f"experiment={args.experiment_name}\n"
         f"hard_budget_hours={args.max_wall_hours}",
     )
     update_stage_manifest(
         stage_manifest,
-        experiment=CAMPAIGN_PROTOCOL,
+        experiment=args.campaign_protocol,
         stage="campaign",
         status="running",
         details={
@@ -236,10 +270,20 @@ def main(argv: list[str] | None = None) -> dict:
             if time.monotonic() >= deadline:
                 break
             current_stage = f"layer{layer}"
-            layer_result_path = output_dir / f"exp054-layer{layer}-result.json"
-            completed = _valid_layer_result(layer_result_path, layer) if args.resume else None
+            layer_result_path = (
+                output_dir / f"{args.artifact_prefix}-layer{layer}-result.json"
+            )
+            completed = (
+                _valid_layer_result(
+                    layer_result_path,
+                    layer,
+                    layer_protocol=args.layer_protocol,
+                )
+                if args.resume
+                else None
+            )
             if completed is not None and completed.get("complete"):
-                print(f"exp054_layer={layer} RESUME-PASS")
+                print(f"{log_prefix}_layer={layer} RESUME-PASS")
                 layer_results[str(layer)] = completed
                 continue
             train_args, train_manifest, train_dir = _cache_arguments(
@@ -252,6 +296,8 @@ def main(argv: list[str] | None = None) -> dict:
                 compute_dtype=args.compute_dtype,
                 storage_dtype=args.storage_dtype,
                 per_device_windows=args.per_device_windows,
+                artifact_prefix=args.artifact_prefix,
+                recovery_steps=args.recovery_steps,
             )
             eval_args, eval_manifest, eval_dir = _cache_arguments(
                 layer=layer,
@@ -263,19 +309,21 @@ def main(argv: list[str] | None = None) -> dict:
                 compute_dtype=args.compute_dtype,
                 storage_dtype=args.storage_dtype,
                 per_device_windows=args.per_device_windows,
+                artifact_prefix=args.artifact_prefix,
+                recovery_steps=args.recovery_steps,
             )
             if not (args.resume and _valid_cache(train_manifest, train_dir, layer)):
-                print(f"exp054_layer={layer} train_cache=START")
+                print(f"{log_prefix}_layer={layer} train_cache=START")
                 build_activation_cache(train_args)
             else:
-                print(f"exp054_layer={layer} train_cache=RESUME-PASS")
+                print(f"{log_prefix}_layer={layer} train_cache=RESUME-PASS")
             if time.monotonic() >= deadline:
                 break
             if not (args.resume and _valid_cache(eval_manifest, eval_dir, layer)):
-                print(f"exp054_layer={layer} validation_cache=START")
+                print(f"{log_prefix}_layer={layer} validation_cache=START")
                 build_activation_cache(eval_args)
             else:
-                print(f"exp054_layer={layer} validation_cache=RESUME-PASS")
+                print(f"{log_prefix}_layer={layer} validation_cache=RESUME-PASS")
             layer_result = run_layer_ablation(
                 [
                     "--activation-cache-manifest", str(train_manifest),
@@ -283,10 +331,14 @@ def main(argv: list[str] | None = None) -> dict:
                     "--evaluation-cache-manifest", str(eval_manifest),
                     "--evaluation-cache-dir", str(eval_dir),
                     "--qwen-cache-dir", qwen_cache_dir,
-                    "--total-steps", str(RECOVERY_STEPS),
-                    "--checkpoints", "0,256,512,1024",
-                    "--bridge-steps", "128",
-                    "--orientation-steps", "128",
+                    "--total-steps", str(args.recovery_steps),
+                    "--checkpoints", args.checkpoints,
+                    "--bridge-steps", str(args.bridge_steps),
+                    "--orientation-steps", str(args.orientation_steps),
+                    "--bridge-learning-rate", str(args.bridge_learning_rate),
+                    "--bridge-matrix-loss-weight", str(args.bridge_matrix_loss_weight),
+                    "--bridge-rope-fraction", str(args.bridge_rope_fraction),
+                    "--experiment-protocol", args.layer_protocol,
                     "--seeds", ",".join(map(str, SEEDS)),
                     "--evaluation-batch-windows", str(args.evaluation_batch_windows),
                     "--compute-dtype", args.compute_dtype,
@@ -298,7 +350,7 @@ def main(argv: list[str] | None = None) -> dict:
             layer_results[str(layer)] = layer_result
             update_stage_manifest(
                 stage_manifest,
-                experiment=CAMPAIGN_PROTOCOL,
+                experiment=args.campaign_protocol,
                 stage=current_stage,
                 status="completed",
                 details={
@@ -319,10 +371,13 @@ def main(argv: list[str] | None = None) -> dict:
         numerical_pass = bool(layer_results) and all(
             result.get("passed") for result in layer_results.values()
         )
-        aggregate = aggregate_bridge_screen(layer_results)
+        aggregate = aggregate_bridge_screen(
+            layer_results, primary_arm=args.primary_arm
+        )
         completed_at = _utc_now()
         result = {
-            "protocol": CAMPAIGN_PROTOCOL,
+            "protocol": args.campaign_protocol,
+            "experiment_name": args.experiment_name,
             "status": "completed" if complete else "deadline_partial",
             "started_at_utc": started,
             "completed_at_utc": completed_at,
@@ -331,6 +386,16 @@ def main(argv: list[str] | None = None) -> dict:
             "target_layers": list(TARGET_LAYERS),
             "seeds": list(SEEDS),
             "arm_order": list(ARM_ORDER),
+            "recovery_steps": args.recovery_steps,
+            "recovery_checkpoints": list(checkpoints),
+            "bridge_recipe": {
+                "steps": args.bridge_steps,
+                "learning_rate": args.bridge_learning_rate,
+                "matrix_loss_weight": args.bridge_matrix_loss_weight,
+                "rope_fraction": args.bridge_rope_fraction,
+            },
+            "orientation_steps": args.orientation_steps,
+            "primary_arm": args.primary_arm,
             "qwen_cache_storage": qwen_storage,
             "layer_results": layer_results,
             "aggregate": aggregate,
@@ -346,11 +411,11 @@ def main(argv: list[str] | None = None) -> dict:
             ],
         }
         mirror = _write_json_with_output_mirror(result_path, result, str(output_dir))
-        summary_path = output_dir / "extent-bridge-ablation-campaign-summary.md"
+        summary_path = output_dir / args.summary_filename
         summary_path.write_text(render_summary(result), encoding="utf-8")
         update_stage_manifest(
             stage_manifest,
-            experiment=CAMPAIGN_PROTOCOL,
+            experiment=args.campaign_protocol,
             stage="final",
             status="completed",
             details={
@@ -364,13 +429,13 @@ def main(argv: list[str] | None = None) -> dict:
             args.telegram,
             "Extent TPU campaign\n"
             f"status={'completed' if complete else 'deadline_partial'}\n"
-            "experiment=EXP-054 bridge initialization\n"
+            f"experiment={args.experiment_name}\n"
             f"layers={','.join(sorted(layer_results))}\n"
             f"numerical_pass={numerical_pass}\n"
             f"screening_gate={aggregate['screening_gate_passed']}",
         )
         print(
-            "EXP-054-COMPLETE "
+            f"{log_prefix.upper()}-COMPLETE "
             f"complete={complete} numerical_pass={numerical_pass} "
             f"screening_gate={aggregate['screening_gate_passed']}"
         )
@@ -381,7 +446,7 @@ def main(argv: list[str] | None = None) -> dict:
         return result
     except BaseException as exc:
         failure = {
-            "protocol": CAMPAIGN_PROTOCOL,
+            "protocol": args.campaign_protocol,
             "status": "failed",
             "failed_stage": current_stage,
             "error_type": type(exc).__name__,
@@ -391,11 +456,11 @@ def main(argv: list[str] | None = None) -> dict:
             "failed_at_utc": _utc_now(),
             "completed_layer_results": layer_results,
         }
-        failure_path = output_dir / "extent-bridge-ablation-campaign-failure.json"
+        failure_path = output_dir / f"{args.artifact_prefix}-campaign-failure.json"
         _write_json_with_output_mirror(failure_path, failure, str(output_dir))
         update_stage_manifest(
             stage_manifest,
-            experiment=CAMPAIGN_PROTOCOL,
+            experiment=args.campaign_protocol,
             stage=current_stage,
             status="failed",
             details={"error_type": type(exc).__name__, "error": str(exc)},
@@ -404,7 +469,7 @@ def main(argv: list[str] | None = None) -> dict:
             args.telegram,
             "Extent TPU campaign\n"
             "status=failed\n"
-            "experiment=EXP-054 bridge initialization\n"
+            f"experiment={args.experiment_name}\n"
             f"stage={current_stage}\n"
             f"error={type(exc).__name__}: {exc}",
         )

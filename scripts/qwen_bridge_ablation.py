@@ -477,8 +477,14 @@ def _train_recovery(
     }, completed == total_steps
 
 
-def aggregate_bridge_screen(layer_results: dict[str, dict]) -> dict:
+def aggregate_bridge_screen(
+    layer_results: dict[str, dict],
+    *,
+    primary_arm: str = "BRIDGE-PLUS-ORIENTATION",
+) -> dict:
     """Aggregate only complete paired cells; never reinterpret partial runs."""
+    if primary_arm == "CONTROL-RANDOM" or primary_arm not in ARM_ORDER:
+        raise ValueError("primary_arm must be a non-random registered arm")
     comparisons = {}
     screening_gate = True
     complete_layers = 0
@@ -511,7 +517,7 @@ def aggregate_bridge_screen(layer_results: dict[str, dict]) -> dict:
                     "wins_over_random": int(np.sum(difference < 0)),
                     "paired_seeds": len(values),
                 }
-            combined = layer_comparisons.get("BRIDGE-PLUS-ORIENTATION")
+            combined = layer_comparisons.get(primary_arm)
             screening_gate = screening_gate and bool(
                 combined
                 and combined["wins_over_random"] >= 2
@@ -528,9 +534,10 @@ def aggregate_bridge_screen(layer_results: dict[str, dict]) -> dict:
         "complete_layers": complete_layers,
         "screening_gate_passed": screening_gate,
         "gate_definition": (
-            "BRIDGE-PLUS-ORIENTATION beats CONTROL-RANDOM in at least 2/3 paired seeds "
+            f"{primary_arm} beats CONTROL-RANDOM in at least 2/3 paired seeds "
             "and in mean final decoder relative-L2 at every completed target layer"
         ),
+        "primary_arm": primary_arm,
     }
 
 
@@ -540,7 +547,7 @@ def main(
     deadline_monotonic: float | None = None,
 ) -> dict:
     parser = argparse.ArgumentParser(
-        description="Run one EXP-054 Qwen3-to-Mamba3 bridge initialization screen."
+        description="Run one Qwen3-to-Mamba3 bridge initialization screen."
     )
     parser.add_argument("--activation-cache-manifest", required=True)
     parser.add_argument("--activation-cache-dir")
@@ -553,6 +560,7 @@ def main(
     parser.add_argument("--orientation-steps", type=int, default=128)
     parser.add_argument("--learning-rate", type=float, default=3e-5)
     parser.add_argument("--bridge-learning-rate", type=float, default=1e-3)
+    parser.add_argument("--bridge-rope-fraction", type=float, default=1.0)
     parser.add_argument("--orientation-learning-rate", type=float, default=3e-5)
     parser.add_argument("--bridge-matrix-loss-weight", type=float, default=0.1)
     parser.add_argument("--decoder-loss-weight", type=float, default=1.0)
@@ -563,8 +571,10 @@ def main(
     parser.add_argument("--compute-dtype", default="bfloat16")
     parser.add_argument("--result-json", required=True)
     parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--experiment-protocol", default=PROTOCOL)
     parser.add_argument("--skip-hash-verification", action="store_true")
     args = parser.parse_args(argv)
+    log_prefix = args.experiment_protocol.split("-", 1)[0]
     checkpoints = _checkpoint_steps(args.checkpoints, args.total_steps)
     seeds = tuple(int(value.strip()) for value in args.seeds.split(",") if value.strip())
     if len(seeds) != len(set(seeds)) or not seeds or min(seeds) < 0:
@@ -598,7 +608,7 @@ def main(
     training_slice = _slice(layout, "training")
     training_count = training_slice.stop - training_slice.start
     if training_count != args.total_steps:
-        raise ValueError("EXP-054 requires one recovery window per requested step")
+        raise ValueError("bridge screen requires one recovery window per requested step")
     layer = int(train_manifest["target_layer"])
     if int(eval_manifest["target_layer"]) != layer:
         raise ValueError("training and evaluation caches target different layers")
@@ -611,7 +621,10 @@ def main(
         remat_policy="none",
     )
     mamba_config = Mamba3Config()
-    bridge_config = AttentionBridgeConfig(feature_dim=mamba_config.d_state)
+    bridge_config = AttentionBridgeConfig(
+        feature_dim=mamba_config.d_state,
+        rope_fraction=args.bridge_rope_fraction,
+    )
     config_payload = _read_json(QWEN3_14B.resolve_url("config.json"))
     index_payload = _read_json(QWEN3_14B.resolve_url("model.safetensors.index.json"))
     validate_source_metadata(config_payload, index_payload, QWEN3_14B)
@@ -670,7 +683,7 @@ def main(
 
     def persist(status: str) -> None:
         payload = {
-            "protocol": PROTOCOL,
+            "protocol": args.experiment_protocol,
             "status": status,
             "source": f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}",
             "target_layer": layer,
@@ -684,7 +697,7 @@ def main(
         if _deadline_reached(deadline_monotonic):
             complete = False
             break
-        print(f"exp054_layer={layer} seed={seed} bridge_stage=START")
+        print(f"{log_prefix}_layer={layer} seed={seed} bridge_stage=START")
         bridge_params, bridge_result, bridge_complete = _train_bridge(
             seed=seed,
             probe=probe,
@@ -792,7 +805,7 @@ def main(
             if _deadline_reached(deadline_monotonic):
                 complete = False
                 break
-            print(f"exp054_layer={layer} seed={seed} arm={arm} recovery=START")
+            print(f"{log_prefix}_layer={layer} seed={seed} arm={arm} recovery=START")
             initial, initializer_report = initializers[arm]
             calibrated, readout_report = _calibrate_readout(
                 mamba,
@@ -835,7 +848,7 @@ def main(
         jax.clear_caches()
 
     result = {
-        "protocol": PROTOCOL,
+        "protocol": args.experiment_protocol,
         "status": "completed" if complete else "deadline_partial",
         "source": f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}",
         "method": "apple_bridge_and_mohawk_orientation_initialization_screen",
@@ -871,7 +884,7 @@ def main(
         "complete": complete,
         "passed": numerical_pass,
         "notes": [
-            "All five arms receive the same 1024-step decoder-aware recovery schedule and paired data order.",
+            f"All five arms receive the same {args.total_steps}-step decoder-aware recovery schedule and paired data order.",
             "Bridge and orientation construction cost is recorded separately instead of hidden inside recovery tokens.",
             "APPLE-BRIDGE folds learned pre-softmax Hedgehog features into canonical Mamba-3; it is not exact HedgeMamba equivalence.",
             "MOHAWK-ORIENTATION matches a head-averaged Mamba-3 matrix proxy because Qwen and Mamba use unequal head counts.",
@@ -882,7 +895,8 @@ def main(
     print(f"result_json={result_path.resolve()}")
     if mirror:
         print(f"output_json={mirror.resolve()}")
-    print("EXP-054-LAYER-COMPLETE" if complete else "EXP-054-LAYER-DEADLINE-PARTIAL")
+    label = log_prefix.upper()
+    print(f"{label}-LAYER-COMPLETE" if complete else f"{label}-LAYER-DEADLINE-PARTIAL")
     return result
 
 

@@ -673,3 +673,17 @@ writes after each completed arm, sends Telegram start/final/failure messages,
 and returns `deadline_partial` rather than discarding finished comparisons when
 the internal wall deadline is reached. Download the compact summary, not the
 activation arrays.
+
+EXP-054 exposed unstable full-feature RoPE normalization and did not pass. Its
+separately numbered correction is EXP-055:
+
+```python
+from scripts.qwen_stabilized_bridge_campaign import main as run_stabilized_bridge
+
+result = run_stabilized_bridge([])
+print(result["status"], result["aggregate"]["screening_gate_passed"])
+```
+
+EXP-055 locks partial RoPE to the canonical Mamba-3 state fraction, restores the
+paper's cosine-only bridge objective, and compares all arms for 4,096 matched
+recovery steps. It does not overwrite or reinterpret EXP-054.

@@ -9,6 +9,7 @@ import numpy as np
 from extent import tiny_config
 from extent.attention_bridge import (
     AttentionBridgeConfig,
+    apply_bridge_rope,
     apply_attention_bridge,
     build_bridge_mamba3_initialization,
     create_bridge_train_step,
@@ -23,7 +24,6 @@ from extent.layers.mamba3 import Mamba3MIMO
 from extent.optimizer import create_lion
 from extent.qwen3_parity import jax_attention_params, layer_mapping_entries
 from extent.qwen3_teacher import Qwen3GQAAttention, tiny_qwen3_teacher_config
-from extent.qwen3_teacher import apply_qwen3_rope
 from extent.weight_mapping import expected_qwen_shape
 
 
@@ -72,12 +72,8 @@ def test_qwen_probe_and_recurrent_bridge_match_reference_and_explicit_form():
         components.query, bridge_params["query"]
     )
     key_features = hedgehog_features(components.key, bridge_params["key"])
-    query_features = apply_qwen3_rope(
-        query_features, positions, bridge_config.rope_theta
-    )
-    key_features = apply_qwen3_rope(
-        key_features, positions, bridge_config.rope_theta
-    )
+    query_features = apply_bridge_rope(query_features, positions, bridge_config)
+    key_features = apply_bridge_rope(key_features, positions, bridge_config)
     explicit_matrix = explicit_bridge_matrix(
         query_features,
         key_features,
@@ -97,6 +93,30 @@ def test_qwen_probe_and_recurrent_bridge_match_reference_and_explicit_form():
         np.asarray(bridge.matrix).sum(axis=-1), 1.0, rtol=2e-5, atol=2e-6
     )
     assert np.allclose(np.triu(np.asarray(bridge.matrix), k=1), 0.0)
+
+
+def test_partial_bridge_rope_preserves_positive_suffix_and_normalization():
+    config = AttentionBridgeConfig(feature_dim=8, rope_fraction=0.5)
+    features = jax.nn.softmax(
+        jax.random.normal(jax.random.key(22), (1, 6, 2, 8)), axis=-1
+    )
+    positions = jnp.arange(6, dtype=jnp.int32)[None]
+    rotated = apply_bridge_rope(features, positions, config)
+    np.testing.assert_allclose(
+        np.asarray(rotated[..., 2:4]), np.asarray(features[..., 2:4]), atol=0.0
+    )
+    np.testing.assert_allclose(
+        np.asarray(rotated[..., 6:]), np.asarray(features[..., 6:]), atol=0.0
+    )
+    assert np.all(np.asarray(rotated[..., 2:4]) > 0)
+    assert np.all(np.asarray(rotated[..., 6:]) > 0)
+    matrix = explicit_bridge_matrix(
+        rotated, rotated, positions, jnp.ones((1, 6), dtype=jnp.bool_), 1e-6
+    )
+    assert np.all(np.isfinite(np.asarray(matrix)))
+    np.testing.assert_allclose(
+        np.asarray(matrix).sum(axis=-1), 1.0, rtol=2e-5, atol=2e-6
+    )
 
 
 def test_qwen_probe_matches_bfloat16_teacher_path():

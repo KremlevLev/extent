@@ -51,6 +51,7 @@ class AttentionBridgeConfig:
     feature_dim: int = 64
     epsilon: float = 1e-6
     rope_theta: float = 1_000_000.0
+    rope_fraction: float = 1.0
 
     def __post_init__(self) -> None:
         if self.feature_dim < 2 or self.feature_dim % 2:
@@ -59,6 +60,11 @@ class AttentionBridgeConfig:
             raise ValueError("bridge epsilon must be positive")
         if self.rope_theta <= 0:
             raise ValueError("bridge rope_theta must be positive")
+        if not 0.0 <= self.rope_fraction <= 1.0:
+            raise ValueError("bridge rope_fraction must be in [0, 1]")
+        rotary_dim = int(self.feature_dim * self.rope_fraction)
+        if rotary_dim % 2:
+            raise ValueError("bridge rotary dimension must be even")
 
 
 class QwenAttentionComponents(NamedTuple):
@@ -181,6 +187,42 @@ def hedgehog_features(x: jax.Array, params: Mapping) -> jax.Array:
     return jax.nn.softmax(paired, axis=-1)
 
 
+def apply_bridge_rope(
+    features: jax.Array,
+    positions: jax.Array,
+    config: AttentionBridgeConfig,
+) -> jax.Array:
+    """Apply split-half RoPE to only the configured Hedgehog feature prefix.
+
+    Apple HedgeMamba keeps a non-rotary positive feature suffix because its
+    Pythia teacher uses partial RoPE.  Keeping the fraction explicit is also
+    essential for Mamba-3, whose canonical state rotation covers only
+    ``Mamba3Config.rope_fraction`` of the B/C state dimensions.
+    """
+    rotary_dim = int(config.feature_dim * config.rope_fraction)
+    if rotary_dim == 0:
+        return features
+    half = config.feature_dim // 2
+    rotary_pairs = rotary_dim // 2
+    selected = jnp.concatenate(
+        (
+            features[..., :rotary_pairs],
+            features[..., half : half + rotary_pairs],
+        ),
+        axis=-1,
+    )
+    rotated = apply_qwen3_rope(selected, positions, config.rope_theta)
+    return jnp.concatenate(
+        (
+            rotated[..., :rotary_pairs],
+            features[..., rotary_pairs:half],
+            rotated[..., rotary_pairs:],
+            features[..., half + rotary_pairs :],
+        ),
+        axis=-1,
+    )
+
+
 def _causal_mask(
     positions: jax.Array, attention_mask: jax.Array | None
 ) -> jax.Array:
@@ -266,12 +308,8 @@ def apply_attention_bridge(
     """Apply the learned bridge with a linear-time value recurrence."""
     query_features = hedgehog_features(teacher.query, bridge_params["query"])
     key_features = hedgehog_features(teacher.key, bridge_params["key"])
-    query_features = apply_qwen3_rope(
-        query_features, positions, config.rope_theta
-    )
-    key_features = apply_qwen3_rope(
-        key_features, positions, config.rope_theta
-    )
+    query_features = apply_bridge_rope(query_features, positions, config)
+    key_features = apply_bridge_rope(key_features, positions, config)
     matrix = explicit_bridge_matrix(
         query_features,
         key_features,
