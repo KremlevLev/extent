@@ -151,6 +151,115 @@ def _compact_boundary_stages(payload: dict) -> list[dict]:
     return compact
 
 
+def _compact_onset_localization(payload: dict) -> dict | None:
+    aggregate = payload.get("aggregate", {})
+    onset = aggregate.get("incremental_onset")
+    attribution = aggregate.get("single_addition_attribution")
+    layouts = aggregate.get("matched_layouts")
+    if not onset or not attribution or not layouts:
+        return None
+    transitions = []
+    for stage in onset.get("stages", []):
+        bootstrap = stage.get("bootstrap", {})
+        transitions.append(
+            {
+                "lower_replacement_count": stage.get(
+                    "lower_replacement_count"
+                ),
+                "upper_replacement_count": stage.get(
+                    "upper_replacement_count"
+                ),
+                "added_layers": stage.get("added_layers"),
+                "expected_added_excess_nll_mean": stage.get(
+                    "expected_added_excess_nll_mean"
+                ),
+                "observed_added_excess_nll_mean": stage.get(
+                    "observed_added_excess_nll_mean"
+                ),
+                "incremental_interaction_nll_mean": stage.get(
+                    "incremental_interaction_nll_mean"
+                ),
+                "incremental_inflation_ratio_mean": stage.get(
+                    "incremental_inflation_ratio_mean"
+                ),
+                "positive_interaction_wins": stage.get(
+                    "positive_interaction_wins"
+                ),
+                "interaction_adjusted_ci": bootstrap.get(
+                    "incremental_interaction_nll_adjusted_ci"
+                ),
+                "inflation_adjusted_ci": bootstrap.get(
+                    "incremental_inflation_ratio_adjusted_ci"
+                ),
+                "adjusted_confidence_level": bootstrap.get(
+                    "adjusted_confidence_level"
+                ),
+                "superadditive_onset_detected": stage.get(
+                    "superadditive_onset_detected"
+                ),
+            }
+        )
+    single_layers = []
+    for layer in attribution.get("layers", []):
+        bootstrap = layer.get("bootstrap", {})
+        single_layers.append(
+            {
+                "layer": layer.get("layer"),
+                "standalone_expected_excess_nll_mean": layer.get(
+                    "standalone_expected_excess_nll_mean"
+                ),
+                "conditional_added_excess_nll_mean": layer.get(
+                    "conditional_added_excess_nll_mean"
+                ),
+                "conditional_interaction_nll_mean": layer.get(
+                    "conditional_interaction_nll_mean"
+                ),
+                "conditional_amplification_ratio_mean": layer.get(
+                    "conditional_amplification_ratio_mean"
+                ),
+                "positive_interaction_wins": layer.get(
+                    "positive_interaction_wins"
+                ),
+                "interaction_adjusted_ci": bootstrap.get(
+                    "conditional_interaction_nll_adjusted_ci"
+                ),
+                "amplification_adjusted_ci": bootstrap.get(
+                    "conditional_amplification_ratio_adjusted_ci"
+                ),
+                "adjusted_confidence_level": bootstrap.get(
+                    "adjusted_confidence_level"
+                ),
+                "context_sensitive_layer_detected": layer.get(
+                    "context_sensitive_layer_detected"
+                ),
+            }
+        )
+    return {
+        "earliest_detected_upper_count": onset.get(
+            "earliest_detected_upper_count"
+        ),
+        "onset_localization_gate_passed": aggregate.get(
+            "onset_localization_gate_passed"
+        ),
+        "context_sensitive_layers": attribution.get(
+            "context_sensitive_layers"
+        ),
+        "first_order_attribution_gate_passed": aggregate.get(
+            "first_order_attribution_gate_passed"
+        ),
+        "transitions": transitions,
+        "single_additions": single_layers,
+        "matched_layouts": {
+            "layouts": layouts.get("layouts"),
+            "pairwise_comparisons": layouts.get("pairwise_comparisons"),
+            "best_layout": layouts.get("best_layout"),
+            "worst_layout": layouts.get("worst_layout"),
+            "layout_spread_nll": layouts.get("layout_spread_nll"),
+            "bootstrap": layouts.get("bootstrap"),
+        },
+    }
+
+
 def build_compact_summary(payload: dict) -> dict:
     """Reduce a full campaign artifact to its scientific decision surface."""
     summary: dict[str, Any] = {
@@ -232,6 +341,9 @@ def build_compact_summary(payload: dict) -> dict:
                 ),
             },
         }
+    onset = _compact_onset_localization(payload)
+    if onset:
+        summary["composition_onset"] = onset
     context = payload.get("context_aggregate")
     if context:
         summary["context_transfer"] = {
@@ -404,6 +516,107 @@ def render_summary_markdown(summary: dict) -> str:
             f"`{boundary['composition_scaling_gate_passed']}`; "
             "boundary-mechanism gate: "
             f"`{boundary['boundary_mechanism_gate_passed']}`."
+        )
+    onset = summary.get("composition_onset")
+    if onset:
+        lines.extend(["", "## Incremental onset localization", ""])
+        lines.append(
+            "| Transition | Added layers | Expected | Observed | Interaction "
+            "| Inflation | Adjusted interaction CI | Adjusted inflation CI "
+            "| Wins | Detected |"
+        )
+        lines.append(
+            "|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|"
+        )
+        for stage in onset["transitions"]:
+            interaction_ci = stage.get("interaction_adjusted_ci") or [None, None]
+            inflation_ci = stage.get("inflation_adjusted_ci") or [None, None]
+            inflation = stage.get("incremental_inflation_ratio_mean")
+            inflation_text = (
+                f"{inflation:.4f}" if inflation is not None else "n/a"
+            )
+            inflation_ci_text = (
+                f"[{inflation_ci[0]:.4f}, {inflation_ci[1]:.4f}]"
+                if inflation_ci[0] is not None and inflation_ci[1] is not None
+                else "n/a"
+            )
+            lines.append(
+                f"| {stage['lower_replacement_count']}→"
+                f"{stage['upper_replacement_count']} "
+                f"| {','.join(str(layer) for layer in stage['added_layers'])} "
+                f"| {stage['expected_added_excess_nll_mean']:.8f} "
+                f"| {stage['observed_added_excess_nll_mean']:.8f} "
+                f"| {stage['incremental_interaction_nll_mean']:.8f} "
+                f"| {inflation_text} "
+                f"| [{interaction_ci[0]:.4f}, {interaction_ci[1]:.4f}] "
+                f"| {inflation_ci_text} "
+                f"| {stage['positive_interaction_wins']}/3 "
+                f"| {stage['superadditive_onset_detected']} |"
+            )
+        lines.append("")
+        lines.append(
+            "- Earliest corrected onset: "
+            f"`{onset['earliest_detected_upper_count']}` replacements; gate: "
+            f"`{onset['onset_localization_gate_passed']}`."
+        )
+        lines.extend(["", "## Conditional single additions over base-8", ""])
+        lines.append(
+            "| Layer | Standalone expected | Conditional added | Interaction "
+            "| Amplification | Adjusted interaction CI | Adjusted ratio CI "
+            "| Wins | Context-sensitive |"
+        )
+        lines.append("|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+        for layer in onset["single_additions"]:
+            interaction_ci = layer.get("interaction_adjusted_ci") or [None, None]
+            ratio_ci = layer.get("amplification_adjusted_ci") or [None, None]
+            ratio = layer.get("conditional_amplification_ratio_mean")
+            ratio_text = f"{ratio:.4f}" if ratio is not None else "n/a"
+            ratio_ci_text = (
+                f"[{ratio_ci[0]:.4f}, {ratio_ci[1]:.4f}]"
+                if ratio_ci[0] is not None and ratio_ci[1] is not None
+                else "n/a"
+            )
+            lines.append(
+                f"| {layer['layer']} "
+                f"| {layer['standalone_expected_excess_nll_mean']:.8f} "
+                f"| {layer['conditional_added_excess_nll_mean']:.8f} "
+                f"| {layer['conditional_interaction_nll_mean']:.8f} "
+                f"| {ratio_text} "
+                f"| [{interaction_ci[0]:.4f}, {interaction_ci[1]:.4f}] "
+                f"| {ratio_ci_text} "
+                f"| {layer['positive_interaction_wins']}/3 "
+                f"| {layer['context_sensitive_layer_detected']} |"
+            )
+        lines.append("")
+        lines.append(
+            "- Context-sensitive layers: "
+            f"`{onset['context_sensitive_layers']}`; attribution gate: "
+            f"`{onset['first_order_attribution_gate_passed']}`."
+        )
+        layouts = onset["matched_layouts"]
+        lines.extend(["", "## Matched 12-layer layouts", ""])
+        lines.append("| Layout | Mean excess NLL |")
+        lines.append("|---|---:|")
+        for layout in layouts["layouts"]:
+            lines.append(
+                f"| {layout['layout']} | {layout['excess_nll_mean']:.8f} |"
+            )
+        if layouts["pairwise_comparisons"]:
+            lines.extend(["", "| Contrast | Mean ΔNLL | Adjusted CI | Resolved |"])
+            lines.append("|---|---:|---:|---:|")
+            for comparison in layouts["pairwise_comparisons"]:
+                interval = comparison.get("adjusted_ci") or [None, None]
+                lines.append(
+                    f"| {comparison['left']}−{comparison['right']} "
+                    f"| {comparison['mean_nll_difference']:.8f} "
+                    f"| [{interval[0]:.4f}, {interval[1]:.4f}] "
+                    f"| {comparison['resolved']} |"
+                )
+        lines.append("")
+        lines.append(
+            f"- Best / worst: `{layouts['best_layout']}` / "
+            f"`{layouts['worst_layout']}`; spread "
+            f"`{layouts['layout_spread_nll']:.8f}`."
         )
     context = summary.get("context_transfer")
     if context:

@@ -201,6 +201,8 @@ def main(argv: list[str] | None = None) -> dict:
             "exp051-long",
             "exp052-short",
             "exp052-long",
+            "exp053-short",
+            "exp053-long",
         ),
         default="exp045",
     )
@@ -251,6 +253,10 @@ def main(argv: list[str] | None = None) -> dict:
         raise ValueError("EXP-052 short recovery requires exactly 2,048 steps")
     if args.experiment == "exp052-long" and args.total_steps != 8192:
         raise ValueError("EXP-052 long recovery requires exactly 8,192 steps")
+    if args.experiment == "exp053-short" and args.total_steps != 2048:
+        raise ValueError("EXP-053 short recovery requires exactly 2,048 steps")
+    if args.experiment == "exp053-long" and args.total_steps != 8192:
+        raise ValueError("EXP-053 long recovery requires exactly 8,192 steps")
     target_layers = tuple(
         int(value.strip())
         for value in (
@@ -283,7 +289,11 @@ def main(argv: list[str] | None = None) -> dict:
                     else (
                         "exp052-boundary-scaling"
                         if args.experiment.startswith("exp052-")
-                        else f"{args.experiment}-depth-objective"
+                        else (
+                            "exp053-onset-localization"
+                            if args.experiment.startswith("exp053-")
+                            else f"{args.experiment}-depth-objective"
+                        )
                     )
                 )
             )

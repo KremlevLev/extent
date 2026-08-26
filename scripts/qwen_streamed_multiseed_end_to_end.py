@@ -76,6 +76,7 @@ OBJECTIVE_COMPARISON_PROTOCOLS = frozenset(
         "exp050-depth-scaling-atlas",
         "exp051-progressive-composition",
         "exp052-boundary-scaling",
+        "exp053-onset-localization",
     }
 )
 EXTERNAL_EVALUATION_PROTOCOLS = OBJECTIVE_COMPARISON_PROTOCOLS | {
@@ -94,6 +95,7 @@ PROTOCOL_METHODS = {
     "exp050-depth-scaling-atlas": "depth_scaling_atlas_objective_comparison",
     "exp051-progressive-composition": "progressive_composition_standalone_objective_comparison",
     "exp052-boundary-scaling": "boundary_scaling_standalone_objective_comparison",
+    "exp053-onset-localization": "composition_onset_standalone_objective_comparison",
 }
 PROTOCOL_NOTES = {
     "exp041": "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance.",
@@ -107,6 +109,7 @@ PROTOCOL_NOTES = {
     "exp050-depth-scaling-atlas": "Three new decoder depths test whether long-budget benefit decays systematically with layer index.",
     "exp051-progressive-composition": "Standalone JOINT endpoints provide paired additive controls for the frozen 2/4/8-layer composition test.",
     "exp052-boundary-scaling": "Standalone JOINT endpoints provide paired controls for 8-to-16-layer scaling and layer-0 boundary ablations.",
+    "exp053-onset-localization": "Standalone JOINT endpoints support multiplicity-corrected onset, conditional-addition, and matched-layout tests.",
 }
 PROTOCOL_LABELS = {
     "exp041": "MULTISEED-STREAMED-END-TO-END",
@@ -120,6 +123,7 @@ PROTOCOL_LABELS = {
     "exp050-depth-scaling-atlas": "DEPTH-SCALING-ATLAS-COMPARISON",
     "exp051-progressive-composition": "PROGRESSIVE-COMPOSITION-STANDALONE",
     "exp052-boundary-scaling": "BOUNDARY-SCALING-STANDALONE",
+    "exp053-onset-localization": "COMPOSITION-ONSET-STANDALONE",
 }
 
 
@@ -391,10 +395,11 @@ def main(argv: list[str] | None = None) -> dict:
         "exp050-depth-scaling-atlas",
         "exp051-progressive-composition",
         "exp052-boundary-scaling",
+        "exp053-onset-localization",
     }:
         if args.total_steps not in {2048, 8192}:
             raise ValueError(
-                "EXP-049/050/051/052 requires 2,048 or 8,192 training steps"
+                "EXP-049/050/051/052/053 requires 2,048 or 8,192 training steps"
             )
     elif args.total_steps != 1024:
         raise ValueError("the selected protocol requires exactly 1,024 steps")
@@ -491,6 +496,7 @@ def main(argv: list[str] | None = None) -> dict:
             "exp050-depth-scaling-atlas": 0.0,
             "exp051-progressive-composition": 0.0,
             "exp052-boundary-scaling": 0.0,
+            "exp053-onset-localization": 0.0,
         }[args.protocol]
     if not 0.0 <= required_recovery <= 1.0:
         raise ValueError("required recovery fraction must be in [0, 1]")
@@ -532,6 +538,9 @@ def main(argv: list[str] | None = None) -> dict:
         ),
         "exp052-boundary-scaling": (
             f"exp052-step{args.total_steps}-layer{args.target_layer}"
+        ),
+        "exp053-onset-localization": (
+            f"exp053-step{args.total_steps}-layer{args.target_layer}"
         ),
     }[args.protocol]
     if context_transfer:

@@ -24,6 +24,7 @@ from scripts.qwen_streamed_end_to_end_shock import (
 )
 from scripts.qwen_streamed_multiseed_end_to_end import branch_divergence
 from extent.boundary_composition import analyze_boundary_scaling
+from extent.composition_onset import analyze_composition_onset
 from extent.config import Mamba3Config
 from extent.decoder_replacement_eval import (
     Qwen3DecoderTail,
@@ -187,7 +188,11 @@ def main(argv: list[str] | None = None) -> dict:
     if any(0 not in layers for layers in layer_sets.values()):
         raise ValueError("every progressive branch must include replacement layer 0")
     analysis_mode = endpoint_index.get("analysis_mode", "progressive")
-    if analysis_mode not in {"progressive", "boundary_scaling"}:
+    if analysis_mode not in {
+        "progressive",
+        "boundary_scaling",
+        "onset_localization",
+    }:
         raise ValueError(f"unsupported composition analysis mode: {analysis_mode}")
     raw_branch_sets = endpoint_index.get("branch_sets")
     branch_sets = (
@@ -544,11 +549,11 @@ def main(argv: list[str] | None = None) -> dict:
         ]
         for layer in target_layers
     }
-    analysis_function = (
-        analyze_boundary_scaling
-        if analysis_mode == "boundary_scaling"
-        else analyze_progressive_composition
-    )
+    analysis_function = {
+        "progressive": analyze_progressive_composition,
+        "boundary_scaling": analyze_boundary_scaling,
+        "onset_localization": analyze_composition_onset,
+    }[analysis_mode]
     aggregate = analysis_function(
         seeds=seeds,
         layer_sets=layer_sets,

@@ -160,3 +160,79 @@ def test_compact_summary_includes_boundary_and_incremental_tables():
     rendered = render_summary_markdown(summary)
     assert "Layer-0 boundary decomposition" in rendered
     assert "Incremental 8-to-16 scaling" in rendered
+
+
+def test_compact_summary_includes_onset_single_and_layout_tables():
+    payload = _payload()
+    payload["aggregate"] = {
+        "stages": [],
+        "onset_localization_gate_passed": True,
+        "first_order_attribution_gate_passed": True,
+        "incremental_onset": {
+            "earliest_detected_upper_count": 10,
+            "stages": [
+                {
+                    "lower_replacement_count": 8,
+                    "upper_replacement_count": 10,
+                    "added_layers": [1, 36],
+                    "expected_added_excess_nll_mean": 0.02,
+                    "observed_added_excess_nll_mean": 0.08,
+                    "incremental_interaction_nll_mean": 0.06,
+                    "incremental_inflation_ratio_mean": 4.0,
+                    "positive_interaction_wins": 3,
+                    "bootstrap": {
+                        "adjusted_confidence_level": 0.9875,
+                        "incremental_interaction_nll_adjusted_ci": [0.04, 0.08],
+                        "incremental_inflation_ratio_adjusted_ci": [2.0, 6.0],
+                    },
+                    "superadditive_onset_detected": True,
+                }
+            ],
+        },
+        "single_addition_attribution": {
+            "context_sensitive_layers": [1],
+            "layers": [
+                {
+                    "layer": 1,
+                    "standalone_expected_excess_nll_mean": 0.01,
+                    "conditional_added_excess_nll_mean": 0.05,
+                    "conditional_interaction_nll_mean": 0.04,
+                    "conditional_amplification_ratio_mean": 5.0,
+                    "positive_interaction_wins": 3,
+                    "bootstrap": {
+                        "adjusted_confidence_level": 0.99375,
+                        "conditional_interaction_nll_adjusted_ci": [0.02, 0.06],
+                        "conditional_amplification_ratio_adjusted_ci": [2.0, 8.0],
+                    },
+                    "context_sensitive_layer_detected": True,
+                }
+            ],
+        },
+        "matched_layouts": {
+            "layouts": [
+                {"layout": "EARLY", "excess_nll_mean": 0.9},
+                {"layout": "BALANCED", "excess_nll_mean": 0.8},
+                {"layout": "LATE", "excess_nll_mean": 0.7},
+            ],
+            "pairwise_comparisons": [
+                {
+                    "left": "EARLY",
+                    "right": "LATE",
+                    "mean_nll_difference": 0.2,
+                    "adjusted_ci": [0.1, 0.3],
+                    "resolved": True,
+                }
+            ],
+            "best_layout": "LATE",
+            "worst_layout": "EARLY",
+            "layout_spread_nll": 0.2,
+            "bootstrap": {},
+        },
+    }
+    summary = build_compact_summary(payload)
+    assert summary["composition_onset"]["earliest_detected_upper_count"] == 10
+    rendered = render_summary_markdown(summary)
+    assert "Incremental onset localization" in rendered
+    assert "Conditional single additions" in rendered
+    assert "Matched 12-layer layouts" in rendered
+    assert "EARLY−LATE" in rendered

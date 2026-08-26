@@ -156,3 +156,40 @@ print(
 ```
 
 Telegram start, completion, and caught-failure notifications are enabled. A false scientific gate is a normal completed run. For handoff, download only `extent-boundary-scaling-campaign-summary.md`; do not download checkpoints or caches. On a caught failure retrieve `extent-boundary-scaling-failure.json` and `exp052-campaign-stage-manifest.json`. If the same interactive session remains alive, rerun the identical `run_boundary_scaling([])` call to reuse completed layer boundaries.
+
+## EXP-053: composition-onset localization
+
+Run as one Kaggle `Save Version` cloud job on a fresh TPU v5e-8 session. It regenerates the same 16 frozen endpoints, then evaluates 46 paired branches: nested 8/10/12/14/16 compositions, each new layer individually over base-8, and matched early/balanced/late 12-layer layouts. Expected runtime is approximately 7--8 hours.
+
+```python
+from scripts.qwen_composition_onset_campaign import main as run_onset
+
+result = run_onset([])
+print("EXP-053 numerical pass:", result["passed"])
+print(
+    "EXP-053 onset gate:",
+    result["aggregate"]["onset_localization_gate_passed"],
+)
+print(
+    "EXP-053 attribution gate:",
+    result["aggregate"]["first_order_attribution_gate_passed"],
+)
+print(
+    "earliest onset:",
+    result["aggregate"]["incremental_onset"][
+        "earliest_detected_upper_count"
+    ],
+)
+print(
+    "context-sensitive layers:",
+    result["aggregate"]["single_addition_attribution"][
+        "context_sensitive_layers"
+    ],
+)
+print(
+    "summary: /kaggle/working/output/"
+    "extent-composition-onset-campaign-summary.md"
+)
+```
+
+Use this single call after clone/install. Do not run `pytest`, `jax.devices()`, or another Python process before it. Telegram start/completion/failure messages are enabled, and false gates still produce a successful completed artifact. Download only `extent-composition-onset-campaign-summary.md`. On a caught error retrieve `extent-composition-onset-failure.json` and `exp053-campaign-stage-manifest.json`; do not download endpoint payloads.
