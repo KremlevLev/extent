@@ -650,3 +650,26 @@ qwen_mamba3_readout_probe([
 Compare each `raw_plus_mamba_heldout` entry with
 `raw_normalized_hidden_control.heldout`. The Mamba representation adds useful
 context only when the former improves held-out relative L2 and cosine.
+
+## Time-bounded attention bridge screen
+
+When only four TPU hours are available, defer the 7--8-hour EXP-053 campaign and
+run EXP-054 instead. It compares canonical random initialization, the rejected
+direct QKVO control, an Apple-inspired learned linear-attention bridge, a
+MOHAWK-inspired Mamba-3 matrix-orientation warm start, and their composition at
+Qwen layers 18 and 0. Every arm receives the same decoder-aware recovery budget;
+initializer construction work is reported separately.
+
+```python
+from scripts.qwen_bridge_ablation_campaign import main as run_bridge_screen
+
+result = run_bridge_screen(["--max-wall-hours", "3.5"])
+print(result["status"], result["aggregate"]["screening_gate_passed"])
+print("/kaggle/working/output/extent-bridge-ablation-campaign-summary.md")
+```
+
+Run this as the first JAX use in a fresh TPU v5e-8 notebook process. The campaign
+writes after each completed arm, sends Telegram start/final/failure messages,
+and returns `deadline_partial` rather than discarding finished comparisons when
+the internal wall deadline is reached. Download the compact summary, not the
+activation arrays.

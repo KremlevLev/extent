@@ -193,3 +193,30 @@ print(
 ```
 
 Use this single call after clone/install. Do not run `pytest`, `jax.devices()`, or another Python process before it. Telegram start/completion/failure messages are enabled, and false gates still produce a successful completed artifact. Download only `extent-composition-onset-campaign-summary.md`. On a caught error retrieve `extent-composition-onset-failure.json` and `exp053-campaign-stage-manifest.json`; do not download endpoint payloads.
+
+## EXP-054: four-hour bridge initialization screen
+
+EXP-053 is deferred when fewer than eight TPU hours remain. On a fresh Kaggle TPU v5e-8 `Save Version` job, run only this cell after cloning the current commit and installing `requirements-tpu.txt`. Do not call `jax.devices()`, `pytest`, `%run`, or start another Python process first.
+
+```python
+from scripts.qwen_bridge_ablation_campaign import main as run_bridge_screen
+
+result = run_bridge_screen([
+    "--max-wall-hours", "3.5",
+])
+print("EXP-054 status:", result["status"])
+print("EXP-054 numerical pass:", result["passed"])
+print("EXP-054 complete:", result["complete"])
+print(
+    "EXP-054 screening gate:",
+    result["aggregate"]["screening_gate_passed"],
+)
+print(
+    "summary: /kaggle/working/output/"
+    "extent-bridge-ablation-campaign-summary.md"
+)
+```
+
+The runner prioritizes layer 18, then layer 0; within each seed it records random, Apple bridge, combined bridge+orientation, MOHAWK orientation, and direct-QKVO controls. It writes a partial JSON after every completed arm and stops cleanly at the 3.5-hour deadline. Telegram reports start, normal completion, deadline-partial completion, or a caught failure.
+
+Download only `extent-bridge-ablation-campaign-summary.md`. If the screen ends at the deadline, also download `extent-bridge-ablation-campaign.json`; the completed arms remain scientifically usable and `complete=false` prevents accidental treatment as the full protocol. On failure download `extent-bridge-ablation-campaign-failure.json` and `exp054-campaign-stage-manifest.json`. Do not download NPY caches or Qwen shards.
