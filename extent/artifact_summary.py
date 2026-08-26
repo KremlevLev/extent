@@ -114,6 +114,43 @@ def _compact_progressive_stages(payload: dict) -> list[dict]:
     return compact
 
 
+def _compact_boundary_stages(payload: dict) -> list[dict]:
+    compact = []
+    boundary = payload.get("aggregate", {}).get("boundary_analysis", {})
+    for stage in boundary.get("stages", []):
+        bootstrap = stage.get("bootstrap", {})
+        compact.append(
+            {
+                "replacement_count": stage.get("replacement_count"),
+                "internal_replacement_count": stage.get(
+                    "internal_replacement_count"
+                ),
+                "layer0_only_excess_nll_mean": stage.get(
+                    "layer0_only_excess_nll_mean"
+                ),
+                "internal_only_excess_nll_mean": stage.get(
+                    "internal_only_excess_nll_mean"
+                ),
+                "full_composition_excess_nll_mean": stage.get(
+                    "full_composition_excess_nll_mean"
+                ),
+                "boundary_interaction_nll_mean": stage.get(
+                    "boundary_interaction_nll_mean"
+                ),
+                "internal_minus_layer0_95ci": bootstrap.get(
+                    "internal_minus_layer0_95ci"
+                ),
+                "boundary_interaction_nll_95ci": bootstrap.get(
+                    "boundary_interaction_nll_95ci"
+                ),
+                "mechanism_gate_passed": stage.get(
+                    "mechanism_gate_passed"
+                ),
+            }
+        )
+    return compact
+
+
 def build_compact_summary(payload: dict) -> dict:
     """Reduce a full campaign artifact to its scientific decision surface."""
     summary: dict[str, Any] = {
@@ -150,6 +187,50 @@ def build_compact_summary(payload: dict) -> dict:
                 "baseline_reproduction"
             ),
             "stages": progressive,
+        }
+    boundary = _compact_boundary_stages(payload)
+    if boundary:
+        aggregate = payload.get("aggregate", {})
+        incremental = aggregate.get("incremental_scaling", {})
+        incremental_bootstrap = incremental.get("bootstrap", {})
+        summary["boundary_scaling"] = {
+            "composition_scaling_gate_passed": aggregate.get(
+                "composition_scaling_gate_passed"
+            ),
+            "boundary_mechanism_gate_passed": aggregate.get(
+                "boundary_mechanism_gate_passed"
+            ),
+            "stages": boundary,
+            "incremental": {
+                "lower_replacement_count": incremental.get(
+                    "lower_replacement_count"
+                ),
+                "upper_replacement_count": incremental.get(
+                    "upper_replacement_count"
+                ),
+                "added_layers": incremental.get("added_layers"),
+                "expected_added_excess_nll_mean": incremental.get(
+                    "expected_added_excess_nll_mean"
+                ),
+                "observed_added_excess_nll_mean": incremental.get(
+                    "observed_added_excess_nll_mean"
+                ),
+                "incremental_interaction_nll_mean": incremental.get(
+                    "incremental_interaction_nll_mean"
+                ),
+                "incremental_inflation_ratio_mean": incremental.get(
+                    "incremental_inflation_ratio_mean"
+                ),
+                "incremental_inflation_ratio_95ci": incremental_bootstrap.get(
+                    "incremental_inflation_ratio_95ci"
+                ),
+                "seed_inflation_passes": incremental.get(
+                    "seed_inflation_passes"
+                ),
+                "scientific_gate_passed": incremental.get(
+                    "scientific_gate_passed"
+                ),
+            },
         }
     context = payload.get("context_aggregate")
     if context:
@@ -263,6 +344,66 @@ def render_summary_markdown(summary: dict) -> str:
         lines.append(
             "- Primary replacement count: "
             f"`{progressive.get('primary_replacement_count')}`."
+        )
+    boundary = summary.get("boundary_scaling")
+    if boundary:
+        lines.extend(["", "## Layer-0 boundary decomposition", ""])
+        lines.append(
+            "| Full replacements | Internal replacements | Layer 0 excess "
+            "| Internal excess | Full excess | Boundary interaction "
+            "| Internal−layer 0 CI | Interaction CI | Gate |"
+        )
+        lines.append("|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+        for stage in boundary["stages"]:
+            dominance_ci = stage.get("internal_minus_layer0_95ci") or [None, None]
+            interaction_ci = stage.get("boundary_interaction_nll_95ci") or [
+                None,
+                None,
+            ]
+            lines.append(
+                f"| {stage['replacement_count']} "
+                f"| {stage['internal_replacement_count']} "
+                f"| {stage['layer0_only_excess_nll_mean']:.8f} "
+                f"| {stage['internal_only_excess_nll_mean']:.8f} "
+                f"| {stage['full_composition_excess_nll_mean']:.8f} "
+                f"| {stage['boundary_interaction_nll_mean']:.8f} "
+                f"| [{dominance_ci[0]:.4f}, {dominance_ci[1]:.4f}] "
+                f"| [{interaction_ci[0]:.4f}, {interaction_ci[1]:.4f}] "
+                f"| {stage['mechanism_gate_passed']} |"
+            )
+        incremental = boundary["incremental"]
+        interval = incremental.get("incremental_inflation_ratio_95ci") or [
+            None,
+            None,
+        ]
+        ratio = incremental.get("incremental_inflation_ratio_mean")
+        ratio_text = f"{ratio:.4f}" if ratio is not None else "n/a"
+        interval_text = (
+            f"[{interval[0]:.4f}, {interval[1]:.4f}]"
+            if interval[0] is not None and interval[1] is not None
+            else "n/a"
+        )
+        lines.extend(["", "## Incremental 8-to-16 scaling", ""])
+        lines.append(
+            "- Added layers: `"
+            + ",".join(str(layer) for layer in incremental["added_layers"])
+            + "`."
+        )
+        lines.append(
+            "- Expected / observed added excess NLL: "
+            f"`{incremental['expected_added_excess_nll_mean']:.8f}` / "
+            f"`{incremental['observed_added_excess_nll_mean']:.8f}`."
+        )
+        lines.append(
+            "- Incremental interaction / inflation: "
+            f"`{incremental['incremental_interaction_nll_mean']:.8f}` / "
+            f"`{ratio_text}`; 95% CI `{interval_text}`."
+        )
+        lines.append(
+            "- Composition-scaling gate: "
+            f"`{boundary['composition_scaling_gate_passed']}`; "
+            "boundary-mechanism gate: "
+            f"`{boundary['boundary_mechanism_gate_passed']}`."
         )
     context = summary.get("context_transfer")
     if context:

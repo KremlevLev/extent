@@ -35,6 +35,7 @@ from extent.decoder_replacement_eval import (
 )
 from extent.hardware import recommended_compute_dtype
 from extent.endpoint_checkpoint import (
+    endpoint_checkpoint_supports_arms,
     restore_endpoint_checkpoint,
     save_endpoint_checkpoint,
 )
@@ -74,6 +75,7 @@ OBJECTIVE_COMPARISON_PROTOCOLS = frozenset(
         "exp049-extended-horizon",
         "exp050-depth-scaling-atlas",
         "exp051-progressive-composition",
+        "exp052-boundary-scaling",
     }
 )
 EXTERNAL_EVALUATION_PROTOCOLS = OBJECTIVE_COMPARISON_PROTOCOLS | {
@@ -91,6 +93,7 @@ PROTOCOL_METHODS = {
     "exp049-extended-horizon": "extended_horizon_transplant_scaling_comparison",
     "exp050-depth-scaling-atlas": "depth_scaling_atlas_objective_comparison",
     "exp051-progressive-composition": "progressive_composition_standalone_objective_comparison",
+    "exp052-boundary-scaling": "boundary_scaling_standalone_objective_comparison",
 }
 PROTOCOL_NOTES = {
     "exp041": "The first configured seed must reproduce the archived EXP-040 NLL values within the frozen tolerance.",
@@ -103,6 +106,7 @@ PROTOCOL_NOTES = {
     "exp049-extended-horizon": "The 2,048-step and 8,192-step arms test whether the depth-dependent scaling sign persists at a larger one-pass recovery budget.",
     "exp050-depth-scaling-atlas": "Three new decoder depths test whether long-budget benefit decays systematically with layer index.",
     "exp051-progressive-composition": "Standalone JOINT endpoints provide paired additive controls for the frozen 2/4/8-layer composition test.",
+    "exp052-boundary-scaling": "Standalone JOINT endpoints provide paired controls for 8-to-16-layer scaling and layer-0 boundary ablations.",
 }
 PROTOCOL_LABELS = {
     "exp041": "MULTISEED-STREAMED-END-TO-END",
@@ -115,6 +119,7 @@ PROTOCOL_LABELS = {
     "exp049-extended-horizon": "EXTENDED-HORIZON-OBJECTIVE-COMPARISON",
     "exp050-depth-scaling-atlas": "DEPTH-SCALING-ATLAS-COMPARISON",
     "exp051-progressive-composition": "PROGRESSIVE-COMPOSITION-STANDALONE",
+    "exp052-boundary-scaling": "BOUNDARY-SCALING-STANDALONE",
 }
 
 
@@ -385,10 +390,11 @@ def main(argv: list[str] | None = None) -> dict:
         "exp049-extended-horizon",
         "exp050-depth-scaling-atlas",
         "exp051-progressive-composition",
+        "exp052-boundary-scaling",
     }:
         if args.total_steps not in {2048, 8192}:
             raise ValueError(
-                "EXP-049/050/051 requires 2,048 or 8,192 training steps"
+                "EXP-049/050/051/052 requires 2,048 or 8,192 training steps"
             )
     elif args.total_steps != 1024:
         raise ValueError("the selected protocol requires exactly 1,024 steps")
@@ -484,6 +490,7 @@ def main(argv: list[str] | None = None) -> dict:
             "exp049-extended-horizon": 0.0,
             "exp050-depth-scaling-atlas": 0.0,
             "exp051-progressive-composition": 0.0,
+            "exp052-boundary-scaling": 0.0,
         }[args.protocol]
     if not 0.0 <= required_recovery <= 1.0:
         raise ValueError("required recovery fraction must be in [0, 1]")
@@ -522,6 +529,9 @@ def main(argv: list[str] | None = None) -> dict:
         ),
         "exp051-progressive-composition": (
             f"exp051-step{args.total_steps}-layer{args.target_layer}"
+        ),
+        "exp052-boundary-scaling": (
+            f"exp052-step{args.total_steps}-layer{args.target_layer}"
         ),
     }[args.protocol]
     if context_transfer:
@@ -615,6 +625,14 @@ def main(argv: list[str] | None = None) -> dict:
         and checkpoint_dir is not None
         and training_json.exists()
         and (checkpoint_dir / "checkpoint.json").exists()
+        and endpoint_checkpoint_supports_arms(
+            checkpoint_dir,
+            {
+                "MIXER-ONLY",
+                "JOINT-MIXER-DECODER",
+                "COUNTERFACTUAL-CONTRIBUTION",
+            },
+        )
     ):
         training_result = json.loads(training_json.read_text(encoding="utf-8"))
         if not training_result.get("passed"):

@@ -110,3 +110,53 @@ def test_compact_summary_includes_progressive_composition_table():
     rendered = render_summary_markdown(summary)
     assert "Progressive composition" in rendered
     assert "0,6,12,18,23,29,34,39" in rendered
+
+
+def test_compact_summary_includes_boundary_and_incremental_tables():
+    payload = _payload()
+    payload["aggregate"] = {
+        "primary_replacement_count": 16,
+        "baseline_reproduction": {
+            "passed": True,
+            "maximum_absolute_mean_nll_difference": 0.001,
+        },
+        "stages": [],
+        "composition_scaling_gate_passed": True,
+        "boundary_mechanism_gate_passed": True,
+        "boundary_analysis": {
+            "stages": [
+                {
+                    "replacement_count": 16,
+                    "internal_replacement_count": 15,
+                    "layer0_only_excess_nll_mean": 0.80,
+                    "internal_only_excess_nll_mean": 0.15,
+                    "full_composition_excess_nll_mean": 0.72,
+                    "boundary_interaction_nll_mean": -0.23,
+                    "bootstrap": {
+                        "internal_minus_layer0_95ci": [-0.70, -0.60],
+                        "boundary_interaction_nll_95ci": [-0.30, -0.15],
+                    },
+                    "mechanism_gate_passed": True,
+                }
+            ]
+        },
+        "incremental_scaling": {
+            "lower_replacement_count": 8,
+            "upper_replacement_count": 16,
+            "added_layers": [1, 3, 9, 15, 21, 26, 32, 36],
+            "expected_added_excess_nll_mean": 0.08,
+            "observed_added_excess_nll_mean": 0.02,
+            "incremental_interaction_nll_mean": -0.06,
+            "incremental_inflation_ratio_mean": 0.25,
+            "seed_inflation_passes": 3,
+            "bootstrap": {
+                "incremental_inflation_ratio_95ci": [0.1, 0.4]
+            },
+            "scientific_gate_passed": True,
+        },
+    }
+    summary = build_compact_summary(payload)
+    assert summary["boundary_scaling"]["boundary_mechanism_gate_passed"]
+    rendered = render_summary_markdown(summary)
+    assert "Layer-0 boundary decomposition" in rendered
+    assert "Incremental 8-to-16 scaling" in rendered

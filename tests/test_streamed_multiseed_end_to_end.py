@@ -72,16 +72,19 @@ def test_every_bootstrapped_campaign_protocol_collects_window_nll():
         "exp049-extended-horizon",
         "exp050-depth-scaling-atlas",
         "exp051-progressive-composition",
+        "exp052-boundary-scaling",
     ):
         assert protocol_collects_window_nll(protocol)
     assert not protocol_collects_window_nll("exp041")
 
 
-def test_protocol_registries_are_complete_for_exp051():
+def test_protocol_registries_are_complete_for_composition_campaigns():
     assert set(PROTOCOL_METHODS) == set(PROTOCOL_NOTES) == set(PROTOCOL_LABELS)
     assert OBJECTIVE_COMPARISON_PROTOCOLS <= EXTERNAL_EVALUATION_PROTOCOLS
     assert "exp051-progressive-composition" in OBJECTIVE_COMPARISON_PROTOCOLS
     assert "exp051-progressive-composition" in EXTERNAL_EVALUATION_PROTOCOLS
+    assert "exp052-boundary-scaling" in OBJECTIVE_COMPARISON_PROTOCOLS
+    assert "exp052-boundary-scaling" in EXTERNAL_EVALUATION_PROTOCOLS
 
 
 def test_reference_reproduction_applies_absolute_nll_tolerance():

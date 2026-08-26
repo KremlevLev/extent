@@ -131,3 +131,28 @@ print("summary: /kaggle/working/output/extent-progressive-composition-campaign-s
 Use this single call; do not run `pytest` or initialize JAX in another process after the notebook has claimed the TPU. Start and final Telegram messages are enabled by default. A failed scientific gate still finishes normally and writes the summary.
 
 For handoff, download only `extent-progressive-composition-campaign-summary.md`. Keep the full campaign JSON in Kaggle Output only if convenient; the runner deletes multi-gigabyte caches and endpoint payloads after the final measurements. On a caught failure retrieve `extent-progressive-composition-failure.json` and `exp051-campaign-stage-manifest.json`. In an interactive session, rerun the identical `run_progressive([])` call to reuse completed layer boundaries.
+
+## EXP-052: 8-to-16-layer boundary scaling
+
+Run this as one Kaggle `Save Version` cloud job on a fresh TPU v5e-8 session. Do not run `pytest`, `jax.devices()`, or a second Python process first. The campaign trains 16 independent endpoints, evaluates full 8/16 compositions and layer-0/internal-only counterfactuals, and is sized for approximately 5--7 hours.
+
+```python
+from scripts.qwen_boundary_scaling_campaign import main as run_boundary_scaling
+
+result = run_boundary_scaling([])
+print("EXP-052 numerical pass:", result["passed"])
+print(
+    "EXP-052 composition gate:",
+    result["aggregate"]["composition_scaling_gate_passed"],
+)
+print(
+    "EXP-052 layer-0 mechanism gate:",
+    result["aggregate"]["boundary_mechanism_gate_passed"],
+)
+print(
+    "summary: /kaggle/working/output/"
+    "extent-boundary-scaling-campaign-summary.md"
+)
+```
+
+Telegram start, completion, and caught-failure notifications are enabled. A false scientific gate is a normal completed run. For handoff, download only `extent-boundary-scaling-campaign-summary.md`; do not download checkpoints or caches. On a caught failure retrieve `extent-boundary-scaling-failure.json` and `exp052-campaign-stage-manifest.json`. If the same interactive session remains alive, rerun the identical `run_boundary_scaling([])` call to reuse completed layer boundaries.

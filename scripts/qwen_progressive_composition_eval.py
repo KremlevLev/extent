@@ -23,6 +23,7 @@ from scripts.qwen_streamed_end_to_end_shock import (
     _run_replacement_windows,
 )
 from scripts.qwen_streamed_multiseed_end_to_end import branch_divergence
+from extent.boundary_composition import analyze_boundary_scaling
 from extent.config import Mamba3Config
 from extent.decoder_replacement_eval import (
     Qwen3DecoderTail,
@@ -105,16 +106,23 @@ def _load_endpoint_bundle(
 
 
 def _branch_specs(
-    seeds: tuple[int, ...], layer_sets: dict[int, tuple[int, ...]]
+    seeds: tuple[int, ...],
+    layer_sets: dict[int, tuple[int, ...]],
+    branch_sets: dict[str, tuple[int, ...]] | None = None,
 ) -> list[dict]:
     specs = [{"name": "ORIGINAL-CACHED-QWEN", "seed": None, "layers": ()}]
+    if branch_sets is None:
+        branch_sets = {
+            f"COMPOSED-{count}": layers
+            for count, layers in sorted(layer_sets.items())
+        }
     for seed in seeds:
-        for count in sorted(layer_sets):
+        for label, layers in branch_sets.items():
             specs.append(
                 {
-                    "name": f"SEED-{seed}-COMPOSED-{count}",
+                    "name": f"SEED-{seed}-{label}",
                     "seed": seed,
-                    "layers": layer_sets[count],
+                    "layers": layers,
                 }
             )
     return specs
@@ -122,7 +130,7 @@ def _branch_specs(
 
 def main(argv: list[str] | None = None) -> dict:
     parser = argparse.ArgumentParser(
-        description="Stream frozen Qwen around nested 2/4/8-layer Mamba compositions."
+        description="Stream frozen Qwen around registered Mamba compositions."
     )
     parser.add_argument("--endpoint-index", required=True)
     parser.add_argument(
@@ -167,7 +175,9 @@ def main(argv: list[str] | None = None) -> dict:
             for count, layers in endpoint_index["layer_sets"].items()
         }
     )
-    target_layers = tuple(sorted({layer for values in layer_sets.values() for layer in values}))
+    target_layers = tuple(
+        sorted({layer for values in layer_sets.values() for layer in values})
+    )
     if tuple(endpoint_index["target_layers"]) != target_layers:
         raise ValueError("endpoint index target layers do not match nested sets")
     if set(endpoint_index["layers"]) != {str(layer) for layer in target_layers}:
@@ -176,6 +186,30 @@ def main(argv: list[str] | None = None) -> dict:
         raise ValueError("progressive evaluation requires layer 0 as its first replacement")
     if any(0 not in layers for layers in layer_sets.values()):
         raise ValueError("every progressive branch must include replacement layer 0")
+    analysis_mode = endpoint_index.get("analysis_mode", "progressive")
+    if analysis_mode not in {"progressive", "boundary_scaling"}:
+        raise ValueError(f"unsupported composition analysis mode: {analysis_mode}")
+    raw_branch_sets = endpoint_index.get("branch_sets")
+    branch_sets = (
+        {
+            str(label): tuple(int(layer) for layer in layers)
+            for label, layers in raw_branch_sets.items()
+        }
+        if raw_branch_sets is not None
+        else None
+    )
+    if branch_sets is not None:
+        if not branch_sets or any(not layers for layers in branch_sets.values()):
+            raise ValueError("custom composition branches cannot be empty")
+        for label, layers in branch_sets.items():
+            if len(layers) != len(set(layers)) or tuple(sorted(layers)) != layers:
+                raise ValueError(f"branch {label} must contain sorted unique layers")
+            if not set(layers) <= set(target_layers):
+                raise ValueError(f"branch {label} uses an unregistered endpoint")
+        if {layer for layers in branch_sets.values() for layer in layers} != set(
+            target_layers
+        ):
+            raise ValueError("custom branches must cover every registered endpoint")
 
     evaluation = endpoint_index["evaluation_cache"]
     evaluation_manifest_path = _resolve_index_path(
@@ -198,7 +232,7 @@ def main(argv: list[str] | None = None) -> dict:
     evaluation_slice = slice(int(layout[0]), int(layout[1]))
     evaluation_windows = evaluation_slice.stop - evaluation_slice.start
     if evaluation_windows != 256:
-        raise ValueError("EXP-051 requires exactly 256 validation windows")
+        raise ValueError("composition evaluation requires 256 validation windows")
 
     dtype_decision = recommended_compute_dtype(requested=args.compute_dtype)
     compute_dtype = jnp.dtype(dtype_decision.dtype)
@@ -213,9 +247,9 @@ def main(argv: list[str] | None = None) -> dict:
         remat_policy="none",
     )
     sequence_length = int(manifest["sequence_length"])
-    names = progressive_branch_names(seeds, layer_sets)
-    specs = _branch_specs(seeds, layer_sets)
-    if tuple(spec["name"] for spec in specs) != names:
+    specs = _branch_specs(seeds, layer_sets, branch_sets)
+    names = tuple(spec["name"] for spec in specs)
+    if branch_sets is None and names != progressive_branch_names(seeds, layer_sets):
         raise AssertionError("branch metadata and names diverged")
 
     mamba = Mamba3MIMO(
@@ -279,7 +313,14 @@ def main(argv: list[str] | None = None) -> dict:
         )
     hidden = np.concatenate(
         [original0]
-        + [seed_layer0[int(spec["seed"])] for spec in specs[1:]],
+        + [
+            (
+                seed_layer0[int(spec["seed"])]
+                if 0 in spec["layers"]
+                else original0
+            )
+            for spec in specs[1:]
+        ],
         axis=0,
     )
     divergence = {"0": branch_divergence(hidden, names, evaluation_windows)}
@@ -478,9 +519,13 @@ def main(argv: list[str] | None = None) -> dict:
     raw_metrics_path = Path(args.result_json).with_name(
         f"{Path(args.result_json).stem}-lm-metrics.json"
     )
+    evaluation_protocol = endpoint_index.get(
+        "evaluation_protocol", "exp051-progressive-composition"
+    )
     raw_metrics = {
         "source": source_name,
-        "protocol": "exp051-progressive-composition",
+        "protocol": evaluation_protocol,
+        "analysis_mode": analysis_mode,
         "branches": list(names),
         "lm_metrics": lm_metrics,
         "complete": True,
@@ -499,7 +544,12 @@ def main(argv: list[str] | None = None) -> dict:
         ]
         for layer in target_layers
     }
-    aggregate = analyze_progressive_composition(
+    analysis_function = (
+        analyze_boundary_scaling
+        if analysis_mode == "boundary_scaling"
+        else analyze_progressive_composition
+    )
+    aggregate = analysis_function(
         seeds=seeds,
         layer_sets=layer_sets,
         original_metric=lm_metrics["ORIGINAL-CACHED-QWEN"],
@@ -514,12 +564,22 @@ def main(argv: list[str] | None = None) -> dict:
     )
     result = {
         "source": source_name,
-        "method": "asymmetric_budget_progressive_Mamba3_composition",
-        "protocol": "exp051-progressive-2-4-8-layer-composition",
+        "method": endpoint_index.get(
+            "method", "asymmetric_budget_progressive_Mamba3_composition"
+        ),
+        "protocol": endpoint_index.get(
+            "protocol", "exp051-progressive-2-4-8-layer-composition"
+        ),
+        "analysis_mode": analysis_mode,
         "endpoint_index": str(index_path),
         "endpoint_index_sha256": file_sha256(index_path),
         "target_layers": list(target_layers),
         "layer_sets": {str(key): list(value) for key, value in layer_sets.items()},
+        "branch_sets": (
+            {key: list(value) for key, value in branch_sets.items()}
+            if branch_sets is not None
+            else None
+        ),
         "seeds": list(seeds),
         "sequence_length": sequence_length,
         "evaluation_windows": evaluation_windows,
@@ -539,12 +599,13 @@ def main(argv: list[str] | None = None) -> dict:
         "removed_checkpoint_shards": sorted(set(removed_shards)),
         "scientific_gate_passed": aggregate["scientific_gate_passed"],
         "passed": aggregate["all_finite"],
-        "notes": [
-            "The 2/4/8 replacement sets are nested and use independently trained JOINT endpoints for each seed.",
-            "Layer 0 uses 8,192 recovery steps; every other layer uses 2,048 steps.",
-            "Additive expected excess NLL is computed from paired standalone layer evaluations on the same validation windows.",
-            "The primary gate is frozen to the eight-layer composition; two- and four-layer stages are secondary scaling diagnostics.",
-        ],
+        "notes": endpoint_index.get(
+            "notes",
+            [
+                "Replacement sets are nested and use independently trained JOINT endpoints for each seed.",
+                "Additive expected excess NLL uses paired standalone evaluations on the same validation windows.",
+            ],
+        ),
     }
     mirror = _write_json_with_output_mirror(
         Path(args.result_json), result, args.output_dir
@@ -555,11 +616,11 @@ def main(argv: list[str] | None = None) -> dict:
     if mirror:
         print(f"output_json={mirror.resolve()}")
     if not result["passed"]:
-        raise SystemExit("PROGRESSIVE-COMPOSITION-NONFINITE")
+        raise SystemExit("COMPOSITION-EVALUATION-NONFINITE")
     print(
-        "PROGRESSIVE-COMPOSITION-PASS"
+        "COMPOSITION-SCIENTIFIC-GATE-PASS"
         if result["scientific_gate_passed"]
-        else "PROGRESSIVE-COMPOSITION-GATE-FAIL"
+        else "COMPOSITION-SCIENTIFIC-GATE-FAIL"
     )
     return result
 

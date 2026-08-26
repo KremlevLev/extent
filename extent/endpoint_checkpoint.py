@@ -42,12 +42,20 @@ def save_endpoint_checkpoint(
     payload = serialization.to_bytes(jax.device_get(dict(endpoints)))
     temporary_payload.write_bytes(payload)
     temporary_payload.replace(payload_path)
+    retained_arms = sorted(
+        {
+            str(arm)
+            for seed_endpoints in endpoints.values()
+            for arm in seed_endpoints
+        }
+    )
     metadata = {
         "format_version": ENDPOINT_CHECKPOINT_FORMAT_VERSION,
         "checkpoint_kind": "mamba_endpoint_parameters",
         "checkpoint_file": payload_path.name,
         "checkpoint_bytes": int(payload_path.stat().st_size),
         "checkpoint_sha256": _sha256(payload_path),
+        "retained_arms": retained_arms,
         "compatibility": compatibility,
     }
     metadata_path = root / "checkpoint.json"
@@ -57,6 +65,89 @@ def save_endpoint_checkpoint(
     )
     temporary_metadata.replace(metadata_path)
     return metadata
+
+
+def endpoint_checkpoint_supports_arms(
+    directory: str | Path, required_arms: set[str]
+) -> bool:
+    """Return whether a checkpoint can resume every requested evaluation arm."""
+    metadata_path = Path(directory) / "checkpoint.json"
+    if not metadata_path.exists():
+        return False
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    retained = metadata.get("retained_arms")
+    return retained is None or required_arms <= set(retained)
+
+
+def compact_endpoint_checkpoint(
+    directory: str | Path,
+    *,
+    retained_arms: set[str],
+    expected_compatibility: dict,
+) -> dict:
+    """Atomically replace a completed endpoint bundle with selected arms only.
+
+    The new payload is installed under a different filename before metadata is
+    switched. An interruption therefore leaves either the old complete bundle
+    or the new compact bundle addressable by valid metadata.
+    """
+    if not retained_arms:
+        raise ValueError("at least one endpoint arm must be retained")
+    root = Path(directory)
+    metadata_path = root / "checkpoint.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    if metadata.get("format_version") != ENDPOINT_CHECKPOINT_FORMAT_VERSION:
+        raise ValueError("unsupported endpoint checkpoint format version")
+    if metadata.get("checkpoint_kind") != "mamba_endpoint_parameters":
+        raise ValueError("checkpoint is not a Mamba endpoint bundle")
+    if _canonical_json(metadata.get("compatibility")) != _canonical_json(
+        expected_compatibility
+    ):
+        raise ValueError("endpoint checkpoint compatibility contract mismatch")
+    old_payload = root / metadata["checkpoint_file"]
+    if int(old_payload.stat().st_size) != int(metadata["checkpoint_bytes"]):
+        raise ValueError("endpoint checkpoint byte-size mismatch")
+    if _sha256(old_payload) != metadata["checkpoint_sha256"]:
+        raise ValueError("endpoint checkpoint SHA-256 mismatch")
+    requested = sorted(str(arm) for arm in retained_arms)
+    if metadata.get("retained_arms") == requested:
+        return metadata
+
+    restored = serialization.msgpack_restore(old_payload.read_bytes())
+    if not isinstance(restored, dict) or not restored:
+        raise ValueError("endpoint checkpoint restored an invalid payload")
+    selected = {}
+    for seed, seed_endpoints in restored.items():
+        missing = retained_arms - set(seed_endpoints)
+        if missing:
+            raise ValueError(f"endpoint seed {seed} is missing arms {sorted(missing)}")
+        selected[str(seed)] = {
+            arm: seed_endpoints[arm] for arm in requested
+        }
+
+    payload_path = root / "endpoint_params.selected.msgpack"
+    temporary_payload = root / "endpoint_params.selected.tmp.msgpack"
+    temporary_payload.write_bytes(serialization.to_bytes(selected))
+    temporary_payload.replace(payload_path)
+    compact_metadata = {
+        **metadata,
+        "checkpoint_file": payload_path.name,
+        "checkpoint_bytes": int(payload_path.stat().st_size),
+        "checkpoint_sha256": _sha256(payload_path),
+        "retained_arms": requested,
+        "compacted": True,
+    }
+    temporary_metadata = root / "checkpoint.compact.tmp.json"
+    temporary_metadata.write_text(
+        json.dumps(compact_metadata, indent=2), encoding="utf-8"
+    )
+    temporary_metadata.replace(metadata_path)
+    if old_payload.resolve() != payload_path.resolve() and old_payload.exists():
+        old_payload.unlink()
+    return compact_metadata
 
 
 def restore_endpoint_checkpoint(
