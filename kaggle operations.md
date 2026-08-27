@@ -276,3 +276,19 @@ print("summary: /kaggle/working/output/extent-exact-lift-confirmation-summary.md
 ```
 
 Do not run `pytest`, `jax.devices()`, `%run`, or another experiment first. Download `extent-exact-lift-confirmation-summary.md` and `extent-exact-lift-confirmation.json`. On failure download `exp057-failure.json` and `exp057-stage-manifest.json`. Do not download caches or weights.
+
+## EXP-058: one-hour exact-lift composition pilot
+
+In a fresh TPU v5e-8 process, after clone/install, immediately run:
+
+```python
+from scripts.qwen_exact_lift_composition_pilot import main as run_composition_pilot
+
+result = run_composition_pilot([])
+print("EXP-058 numerical pass:", result["passed"])
+print("EXP-058 pilot gate:", result["aggregate"]["pilot_gate_passed"])
+print("exact minus random NLL:", result["aggregate"]["exact_minus_random_nll"])
+print("summary: /kaggle/working/output/extent-exact-lift-composition-pilot-summary.md")
+```
+
+Do not run any other JAX command first. Download `extent-exact-lift-composition-pilot-summary.md` and `extent-exact-lift-composition-pilot.json`. On failure download `exp058-failure.json` and `exp058-stage-manifest.json`. Endpoint checkpoints are only needed for debugging a failed streamed stage; do not download them after normal completion.

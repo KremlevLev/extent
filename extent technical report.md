@@ -1204,6 +1204,16 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** retain balanced exact lift as the leading internal-layer initializer. Do not rerun the missing two cells merely to turn the Boolean gate green unless compute becomes available; the higher-value next experiment is a small composed end-to-end comparison, with a genuinely conservative wall-budget design.
 - **Execution provenance:** compact-summary SHA-256 `16ca45ad8bd44fe4700708776f29ebfbe2d24c59071a990362cb96ca55889d58`; full-campaign SHA-256 `cada5cb274596a54d54d9a9f737253d269f645e0db296bc8ea4fa444af270623`; compact artifact `results/EXP-057-exact-lift-confirmation-summary.md`.
 
+### EXP-058 — One-hour exact-lift composition pilot (pre-registered)
+
+- **Implementation commit title:** `feat: add one-hour exact-lift composition pilot`.
+- **Question:** after equal short recovery, does exact operator lift reduce the end-to-end NLL damage caused by composing two Mamba replacements, relative to random Mamba initialization?
+- **Frozen design:** Qwen layers 0 and 18; paired model seed 123; random versus balanced exact lift; 1,024 decoder-aware updates per layer/arm; sequence length 32; new train offset `196608`; new validation offset `16384`; 256 validation windows.
+- **Composition evaluation:** store the four trained endpoints, stream frozen Qwen3-14B once for the random pair and once for the exact-lift pair, and measure final LM-head NLL on identical token windows. The original Qwen branch is retained as a calibration reference.
+- **Pilot gate:** exact-lift two-layer composition mean NLL must be finite and lower than random two-layer composition mean NLL. Excess NLL versus original Qwen is reported but does not gate this initializer ranking.
+- **Interpretation boundary:** one seed and 1,024 updates cannot establish publication-level composition robustness. A pass only licenses a later multiseed composition confirmation; a failure rejects immediate scaling of exact lift to the 85% replacement plan under the present recovery recipe.
+- **Resource strategy:** prioritize completing both endpoint pairs and one shared streaming pass rather than attempting more seeds. Durable endpoint checkpoints, stage manifest, Telegram start/final/failure, and compact output are retained. No hard wall-time claim is made because JAX dispatch cannot be interrupted safely.
+
 ### Cloud TPU campaign protocol
 
 - **Campaign contents:** run EXP-045, EXP-046, and EXP-047 sequentially in one TPU v5e-8 allocation. Completed experiment and cell JSONs are restart boundaries; a rerun skips every numerically valid result.

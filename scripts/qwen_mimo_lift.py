@@ -52,7 +52,12 @@ def _read_json(url: str) -> dict:
         return json.loads(response.read().decode("utf-8"))
 
 
-def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = None) -> dict:
+def main(
+    argv: list[str] | None = None,
+    *,
+    deadline_monotonic: float | None = None,
+    return_endpoint_params: bool = False,
+) -> dict | tuple[dict, dict[str, dict[str, dict]]]:
     parser = argparse.ArgumentParser(description="Screen exact SISO-to-MIMO QKVO lifts at one Qwen3 layer.")
     parser.add_argument("--activation-cache-manifest", required=True)
     parser.add_argument("--activation-cache-dir")
@@ -126,6 +131,7 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
     result_path = Path(args.result_json)
     partial_path = result_path.with_suffix(".partial.json")
     seed_results: dict[str, dict] = {}
+    endpoint_params: dict[str, dict[str, dict]] = {}
     complete = True
     numerical_pass = True
 
@@ -146,6 +152,7 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
         )
         seed_record = {"arms": {}}
         seed_results[str(seed)] = seed_record
+        endpoint_params[str(seed)] = {}
         for arm in arms:
             if _deadline_reached(deadline_monotonic):
                 complete = False
@@ -156,7 +163,7 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
                 mamba, variants[variant], calibration_inputs, calibration_targets,
                 compute_dtype, args.readout_ridge,
             )
-            _, recovery, arm_complete = _train_recovery(
+            trained, recovery, arm_complete = _train_recovery(
                 params=calibrated, mamba=mamba, tail=tail, tail_params=tail_params,
                 training_arrays=train_arrays, training_slice=training_slice,
                 evaluation_arrays=eval_arrays, evaluation_slice=evaluation_slice,
@@ -172,6 +179,8 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
                 "readout_calibration": readout_report, "recovery": recovery,
             }
             numerical_pass = numerical_pass and bool(recovery["finite"])
+            if arm_complete and return_endpoint_params:
+                endpoint_params[str(seed)][arm] = trained
             persist("in_progress" if arm_complete else "deadline_partial")
             if not arm_complete:
                 complete = False
@@ -205,7 +214,7 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
     print(f"result_json={result_path.resolve()}")
     if mirror:
         print(f"output_json={mirror.resolve()}")
-    return result
+    return (result, endpoint_params) if return_endpoint_params else result
 
 
 if __name__ == "__main__":

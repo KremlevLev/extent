@@ -129,6 +129,30 @@ def _branch_specs(
     return specs
 
 
+def analyze_exact_lift_pilot(*, original_metric: dict, composed_metrics: dict, **_) -> dict:
+    random_metric = composed_metrics["SEED-123-COMPOSED-2"]
+    lift_metric = composed_metrics["SEED-456-COMPOSED-2"]
+    random_nll = float(random_metric["mean_nll"])
+    lift_nll = float(lift_metric["mean_nll"])
+    original_nll = float(original_metric["mean_nll"])
+    passed = bool(
+        np.isfinite([original_nll, random_nll, lift_nll]).all()
+        and lift_nll < random_nll
+    )
+    return {
+        "original_mean_nll": original_nll,
+        "random_composition_mean_nll": random_nll,
+        "exact_lift_composition_mean_nll": lift_nll,
+        "exact_minus_random_nll": lift_nll - random_nll,
+        "exact_minus_original_nll": lift_nll - original_nll,
+        "random_minus_original_nll": random_nll - original_nll,
+        "pilot_gate_passed": passed,
+        "scientific_gate_passed": passed,
+        "all_finite": bool(np.isfinite([original_nll, random_nll, lift_nll]).all()),
+        "gate_definition": "The paired two-layer exact-lift composition has lower frozen end-to-end mean NLL than the random-initialized composition.",
+    }
+
+
 def main(argv: list[str] | None = None) -> dict:
     parser = argparse.ArgumentParser(
         description="Stream frozen Qwen around registered Mamba compositions."
@@ -170,11 +194,14 @@ def main(argv: list[str] | None = None) -> dict:
     if endpoint_index.get("source") != source_name:
         raise ValueError("endpoint index does not use pinned Qwen3-14B")
     seeds = tuple(int(seed) for seed in endpoint_index["seeds"])
-    layer_sets = validate_progressive_layer_sets(
-        {
-            int(count): tuple(layers)
-            for count, layers in endpoint_index["layer_sets"].items()
-        }
+    raw_layer_sets = {
+        int(count): tuple(layers)
+        for count, layers in endpoint_index["layer_sets"].items()
+    }
+    layer_sets = (
+        raw_layer_sets
+        if endpoint_index.get("analysis_mode") == "exact_lift_pilot"
+        else validate_progressive_layer_sets(raw_layer_sets)
     )
     target_layers = tuple(
         sorted({layer for values in layer_sets.values() for layer in values})
@@ -192,6 +219,7 @@ def main(argv: list[str] | None = None) -> dict:
         "progressive",
         "boundary_scaling",
         "onset_localization",
+        "exact_lift_pilot",
     }:
         raise ValueError(f"unsupported composition analysis mode: {analysis_mode}")
     raw_branch_sets = endpoint_index.get("branch_sets")
@@ -553,6 +581,7 @@ def main(argv: list[str] | None = None) -> dict:
         "progressive": analyze_progressive_composition,
         "boundary_scaling": analyze_boundary_scaling,
         "onset_localization": analyze_composition_onset,
+        "exact_lift_pilot": analyze_exact_lift_pilot,
     }[analysis_mode]
     aggregate = analysis_function(
         seeds=seeds,
