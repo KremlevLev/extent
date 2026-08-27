@@ -106,3 +106,25 @@ def test_transplant_variants_are_controlled_and_mimo_channels_are_distinct():
         output = module.apply({"params": params}, inputs)
         assert output.shape == inputs.shape
         assert np.all(np.isfinite(np.asarray(output)))
+
+    single = variants["INIT-J-single-channel-qkvo-lift"]
+    balanced = variants["INIT-K-balanced-qkvo-lift"]
+    single_output, single_features = module.apply(
+        {"params": single}, inputs, return_features=True
+    )
+    balanced_output, balanced_features = module.apply(
+        {"params": balanced}, inputs, return_features=True
+    )
+    np.testing.assert_allclose(
+        balanced_features, single_features, rtol=2e-5, atol=2e-6
+    )
+    np.testing.assert_allclose(
+        balanced_output, single_output, rtol=2e-5, atol=2e-6
+    )
+    rank = config.mimo_rank
+    np.testing.assert_array_equal(
+        single["mimo_x"][:, 1:, :], 0.0
+    )
+    np.testing.assert_allclose(balanced["mimo_x"], 1.0 / rank)
+    np.testing.assert_allclose(balanced["mimo_o"], 1.0 / rank)
+    np.testing.assert_allclose(balanced["D"], single["D"] * rank)

@@ -241,3 +241,22 @@ print(
 ```
 
 The locked runner uses partial RoPE `0.5`, cosine-only bridge fitting, 256 initializer updates, and 4,096 matched recovery steps per arm. It has a 3.4-hour internal deadline and sends Telegram start/final/failure notifications. Download both `extent-stabilized-bridge-campaign-summary.md` and the small `extent-stabilized-bridge-campaign.json`; the full JSON is required to audit bridge stability. On failure retrieve `exp055-campaign-failure.json` and `exp055-campaign-stage-manifest.json`. Do not download activation arrays or Qwen shards.
+
+## EXP-056: operator-preserving MIMO lift campaign
+
+Use a fresh Kaggle TPU v5e-8 `Save Version` job. After cloning the current commit and installing `requirements-tpu.txt`, make this the first code that touches JAX. Do not run `pytest`, `jax.devices()`, `%run`, or an earlier experiment first.
+
+```python
+from scripts.qwen_mimo_lift_campaign import main as run_mimo_lift
+
+result = run_mimo_lift([])
+print("EXP-056 status:", result["status"])
+print("EXP-056 numerical pass:", result["passed"])
+print("EXP-056 complete:", result["complete"])
+print("EXP-056 screening gate:", result["aggregate"]["screening_gate_passed"])
+print("summary: /kaggle/working/output/extent-mimo-lift-campaign-summary.md")
+```
+
+The hard budget is 7.5 hours. The runner evaluates layers 18, 6, 29, then 0 and saves after every arm, so a deadline-partial run remains auditable. Telegram reports start, completion/deadline, or failure.
+
+Download `extent-mimo-lift-campaign-summary.md` and `extent-mimo-lift-campaign.json`. On failure download `exp056-campaign-failure.json` and `exp056-campaign-stage-manifest.json`. Do not download Qwen shards, NPY caches, or checkpoints.

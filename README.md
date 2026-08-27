@@ -687,3 +687,8 @@ print(result["status"], result["aggregate"]["screening_gate_passed"])
 EXP-055 locks partial RoPE to the canonical Mamba-3 state fraction, restores the
 paper's cosine-only bridge objective, and compares all arms for 4,096 matched
 recovery steps. It does not overwrite or reinterpret EXP-054.
+
+EXP-056 tests an operator-preserving QKVO SISO-to-MIMO lift. Single-channel and
+balanced-rank initializations are functionally equal before training, allowing
+their paired recovery trajectories to isolate MIMO optimization geometry. The
+resilient v5e-8 entry point is `scripts.qwen_mimo_lift_campaign`.

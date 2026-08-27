@@ -1164,6 +1164,19 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Scientific decision:** close the learned Hedgehog/bridge family for the present Extent Mamba-3 architecture. Preserve random initialization for layer 0. Reopen direct QKVO only as an internal-layer, long-horizon signal—not as a universal initializer. The next high-value experiment should test whether an algebraically exact SISO-to-MIMO lift of the same QKVO donor moves the layer-18 crossover earlier, using single-active-channel and balanced-rank embeddings against random and the current flat QKVO port. Multiple internal depths and end-to-end NLL are required before changing the full-model initialization policy.
 - **Execution provenance:** supplied compact-summary SHA-256 `feece097075781898024a7059a40160a8184b983c2c9dc6da2fcce8641256c81`; supplied full-campaign SHA-256 `9d269e08b4f8122c5f9d3398ee7a6a73b4613de4caf14c09648deba96dc98dc3`; compact artifact `results/EXP-055-stabilized-bridge-campaign-summary.md`.
 
+### EXP-056 — Operator-preserving SISO-to-MIMO lift (pre-registered)
+
+- **Implementation commit title:** `feat: add operator-preserving MIMO lift campaign`
+- **Motivation:** EXP-055 found a delayed direct-QKVO advantage at internal layer 18 only after 4,096 recovery steps. EXP-056 asks whether the donor was useful but embedded poorly into Mamba-3's MIMO recurrence.
+- **Intervention:** `SINGLE-CHANNEL-LIFT` activates only rank channel zero. `BALANCED-RANK-LIFT` copies B/C across all rank channels, sets MIMO input/output scales to `1/R`, retains the gate, and multiplies the D skip by `R`. Because B/C are RMS-normalized, this compensation preserves the complete pre-training operator.
+- **Frozen controls:** canonical random and the EXP-055 flat direct-QKVO port. All four arms receive identical ridge readout calibration, Lion optimizer, paired data order, and decoder-aware recovery.
+- **Depth and compute:** layers `18, 6, 29, 0`; seeds `123/456/789`; sequence length 32; 4,096 recovery steps per arm; checkpoints `0/256/1024/2048/4096`; external WikiText-2 validation windows. Layer 0 is a separately interpreted boundary diagnostic.
+- **Primary measurements:** paired decoder-output relative-L2 difference from random, wins across seeds, and earliest checkpoint where the mean difference crosses below zero. This is a layer-local decoder-aware screen, not an end-to-end NLL or full 14B claim.
+- **Exploratory gate:** at each internal layer 6/18/29, balanced lift must beat random at step 4,096 in mean and at least `2/3` seeds, and cross no later than flat QKVO. Layer 0 cannot veto the internal-layer gate.
+- **Mechanistic interpretation:** single and balanced lifts compute the same function at step zero. Any later separation therefore isolates optimization geometry from initial function quality.
+- **Durability:** the v5e-8 campaign has a 7.5-hour internal deadline, saves after every arm, mirrors partial/final JSONs, prunes only regenerable arrays after durable results, and sends Telegram start/completion/deadline/failure notifications.
+- **Artifacts:** normal handoff is `extent-mimo-lift-campaign-summary.md` plus `extent-mimo-lift-campaign.json`; failure handoff is `exp056-campaign-failure.json` plus `exp056-campaign-stage-manifest.json`.
+
 ### Cloud TPU campaign protocol
 
 - **Campaign contents:** run EXP-045, EXP-046, and EXP-047 sequentially in one TPU v5e-8 allocation. Completed experiment and cell JSONs are restart boundaries; a rerun skips every numerically valid result.

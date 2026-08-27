@@ -173,6 +173,10 @@ def build_qwen3_to_mamba3_transplant_variants(
         config.d_state,
         copy_channels=True,
     )
+    single_b = np.zeros_like(siso_b)
+    single_c = np.zeros_like(siso_c)
+    single_b[:, : config.d_state] = siso_b[:, : config.d_state]
+    single_c[:, : config.d_state] = siso_c[:, : config.d_state]
     mimo_b = _head_group_projection(
         k,
         source.num_key_value_heads,
@@ -188,6 +192,58 @@ def build_qwen3_to_mamba3_transplant_variants(
         config.mimo_rank,
         config.d_state,
         copy_channels=False,
+    )
+
+    def exact_lift(params: FrozenDict, *, balanced: bool) -> FrozenDict:
+        """Embed one SISO parameterization into the canonical MIMO contract.
+
+        The single-channel and balanced forms compute the same recurrence.  In
+        the balanced form every B/C channel is copied, ``mimo_x`` and
+        ``mimo_o`` are 1/R, and D is multiplied by R so the skip path is not
+        accidentally attenuated.  This compensates for BC RMSNorm preventing
+        direct 1/sqrt(R) scaling of B/C projections.
+        """
+        lifted = unfreeze(params)
+        rank = config.mimo_rank
+        if balanced:
+            lifted["mimo_x"] = jnp.full_like(lifted["mimo_x"], 1.0 / rank)
+            lifted["mimo_o"] = jnp.full_like(lifted["mimo_o"], 1.0 / rank)
+            lifted["mimo_z"] = jnp.ones_like(lifted["mimo_z"])
+            lifted["D"] = lifted["D"] * rank
+            for name in ("b_bias", "c_bias"):
+                lifted[name] = jnp.broadcast_to(
+                    lifted[name][:, :1, :], lifted[name].shape
+                )
+        else:
+            for name in ("mimo_x", "mimo_o", "mimo_z"):
+                value = jnp.zeros_like(lifted[name])
+                value = value.at[:, 0, :].set(1.0)
+                lifted[name] = value
+            for name in ("b_bias", "c_bias"):
+                value = jnp.zeros_like(lifted[name])
+                value = value.at[:, 0, :].set(lifted[name][:, 0, :])
+                lifted[name] = value
+        return freeze(lifted)
+
+    single_lift = exact_lift(
+        replace(
+            copy_out=True,
+            copy_bc_norm=True,
+            x_projection=x_projection,
+            b_projection=single_b,
+            c_projection=single_c,
+        ),
+        balanced=False,
+    )
+    balanced_lift = exact_lift(
+        replace(
+            copy_out=True,
+            copy_bc_norm=True,
+            x_projection=x_projection,
+            b_projection=siso_b,
+            c_projection=siso_c,
+        ),
+        balanced=True,
     )
 
     variants = {
@@ -235,6 +291,8 @@ def build_qwen3_to_mamba3_transplant_variants(
             b_projection=interpolate("b", matched_b, 0.5),
             c_projection=interpolate("c", matched_c, 0.5),
         ),
+        "INIT-J-single-channel-qkvo-lift": single_lift,
+        "INIT-K-balanced-qkvo-lift": balanced_lift,
     }
     copied_qkvo = (
         slices["x"].stop - slices["x"].start + 2 * bc_width
@@ -296,6 +354,24 @@ def build_qwen3_to_mamba3_transplant_variants(
             total_width,
             True,
             "50% variance-matched flat port plus 50% random base",
+            MAMBA_IN_LLAMA_REFERENCE_COMMIT,
+        ),
+        "INIT-J-single-channel-qkvo-lift": Mamba3TransplantReport(
+            "INIT-J-single-channel-qkvo-lift",
+            "A pooled QKVO SISO donor embedded into exactly one active MIMO input/output channel.",
+            copied_qkvo,
+            total_width,
+            True,
+            "exact single-active-channel SISO-to-MIMO embedding",
+            MAMBA_IN_LLAMA_REFERENCE_COMMIT,
+        ),
+        "INIT-K-balanced-qkvo-lift": Mamba3TransplantReport(
+            "INIT-K-balanced-qkvo-lift",
+            "The same pooled QKVO SISO donor distributed exactly across all MIMO channels with skip-path compensation.",
+            copied_qkvo,
+            total_width,
+            True,
+            "exact balanced-rank SISO-to-MIMO embedding; x/o=1/R and D'=R*D",
             MAMBA_IN_LLAMA_REFERENCE_COMMIT,
         ),
     }
