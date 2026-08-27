@@ -1186,6 +1186,16 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Scientific decision:** exact operator-preserving lift replaces canonical random initialization as the leading Mamba-3 transplant candidate. Do not claim full-model superiority yet. Next require a locked external-text confirmation and progressive multi-layer/end-to-end NLL comparison using exact lift versus random, while treating single and balanced as near-equivalent unless later scale tests separate them.
 - **Execution provenance:** compact-summary SHA-256 `cee9326520d3fa4dfc7a2efc83ce4fd3f6bce730919234a35cc40e76e15079ab`; full-campaign SHA-256 `dbc6e191e0cc6c9f1db613be63905b4aa1ce39af1eed240d4621443e06aa7652`; compact artifact `results/EXP-056-mimo-lift-campaign-summary.md`.
 
+### EXP-057 — Two-hour locked fresh-text exact-lift confirmation (pre-registered)
+
+- **Implementation commit title:** `feat: add two-hour exact-lift confirmation campaign`.
+- **Purpose:** independently confirm EXP-056 under a frozen distribution shift before spending compute on endpoint composition. This campaign does not reuse EXP-056 activations or select hyperparameters from its validation outcomes.
+- **Locked changes:** sequence length increases from 32 to 64; training uses WikiText-2 train token offset `131072`; evaluation uses the disjoint validation split at offset `8192`. Layers remain `18, 6, 29, 0`, seeds remain `123/456/789`, and recovery remains 4,096 updates.
+- **Arms:** only `CONTROL-RANDOM` and `BALANCED-RANK-LIFT`. Removing already-resolved single/flat controls directs the two-hour budget to a paired confirmation with twice the context length.
+- **Primary gate:** balanced exact lift must beat random in mean final decoder relative L2 and at least `2/3` paired seeds at every layer. Unlike EXP-056, layer 0 is part of the locked confirmation gate.
+- **Boundary:** a pass confirms layer-local recovery generalization. It still does not establish multi-layer composition or end-to-end language-model NLL; those remain the next experiment.
+- **Resource protocol:** one fresh v5e-8 process, 1.85-hour internal deadline, layer order 18→6→29→0, partial JSON after every arm, regenerable-cache pruning, and Telegram start/final/failure notifications.
+
 ### Cloud TPU campaign protocol
 
 - **Campaign contents:** run EXP-045, EXP-046, and EXP-047 sequentially in one TPU v5e-8 allocation. Completed experiment and cell JSONs are restart boundaries; a rerun skips every numerically valid result.

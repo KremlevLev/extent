@@ -260,3 +260,19 @@ print("summary: /kaggle/working/output/extent-mimo-lift-campaign-summary.md")
 The hard budget is 7.5 hours. The runner evaluates layers 18, 6, 29, then 0 and saves after every arm, so a deadline-partial run remains auditable. Telegram reports start, completion/deadline, or failure.
 
 Download `extent-mimo-lift-campaign-summary.md` and `extent-mimo-lift-campaign.json`. On failure download `exp056-campaign-failure.json` and `exp056-campaign-stage-manifest.json`. Do not download Qwen shards, NPY caches, or checkpoints.
+
+## EXP-057: two-hour locked exact-lift confirmation
+
+In a fresh TPU v5e-8 `Save Version` process, after clone/install, run this as the first JAX call:
+
+```python
+from scripts.qwen_exact_lift_confirmation_campaign import main as run_confirmation
+
+result = run_confirmation([])
+print("EXP-057 status:", result["status"])
+print("EXP-057 complete:", result["complete"])
+print("EXP-057 gate:", result["aggregate"]["confirmation_gate_passed"])
+print("summary: /kaggle/working/output/extent-exact-lift-confirmation-summary.md")
+```
+
+Do not run `pytest`, `jax.devices()`, `%run`, or another experiment first. Download `extent-exact-lift-confirmation-summary.md` and `extent-exact-lift-confirmation.json`. On failure download `exp057-failure.json` and `exp057-stage-manifest.json`. Do not download caches or weights.

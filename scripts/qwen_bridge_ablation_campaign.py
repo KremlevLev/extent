@@ -51,6 +51,9 @@ def _cache_arguments(
     artifact_prefix: str = "exp054",
     recovery_steps: int = RECOVERY_STEPS,
     validation_windows: int = VALIDATION_WINDOWS,
+    sequence_length: int = SEQUENCE_LENGTH,
+    training_token_offset: int = 0,
+    validation_token_offset: int = 0,
 ) -> tuple[list[str], Path, Path]:
     role = "validation" if evaluation_only else "train"
     artifact_dir = output_dir / f"{artifact_prefix}-layer{layer}-{role}-cache"
@@ -59,7 +62,7 @@ def _cache_arguments(
         "--cache-dir", qwen_cache_dir,
         "--dataset-cache-dir", dataset_cache_dir,
         "--target-layer", str(layer),
-        "--sequence-length", str(SEQUENCE_LENGTH),
+        "--sequence-length", str(sequence_length),
         "--microbatch-windows", "4",
         "--data-parallel",
         "--per-device-windows", str(per_device_windows),
@@ -78,7 +81,7 @@ def _cache_arguments(
                 "--calibration-windows", "0",
                 "--training-windows", "0",
                 "--evaluation-windows", str(validation_windows),
-                "--token-offset", "0",
+                "--token-offset", str(validation_token_offset),
             ]
         )
     else:
@@ -88,7 +91,7 @@ def _cache_arguments(
                 "--calibration-windows", "8",
                 "--training-windows", str(recovery_steps),
                 "--evaluation-windows", "4",
-                "--token-offset", "0",
+                "--token-offset", str(training_token_offset),
             ]
         )
     return arguments, manifest, artifact_dir

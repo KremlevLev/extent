@@ -65,6 +65,7 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
     parser.add_argument("--decoder-loss-weight", type=float, default=1.0)
     parser.add_argument("--readout-ridge", type=float, default=1e-2)
     parser.add_argument("--seeds", default="123,456,789")
+    parser.add_argument("--arms", default=",".join(ARM_ORDER))
     parser.add_argument("--data-seed", type=int, default=20260827)
     parser.add_argument("--evaluation-batch-windows", type=int, default=4)
     parser.add_argument("--compute-dtype", default="bfloat16")
@@ -75,8 +76,13 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
     args = parser.parse_args(argv)
     checkpoints = _checkpoint_steps(args.checkpoints, args.total_steps)
     seeds = tuple(int(value) for value in args.seeds.split(","))
+    arms = tuple(value.strip() for value in args.arms.split(",") if value.strip())
     if not seeds or len(seeds) != len(set(seeds)) or min(seeds) < 0:
         raise ValueError("seeds must be unique non-negative integers")
+    if not arms or len(arms) != len(set(arms)) or any(arm not in ARM_ORDER for arm in arms):
+        raise ValueError("arms must be unique registered MIMO-lift arms")
+    if "CONTROL-RANDOM" not in arms:
+        raise ValueError("arms must include CONTROL-RANDOM")
 
     train_manifest, train_arrays, train_paths = load_activation_cache(
         args.activation_cache_manifest, artifact_dir=args.activation_cache_dir,
@@ -126,7 +132,7 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
     def persist(status: str) -> None:
         _write_json_with_output_mirror(partial_path, {
             "protocol": args.experiment_protocol, "status": status, "target_layer": layer,
-            "arm_order": list(ARM_ORDER), "seeds": seed_results,
+            "arm_order": list(arms), "seeds": seed_results,
             "complete": complete, "passed": numerical_pass,
         }, args.output_dir)
 
@@ -140,7 +146,7 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
         )
         seed_record = {"arms": {}}
         seed_results[str(seed)] = seed_record
-        for arm in ARM_ORDER:
+        for arm in arms:
             if _deadline_reached(deadline_monotonic):
                 complete = False
                 break
@@ -181,7 +187,7 @@ def main(argv: list[str] | None = None, *, deadline_monotonic: float | None = No
         "source": f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}",
         "method": "operator_preserving_siso_to_mimo_qkvo_lift",
         "target_layer": layer, "sequence_length": int(train_manifest["sequence_length"]),
-        "seeds_requested": list(seeds), "arm_order": list(ARM_ORDER),
+        "seeds_requested": list(seeds), "arm_order": list(arms),
         "training": {"recovery_steps_per_arm": args.total_steps, "checkpoints": list(checkpoints)},
         "compute_dtype": dtype_decision.dtype, "mamba_config": asdict(mamba_config),
         "activation_cache_manifest": str(Path(args.activation_cache_manifest).resolve()),
