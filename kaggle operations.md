@@ -309,3 +309,20 @@ print("summary: /kaggle/working/output/extent-exact-lift-composition-confirmatio
 ```
 
 Expected runtime is inferred from EXP-058, not guaranteed. Download `extent-exact-lift-composition-confirmation-summary.md` and `extent-exact-lift-composition-confirmation.json`. On failure download `exp059-failure.json` and `exp059-stage-manifest.json`.
+
+## EXP-060: 5–8-hour progressive exact-lift scaling
+
+Use a fresh TPU v5e-8 `Save Version` process and run this as the first JAX call:
+
+```python
+from scripts.qwen_exact_lift_scaling_campaign import main as run_scaling
+
+result = run_scaling([])
+print("EXP-060 pass:", result["passed"])
+print("EXP-060 gate:", result["aggregate"]["scientific_gate_passed"])
+for stage in result["aggregate"]["stages"]:
+    print(stage["replacement_count"], stage["mean_exact_minus_random_nll"], stage["bootstrap_95_ci"])
+print("summary: /kaggle/working/output/extent-exact-lift-scaling-campaign-summary.md")
+```
+
+The campaign resumes at completed layer boundaries when the same Kaggle output is still present. Download only `extent-exact-lift-scaling-campaign-summary.md` and `extent-exact-lift-scaling-campaign.json`. On failure download `exp060-failure.json` and `exp060-stage-manifest.json`; endpoint checkpoints are large and only useful for resuming/debugging.

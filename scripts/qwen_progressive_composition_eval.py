@@ -193,6 +193,50 @@ def analyze_exact_lift_multiseed(
     }
 
 
+def analyze_exact_lift_scaling(
+    *, layer_sets: dict[int, tuple[int, ...]], original_metric: dict,
+    composed_metrics: dict, bootstrap_samples: int, bootstrap_seed: int, **_
+) -> dict:
+    seeds = (123, 456, 789)
+    stages = []
+    all_finite = True
+    for count in sorted(layer_sets):
+        pairs, window_differences = [], []
+        for seed in seeds:
+            random_metric = composed_metrics[f"SEED-{seed}-COMPOSED-{count}"]
+            exact_metric = composed_metrics[f"SEED-{seed + 1000}-COMPOSED-{count}"]
+            random_nll = float(random_metric["mean_nll"])
+            exact_nll = float(exact_metric["mean_nll"])
+            pairs.append({"seed": seed, "random_mean_nll": random_nll, "exact_mean_nll": exact_nll, "exact_minus_random_nll": exact_nll - random_nll})
+            window_differences.append(np.asarray(exact_metric["window_mean_nll"], np.float64) - np.asarray(random_metric["window_mean_nll"], np.float64))
+        differences = np.stack(window_differences)
+        finite = bool(np.isfinite(differences).all())
+        all_finite = all_finite and finite
+        rng = np.random.default_rng(bootstrap_seed + count)
+        draws = np.empty(bootstrap_samples, np.float64)
+        for index in range(bootstrap_samples):
+            seed_indices = rng.integers(0, len(seeds), size=len(seeds))
+            window_indices = rng.integers(0, differences.shape[1], size=differences.shape[1])
+            draws[index] = differences[seed_indices][:, window_indices].mean()
+        mean_delta = float(np.mean([pair["exact_minus_random_nll"] for pair in pairs]))
+        lower, upper = np.quantile(draws, [0.025, 0.975])
+        wins = sum(pair["exact_minus_random_nll"] < 0 for pair in pairs)
+        stage_gate = bool(finite and mean_delta < 0 and wins >= 2 and upper < 0)
+        stages.append({
+            "replacement_count": count, "layers": list(layer_sets[count]),
+            "paired_seeds": pairs, "mean_exact_minus_random_nll": mean_delta,
+            "wins": wins, "bootstrap_95_ci": [float(lower), float(upper)],
+            "stage_gate_passed": stage_gate,
+        })
+    gate = bool(all_finite and len(stages) == 3 and all(stage["stage_gate_passed"] for stage in stages))
+    return {
+        "original_mean_nll": float(original_metric["mean_nll"]),
+        "stages": stages, "bootstrap_samples": bootstrap_samples,
+        "all_finite": all_finite, "scientific_gate_passed": gate,
+        "gate_definition": "At every 2/4/8-layer stage, exact lift wins >=2/3 seeds and mean paired NLL plus its 95% hierarchical-bootstrap upper bound are below zero.",
+    }
+
+
 def main(argv: list[str] | None = None) -> dict:
     parser = argparse.ArgumentParser(
         description="Stream frozen Qwen around registered Mamba compositions."
@@ -240,7 +284,7 @@ def main(argv: list[str] | None = None) -> dict:
     }
     layer_sets = (
         raw_layer_sets
-        if endpoint_index.get("analysis_mode") in {"exact_lift_pilot", "exact_lift_multiseed"}
+        if endpoint_index.get("analysis_mode") in {"exact_lift_pilot", "exact_lift_multiseed", "exact_lift_scaling"}
         else validate_progressive_layer_sets(raw_layer_sets)
     )
     target_layers = tuple(
@@ -261,6 +305,7 @@ def main(argv: list[str] | None = None) -> dict:
         "onset_localization",
         "exact_lift_pilot",
         "exact_lift_multiseed",
+        "exact_lift_scaling",
     }:
         raise ValueError(f"unsupported composition analysis mode: {analysis_mode}")
     raw_branch_sets = endpoint_index.get("branch_sets")
@@ -624,6 +669,7 @@ def main(argv: list[str] | None = None) -> dict:
         "onset_localization": analyze_composition_onset,
         "exact_lift_pilot": analyze_exact_lift_pilot,
         "exact_lift_multiseed": analyze_exact_lift_multiseed,
+        "exact_lift_scaling": analyze_exact_lift_scaling,
     }[analysis_mode]
     aggregate = analysis_function(
         seeds=seeds,

@@ -1241,6 +1241,18 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Remaining boundary:** exact composition remains roughly `+1.04024` NLL above original Qwen after 1,024 updates. The result establishes relative initializer quality, not recovered model quality, long-context inference, 15/85 replacement scaling, or an MLA interaction. The next publication-critical experiment is progressive 2/4/8-layer scaling with matched exact/random controls and then a checkpointable full-model recovery run.
 - **Execution provenance:** compact-summary SHA-256 `7d6f4a83a29331810d5ae99ba62b33e8b55e5420f9e1c1ab9c83b0460c613dea`; full-campaign SHA-256 `3aa7298a8e5265ce8eed95502f11f151752edabec901882d4896925118adb1b9`; compact artifact `results/EXP-059-exact-lift-composition-confirmation-summary.md`.
 
+### EXP-060 — Exact-lift progressive 2/4/8-layer scaling (pre-registered)
+
+- **Implementation commit title:** `feat: add exact-lift progressive scaling campaign`.
+- **Question:** does the confirmed two-layer exact-lift advantage persist as independently trained replacements are composed into nested 4- and 8-layer hybrids, or does composition error grow faster than the initialization benefit?
+- **Nested sets:** `2={0,18}`, `4={0,12,18,29}`, and `8={0,6,12,18,23,29,34,39}`. These cover input boundary, early/interior/late depths, and preserve exact nesting for paired scaling comparisons.
+- **Paired design:** random versus balanced exact lift for model seeds `123/456/789`. Layer 0 receives 8,192 decoder-aware updates; every other endpoint receives 4,096. Sequence length 32, train offset `262144`, validation offset `24576`, and 256 validation windows are frozen before execution.
+- **Evaluation:** one streamed Qwen3-14B pass evaluates original Qwen plus random/exact branches at each 2/4/8 replacement count. Primary outcomes are paired end-to-end NLL differences; hidden-state divergence is recorded at diagnostic depths.
+- **Statistics and gate:** for each count independently, exact lift must win at least `2/3` seeds, have negative mean exact-minus-random NLL, and a hierarchical paired-bootstrap 95% upper bound below zero. The global gate requires all three stages to pass and all outputs to remain finite.
+- **Durability:** each fully trained layer writes a BF16 endpoint checkpoint and becomes a restart boundary. Interior layers run before the longer layer-0 cell. Activation arrays are deleted only after their endpoint is durable; layer-0 validation is retained for the final stream. Telegram reports start/completion/failure and the failure artifact records the precise stage.
+- **Resource expectation:** designed for a fresh 5–8-hour v5e-8 allocation. Runtime is an estimate from EXP-058/059 and is not described as a hard deadline. Endpoint payloads may occupy several GiB in Kaggle output and must not be downloaded after normal completion.
+- **Interpretation boundary:** a pass supports exact-lift scaling through eight replacements, not the final 34 Mamba layers, MLA conversion, long-context performance, or full recovery to Qwen NLL. A failed 8-layer stage with passing 2/4 stages would identify a composition boundary rather than invalidate the transplant mechanism.
+
 ### Cloud TPU campaign protocol
 
 - **Campaign contents:** run EXP-045, EXP-046, and EXP-047 sequentially in one TPU v5e-8 allocation. Completed experiment and cell JSONs are restart boundaries; a rerun skips every numerically valid result.
