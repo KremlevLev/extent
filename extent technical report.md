@@ -1223,6 +1223,15 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** advance exact lift to a multiseed progressive-composition confirmation when TPU budget returns. Do not spend remaining sub-hour fragments repeating this cell; the immediate engineering priority can shift to checkpointable full-model recovery infrastructure and MLA integration while preserving EXP-058 as the initializer-selection basis.
 - **Execution provenance:** compact-summary SHA-256 `15ea05d48703f150e1b02f4e119c1613808b21a0754aeb54d45e012672d77272`; full-campaign SHA-256 `e7d9b4b13a52fcf01031b6d31906862a9b3cfbc36ff9208b84920d2d19a6f86c`; compact artifact `results/EXP-058-exact-lift-composition-pilot-summary.md`.
 
+### EXP-059 — Multiseed exact-lift composition confirmation (pre-registered)
+
+- **Implementation commit title:** `feat: add multiseed exact-lift composition confirmation`.
+- **Locked extension of EXP-058:** repeat the same layers 0+18, 1,024-step recovery, train/validation offsets, sequence length, and full-model streaming evaluation for paired seeds `123/456/789`. No hyperparameter is changed in response to the pilot result.
+- **Branches:** original Qwen plus six composed branches: random and balanced exact lift for each paired model seed. Endpoint identifiers with `seed+1000` denote exact lift and are bookkeeping labels, not independent seeds.
+- **Primary statistic:** per-seed exact-minus-random final NLL on identical 256 validation windows. A hierarchical paired bootstrap resamples model seeds and validation windows with 2,000 draws.
+- **Confirmation gate:** mean exact-minus-random NLL below zero, exact lift wins at least `2/3` model seeds, all values finite, and the paired-bootstrap 95% upper confidence bound is below zero.
+- **Scope:** a pass confirms a two-layer composition advantage under short recovery. It does not establish scaling to 4/8/34 replaced layers or recovery to original-Qwen NLL.
+
 ### Cloud TPU campaign protocol
 
 - **Campaign contents:** run EXP-045, EXP-046, and EXP-047 sequentially in one TPU v5e-8 allocation. Completed experiment and cell JSONs are restart boundaries; a rerun skips every numerically valid result.

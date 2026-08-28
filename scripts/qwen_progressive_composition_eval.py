@@ -153,6 +153,46 @@ def analyze_exact_lift_pilot(*, original_metric: dict, composed_metrics: dict, *
     }
 
 
+def analyze_exact_lift_multiseed(
+    *, original_metric: dict, composed_metrics: dict, bootstrap_samples: int, bootstrap_seed: int, **_
+) -> dict:
+    seeds = (123, 456, 789)
+    pairs = []
+    window_differences = []
+    for seed in seeds:
+        random_metric = composed_metrics[f"SEED-{seed}-COMPOSED-2"]
+        exact_metric = composed_metrics[f"SEED-{seed + 1000}-COMPOSED-2"]
+        delta = float(exact_metric["mean_nll"] - random_metric["mean_nll"])
+        pairs.append({
+            "seed": seed, "random_mean_nll": float(random_metric["mean_nll"]),
+            "exact_mean_nll": float(exact_metric["mean_nll"]), "exact_minus_random_nll": delta,
+        })
+        window_differences.append(
+            np.asarray(exact_metric["window_mean_nll"], np.float64)
+            - np.asarray(random_metric["window_mean_nll"], np.float64)
+        )
+    differences = np.stack(window_differences)
+    rng = np.random.default_rng(bootstrap_seed)
+    draws = np.empty(bootstrap_samples, np.float64)
+    for index in range(bootstrap_samples):
+        seed_indices = rng.integers(0, len(seeds), size=len(seeds))
+        window_indices = rng.integers(0, differences.shape[1], size=differences.shape[1])
+        draws[index] = differences[seed_indices][:, window_indices].mean()
+    mean_delta = float(np.mean([pair["exact_minus_random_nll"] for pair in pairs]))
+    lower, upper = np.quantile(draws, [0.025, 0.975])
+    finite = bool(np.isfinite(differences).all() and np.isfinite(draws).all())
+    wins = sum(pair["exact_minus_random_nll"] < 0 for pair in pairs)
+    gate = bool(finite and mean_delta < 0 and wins >= 2 and upper < 0)
+    return {
+        "original_mean_nll": float(original_metric["mean_nll"]),
+        "paired_seeds": pairs, "mean_exact_minus_random_nll": mean_delta,
+        "wins": wins, "bootstrap_95_ci": [float(lower), float(upper)],
+        "bootstrap_samples": bootstrap_samples, "pilot_gate_passed": gate,
+        "scientific_gate_passed": gate, "all_finite": finite,
+        "gate_definition": "Exact lift has lower mean NLL, wins >=2/3 seeds, and the paired hierarchical-bootstrap 95% upper bound is below zero.",
+    }
+
+
 def main(argv: list[str] | None = None) -> dict:
     parser = argparse.ArgumentParser(
         description="Stream frozen Qwen around registered Mamba compositions."
@@ -200,7 +240,7 @@ def main(argv: list[str] | None = None) -> dict:
     }
     layer_sets = (
         raw_layer_sets
-        if endpoint_index.get("analysis_mode") == "exact_lift_pilot"
+        if endpoint_index.get("analysis_mode") in {"exact_lift_pilot", "exact_lift_multiseed"}
         else validate_progressive_layer_sets(raw_layer_sets)
     )
     target_layers = tuple(
@@ -220,6 +260,7 @@ def main(argv: list[str] | None = None) -> dict:
         "boundary_scaling",
         "onset_localization",
         "exact_lift_pilot",
+        "exact_lift_multiseed",
     }:
         raise ValueError(f"unsupported composition analysis mode: {analysis_mode}")
     raw_branch_sets = endpoint_index.get("branch_sets")
@@ -582,6 +623,7 @@ def main(argv: list[str] | None = None) -> dict:
         "boundary_scaling": analyze_boundary_scaling,
         "onset_localization": analyze_composition_onset,
         "exact_lift_pilot": analyze_exact_lift_pilot,
+        "exact_lift_multiseed": analyze_exact_lift_multiseed,
     }[analysis_mode]
     aggregate = analysis_function(
         seeds=seeds,

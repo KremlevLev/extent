@@ -292,3 +292,20 @@ print("summary: /kaggle/working/output/extent-exact-lift-composition-pilot-summa
 ```
 
 Do not run any other JAX command first. Download `extent-exact-lift-composition-pilot-summary.md` and `extent-exact-lift-composition-pilot.json`. On failure download `exp058-failure.json` and `exp058-stage-manifest.json`. Endpoint checkpoints are only needed for debugging a failed streamed stage; do not download them after normal completion.
+
+## EXP-059: multiseed composition confirmation
+
+Run as the first JAX call in a fresh TPU v5e-8 process:
+
+```python
+from scripts.qwen_exact_lift_composition_confirmation import main as run_confirmation
+
+result = run_confirmation([])
+print("EXP-059 pass:", result["passed"])
+print("EXP-059 gate:", result["aggregate"]["scientific_gate_passed"])
+print("mean exact-random NLL:", result["aggregate"]["mean_exact_minus_random_nll"])
+print("95% CI:", result["aggregate"]["bootstrap_95_ci"])
+print("summary: /kaggle/working/output/extent-exact-lift-composition-confirmation-summary.md")
+```
+
+Expected runtime is inferred from EXP-058, not guaranteed. Download `extent-exact-lift-composition-confirmation-summary.md` and `extent-exact-lift-composition-confirmation.json`. On failure download `exp059-failure.json` and `exp059-stage-manifest.json`.
