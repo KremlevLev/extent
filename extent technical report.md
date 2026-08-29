@@ -1262,6 +1262,19 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Next decision:** stop further small layerwise initializer screens. The publication-critical next phase is checkpointable 15/85 hybrid recovery with staged replacement or curriculum, exact lift versus a matched random-control run at smaller scale, and simultaneous MLA interaction ablations. Long context, throughput, HBM, and generation quality must be measured separately.
 - **Execution provenance:** compact-summary SHA-256 `4c476a0a6217f9e248ac4d8d7f00bbee80ca7678f0a7d8b25ff8aa43352db6a5`; full-campaign SHA-256 `422e0d0ec03d12aac7ee7dc027c04fe87351c045cdffe61b3c20d62d58e9760b`; compact artifact `results/EXP-060-exact-lift-scaling-campaign-summary.md`.
 
+### Full 15/85 hybrid transplant preflight — production integration milestone
+
+- **Implementation commit title:** `feat: add full hybrid transplant preflight`.
+- **Purpose:** convert the separately selected Mamba and MLA research results into one auditable 40-layer production initialization contract before any full checkpoint import or recovery run.
+- **Layer contract:** exactly six retained attention layers `(5,12,19,25,32,39)` and 34 Mamba-3 MIMO layers, i.e. exactly 15% attention / 85% Mamba. Every layer owns exactly the six Qwen mixer tensors Q/K/V/O plus Q/K norms.
+- **Mamba policy:** all 34 replaced layers select `INIT-K-balanced-qkvo-lift`, the operator-preserving transplant confirmed by EXP-056/057/059/060. This is a selected policy, not yet a completed 34-layer checkpoint import.
+- **Attention policy:** all six retained attention layers now instantiate the EXP-019 `Qwen3RoRoPEBKVAttention` contract rather than the stale generic MaxText-style MLA scaffold. Frozen conversion settings are activation-PCA latent rank 448, one complete 128-element RoRoPE key, eight source KV heads, and no latent RMSNorm.
+- **Source ownership audit:** 203 embeddings/norm/MLP/head tensors plus 240 mixer tensors cover exactly `443/443` tensors in pinned `Qwen/Qwen3-14B@40c069824f4251a91eefaf281ebe4c544efd3e18`, with no overlap between direct and mixer ownership.
+- **Cache accounting:** each retained Qwen GQA layer stores 2,048 BF16 elements/token; EXP-019 stores 576. Across six attention layers this is `12,288 -> 3,456` elements/token, a 71.875% reduction for the retained-attention KV cache. This excludes recurrent Mamba state and does not yet constitute a measured generation-throughput result.
+- **Shape-only production audit:** the integrated architecture traces `14,765,658,870` parameters and 631 tensors. Under the v5e-8 `data/fsdp/tensor=1/4/2` layout, ideal BF16 weights are 3.451 GiB/device and weights + BF16 gradients + BF16 Lion momentum are 10.354 GiB/device, leaving 5.646 GiB of a nominal 16 GiB device for activations, XLA temporaries, executable buffers, and uneven replication.
+- **Engineering gate:** `scripts.full_hybrid_transplant_preflight.py --require-ready` reports the layer schedule, 443/443 source ownership, selected method IDs, cache accounting, and architecture compatibility without allocating model/checkpoint arrays. Its first run correctly rejected the stale rank-512/64-wide generic MLA contract; after production integration it reports `verdict=GO`.
+- **Numerical boundary:** this milestone contains CPU shape/smoke tests and analytical HBM accounting. It does not calibrate the six RoRoPE+BKV bases, materialize the 34 exact-lift mixers, execute a full 14B forward/backward, measure incremental decode, or establish recovered quality. Those remain required before full training.
+
 ### Cloud TPU campaign protocol
 
 - **Campaign contents:** run EXP-045, EXP-046, and EXP-047 sequentially in one TPU v5e-8 allocation. Completed experiment and cell JSONs are restart boundaries; a rerun skips every numerically valid result.

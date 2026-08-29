@@ -8,6 +8,28 @@ from extent.config import HybridConfig
 from extent.layers.common import RMSNorm, SwiGLU, dtype_from_name
 from extent.layers.mamba3 import Mamba3MIMO
 from extent.layers.mla import MultiHeadLatentAttention
+from extent.layers.rorope_bkv import Qwen3RoRoPEBKVAttention
+from extent.qwen3_teacher import Qwen3TeacherConfig
+
+
+def _attention_source_config(config: HybridConfig) -> Qwen3TeacherConfig:
+    """Construct the source-faithful attention contract without a teacher model."""
+    return Qwen3TeacherConfig(
+        vocab_size=config.vocab_size,
+        hidden_size=config.hidden_size,
+        intermediate_size=config.intermediate_size,
+        num_layers=config.num_layers,
+        num_attention_heads=config.mla.num_heads,
+        num_key_value_heads=config.mla.num_kv_heads,
+        head_dim=config.hidden_size // config.mla.num_heads,
+        max_position_embeddings=config.max_position_embeddings,
+        rope_theta=config.mla.rope_theta,
+        rms_norm_eps=config.rms_norm_eps,
+        param_dtype=config.param_dtype,
+        compute_dtype=config.compute_dtype,
+        logits_dtype=config.logits_dtype,
+        remat_policy=config.remat_policy,
+    )
 
 
 class HybridDecoderLayer(nn.Module):
@@ -21,9 +43,18 @@ class HybridDecoderLayer(nn.Module):
         residual = x
         normalized = RMSNorm(cfg.hidden_size, cfg.rms_norm_eps, param_dtype, name="input_layernorm")(x)
         if self.layer_index in cfg.attention_layer_indices:
-            mixed = MultiHeadLatentAttention(
-                cfg.hidden_size, cfg.mla, dtype, param_dtype, name="self_attn"
-            )(normalized, positions, attention_mask)
+            if cfg.mla.implementation == "rorope_bkv":
+                mixed = Qwen3RoRoPEBKVAttention(
+                    _attention_source_config(cfg),
+                    latent_rank=cfg.mla.kv_lora_rank,
+                    dtype=dtype,
+                    param_dtype=param_dtype,
+                    name="self_attn",
+                )(normalized, positions, attention_mask)
+            else:
+                mixed = MultiHeadLatentAttention(
+                    cfg.hidden_size, cfg.mla, dtype, param_dtype, name="self_attn"
+                )(normalized, positions, attention_mask)
         else:
             mixed = Mamba3MIMO(cfg.hidden_size, cfg.mamba, dtype, param_dtype, name="mamba")(normalized)
         x = residual + mixed

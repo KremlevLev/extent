@@ -21,19 +21,21 @@ model:
     dt_max: 0.1
     a_floor: 0.0001
   mla:
+    # Frozen deployable-reference contract selected by EXP-019.
+    implementation: rorope_bkv
     num_heads: 40
-    num_kv_heads: 40
+    num_kv_heads: 8
     num_key_rope_heads: 1
-    q_lora_rank: 1536
-    kv_lora_rank: 512
-    qk_nope_head_dim: 128
-    qk_rope_head_dim: 64
+    q_lora_rank: 0
+    kv_lora_rank: 448
+    qk_nope_head_dim: 0
+    qk_rope_head_dim: 128
     v_head_dim: 128
     rope_theta: 1000000.0
-    rope_original_head_dim: 64
+    rope_original_head_dim: 128
     partial_rope_strategy: high
     use_qk_norm: true
-    use_kv_latent_norm: true
+    use_kv_latent_norm: false
     qk_head_chunk_size: 4
 
 training:

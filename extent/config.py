@@ -24,19 +24,20 @@ class Mamba3Config:
 
 @dataclass(frozen=True)
 class MLAConfig:
+    implementation: str = "rorope_bkv"
     num_heads: int = 40
-    num_kv_heads: int = 40
+    num_kv_heads: int = 8
     num_key_rope_heads: int = 1
-    q_lora_rank: int = 1536
-    kv_lora_rank: int = 512
-    qk_nope_head_dim: int = 128
-    qk_rope_head_dim: int = 64
+    q_lora_rank: int = 0
+    kv_lora_rank: int = 448
+    qk_nope_head_dim: int = 0
+    qk_rope_head_dim: int = 128
     v_head_dim: int = 128
     rope_theta: float = 1_000_000.0
-    rope_original_head_dim: int = 64
+    rope_original_head_dim: int = 128
     partial_rope_strategy: str = "high"
     use_qk_norm: bool = True
-    use_kv_latent_norm: bool = True
+    use_kv_latent_norm: bool = False
     qk_head_chunk_size: int = 4
 
 
@@ -89,6 +90,8 @@ class HybridConfig:
             raise ValueError("partial RoPE width cannot exceed the original RoPE width")
         if self.mla.partial_rope_strategy not in {"high", "low"}:
             raise ValueError("partial_rope_strategy must be high or low")
+        if self.mla.implementation not in {"rorope_bkv", "maxtext_mla"}:
+            raise ValueError("MLA implementation must be rorope_bkv or maxtext_mla")
 
     @property
     def mamba_layer_indices(self) -> tuple[int, ...]:
@@ -117,16 +120,17 @@ def tiny_config() -> HybridConfig:
             conv_kernel=3,
         ),
         mla=MLAConfig(
+            implementation="rorope_bkv",
             num_heads=4,
-            num_kv_heads=4,
+            num_kv_heads=2,
             num_key_rope_heads=1,
-            q_lora_rank=16,
+            q_lora_rank=0,
             kv_lora_rank=16,
-            qk_nope_head_dim=8,
-            qk_rope_head_dim=8,
-            v_head_dim=8,
-            rope_original_head_dim=8,
-            use_kv_latent_norm=True,
+            qk_nope_head_dim=0,
+            qk_rope_head_dim=16,
+            v_head_dim=16,
+            rope_original_head_dim=16,
+            use_kv_latent_norm=False,
             qk_head_chunk_size=2,
         ),
     )

@@ -33,6 +33,9 @@ def test_production_config_matches_pinned_qwen3_exactly():
     assert config.num_layers == spec.num_hidden_layers
     assert config.max_position_embeddings == spec.max_position_embeddings
     assert config.mla.num_heads == spec.num_attention_heads
+    assert config.mla.num_kv_heads == spec.num_key_value_heads
+    assert config.mla.kv_lora_rank == 448
+    assert config.mla.qk_rope_head_dim == spec.head_dim
     assert config.mla.rope_theta == spec.rope_theta
     assert config.attention_layer_indices == (5, 12, 19, 25, 32, 39)
     assert len(config.attention_layer_indices) / config.num_layers == 0.15

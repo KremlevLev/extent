@@ -9,6 +9,12 @@ from extent.qwen3_teacher import Qwen3TeacherConfig
 from extent.rorope import apply_rorope
 
 
+def _orthogonal_fp32_then_cast(key, shape, dtype=jnp.float32):
+    """Avoid unsupported BF16 QR during parameter initialization on CPU/TPU."""
+    value = nn.initializers.orthogonal()(key, shape, jnp.float32)
+    return value.astype(dtype)
+
+
 class Qwen3RoRoPEBKVAttention(nn.Module):
     """Qwen3-faithful RoRoPE+BKV attention with an explicit compressed cache."""
 
@@ -54,14 +60,14 @@ class Qwen3RoRoPEBKVAttention(nn.Module):
 
         rotations = self.param(
             "rorope_rotations",
-            nn.initializers.orthogonal(),
+            _orthogonal_fp32_then_cast,
             (cfg.head_dim // 2, cfg.num_key_value_heads, cfg.num_key_value_heads),
             self.param_dtype,
         )
         joint_width = (2 * cfg.num_key_value_heads - 1) * cfg.head_dim
         basis = self.param(
             "joint_basis",
-            nn.initializers.orthogonal(),
+            _orthogonal_fp32_then_cast,
             (self.latent_rank, joint_width),
             self.param_dtype,
         )

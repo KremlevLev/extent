@@ -114,8 +114,11 @@ page rather than disabling strict host checking.
 - A reusable Flax `Mamba3MIMO` block with data-dependent decay, the
   exponential-trapezoidal update, complex/rotary state channels, rank-4 MIMO,
   and an FP32 recurrent state.
-- A reference MLA module whose configuration and projection names follow
-  MaxText (`q_lora_rank`, `kv_lora_rank`, `qk_nope_head_dim`, and friends).
+- The EXP-019-selected RoRoPE+BKV attention contract in all six retained
+  attention layers: rank-448 activation-PCA cache plus one 128-element rotary
+  key, reducing retained-attention KV elements by 71.875% versus Qwen3 GQA.
+- The earlier MaxText-style MLA module remains available as an explicit
+  scaffold/ablation, but it is no longer the production Extent-14B attention.
 - A pre-norm hybrid decoder and causal LM head.
 - BF16 parameters and gradients, with FP32 recurrence/softmax/logits for
   numerical stability.
@@ -172,6 +175,20 @@ v5e-1). It traces all parameter shapes but allocates no 14B arrays:
 from scripts.full_model_preflight import main as full_preflight
 full_preflight([])
 ```
+
+Also audit the complete transplant ownership and selected mixer contracts. This
+allocates neither model weights nor checkpoint tensors:
+
+```python
+from scripts.full_hybrid_transplant_preflight import main as transplant_preflight
+
+transplant_preflight(["--require-ready"])
+```
+
+The expected production result is `443/443` pinned Qwen source tensors owned,
+34 Mamba layers assigned to `INIT-K-balanced-qkvo-lift`, six attention layers
+assigned to the EXP-019 RoRoPE+BKV conversion, and `verdict=GO`. The generated
+JSON is written under `output/` for audit but is intentionally not committed.
 
 Only on v5e-8, after reviewing the report, initialize parameter shards with:
 
