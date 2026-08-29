@@ -190,6 +190,36 @@ The expected production result is `443/443` pinned Qwen source tensors owned,
 assigned to the EXP-019 RoRoPE+BKV conversion, and `verdict=GO`. The generated
 JSON is written under `output/` for audit but is intentionally not committed.
 
+## EXP-061: one long production-aligned TPU run
+
+EXP-061 is the next publication experiment, designed to use one v5e-8 session
+for roughly 6–7 hours rather than spending an allocation on one HBM probe. It
+trains paired random/exact-lift endpoints at 12 layers drawn only from the final
+34-layer Mamba schedule, then evaluates nested 4/8/12-layer compositions with
+three paired seeds and end-to-end NLL. It is resumable at every completed layer,
+keeps large Qwen shards in RAM when available, writes durable stage/result
+JSONs, deletes endpoint payloads only after successful final evaluation, and
+sends Telegram start/completion/failure notifications.
+
+Run it inside the already initialized Kaggle notebook process (never through
+`!python` or `%run`):
+
+```python
+from scripts.qwen_production_aligned_scaling_campaign import main as run_exp061
+
+result = run_exp061([])
+```
+
+Download only these small final artifacts:
+
+- `/kaggle/working/output/extent-production-aligned-scaling-campaign-summary.md`
+- `/kaggle/working/output/extent-production-aligned-scaling-campaign.json`
+- `/kaggle/working/output/exp061-stage-manifest.json`
+
+Do not download activation arrays or endpoint payloads. If a managed Kaggle run
+is interrupted, rerun the same cell with the preserved output attached and the
+default resume behavior; completed, hash-checked layer boundaries are skipped.
+
 Only on v5e-8, after reviewing the report, initialize parameter shards with:
 
 ```python
