@@ -25,19 +25,26 @@ from extent.experiment_stage import update_stage_manifest
 from extent.qwen_source import QWEN3_1_7B_BASE
 
 
-PROTOCOL = "exp063-qwen3-1.7b-transplant-depth-atlas"
+PROTOCOL = "exp063-mamba3-in-the-qwen-homotopy-screen"
 SOURCE_MODEL = "1.7b-base"
 SEEDS = (123, 456, 789)
-ARMS = ("CONTROL-RANDOM", "BALANCED-RANK-LIFT")
+ARMS = (
+    "CONTROL-RANDOM",
+    "CONTROL-FLAT-QKVO",
+    "BALANCED-RANK-LIFT",
+    "M3Q-EXACT-LINEAR",
+    "M3Q-EXACT-COSINE",
+    "M3Q-EXACT-DELAYED-COSINE",
+)
 STEPS = 8192
 CHECKPOINTS = (0, 256, 1024, 2048, 4096, 8192)
 SEQUENCE_LENGTH = 64
 VALIDATION_WINDOWS = 128
 TRAIN_OFFSET = 393_216
 VALIDATION_OFFSET = 0
-# Early/middle/late evidence is produced first; remaining layers fill the atlas.
-LAYER_ORDER = (0, 13, 27, 6, 20, 3, 10, 17, 24, 1, 4, 7, 11, 14,
-               18, 21, 25, 2, 5, 8, 9, 12, 15, 16, 19, 22, 23, 26)
+# Uniform boundary/interior coverage. Compute is spent on recovery-method
+# discovery rather than repeating the already-selected initializer at 28 depths.
+LAYER_ORDER = (0, 6, 13, 20, 27)
 
 
 def _now() -> str:
@@ -52,46 +59,93 @@ def _arm_error(result: dict, seed: int, arm: str, step: int) -> float:
 
 
 def aggregate_atlas(layer_results: dict[str, dict]) -> dict:
-    layers: dict[str, dict] = {}
-    final_deltas = []
-    auc_deltas = []
+    prepared: dict[str, dict] = {}
     for layer, result in sorted(layer_results.items(), key=lambda item: int(item[0])):
         if not result.get("complete"):
-            layers[layer] = {"complete": False}
+            prepared[layer] = {"complete": False}
             continue
-        curves = {}
+        curves: dict[str, np.ndarray] = {}
         for arm in ARMS:
             curves[arm] = np.asarray([
                 np.mean([_arm_error(result, seed, arm, step) for seed in SEEDS])
                 for step in CHECKPOINTS
             ], dtype=np.float64)
         random_curve = curves["CONTROL-RANDOM"]
+        flat_curve = curves["CONTROL-FLAT-QKVO"]
         lift_curve = curves["BALANCED-RANK-LIFT"]
         x = np.asarray(CHECKPOINTS, dtype=np.float64) / STEPS
-        random_auc = float(np.trapezoid(random_curve, x=x))
-        lift_auc = float(np.trapezoid(lift_curve, x=x))
-        paired_final = np.asarray([
-            _arm_error(result, seed, "BALANCED-RANK-LIFT", STEPS)
-            - _arm_error(result, seed, "CONTROL-RANDOM", STEPS)
+        auc = {
+            arm: float(np.sum(0.5 * (curve[:-1] + curve[1:]) * np.diff(x)))
+            for arm, curve in curves.items()
+        }
+        prepared[layer] = {
+            "complete": True,
+            "result": result,
+            "curves": curves,
+            "auc": auc,
+            "random_curve": random_curve,
+            "flat_curve": flat_curve,
+            "lift_curve": lift_curve,
+        }
+
+    complete_prepared = [row for row in prepared.values() if row.get("complete")]
+    homotopy_arms = ARMS[3:]
+    mean_schedule_auc = {
+        arm: float(np.mean([row["auc"][arm] for row in complete_prepared]))
+        for arm in homotopy_arms
+    }
+    selected_arm = (
+        min(homotopy_arms, key=lambda arm: mean_schedule_auc[arm])
+        if complete_prepared else None
+    )
+
+    layers: dict[str, dict] = {}
+    selected_final_deltas = []
+    selected_auc_deltas = []
+    for layer, prepared_row in prepared.items():
+        if not prepared_row.get("complete") or selected_arm is None:
+            layers[layer] = {"complete": False}
+            continue
+        result = prepared_row["result"]
+        curves = prepared_row["curves"]
+        auc = prepared_row["auc"]
+        random_curve = prepared_row["random_curve"]
+        flat_curve = prepared_row["flat_curve"]
+        lift_curve = prepared_row["lift_curve"]
+        paired_vs_exact = np.asarray([
+            _arm_error(result, seed, selected_arm, STEPS)
+            - _arm_error(result, seed, "BALANCED-RANK-LIFT", STEPS)
             for seed in SEEDS
         ])
         record = {
             "complete": True,
-            "random_curve": dict(zip(map(str, CHECKPOINTS), map(float, random_curve))),
-            "exact_lift_curve": dict(zip(map(str, CHECKPOINTS), map(float, lift_curve))),
-            "random_normalized_auc": random_auc,
-            "exact_lift_normalized_auc": lift_auc,
-            "auc_relative_improvement": float(1.0 - lift_auc / random_auc),
+            "curves": {
+                arm: dict(zip(map(str, CHECKPOINTS), map(float, curve)))
+                for arm, curve in curves.items()
+            },
+            "normalized_auc": auc,
+            "selected_homotopy_arm": selected_arm,
+            "selected_homotopy_auc_improvement_over_exact": float(
+                1.0 - auc[selected_arm] / auc["BALANCED-RANK-LIFT"]
+            ),
             "final_random_mean": float(random_curve[-1]),
+            "final_flat_qkvo_mean": float(flat_curve[-1]),
             "final_exact_lift_mean": float(lift_curve[-1]),
-            "final_exact_minus_random": float(np.mean(paired_final)),
-            "final_relative_improvement": float(1.0 - lift_curve[-1] / random_curve[-1]),
-            "final_seed_wins": int(np.sum(paired_final < 0)),
-            "layer_gate_passed": bool(np.mean(paired_final) < 0 and np.sum(paired_final < 0) >= 2),
+            "final_selected_homotopy_mean": float(curves[selected_arm][-1]),
+            "final_selected_minus_exact": float(np.mean(paired_vs_exact)),
+            "final_selected_relative_improvement_over_exact": float(
+                1.0 - curves[selected_arm][-1] / lift_curve[-1]
+            ),
+            "final_selected_seed_wins_over_exact": int(np.sum(paired_vs_exact < 0)),
+            "layer_gate_passed": bool(
+                np.mean(paired_vs_exact) < 0
+                and np.sum(paired_vs_exact < 0) >= 2
+                and auc[selected_arm] < auc["BALANCED-RANK-LIFT"]
+            ),
         }
         layers[layer] = record
-        final_deltas.append(record["final_exact_minus_random"])
-        auc_deltas.append(lift_auc - random_auc)
+        selected_final_deltas.append(record["final_selected_minus_exact"])
+        selected_auc_deltas.append(auc[selected_arm] - auc["BALANCED-RANK-LIFT"])
     complete_rows = [row for row in layers.values() if row.get("complete")]
     wins = sum(bool(row["layer_gate_passed"]) for row in complete_rows)
     complete = len(complete_rows) == len(LAYER_ORDER)
@@ -99,17 +153,21 @@ def aggregate_atlas(layer_results: dict[str, dict]) -> dict:
         "layers": layers,
         "completed_layers": len(complete_rows),
         "layer_wins": wins,
-        "mean_final_exact_minus_random": float(np.mean(final_deltas)) if final_deltas else None,
-        "mean_auc_exact_minus_random": float(np.mean(auc_deltas)) if auc_deltas else None,
-        "scientific_gate_passed": bool(
+        "mean_normalized_auc_by_homotopy_schedule": mean_schedule_auc,
+        "selected_homotopy_schedule": selected_arm,
+        "mean_selected_homotopy_minus_exact_final": float(np.mean(selected_final_deltas)) if selected_final_deltas else None,
+        "mean_selected_homotopy_minus_exact_auc": float(np.mean(selected_auc_deltas)) if selected_auc_deltas else None,
+        "exploratory_advancement_gate_passed": bool(
             complete
-            and wins >= 21
-            and np.mean(final_deltas) < 0
-            and np.mean(auc_deltas) < 0
+            and wins >= 4
+            and np.mean(selected_final_deltas) < 0
+            and np.mean(selected_auc_deltas) < 0
         ) if complete_rows else False,
         "gate_definition": (
-            "All 28 layers complete; exact lift wins at least 21/28 layer gates "
-            "and has lower across-layer mean final error and normalized recovery AUC."
+            "Select one global schedule by lowest mean AUC across the five-layer "
+            "screen; it must then beat standard exact lift at at least 4/5 layer "
+            "gates and in across-layer mean final error and AUC. A pass advances "
+            "the recipe to a fresh-data locked confirmation."
         ),
     }
 
@@ -117,31 +175,33 @@ def aggregate_atlas(layer_results: dict[str, dict]) -> dict:
 def render_summary(result: dict) -> str:
     aggregate = result["aggregate"]
     lines = [
-        "# EXP-063 Qwen3-1.7B transplant depth atlas",
+        "# EXP-063 Mamba-3 in the Qwen homotopy screen",
         "",
         f"- Status: `{result['status']}`",
         f"- Duration: `{result['duration_hours']:.3f}` hours",
-        f"- Completed layers: `{aggregate['completed_layers']}/28`",
-        f"- Exact-lift layer wins: `{aggregate['layer_wins']}/{aggregate['completed_layers']}`",
-        f"- Scientific gate: `{aggregate['scientific_gate_passed']}`",
+        f"- Completed layers: `{aggregate['completed_layers']}/5`",
+        f"- M3Q layer wins over exact lift: `{aggregate['layer_wins']}/{aggregate['completed_layers']}`",
+        f"- Selected global schedule: `{aggregate['selected_homotopy_schedule']}`",
+        f"- Exploratory advancement gate: `{aggregate['exploratory_advancement_gate_passed']}`",
         "",
-        "| Layer | Random @8192 | Exact @8192 | Improvement | AUC improvement | Seed wins | Gate |",
-        "|---:|---:|---:|---:|---:|---:|---:|",
+        "| Layer | Random | Flat QKVO | Exact | Selected M3Q | Global schedule | Final gain | AUC gain | Wins | Gate |",
+        "|---:|---:|---:|---:|---:|---|---:|---:|---:|---:|",
     ]
     for layer, row in aggregate["layers"].items():
         if not row.get("complete"):
             continue
         lines.append(
             f"| {layer} | {row['final_random_mean']:.7f} | "
-            f"{row['final_exact_lift_mean']:.7f} | "
-            f"{100 * row['final_relative_improvement']:+.2f}% | "
-            f"{100 * row['auc_relative_improvement']:+.2f}% | "
-            f"{row['final_seed_wins']}/3 | {row['layer_gate_passed']} |"
+            f"{row['final_flat_qkvo_mean']:.7f} | {row['final_exact_lift_mean']:.7f} | "
+            f"{row['final_selected_homotopy_mean']:.7f} | {row['selected_homotopy_arm']} | "
+            f"{100 * row['final_selected_relative_improvement_over_exact']:+.2f}% | "
+            f"{100 * row['selected_homotopy_auc_improvement_over_exact']:+.2f}% | "
+            f"{row['final_selected_seed_wins_over_exact']}/3 | {row['layer_gate_passed']} |"
         )
     lines += [
         "",
-        "AUC integrates held-out decoder-output relative L2 over the registered "
-        "0/256/1024/2048/4096/8192 recovery checkpoints. Lower is better.",
+        "AUC integrates held-out deployable (alpha=1) decoder-output relative L2 "
+        "over the registered checkpoints. Homotopy is never used during evaluation.",
     ]
     return "\n".join(lines) + "\n"
 
@@ -164,7 +224,9 @@ def _valid_layer_result(path: Path, layer: int) -> dict | None:
 
 
 def main(argv: list[str] | None = None) -> dict:
-    parser = argparse.ArgumentParser(description="Run the Qwen3-1.7B exact-lift depth atlas.")
+    parser = argparse.ArgumentParser(
+        description="Screen M3Q attention-to-Mamba homotopy on Qwen3-1.7B."
+    )
     parser.add_argument("--output-dir", default="/kaggle/working/output")
     parser.add_argument("--qwen-cache-dir", default="/dev/shm/qwen3-1.7b-exp063-weights")
     parser.add_argument("--dataset-cache-dir", default="/kaggle/working/extent-dataset-cache")
@@ -175,7 +237,7 @@ def main(argv: list[str] | None = None) -> dict:
 
     devices = list(jax.devices())
     if len(devices) != 8 or any(device.platform != "tpu" for device in devices):
-        raise ValueError("EXP-063 requires one TPU v5e-8")
+        raise ValueError("EXP-063 M3Q requires one TPU v5e-8")
     output = Path(args.output_dir)
     output.mkdir(parents=True, exist_ok=True)
     started_clock = time.monotonic()
@@ -185,7 +247,7 @@ def main(argv: list[str] | None = None) -> dict:
     stage_path = output / "exp063-stage-manifest.json"
     start_notice = _safe_notify(
         args.telegram,
-        f"Extent TPU campaign\nstatus=started\nexperiment=EXP-063 Qwen3-1.7B atlas"
+        f"Extent TPU campaign\nstatus=started\nexperiment=EXP-063 Mamba-3 in the Qwen"
         f"\nhost={socket.gethostname()}\nhard_budget_hours={args.max_wall_hours}",
     )
     update_stage_manifest(
@@ -291,9 +353,9 @@ def main(argv: list[str] | None = None) -> dict:
             "removed_regenerable_arrays": removed,
             "start_notification": start_notice,
         }
-        result_path = output / "extent-qwen17-transplant-atlas.json"
+        result_path = output / "extent-m3q-homotopy-screen.json"
         _write_json_with_output_mirror(result_path, result, str(output))
-        summary = output / "extent-qwen17-transplant-atlas-summary.md"
+        summary = output / "extent-m3q-homotopy-screen-summary.md"
         summary.write_text(render_summary(result), encoding="utf-8")
         update_stage_manifest(
             stage_path, experiment=PROTOCOL, stage="final", status=result["status"],
@@ -301,12 +363,12 @@ def main(argv: list[str] | None = None) -> dict:
         )
         _safe_notify(
             args.telegram,
-            f"Extent TPU campaign\nstatus={result['status']}\nexperiment=EXP-063 Qwen3-1.7B atlas"
+            f"Extent TPU campaign\nstatus={result['status']}\nexperiment=EXP-063 M3Q homotopy"
             f"\nduration_hours={result['duration_hours']:.3f}"
-            f"\nlayers={aggregate['completed_layers']}/28\nwins={aggregate['layer_wins']}",
+            f"\nlayers={aggregate['completed_layers']}/5\nwins={aggregate['layer_wins']}",
         )
         print(
-            f"EXP063-{result['status'].upper()} layers={aggregate['completed_layers']}/28 "
+            f"EXP063-{result['status'].upper()} layers={aggregate['completed_layers']}/5 "
             f"wins={aggregate['layer_wins']}\nsummary={summary.resolve()}"
         )
         return result

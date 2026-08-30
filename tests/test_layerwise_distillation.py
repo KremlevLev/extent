@@ -11,6 +11,7 @@ from flax.core import freeze
 from extent.layerwise_distillation import (
     create_counterfactual_contribution_train_step,
     create_decoder_aware_train_step,
+    create_homotopy_decoder_train_step,
     apply_parameter_offset,
     create_layerwise_prior_train_step,
     create_layerwise_train_step,
@@ -94,6 +95,40 @@ def test_decoder_aware_step_rejects_negative_decoder_weight():
             decoder_loss_weight=-1.0,
             bf16_gradients=False,
         )
+
+
+def test_homotopy_step_trains_mixer_and_reaches_deployable_decoder_path():
+    params = {"kernel": jnp.eye(2, dtype=jnp.float32)}
+    tail_params = {"scale": jnp.asarray(2.0, dtype=jnp.float32)}
+    residual = jnp.asarray([[1.0, -1.0]], dtype=jnp.float32)
+    normalized = jnp.asarray([[2.0, 1.0]], dtype=jnp.float32)
+    mixer_target = jnp.asarray([[0.5, -0.25]], dtype=jnp.float32)
+    apply_mixer = lambda candidate, value: value @ candidate["kernel"]
+    apply_tail = lambda frozen, residual_value, mixer_value: (
+        residual_value + frozen["scale"] * mixer_value
+    )
+    tx = optax.sgd(learning_rate=1e-2)
+    step = create_homotopy_decoder_train_step(
+        apply_mixer,
+        apply_tail,
+        tx,
+        decoder_loss_weight=1.0,
+        bf16_gradients=False,
+    )
+
+    _, _, teacher_bridge = step(
+        params, tx.init(params), tail_params, residual, normalized, mixer_target, 0.0
+    )
+    updated, _, deployable = step(
+        params, tx.init(params), tail_params, residual, normalized, mixer_target, 1.0
+    )
+    jax.block_until_ready((teacher_bridge, deployable))
+
+    assert float(teacher_bridge["homotopy_decoder_loss"]) == 0.0
+    assert float(deployable["homotopy_decoder_loss"]) > 0.0
+    assert float(deployable["homotopy_alpha"]) == 1.0
+    assert bool(deployable["grads_finite"])
+    assert not np.array_equal(updated["kernel"], params["kernel"])
 
 
 def test_counterfactual_contribution_removes_residual_baseline():

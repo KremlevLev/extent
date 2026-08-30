@@ -269,27 +269,28 @@ This first bring-up does not serialize the resulting 27.5 GiB Extent parameter
 tree. A PASS is required before adding sharded safetensors export/Hugging Face
 upload; otherwise a large but invalid checkpoint could be published.
 
-## EXP-063: Qwen3-1.7B exact-lift depth atlas
+## EXP-063: Mamba-3 in the Qwen homotopy screen
 
-The controlled method-development track uses the immutable
-`Qwen/Qwen3-1.7B-Base` checkpoint. EXP-063 compares random Mamba initialization
-against balanced exact QKVO lift at every one of the 28 source depths, using
-three paired seeds, identical data order, 8,192 recovery steps per arm, and
-held-out validation curves at 0/256/1024/2048/4096/8192 steps. A 7.25-hour wall
-deadline produces a valid partial atlas instead of losing completed layers.
+This is the first controlled test of the proposed **M3Q** recovery method on
+the immutable `Qwen/Qwen3-1.7B-Base` checkpoint. It compares random, flat-QKVO,
+and balanced exact-lift controls with three schedules that gradually replace
+teacher attention by the exact-lift Mamba-3 block inside the frozen decoder.
+Five registered boundary/interior layers, three paired seeds, 8,192 recovery
+steps, and six checkpoints measure both final error and recovery-curve AUC.
+Every held-out checkpoint is evaluated with the teacher bridge removed.
 
 Run only this final cell after the normal Kaggle setup cells:
 
 ```python
-from scripts.qwen17_transplant_atlas_campaign import main as run_exp063
+from scripts.m3q_homotopy_campaign import main as run_exp063
 
 result = run_exp063([])
 ```
 
 Download only:
 
-- `/kaggle/working/output/extent-qwen17-transplant-atlas-summary.md`
-- `/kaggle/working/output/extent-qwen17-transplant-atlas.json`
+- `/kaggle/working/output/extent-m3q-homotopy-screen-summary.md`
+- `/kaggle/working/output/extent-m3q-homotopy-screen.json`
 - `/kaggle/working/output/exp063-failure.json` only if Telegram reports failure
 
 Activation arrays and the source checkpoint are regenerated and must not be

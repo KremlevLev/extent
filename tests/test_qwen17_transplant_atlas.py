@@ -10,14 +10,23 @@ from scripts.qwen17_transplant_atlas_campaign import (
     SEEDS,
     aggregate_atlas,
 )
+from scripts.qwen_bridge_ablation import homotopy_alpha
 
 
-def _layer_result(exact_scale: float = 0.8):
+def _layer_result():
+    scales = {
+        "CONTROL-RANDOM": 1.00,
+        "CONTROL-FLAT-QKVO": 0.95,
+        "BALANCED-RANK-LIFT": 0.80,
+        "M3Q-EXACT-LINEAR": 0.75,
+        "M3Q-EXACT-COSINE": 0.70,
+        "M3Q-EXACT-DELAYED-COSINE": 0.65,
+    }
     seeds = {}
     for seed in SEEDS:
         arms = {}
         for arm in ARMS:
-            scale = exact_scale if arm == "BALANCED-RANK-LIFT" else 1.0
+            scale = scales[arm]
             evaluations = {
                 str(step): {
                     "decoder_output": {"relative_l2": scale * (1.0 - step / 20_000)}
@@ -76,6 +85,20 @@ def test_atlas_aggregation_measures_final_and_curve_advantage():
 
     assert aggregate["completed_layers"] == 1
     assert aggregate["layer_wins"] == 1
-    assert layer["final_seed_wins"] == 3
-    assert layer["final_relative_improvement"] > 0
-    assert layer["auc_relative_improvement"] > 0
+    assert aggregate["selected_homotopy_schedule"] == "M3Q-EXACT-DELAYED-COSINE"
+    assert aggregate["exploratory_advancement_gate_passed"] is False
+    assert layer["final_selected_seed_wins_over_exact"] == 3
+    assert layer["final_selected_relative_improvement_over_exact"] > 0
+    assert layer["selected_homotopy_auc_improvement_over_exact"] > 0
+
+
+def test_homotopy_schedules_are_bounded_monotonic_and_finish_deployable():
+    for schedule in ("linear", "cosine", "delayed-cosine"):
+        values = [homotopy_alpha(step, 100, schedule) for step in range(100)]
+        assert all(0.0 <= value <= 1.0 for value in values)
+        assert all(left <= right for left, right in zip(values, values[1:]))
+        assert values[-1] == 1.0
+
+    assert homotopy_alpha(0, 100, "delayed-cosine") == 0.0
+    assert homotopy_alpha(14, 100, "delayed-cosine") == 0.0
+    assert homotopy_alpha(69, 100, "delayed-cosine") == 1.0

@@ -1,4 +1,4 @@
-from scripts.qwen_mimo_lift import ARM_ORDER, VARIANT_BY_ARM
+from scripts.qwen_mimo_lift import ARM_ORDER, REGISTERED_ARMS, VARIANT_BY_ARM
 from scripts.qwen_mimo_lift_campaign import TARGET_LAYERS, aggregate_mimo_lift, render_summary
 
 
@@ -32,7 +32,8 @@ def _layer(layer):
 def test_protocol_has_paired_controls_and_depth_order():
     assert TARGET_LAYERS == (18, 6, 29, 0)
     assert ARM_ORDER[0] == "CONTROL-RANDOM"
-    assert set(ARM_ORDER) == set(VARIANT_BY_ARM)
+    assert set(REGISTERED_ARMS) == set(VARIANT_BY_ARM)
+    assert set(ARM_ORDER).issubset(VARIANT_BY_ARM)
     assert VARIANT_BY_ARM["SINGLE-CHANNEL-LIFT"].startswith("INIT-J")
     assert VARIANT_BY_ARM["BALANCED-RANK-LIFT"].startswith("INIT-K")
 

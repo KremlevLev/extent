@@ -41,7 +41,10 @@ from extent.decoder_replacement_eval import (
     qwen3_decoder_tail_params,
 )
 from extent.hardware import recommended_compute_dtype
-from extent.layerwise_distillation import create_decoder_aware_train_step
+from extent.layerwise_distillation import (
+    create_decoder_aware_train_step,
+    create_homotopy_decoder_train_step,
+)
 from extent.layers.mamba3 import Mamba3MIMO
 from extent.mamba3_transplant import build_qwen3_to_mamba3_transplant_variants
 from extent.offline_distillation import deterministic_batch_indices
@@ -87,6 +90,27 @@ def _checkpoint_steps(value: str, total_steps: int) -> tuple[int, ...]:
 
 def _deadline_reached(deadline_monotonic: float | None) -> bool:
     return deadline_monotonic is not None and time.monotonic() >= deadline_monotonic
+
+
+def homotopy_alpha(step: int, total_steps: int, schedule: str) -> float:
+    """Return the registered deployable-Mamba fraction for one recovery step."""
+    if total_steps < 1 or not 0 <= step < total_steps:
+        raise ValueError("homotopy step is outside the recovery schedule")
+    progress = (step + 1) / total_steps
+    if schedule == "linear":
+        return float(progress)
+    if schedule == "cosine":
+        return float(0.5 - 0.5 * np.cos(np.pi * progress))
+    if schedule == "delayed-cosine":
+        # 15% teacher-only decoder path, transition through 70%, then 30%
+        # fully deployable training. Mixer matching remains active throughout.
+        if progress <= 0.15:
+            return 0.0
+        if progress >= 0.70:
+            return 1.0
+        local = (progress - 0.15) / 0.55
+        return float(0.5 - 0.5 * np.cos(np.pi * local))
+    raise ValueError(f"unknown homotopy schedule: {schedule}")
 
 
 def _metric_record(metrics: dict) -> dict:
@@ -345,6 +369,7 @@ def _train_recovery(
     data_seed: int,
     evaluation_batch_windows: int,
     deadline_monotonic: float | None,
+    homotopy_schedule: str = "none",
 ) -> tuple[dict, dict, bool]:
     apply_mixer = lambda candidate, inputs: mamba.apply(
         {"params": candidate}, inputs
@@ -359,13 +384,24 @@ def _train_recovery(
         weight_decay=0.0,
         max_grad_norm=1.0,
     )
-    train_step = create_decoder_aware_train_step(
-        apply_mixer,
-        apply_tail,
-        tx,
-        decoder_loss_weight=decoder_loss_weight,
-        bf16_gradients=compute_dtype == jnp.bfloat16,
-    )
+    if homotopy_schedule == "none":
+        train_step = create_decoder_aware_train_step(
+            apply_mixer,
+            apply_tail,
+            tx,
+            decoder_loss_weight=decoder_loss_weight,
+            bf16_gradients=compute_dtype == jnp.bfloat16,
+        )
+    else:
+        # Validate before compilation so protocol mistakes fail cheaply.
+        homotopy_alpha(0, total_steps, homotopy_schedule)
+        train_step = create_homotopy_decoder_train_step(
+            apply_mixer,
+            apply_tail,
+            tx,
+            decoder_loss_weight=decoder_loss_weight,
+            bf16_gradients=compute_dtype == jnp.bfloat16,
+        )
     opt_state = tx.init(params)
     teacher_runner = create_batched_teacher_tail_runner(tail)
     replacement_runner = create_batched_replacement_runner(mamba, tail)
@@ -413,7 +449,7 @@ def _train_recovery(
             )[0]
         )
         cache_index = training_slice.start + index
-        params, opt_state, metrics = train_step(
+        step_arguments = (
             params,
             opt_state,
             tail_params,
@@ -430,6 +466,13 @@ def _train_recovery(
                 dtype=compute_dtype,
             ),
         )
+        if homotopy_schedule == "none":
+            params, opt_state, metrics = train_step(*step_arguments)
+        else:
+            alpha = homotopy_alpha(
+                zero_based_step, total_steps, homotopy_schedule
+            )
+            params, opt_state, metrics = train_step(*step_arguments, alpha)
         jax.block_until_ready(metrics)
         last_train_metrics = _metric_record(metrics)
         max_grad_norm = max(max_grad_norm, last_train_metrics["grad_norm"])
@@ -472,6 +515,7 @@ def _train_recovery(
         "evaluations": evaluations,
         "last_train_metrics": last_train_metrics,
         "max_grad_norm": max_grad_norm,
+        "homotopy_schedule": homotopy_schedule,
         "finite": finite,
         "complete": completed == total_steps,
     }, completed == total_steps

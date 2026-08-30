@@ -41,11 +41,25 @@ ARM_ORDER = (
     "SINGLE-CHANNEL-LIFT",
     "BALANCED-RANK-LIFT",
 )
+M3Q_HOMOTOPY_ARMS = (
+    "M3Q-EXACT-LINEAR",
+    "M3Q-EXACT-COSINE",
+    "M3Q-EXACT-DELAYED-COSINE",
+)
+REGISTERED_ARMS = ARM_ORDER + M3Q_HOMOTOPY_ARMS
 VARIANT_BY_ARM = {
     "CONTROL-RANDOM": "INIT-A-random",
     "CONTROL-FLAT-QKVO": "INIT-C-prior-qkvo-port",
     "SINGLE-CHANNEL-LIFT": "INIT-J-single-channel-qkvo-lift",
     "BALANCED-RANK-LIFT": "INIT-K-balanced-qkvo-lift",
+    "M3Q-EXACT-LINEAR": "INIT-K-balanced-qkvo-lift",
+    "M3Q-EXACT-COSINE": "INIT-K-balanced-qkvo-lift",
+    "M3Q-EXACT-DELAYED-COSINE": "INIT-K-balanced-qkvo-lift",
+}
+HOMOTOPY_BY_ARM = {
+    "M3Q-EXACT-LINEAR": "linear",
+    "M3Q-EXACT-COSINE": "cosine",
+    "M3Q-EXACT-DELAYED-COSINE": "delayed-cosine",
 }
 
 
@@ -82,7 +96,7 @@ def main(
     arms = tuple(value.strip() for value in args.arms.split(",") if value.strip())
     if not seeds or len(seeds) != len(set(seeds)) or min(seeds) < 0:
         raise ValueError("seeds must be unique non-negative integers")
-    if not arms or len(arms) != len(set(arms)) or any(arm not in ARM_ORDER for arm in arms):
+    if not arms or len(arms) != len(set(arms)) or any(arm not in REGISTERED_ARMS for arm in arms):
         raise ValueError("arms must be unique registered MIMO-lift arms")
     if "CONTROL-RANDOM" not in arms:
         raise ValueError("arms must include CONTROL-RANDOM")
@@ -187,10 +201,17 @@ def main(
                 data_seed=args.data_seed + seed,
                 evaluation_batch_windows=args.evaluation_batch_windows,
                 deadline_monotonic=deadline_monotonic,
+                homotopy_schedule=HOMOTOPY_BY_ARM.get(arm, "none"),
             )
             seed_record["arms"][arm] = {
                 "variant": variant, "initializer": asdict(reports[variant]),
-                "readout_calibration": readout_report, "recovery": recovery,
+                "readout_calibration": readout_report,
+                "recovery_recipe": (
+                    "standard_decoder_aware"
+                    if arm not in HOMOTOPY_BY_ARM
+                    else f"m3q_{HOMOTOPY_BY_ARM[arm]}_attention_to_mamba3_homotopy"
+                ),
+                "recovery": recovery,
             }
             numerical_pass = numerical_pass and bool(recovery["finite"])
             if arm_complete and return_endpoint_params:
@@ -208,7 +229,11 @@ def main(
         "protocol": args.experiment_protocol,
         "status": "completed" if complete else "deadline_partial",
         "source": f"{spec.repo_id}@{spec.revision}",
-        "method": "operator_preserving_siso_to_mimo_qkvo_lift",
+        "method": (
+            "m3q_operator_lift_with_attention_to_mamba3_homotopy"
+            if any(arm in HOMOTOPY_BY_ARM for arm in arms)
+            else "operator_preserving_siso_to_mimo_qkvo_lift"
+        ),
         "target_layer": layer, "sequence_length": int(train_manifest["sequence_length"]),
         "seeds_requested": list(seeds), "arm_order": list(arms),
         "training": {"recovery_steps_per_arm": args.total_steps, "checkpoints": list(checkpoints)},
@@ -219,7 +244,8 @@ def main(
         "resolved_evaluation_artifacts": {k: str(v) for k, v in eval_paths.items()},
         "seeds": seed_results, "complete": complete, "passed": numerical_pass,
         "notes": [
-            "All arms use paired data order, readout calibration, optimizer, and decoder-aware recovery.",
+            "All arms use paired data order, readout calibration, optimizer, and held-out deployable evaluation.",
+            "M3Q arms alter only the training-time decoder bridge schedule; evaluation always runs standalone Mamba-3.",
             "Single-channel and balanced-rank lifts are algebraically equal before training; optimization geometry is the intervention.",
             "This is a layer-local decoder-aware screen, not full-model NLL evidence.",
         ],

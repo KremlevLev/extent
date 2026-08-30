@@ -123,6 +123,77 @@ def create_decoder_aware_train_step(
     return train_step
 
 
+def create_homotopy_decoder_train_step(
+    apply_mixer: Callable[[optax.Params, jax.Array], jax.Array],
+    apply_decoder_tail: Callable[[optax.Params, jax.Array, jax.Array], jax.Array],
+    tx: optax.GradientTransformation,
+    *,
+    decoder_loss_weight: float,
+    bf16_gradients: bool,
+) -> Callable:
+    """Train through a scheduled teacher-attention -> Mamba decoder bridge.
+
+    Mixer matching remains active for the whole run.  ``alpha`` controls only
+    the decoder path: alpha=0 is the frozen Qwen block, alpha=1 is the fully
+    deployable Mamba replacement.  This makes architectural shock an explicit
+    curriculum instead of an instantaneous intervention.
+    """
+    if decoder_loss_weight < 0:
+        raise ValueError("decoder loss weight must be non-negative")
+    weight = jnp.asarray(decoder_loss_weight, dtype=jnp.float32)
+    normalization = jnp.asarray(1.0 + decoder_loss_weight, dtype=jnp.float32)
+
+    @jax.jit
+    def train_step(
+        params,
+        opt_state,
+        tail_params,
+        residual_inputs,
+        normalized_inputs,
+        mixer_targets,
+        alpha,
+    ):
+        alpha = jnp.clip(jnp.asarray(alpha, jnp.float32), 0.0, 1.0)
+        decoder_targets = jax.lax.stop_gradient(
+            apply_decoder_tail(tail_params, residual_inputs, mixer_targets)
+        )
+
+        def loss_fn(candidate):
+            mixer_predictions = apply_mixer(candidate, normalized_inputs)
+            bridged_mixer = (
+                (1.0 - alpha) * mixer_targets.astype(jnp.float32)
+                + alpha * mixer_predictions.astype(jnp.float32)
+            ).astype(mixer_predictions.dtype)
+            decoder_predictions = apply_decoder_tail(
+                tail_params, residual_inputs, bridged_mixer
+            )
+            mixer_loss = relative_mse(mixer_predictions, mixer_targets)
+            homotopy_decoder_loss = relative_mse(
+                decoder_predictions, decoder_targets
+            )
+            objective = (
+                mixer_loss + weight * homotopy_decoder_loss
+            ) / normalization
+            return objective, (mixer_loss, homotopy_decoder_loss)
+
+        (loss, (mixer_loss, decoder_loss)), grads = jax.value_and_grad(
+            loss_fn, has_aux=True
+        )(params)
+        health = gradient_health(grads)
+        optimizer_grads = cast_grads_bf16(grads) if bf16_gradients else grads
+        updates, opt_state = tx.update(optimizer_grads, opt_state, params)
+        params = optax.apply_updates(params, updates)
+        return params, opt_state, {
+            "loss": loss,
+            "mixer_loss": mixer_loss,
+            "homotopy_decoder_loss": decoder_loss,
+            "homotopy_alpha": alpha,
+            **health,
+        }
+
+    return train_step
+
+
 def create_counterfactual_contribution_train_step(
     apply_mixer: Callable[[optax.Params, jax.Array], jax.Array],
     apply_decoder_tail: Callable[[optax.Params, jax.Array, jax.Array], jax.Array],
