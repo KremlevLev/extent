@@ -21,6 +21,7 @@ class Qwen3TeacherConfig:
     max_position_embeddings: int = 40_960
     rope_theta: float = 1_000_000.0
     rms_norm_eps: float = 1e-6
+    tie_word_embeddings: bool = False
     param_dtype: str = "bfloat16"
     compute_dtype: str = "bfloat16"
     logits_dtype: str = "float32"
@@ -186,14 +187,15 @@ class Qwen3ForCausalLM(nn.Module):
         if positions.shape[0] == 1 and batch != 1:
             positions = jnp.broadcast_to(positions, (batch, length))
 
-        inputs = nn.Embed(
+        embedding = nn.Embed(
             cfg.vocab_size,
             cfg.hidden_size,
             dtype=dtype,
             param_dtype=param_dtype,
             embedding_init=nn.initializers.normal(0.02),
             name="embed_tokens",
-        )(input_ids)
+        )
+        inputs = embedding(input_ids)
         hidden_states = []
         layer_type = Qwen3DecoderLayer
         if cfg.remat_policy == "full":
@@ -207,14 +209,18 @@ class Qwen3ForCausalLM(nn.Module):
         inputs = RMSNorm(
             cfg.hidden_size, cfg.rms_norm_eps, param_dtype, name="norm"
         )(inputs)
-        logits = nn.Dense(
-            cfg.vocab_size,
-            use_bias=False,
-            dtype=dtype,
-            param_dtype=param_dtype,
-            kernel_init=nn.initializers.normal(0.02),
-            name="lm_head",
-        )(inputs).astype(dtype_from_name(cfg.logits_dtype))
+        if cfg.tie_word_embeddings:
+            logits = embedding.attend(inputs.astype(param_dtype))
+        else:
+            logits = nn.Dense(
+                cfg.vocab_size,
+                use_bias=False,
+                dtype=dtype,
+                param_dtype=param_dtype,
+                kernel_init=nn.initializers.normal(0.02),
+                name="lm_head",
+            )(inputs)
+        logits = logits.astype(dtype_from_name(cfg.logits_dtype))
         if return_hidden_states:
             return logits, tuple(hidden_states)
         return logits

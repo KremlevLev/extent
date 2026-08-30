@@ -4,7 +4,6 @@ import argparse
 import gc
 import json
 from pathlib import Path
-from urllib import request
 
 import jax
 import jax.numpy as jnp
@@ -28,9 +27,12 @@ from extent.qwen3_parity import (
 from extent.qwen3_teacher import (
     Qwen3DecoderLayer,
     Qwen3GQAAttention,
-    Qwen3TeacherConfig,
 )
-from extent.qwen_source import QWEN3_14B, validate_source_metadata
+from extent.qwen_source import (
+    QWEN_SOURCES,
+    load_remote_source_metadata,
+    teacher_config_from_spec,
+)
 from extent.teacher_activation_cache import (
     activation_window_layout,
     array_artifact,
@@ -41,11 +43,6 @@ from extent.teacher_activation_cache import (
     run_host_microbatches,
 )
 from extent.weight_mapping import QwenCheckpointReader
-
-
-def _read_json(url: str) -> dict:
-    with request.urlopen(url, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
 
 
 def _create_decoder_runner(module, positions, attention_mask):
@@ -153,6 +150,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument(
         "--cache-dir", default="/kaggle/working/qwen3-activation-checkpoint"
     )
+    parser.add_argument("--source-model", choices=tuple(QWEN_SOURCES), default="14b")
     parser.add_argument(
         "--dataset-cache-dir", default="/kaggle/working/extent-calibration-cache"
     )
@@ -184,8 +182,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--prune-consumed-shards", action="store_true")
     args = parser.parse_args(argv)
-    if not 0 <= args.target_layer < 40:
-        raise ValueError("target-layer must be in [0, 40)")
+    if args.target_layer < 0:
+        raise ValueError("target-layer must be non-negative")
     if min(args.sequence_length, args.microbatch_windows, args.per_device_windows) < 1:
         raise ValueError("sequence-length and batch sizes must be positive")
     if args.token_offset < 0:
@@ -200,12 +198,11 @@ def main(argv: list[str] | None = None) -> None:
     dtype_decision = recommended_compute_dtype(requested=args.compute_dtype)
     compute_dtype = jnp.dtype(dtype_decision.dtype)
     storage_dtype = np.dtype(args.storage_dtype)
-    spec = QWEN3_14B
+    spec = QWEN_SOURCES[args.source_model]
     source_name = f"{spec.repo_id}@{spec.revision}"
-    config_payload = _read_json(spec.resolve_url("config.json"))
-    index_payload = _read_json(spec.resolve_url("model.safetensors.index.json"))
-    validate_source_metadata(config_payload, index_payload, spec)
-    source = Qwen3TeacherConfig(
+    _, index_payload = load_remote_source_metadata(spec)
+    source = teacher_config_from_spec(
+        spec,
         param_dtype="float32",
         compute_dtype=dtype_decision.dtype,
         remat_policy="none",
@@ -242,12 +239,19 @@ def main(argv: list[str] | None = None) -> None:
     model_dir = Path(args.cache_dir)
     from huggingface_hub import hf_hub_download
 
-    for filename in ("config.json", "model.safetensors.index.json"):
+    metadata_files = ["config.json"]
+    if spec.shard_count > 1:
+        metadata_files.append("model.safetensors.index.json")
+    for filename in metadata_files:
         hf_hub_download(
             repo_id=spec.repo_id,
             revision=spec.revision,
             filename=filename,
             local_dir=model_dir,
+        )
+    if spec.shard_count == 1:
+        (model_dir / "model.safetensors.index.json").write_text(
+            json.dumps(index_payload, indent=2) + "\n", encoding="utf-8"
         )
     reader = QwenCheckpointReader(model_dir)
     last_use = checkpoint_shard_last_use(index_payload["weight_map"], args.target_layer)

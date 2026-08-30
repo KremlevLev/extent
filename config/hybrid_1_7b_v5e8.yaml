@@ -1,0 +1,58 @@
+model:
+  vocab_size: 151936
+  hidden_size: 2048
+  intermediate_size: 6144
+  num_layers: 28
+  # Four uniformly interleaved retained mixers: 4/28 = 14.286% attention.
+  attention_layer_indices: [6, 13, 20, 27]
+  max_position_embeddings: 32768
+  tie_word_embeddings: true
+  param_dtype: bfloat16
+  compute_dtype: bfloat16
+  logits_dtype: float32
+  remat_policy: full
+  mamba:
+    d_state: 64
+    expand: 0.75
+    head_dim: 64
+    groups: 1
+    mimo_rank: 4
+    rope_fraction: 0.5
+    dt_min: 0.001
+    dt_max: 0.1
+    a_floor: 0.0001
+  mla:
+    implementation: rorope_bkv
+    num_heads: 16
+    num_kv_heads: 8
+    num_key_rope_heads: 1
+    q_lora_rank: 0
+    kv_lora_rank: 448
+    qk_nope_head_dim: 0
+    qk_rope_head_dim: 128
+    v_head_dim: 128
+    rope_theta: 1000000.0
+    rope_original_head_dim: 128
+    partial_rope_strategy: high
+    use_qk_norm: true
+    use_kv_latent_norm: false
+    qk_head_chunk_size: 4
+
+training:
+  micro_batch_size: 1
+  sequence_length: 1024
+  gradient_accumulation_steps: 1
+  learning_rate: 0.0001
+  warmup_steps: 2000
+  max_steps: 100000
+  optimizer: lion
+  lion_momentum_dtype: bfloat16
+  gradient_dtype: bfloat16
+  weight_decay: 0.1
+  max_grad_norm: 1.0
+
+mesh:
+  axes: [data, fsdp, tensor]
+  shape: [1, 4, 2]
+  remat: full
+  donate_train_state: true

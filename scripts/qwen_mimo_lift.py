@@ -6,7 +6,6 @@ import gc
 import json
 from pathlib import Path
 import time
-from urllib import request
 
 import jax
 import jax.numpy as jnp
@@ -26,8 +25,11 @@ from extent.hardware import recommended_compute_dtype
 from extent.layers.mamba3 import Mamba3MIMO
 from extent.mamba3_transplant import build_qwen3_to_mamba3_transplant_variants
 from extent.qwen3_parity import ensure_layer_checkpoint, load_mixer_arrays
-from extent.qwen3_teacher import Qwen3TeacherConfig
-from extent.qwen_source import QWEN3_14B, validate_source_metadata
+from extent.qwen_source import (
+    QWEN_SOURCES,
+    load_remote_source_metadata,
+    teacher_config_from_spec,
+)
 from extent.teacher_activation_cache import load_activation_cache, validate_external_evaluation_cache
 from extent.weight_mapping import QwenCheckpointReader
 
@@ -47,11 +49,6 @@ VARIANT_BY_ARM = {
 }
 
 
-def _read_json(url: str) -> dict:
-    with request.urlopen(url, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
-
-
 def main(
     argv: list[str] | None = None,
     *,
@@ -64,6 +61,7 @@ def main(
     parser.add_argument("--evaluation-cache-manifest", required=True)
     parser.add_argument("--evaluation-cache-dir")
     parser.add_argument("--qwen-cache-dir", required=True)
+    parser.add_argument("--source-model", choices=tuple(QWEN_SOURCES), default="14b")
     parser.add_argument("--total-steps", type=int, default=4096)
     parser.add_argument("--checkpoints", default="0,256,1024,2048,4096")
     parser.add_argument("--learning-rate", type=float, default=3e-5)
@@ -110,15 +108,31 @@ def main(
 
     dtype_decision = recommended_compute_dtype(requested=args.compute_dtype)
     compute_dtype = jnp.dtype(dtype_decision.dtype)
-    source = Qwen3TeacherConfig(param_dtype="float32", compute_dtype=dtype_decision.dtype, remat_policy="none")
+    spec = QWEN_SOURCES[args.source_model]
+    expected_source = f"{spec.repo_id}@{spec.revision}"
+    if train_manifest.get("source") != expected_source:
+        raise ValueError(
+            f"activation cache source is {train_manifest.get('source')!r}; "
+            f"expected {expected_source!r}"
+        )
+    source = teacher_config_from_spec(
+        spec,
+        param_dtype="float32",
+        compute_dtype=dtype_decision.dtype,
+        remat_policy="none",
+    )
     mamba_config = Mamba3Config()
-    config_payload = _read_json(QWEN3_14B.resolve_url("config.json"))
-    index_payload = _read_json(QWEN3_14B.resolve_url("model.safetensors.index.json"))
-    validate_source_metadata(config_payload, index_payload, QWEN3_14B)
+    _, index_payload = load_remote_source_metadata(spec)
     model_dir, _ = ensure_layer_checkpoint(
         args.qwen_cache_dir, index_payload["weight_map"], source, layer,
-        repo_id=QWEN3_14B.repo_id, revision=QWEN3_14B.revision,
+        repo_id=spec.repo_id, revision=spec.revision,
     )
+    if spec.shard_count == 1:
+        index_path = Path(model_dir) / "model.safetensors.index.json"
+        index_path.write_text(
+            json.dumps(index_payload, indent=2) + "\n",
+            encoding="utf-8",
+        )
     reader = QwenCheckpointReader(model_dir)
     mixer_arrays = load_mixer_arrays(reader, source, layer)
     tail_params = qwen3_decoder_tail_params(reader, layer)
@@ -193,7 +207,7 @@ def main(
     result = {
         "protocol": args.experiment_protocol,
         "status": "completed" if complete else "deadline_partial",
-        "source": f"{QWEN3_14B.repo_id}@{QWEN3_14B.revision}",
+        "source": f"{spec.repo_id}@{spec.revision}",
         "method": "operator_preserving_siso_to_mimo_qkvo_lift",
         "target_layer": layer, "sequence_length": int(train_manifest["sequence_length"]),
         "seeds_requested": list(seeds), "arm_order": list(arms),

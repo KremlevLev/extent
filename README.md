@@ -269,6 +269,32 @@ This first bring-up does not serialize the resulting 27.5 GiB Extent parameter
 tree. A PASS is required before adding sharded safetensors export/Hugging Face
 upload; otherwise a large but invalid checkpoint could be published.
 
+## EXP-063: Qwen3-1.7B exact-lift depth atlas
+
+The controlled method-development track uses the immutable
+`Qwen/Qwen3-1.7B-Base` checkpoint. EXP-063 compares random Mamba initialization
+against balanced exact QKVO lift at every one of the 28 source depths, using
+three paired seeds, identical data order, 8,192 recovery steps per arm, and
+held-out validation curves at 0/256/1024/2048/4096/8192 steps. A 7.25-hour wall
+deadline produces a valid partial atlas instead of losing completed layers.
+
+Run only this final cell after the normal Kaggle setup cells:
+
+```python
+from scripts.qwen17_transplant_atlas_campaign import main as run_exp063
+
+result = run_exp063([])
+```
+
+Download only:
+
+- `/kaggle/working/output/extent-qwen17-transplant-atlas-summary.md`
+- `/kaggle/working/output/extent-qwen17-transplant-atlas.json`
+- `/kaggle/working/output/exp063-failure.json` only if Telegram reports failure
+
+Activation arrays and the source checkpoint are regenerated and must not be
+downloaded.
+
 Only on v5e-8, after reviewing the report, initialize parameter shards with:
 
 ```python

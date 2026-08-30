@@ -165,7 +165,10 @@ def ensure_layer_checkpoint(
     output = Path(output_dir).resolve()
     output.mkdir(parents=True, exist_ok=True)
     shards = required_layer_shards(weight_map, config, layer_index)
-    for filename in ("config.json", "model.safetensors.index.json", *shards):
+    metadata_files = ["config.json"]
+    if set(shards) != {"model.safetensors"}:
+        metadata_files.append("model.safetensors.index.json")
+    for filename in (*metadata_files, *shards):
         hf_hub_download(
             repo_id=repo_id,
             revision=revision,

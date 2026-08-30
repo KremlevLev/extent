@@ -54,12 +54,14 @@ def _cache_arguments(
     sequence_length: int = SEQUENCE_LENGTH,
     training_token_offset: int = 0,
     validation_token_offset: int = 0,
+    source_model: str = "14b",
 ) -> tuple[list[str], Path, Path]:
     role = "validation" if evaluation_only else "train"
     artifact_dir = output_dir / f"{artifact_prefix}-layer{layer}-{role}-cache"
     manifest = artifact_dir / f"{artifact_prefix}-layer{layer}-{role}-manifest.json"
     arguments = [
         "--cache-dir", qwen_cache_dir,
+        "--source-model", source_model,
         "--dataset-cache-dir", dataset_cache_dir,
         "--target-layer", str(layer),
         "--sequence-length", str(sequence_length),

@@ -47,8 +47,9 @@ def direct_qwen_mappings(config: QwenShapeConfig) -> list[MappingEntry]:
     entries = [
         MappingEntry("model.embed_tokens.weight", "embed_tokens/embedding", "identity"),
         MappingEntry("model.norm.weight", "norm/scale", "identity"),
-        MappingEntry("lm_head.weight", "lm_head/kernel", "transpose"),
     ]
+    if not getattr(config, "tie_word_embeddings", False):
+        entries.append(MappingEntry("lm_head.weight", "lm_head/kernel", "transpose"))
     for layer in range(config.num_layers):
         source = f"model.layers.{layer}"
         target = f"layers_{layer}"
@@ -116,8 +117,18 @@ class QwenCheckpointReader:
 
     def __init__(self, model_dir: str | Path):
         self.model_dir = Path(model_dir)
-        with (self.model_dir / "model.safetensors.index.json").open("r", encoding="utf-8") as stream:
-            self.weight_map: dict[str, str] = json.load(stream)["weight_map"]
+        index = self.model_dir / "model.safetensors.index.json"
+        if index.exists():
+            with index.open("r", encoding="utf-8") as stream:
+                self.weight_map: dict[str, str] = json.load(stream)["weight_map"]
+        else:
+            single = self.model_dir / "model.safetensors"
+            if not single.exists():
+                raise FileNotFoundError("checkpoint has neither an index nor model.safetensors")
+            from safetensors import safe_open
+
+            with safe_open(str(single), framework="np", device="cpu") as shard:
+                self.weight_map = {name: single.name for name in shard.keys()}
 
     def read(self, name: str) -> np.ndarray:
         from safetensors import safe_open

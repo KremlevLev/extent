@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import json
 from pathlib import Path
 from typing import Any, Mapping
+from urllib import request
 
 
 @dataclass(frozen=True)
@@ -51,6 +52,85 @@ QWEN3_14B = QwenSourceSpec(
     shard_count=8,
     total_size_bytes=29_536_614_400,
 )
+
+QWEN3_1_7B_BASE = QwenSourceSpec(
+    repo_id="Qwen/Qwen3-1.7B-Base",
+    revision="ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+    architecture="Qwen3ForCausalLM",
+    model_type="qwen3",
+    num_hidden_layers=28,
+    hidden_size=2048,
+    intermediate_size=6144,
+    num_attention_heads=16,
+    num_key_value_heads=8,
+    head_dim=128,
+    vocab_size=151936,
+    max_position_embeddings=32768,
+    rope_theta=1_000_000.0,
+    rms_norm_eps=1e-6,
+    tie_word_embeddings=True,
+    tensor_count=310,
+    shard_count=1,
+    total_size_bytes=3_441_149_952,
+)
+
+QWEN_SOURCES = {
+    "14b": QWEN3_14B,
+    "1.7b-base": QWEN3_1_7B_BASE,
+}
+
+
+def teacher_config_from_spec(
+    spec: QwenSourceSpec,
+    *,
+    param_dtype: str = "float32",
+    compute_dtype: str = "bfloat16",
+    remat_policy: str = "none",
+):
+    """Construct the JAX teacher contract from an immutable source pin."""
+    from extent.qwen3_teacher import Qwen3TeacherConfig
+
+    return Qwen3TeacherConfig(
+        vocab_size=spec.vocab_size,
+        hidden_size=spec.hidden_size,
+        intermediate_size=spec.intermediate_size,
+        num_layers=spec.num_hidden_layers,
+        num_attention_heads=spec.num_attention_heads,
+        num_key_value_heads=spec.num_key_value_heads,
+        head_dim=spec.head_dim,
+        max_position_embeddings=spec.max_position_embeddings,
+        rope_theta=spec.rope_theta,
+        rms_norm_eps=spec.rms_norm_eps,
+        tie_word_embeddings=spec.tie_word_embeddings,
+        param_dtype=param_dtype,
+        compute_dtype=compute_dtype,
+        remat_policy=remat_policy,
+    )
+
+
+def load_remote_source_metadata(spec: QwenSourceSpec) -> tuple[dict, dict]:
+    """Read pinned config/index metadata without downloading model weights."""
+    with request.urlopen(spec.resolve_url("config.json"), timeout=30) as response:
+        config_payload = json.loads(response.read().decode("utf-8"))
+    if spec.shard_count == 1:
+        from extent.weight_mapping import teacher_qwen_mappings
+
+        teacher = teacher_config_from_spec(spec)
+        weight_map = {
+            entry.source: "model.safetensors"
+            for entry in teacher_qwen_mappings(teacher)
+        }
+        index_payload = {
+            "metadata": {"total_size": spec.total_size_bytes},
+            "weight_map": weight_map,
+        }
+    else:
+        with request.urlopen(
+            spec.resolve_url("model.safetensors.index.json"), timeout=30
+        ) as response:
+            index_payload = json.loads(response.read().decode("utf-8"))
+    validate_source_metadata(config_payload, index_payload, spec)
+    return config_payload, index_payload
 
 SOURCE_MARKER = ".extent_source.json"
 
