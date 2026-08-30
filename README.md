@@ -220,6 +220,34 @@ Do not download activation arrays or endpoint payloads. If a managed Kaggle run
 is interrupted, rerun the same cell with the preserved output attached and the
 default resume behavior; completed, hash-checked layer boundaries are skipped.
 
+## EXP-062: real full-hybrid materialization bring-up
+
+EXP-062 is the first non-shape-only construction of Extent-14B. It generates
+teacher calibration inputs for the six retained attention layers, downloads the
+pinned Qwen3-14B checkpoint into RAM-backed storage, creates the global sharded
+14.766B parameter tree, imports all preserved tensors, materializes 34 balanced
+exact-lift Mamba mixers and six rank-448 RoRoPE+BKV mixers, allocates Lion, and
+compiles full-model forward probes at contexts 8/32/128.
+
+Run in the notebook Python process on v5e-8:
+
+```python
+from scripts.full_hybrid_materialization_campaign import main as run_exp062
+
+result = run_exp062([])
+```
+
+The campaign writes a partial JSON after every materialized layer, sends
+Telegram start/completion/failure messages, and writes the final small artifact
+to `/kaggle/working/output/extent-full-hybrid-materialization.json`. Download
+only that JSON (or `exp062-materialization-failure.json` on failure). Calibration
+NPY files and the 27.5 GiB source checkpoint are regenerable and must not be
+downloaded.
+
+This first bring-up does not serialize the resulting 27.5 GiB Extent parameter
+tree. A PASS is required before adding sharded safetensors export/Hugging Face
+upload; otherwise a large but invalid checkpoint could be published.
+
 Only on v5e-8, after reviewing the report, initialize parameter shards with:
 
 ```python

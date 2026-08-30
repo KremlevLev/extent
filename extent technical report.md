@@ -1284,6 +1284,19 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** stop progressive layer-count screens. Exact lift is now the selected Mamba initialization for full materialization. The next engineering milestone is a resumable, sharded 34-Mamba/6-RoRoPE-BKV checkpoint builder followed by a small full-model recovery bring-up. The next scientific comparison should measure tokens-to-NLL for exact lift versus matched random at a smaller tractable whole-model scale, not add another isolated-layer sweep.
 - **Execution provenance:** compact-summary SHA-256 `9dbb00e2b7db11469002c3f0d190d9613a198484fe5a4aeb646c27f9f2969900`; full-campaign SHA-256 `8eb8591ff054fc60b3da9b7de7db8f680e4453de46ff72fed0856dea6f955eeb`; compact artifact `results/EXP-061-production-aligned-scaling-campaign-summary.md`.
 
+### EXP-062 — Full 34/6 sharded materialization bring-up (pre-registered)
+
+- **Implementation commit title:** `feat: add sharded full hybrid materialization campaign`.
+- **Purpose:** perform the first real, non-shape-only construction of the selected Extent-14B architecture on v5e-8 before checkpoint export or recovery training.
+- **Source/calibration:** pinned Qwen3-14B revision `40c069...e18`; WikiText-2 train offset 393,216; 16 independent windows of length 32 (512 tokens) calibrate each retained attention layer. Six target-layer caches are generated with data-parallel teacher inference and BF16 compute. Calibration rank 448 is valid because 512 samples exceed the selected latent rank.
+- **Materialization order:** initialize the full parameter tree directly in `data/fsdp/tensor=1/4/2` shards; stream 203 preserved embedding/norm/MLP/head tensors; replace 34 random Mamba subtrees with `INIT-K-balanced-qkvo-lift`; replace six attention subtrees with EXP-019 rank-448 RoRoPE+BKV fits; allocate BF16 Lion momentum using the same parameter layouts.
+- **Runtime validation:** compile and execute full-model causal-LM forward losses at sequence lengths 8, 32, and 128. Every loss must be finite. The result records real parameter and optimizer bytes per device, every mixer conversion report, PCA calibration reconstruction error, cache reduction, backend, and duration.
+- **Failure containment:** a partial JSON is atomically updated after every materialized layer. Caught failures write stage, exception type, traceback, and completed mixer reports; Telegram reports start, completion, or caught failure. Source weights default to `/dev/shm` so Kaggle disk is not exhausted.
+- **Gate:** `34/34` Mamba and `6/6` MLA reports, `203` direct tensors, `443` source tensors, successful Lion allocation, and finite forward probes at all three contexts. This is an engineering GO/NO-GO gate, not a quality comparison.
+- **Checkpoint boundary:** EXP-062 deliberately does not serialize/upload the 27.5 GiB resulting tree. Sharded safetensors export and private Hugging Face upload are enabled only after this materialization contract passes, preventing publication of a large invalid artifact.
+- **Interpretation boundary:** a pass proves that selected layerwise methods compose into an executable sharded 14B model. It does not prove finite backward gradients, recovered NLL, long-context behavior, generation quality, or inference speed.
+- **Artifact:** `extent-full-hybrid-materialization.json` on success; `exp062-materialization-failure.json` on failure. Do not download calibration arrays or Qwen shards.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.
