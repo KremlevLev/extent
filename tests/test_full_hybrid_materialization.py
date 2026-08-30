@@ -10,6 +10,9 @@ from extent.full_hybrid_materialization import (
 from extent.qwen3_parity import layer_mapping_entries
 from extent.qwen3_teacher import tiny_qwen3_teacher_config
 from extent.weight_mapping import expected_qwen_shape
+from extent.initialization import initialize_sharded_parameters
+from extent.sharding import batch_sharding, create_v5e_mesh
+from scripts.full_hybrid_materialization_campaign import _backward_probe
 
 
 def _mixer_arrays(source, layer):
@@ -52,3 +55,34 @@ def test_materializes_selected_mixers_without_changing_contract():
         {"params": params}, jnp.zeros((1, 4), jnp.int32)
     )
     assert logits.shape == (1, 4, config.vocab_size)
+
+
+def test_full_model_backward_probe_reduces_gradient_tree_to_finite_metrics():
+    config = tiny_config()
+    model = HybridForCausalLM(config)
+    mesh = create_v5e_mesh()
+    tokens = jax.device_put(
+        np.zeros((mesh.shape["data"], 1), np.int32),
+        batch_sharding(mesh),
+    )
+    initialized = initialize_sharded_parameters(
+        model,
+        jax.random.key(62),
+        tokens,
+        mesh,
+    )
+
+    result = _backward_probe(
+        model,
+        initialized.params,
+        initialized.layout,
+        mesh,
+        4,
+    )
+
+    assert result["sequence_length"] == 4
+    assert result["grads_finite"] is True
+    assert result["nonfinite_grad_leaves"] == 0
+    assert np.isfinite(result["loss"])
+    assert np.isfinite(result["grad_norm"])
+    assert np.isfinite(result["max_abs_grad"])

@@ -26,7 +26,7 @@ from extent.initialization import (
     initialize_sharded_parameters,
 )
 from extent.model import causal_lm_loss
-from extent.optimizer import create_lion
+from extent.optimizer import cast_grads_bf16, create_lion, gradient_health
 from extent.preflight import allocated_bytes_by_device
 from extent.qwen3_parity import load_mixer_arrays
 from extent.qwen3_teacher import Qwen3TeacherConfig
@@ -153,6 +153,58 @@ def _forward_probe(model, params, layout, mesh, length: int) -> dict:
     }
 
 
+def _backward_probe(model, params, layout, mesh, length: int) -> dict:
+    """Compile a full gradient without returning its parameter-sized tree."""
+    tokens = np.arange(length, dtype=np.int32)[None] % model.config.vocab_size
+    host = {
+        "input_ids": tokens,
+        "labels": tokens.copy(),
+        "attention_mask": np.ones_like(tokens, dtype=np.bool_),
+        "loss_mask": np.ones_like(tokens, dtype=np.bool_),
+    }
+    batch_layout = batch_sharding(mesh)
+    batch = {name: jax.device_put(value, batch_layout) for name, value in host.items()}
+
+    def probe(candidate, values):
+        def loss_fn(candidate_params):
+            logits = model.apply(
+                {"params": candidate_params},
+                values["input_ids"],
+                attention_mask=values["attention_mask"],
+            )
+            return causal_lm_loss(logits, values["labels"], values["loss_mask"])
+
+        loss, grads = jax.value_and_grad(loss_fn)(candidate)
+        grads = cast_grads_bf16(grads)
+        return {"loss": loss, **gradient_health(grads)}
+
+    replicated = replicated_sharding(mesh)
+    metric_layout = {
+        "loss": replicated,
+        "grad_norm": replicated,
+        "grads_finite": replicated,
+        "nonfinite_grad_leaves": replicated,
+        "max_abs_grad": replicated,
+    }
+    compiled = jax.jit(
+        probe,
+        in_shardings=(layout, {name: batch_layout for name in batch}),
+        out_shardings=metric_layout,
+    )
+    started = time.monotonic()
+    metrics = compiled(params, batch)
+    jax.block_until_ready(metrics)
+    return {
+        "sequence_length": length,
+        "loss": float(metrics["loss"]),
+        "grad_norm": float(metrics["grad_norm"]),
+        "max_abs_grad": float(metrics["max_abs_grad"]),
+        "grads_finite": bool(metrics["grads_finite"]),
+        "nonfinite_grad_leaves": int(metrics["nonfinite_grad_leaves"]),
+        "compile_and_execute_seconds": time.monotonic() - started,
+    }
+
+
 def main(argv: list[str] | None = None) -> dict:
     parser = argparse.ArgumentParser(description="Materialize and probe the full Extent-14B hybrid.")
     parser.add_argument("--config", default="config/hybrid_14b_v5e8.yaml")
@@ -162,6 +214,12 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--calibration-windows", type=int, default=16)
     parser.add_argument("--calibration-sequence-length", type=int, default=32)
     parser.add_argument("--probe-contexts", default="8,32,128")
+    parser.add_argument(
+        "--backward-probe-context",
+        type=int,
+        default=0,
+        help="Run one full value-and-grad health probe; zero disables it.",
+    )
     parser.add_argument("--telegram", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args(argv)
 
@@ -173,7 +231,11 @@ def main(argv: list[str] | None = None) -> dict:
     contexts = tuple(sorted({int(value) for value in args.probe_contexts.split(",")}))
     output = Path(args.output_dir); output.mkdir(parents=True, exist_ok=True)
     qwen_dir, dataset_dir = Path(args.qwen_cache_dir), Path(args.dataset_cache_dir)
-    result_path = output / "extent-full-hybrid-materialization.json"
+    result_path = output / (
+        "extent-full-hybrid-backward-bringup.json"
+        if args.backward_probe_context
+        else "extent-full-hybrid-materialization.json"
+    )
     partial_path = output / "exp062-materialization-partial.json"
     started_clock, started, stage = time.monotonic(), _now(), "startup"
     _safe_notify(args.telegram, f"Extent TPU campaign\nstatus=started\nexperiment=EXP-062 full hybrid materialization\nhost={socket.gethostname()}")
@@ -186,6 +248,7 @@ def main(argv: list[str] | None = None) -> dict:
         "visible_devices": [str(device) for device in devices],
         "mixer_reports": [],
         "forward_probes": [],
+        "backward_probe_context": args.backward_probe_context,
     }
     try:
         config, extras = load_config(args.config)
@@ -242,9 +305,30 @@ def main(argv: list[str] | None = None) -> dict:
             print(f"forward_probe_context={length} loss={probe['loss']:.6f} finite={probe['finite']}")
             if not probe["finite"]:
                 raise FloatingPointError(f"non-finite full-hybrid forward at context {length}")
+        if args.backward_probe_context:
+            stage = "backward-probe"
+            backward = _backward_probe(
+                model,
+                params,
+                initialized.layout,
+                mesh,
+                args.backward_probe_context,
+            )
+            result["backward_probe"] = backward
+            _write_partial(partial_path, result)
+            print(
+                f"backward_probe_context={backward['sequence_length']} "
+                f"loss={backward['loss']:.6f} grad_norm={backward['grad_norm']:.6g} "
+                f"finite={backward['grads_finite']}"
+            )
+            if not backward["grads_finite"]:
+                raise FloatingPointError(
+                    "non-finite full-hybrid backward: "
+                    f"leaves={backward['nonfinite_grad_leaves']}"
+                )
         result.update({"status": "completed", "passed": True, "stage": "completed", "completed_at_utc": _now(), "duration_hours": (time.monotonic() - started_clock) / 3600, "source_tensor_count": len(index_payload["weight_map"]), "materialized_mamba_layers": len(config.mamba_layer_indices), "materialized_mla_layers": len(config.attention_layer_indices)})
         _write_json_with_output_mirror(result_path, result, str(output))
-        _safe_notify(args.telegram, f"Extent TPU campaign\nstatus=completed\nexperiment=EXP-062\nduration_hours={result['duration_hours']:.3f}\ncontexts={contexts}")
+        _safe_notify(args.telegram, f"Extent TPU campaign\nstatus=completed\nexperiment=EXP-062\nduration_hours={result['duration_hours']:.3f}\ncontexts={contexts}\nbackward_context={args.backward_probe_context}")
         print(f"EXP062-MATERIALIZATION-PASS\nresult_json={result_path.resolve()}")
         return result
     except BaseException as exc:

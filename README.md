@@ -237,6 +237,27 @@ from scripts.full_hybrid_materialization_campaign import main as run_exp062
 result = run_exp062([])
 ```
 
+After the forward-only artifact passes, reuse the same live v5e-8 session for
+the final bring-up gate. This keeps the BF16 Lion state resident and compiles
+one full-model gradient health probe at context 8, but does not update weights:
+
+```python
+import importlib
+import scripts.full_hybrid_materialization_campaign as exp062
+
+importlib.reload(exp062)
+result = exp062.main([
+    "--probe-contexts", "8",
+    "--backward-probe-context", "8",
+])
+```
+
+The small result is
+`/kaggle/working/output/extent-full-hybrid-backward-bringup.json`. A PASS
+requires finite loss, finite global BF16 gradient norm, finite maximum absolute
+gradient, and zero non-finite gradient leaves. This is a numerical/HBM gate,
+not a training-quality measurement.
+
 The campaign writes a partial JSON after every materialized layer, sends
 Telegram start/completion/failure messages, and writes the final small artifact
 to `/kaggle/working/output/extent-full-hybrid-materialization.json`. Download
