@@ -90,8 +90,14 @@ class HybridConfig:
             raise ValueError("partial RoPE width cannot exceed the original RoPE width")
         if self.mla.partial_rope_strategy not in {"high", "low"}:
             raise ValueError("partial_rope_strategy must be high or low")
-        if self.mla.implementation not in {"rorope_bkv", "maxtext_mla"}:
-            raise ValueError("MLA implementation must be rorope_bkv or maxtext_mla")
+        if self.mla.implementation not in {
+            "qwen3_gqa",
+            "rorope_bkv",
+            "maxtext_mla",
+        }:
+            raise ValueError(
+                "attention implementation must be qwen3_gqa, rorope_bkv, or maxtext_mla"
+            )
 
     @property
     def mamba_layer_indices(self) -> tuple[int, ...]:

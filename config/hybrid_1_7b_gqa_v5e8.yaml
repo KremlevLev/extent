@@ -1,0 +1,53 @@
+model:
+  vocab_size: 151936
+  hidden_size: 2048
+  intermediate_size: 6144
+  num_layers: 28
+  attention_layer_indices: [6, 13, 20, 27]
+  max_position_embeddings: 32768
+  tie_word_embeddings: true
+  param_dtype: bfloat16
+  compute_dtype: bfloat16
+  logits_dtype: float32
+  remat_policy: full
+  mamba:
+    d_state: 64
+    expand: 0.75
+    head_dim: 64
+    groups: 1
+    mimo_rank: 4
+    rope_fraction: 0.5
+    dt_min: 0.001
+    dt_max: 0.1
+    a_floor: 0.0001
+  mla:
+    # GQA is retained here to isolate the Mamba transplant/recovery method.
+    # MLA is introduced only after the M3Q recipe is selected.
+    implementation: qwen3_gqa
+    num_heads: 16
+    num_kv_heads: 8
+    num_key_rope_heads: 1
+    q_lora_rank: 0
+    kv_lora_rank: 448
+    qk_nope_head_dim: 0
+    qk_rope_head_dim: 128
+    v_head_dim: 128
+    rope_theta: 1000000.0
+    rope_original_head_dim: 128
+    partial_rope_strategy: high
+    use_qk_norm: true
+    use_kv_latent_norm: false
+    qk_head_chunk_size: 4
+
+training:
+  sequence_length: 256
+  learning_rate: 0.00003
+  warmup_steps: 128
+  max_steps: 3072
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+
+mesh:
+  axes: [data, fsdp, tensor]
+  shape: [1, 4, 2]
+  remat: full

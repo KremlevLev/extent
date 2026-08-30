@@ -13,6 +13,7 @@ import numpy as np
 
 from extent.config import HybridConfig
 from extent.mamba3_transplant import build_qwen3_to_mamba3_transplant_variants
+from extent.qwen3_parity import jax_attention_params
 from extent.qwen3_teacher import Qwen3TeacherConfig
 from extent.rorope_bkv_conversion import map_qwen3_to_rorope_bkv
 
@@ -130,5 +131,30 @@ def materialize_rorope_bkv_layer(
         calibration_tokens=conversion.calibration_tokens,
         cache_reduction_fraction=conversion.cache_reduction_fraction,
         calibration_relative_l2=conversion.calibration_joint_reconstruction_relative_l2,
+    )
+    return _replace_layer_mixer(params, layer_index, "self_attn", selected), report
+
+
+def materialize_qwen_gqa_layer(
+    params: Mapping,
+    arrays: Mapping[str, np.ndarray],
+    source: Qwen3TeacherConfig,
+    layer_index: int,
+) -> tuple[Mapping, MaterializedMixerReport]:
+    """Copy one retained Qwen GQA mixer into the hybrid's target shards."""
+    target = params[f"layers_{layer_index}"]["self_attn"]
+    cpu = jax.devices("cpu")[0]
+    with jax.default_device(cpu):
+        mapped_host = jax.device_get(
+            jax_attention_params(arrays, source, layer_index)
+        )
+    selected = _host_tree_into_target_shards(mapped_host, target)
+    flat = traverse_util.flatten_dict(selected)
+    report = MaterializedMixerReport(
+        layer_index=layer_index,
+        target_mixer="qwen3_gqa",
+        method="DIRECT-QWEN3-GQA",
+        tensor_count=len(flat),
+        parameter_count=sum(int(np.prod(value.shape)) for value in flat.values()),
     )
     return _replace_layer_mixer(params, layer_index, "self_attn", selected), report

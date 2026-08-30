@@ -296,6 +296,33 @@ Download only:
 Activation arrays and the source checkpoint are regenerated and must not be
 downloaded.
 
+## EXP-064: full-model M3Q distillation on Qwen3-1.7B
+
+EXP-063 rejected a universal training-time homotopy. EXP-064 moves to the
+whole 1.675B-parameter student and isolates the transplant method from MLA by
+retaining source-faithful Qwen GQA at layers `6,13,20,27`. It compares ordinary
+exact-init prediction KL, exact-init M3Q hidden-state bridge followed by KL,
+and random-Mamba prediction KL. The online sharded teacher avoids a huge
+offline-logit cache. A 7.25-hour deadline prioritizes and preserves the paired
+exact-vs-M3Q comparison before the contextual random arm.
+
+Run only this final cell after the normal Kaggle setup cells:
+
+```python
+from scripts.m3q_full_model_campaign import main as run_exp064
+
+result = run_exp064([])
+```
+
+Download only:
+
+- `/kaggle/working/output/extent-qwen17-full-model-m3q-summary.md`
+- `/kaggle/working/output/extent-qwen17-full-model-m3q.json`
+- `/kaggle/working/output/exp064-failure.json` only after a failure notification
+
+No model checkpoint is written by this controlled comparison. The source
+checkpoint lives in RAM-backed storage and is regenerable.
+
 Only on v5e-8, after reviewing the report, initialize parameter shards with:
 
 ```python

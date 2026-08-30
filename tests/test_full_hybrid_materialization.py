@@ -1,11 +1,13 @@
 import jax
 import jax.numpy as jnp
 import numpy as np
+from dataclasses import replace
 
 from extent import HybridForCausalLM, tiny_config
 from extent.full_hybrid_materialization import (
     materialize_exact_lift_layer,
     materialize_rorope_bkv_layer,
+    materialize_qwen_gqa_layer,
 )
 from extent.qwen3_parity import layer_mapping_entries
 from extent.qwen3_teacher import tiny_qwen3_teacher_config
@@ -55,6 +57,32 @@ def test_materializes_selected_mixers_without_changing_contract():
         {"params": params}, jnp.zeros((1, 4), jnp.int32)
     )
     assert logits.shape == (1, 4, config.vocab_size)
+
+
+def test_materializes_retained_qwen_gqa_for_isolated_mamba_ablation():
+    base = tiny_config()
+    config = replace(
+        base, mla=replace(base.mla, implementation="qwen3_gqa")
+    )
+    source = tiny_qwen3_teacher_config()
+    model = HybridForCausalLM(config)
+    params = model.init(jax.random.key(5), jnp.zeros((1, 4), jnp.int32))["params"]
+
+    params, report = materialize_qwen_gqa_layer(
+        params, _mixer_arrays(source, 1), source, 1
+    )
+
+    assert report.target_mixer == "qwen3_gqa"
+    assert report.method == "DIRECT-QWEN3-GQA"
+    assert report.tensor_count == 6
+    logits, hidden = model.apply(
+        {"params": params},
+        jnp.zeros((1, 4), jnp.int32),
+        return_hidden_states=True,
+    )
+    assert logits.shape == (1, 4, config.vocab_size)
+    assert len(hidden) == config.num_layers
+    assert all(np.all(np.isfinite(np.asarray(value))) for value in hidden)
 
 
 def test_full_model_backward_probe_reduces_gradient_tree_to_finite_metrics():

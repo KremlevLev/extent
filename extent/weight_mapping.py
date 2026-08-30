@@ -338,6 +338,52 @@ def stream_direct_qwen_weights(
     return (freeze(result) if was_frozen else result), report
 
 
+def stream_teacher_qwen_weights(
+    params: Mapping[str, Any],
+    reader: QwenCheckpointReader,
+    config: QwenShapeConfig,
+    *,
+    progress: Callable[[int, int, MappingEntry], None] | None = None,
+) -> tuple[Mapping[str, Any], MappingValidationReport]:
+    """Stream the complete Qwen checkpoint directly into teacher shards."""
+    entries = teacher_qwen_mappings(config)
+    report = validate_mapping_plan(
+        config,
+        params,
+        reader.weight_map,
+        entries,
+        require_complete_source=True,
+    )
+    was_frozen = isinstance(params, FrozenDict)
+    flat = dict(traverse_util.flatten_dict(params))
+    for index, entry in enumerate(entries, start=1):
+        target_path = tuple(entry.target.split("/"))
+        target = flat[target_path]
+        source = reader.read(entry.source)
+        expected_source_shape = expected_qwen_shape(entry, config)
+        if tuple(source.shape) != expected_source_shape:
+            raise ValueError(
+                f"checkpoint tensor {entry.source} has shape {source.shape}; "
+                f"expected {expected_source_shape}"
+            )
+        value = source if entry.transform == "identity" else source.T
+        if isinstance(target, jax.Array):
+            host_value = np.ascontiguousarray(value, dtype=np.dtype(target.dtype))
+            value = jax.make_array_from_callback(
+                target.shape,
+                target.sharding,
+                lambda shard_index, host_value=host_value: host_value[shard_index],
+            )
+        else:
+            value = np.asarray(value, dtype=target.dtype)
+        flat[target_path] = value
+        del source
+        if progress is not None:
+            progress(index, len(entries), entry)
+    result = traverse_util.unflatten_dict(flat)
+    return (freeze(result) if was_frozen else result), report
+
+
 def validate_local_direct_shapes(
     reader: QwenCheckpointReader,
     config: HybridConfig,

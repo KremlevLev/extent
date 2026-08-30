@@ -7,6 +7,8 @@ from safetensors.numpy import save_file
 
 from extent import HybridForCausalLM, tiny_config
 from extent.config import load_config
+from extent.initialization import abstract_parameter_tree
+from extent.qwen3_teacher import Qwen3ForCausalLM, tiny_qwen3_teacher_config
 from extent.qwen_source import (
     QWEN3_14B,
     QwenSourceSpec,
@@ -19,9 +21,38 @@ from extent.weight_mapping import (
     direct_qwen_mappings,
     expected_qwen_shape,
     stream_direct_qwen_weights,
+    stream_teacher_qwen_weights,
+    teacher_qwen_mappings,
     validate_direct_mapping_plan,
     validate_local_direct_shapes,
 )
+
+
+def test_stream_teacher_weights_covers_complete_checkpoint(tmp_path):
+    config = tiny_qwen3_teacher_config()
+    params = abstract_parameter_tree(Qwen3ForCausalLM(config))
+    entries = teacher_qwen_mappings(config)
+    source_tensors = {
+        entry.source: np.full(
+            expected_qwen_shape(entry, config), index + 1, np.float32
+        )
+        for index, entry in enumerate(entries)
+    }
+    save_file(source_tensors, tmp_path / "model.safetensors")
+    reader = QwenCheckpointReader(tmp_path)
+
+    loaded, report = stream_teacher_qwen_weights(params, reader, config)
+
+    assert report.tensor_count == len(entries) == len(source_tensors)
+    assert len(jax.tree.leaves(loaded)) == len(source_tensors)
+    q_entry = next(
+        entry for entry in entries
+        if entry.target == "layers_0/self_attn/q_proj/kernel"
+    )
+    np.testing.assert_array_equal(
+        np.asarray(loaded["layers_0"]["self_attn"]["q_proj"]["kernel"]),
+        source_tensors[q_entry.source].T,
+    )
 
 
 def test_production_config_matches_pinned_qwen3_exactly():

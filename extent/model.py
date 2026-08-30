@@ -9,7 +9,7 @@ from extent.layers.common import RMSNorm, SwiGLU, dtype_from_name
 from extent.layers.mamba3 import Mamba3MIMO
 from extent.layers.mla import MultiHeadLatentAttention
 from extent.layers.rorope_bkv import Qwen3RoRoPEBKVAttention
-from extent.qwen3_teacher import Qwen3TeacherConfig
+from extent.qwen3_teacher import Qwen3GQAAttention, Qwen3TeacherConfig
 
 
 def _attention_source_config(config: HybridConfig) -> Qwen3TeacherConfig:
@@ -43,7 +43,11 @@ class HybridDecoderLayer(nn.Module):
         residual = x
         normalized = RMSNorm(cfg.hidden_size, cfg.rms_norm_eps, param_dtype, name="input_layernorm")(x)
         if self.layer_index in cfg.attention_layer_indices:
-            if cfg.mla.implementation == "rorope_bkv":
+            if cfg.mla.implementation == "qwen3_gqa":
+                mixed = Qwen3GQAAttention(
+                    _attention_source_config(cfg), name="self_attn"
+                )(normalized, positions, attention_mask)
+            elif cfg.mla.implementation == "rorope_bkv":
                 mixed = Qwen3RoRoPEBKVAttention(
                     _attention_source_config(cfg),
                     latent_rank=cfg.mla.kv_lora_rank,
@@ -73,7 +77,9 @@ class HybridForCausalLM(nn.Module):
         input_ids: jax.Array,
         positions: jax.Array | None = None,
         attention_mask: jax.Array | None = None,
-    ) -> jax.Array:
+        *,
+        return_hidden_states: bool = False,
+    ) -> jax.Array | tuple[jax.Array, tuple[jax.Array, ...]]:
         cfg = self.config
         dtype, param_dtype = dtype_from_name(cfg.compute_dtype), dtype_from_name(cfg.param_dtype)
         batch, length = input_ids.shape
@@ -93,8 +99,11 @@ class HybridForCausalLM(nn.Module):
         layer_type = HybridDecoderLayer
         if cfg.remat_policy == "full":
             layer_type = nn.remat(HybridDecoderLayer, prevent_cse=False)
+        hidden_states = []
         for index in range(cfg.num_layers):
             x = layer_type(cfg, index, name=f"layers_{index}")(x, positions, attention_mask)
+            if return_hidden_states:
+                hidden_states.append(x)
         x = RMSNorm(cfg.hidden_size, cfg.rms_norm_eps, param_dtype, name="norm")(x)
         if cfg.tie_word_embeddings:
             logits = embedding.attend(x.astype(param_dtype))
@@ -107,7 +116,10 @@ class HybridForCausalLM(nn.Module):
                 kernel_init=nn.initializers.normal(0.02),
                 name="lm_head",
             )(x)
-        return logits.astype(dtype_from_name(cfg.logits_dtype))
+        logits = logits.astype(dtype_from_name(cfg.logits_dtype))
+        if return_hidden_states:
+            return logits, tuple(hidden_states)
+        return logits
 
 
 def causal_lm_loss(logits: jax.Array, labels: jax.Array, loss_mask: jax.Array | None = None) -> jax.Array:
