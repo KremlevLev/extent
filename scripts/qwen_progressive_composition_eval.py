@@ -229,11 +229,12 @@ def analyze_exact_lift_scaling(
             "stage_gate_passed": stage_gate,
         })
     gate = bool(all_finite and len(stages) == 3 and all(stage["stage_gate_passed"] for stage in stages))
+    stage_counts = "/".join(str(count) for count in sorted(layer_sets))
     return {
         "original_mean_nll": float(original_metric["mean_nll"]),
         "stages": stages, "bootstrap_samples": bootstrap_samples,
         "all_finite": all_finite, "scientific_gate_passed": gate,
-        "gate_definition": "At every 2/4/8-layer stage, exact lift wins >=2/3 seeds and mean paired NLL plus its 95% hierarchical-bootstrap upper bound are below zero.",
+        "gate_definition": f"At every {stage_counts}-layer stage, exact lift wins >=2/3 seeds and mean paired NLL plus its 95% hierarchical-bootstrap upper bound are below zero.",
     }
 
 
