@@ -5,7 +5,7 @@ import jax.numpy as jnp
 import numpy as np
 import torch
 
-from extent.config import tiny_config
+from extent.config import Mamba3Config, tiny_config
 from extent.layers.mamba3 import (
     MAMBA3_REFERENCE_COMMIT,
     Mamba3MIMO,
@@ -85,4 +85,39 @@ def test_mamba3_module_uses_official_parameter_shapes_and_names():
         1,
         3,
         int(config.hidden_size * config.mamba.expand),
+    )
+
+
+def test_quadratic_dual_and_recurrent_module_are_functionally_identical():
+    config = Mamba3Config(
+        d_state=8,
+        expand=1.0,
+        head_dim=8,
+        groups=1,
+        mimo_rank=3,
+        rope_fraction=0.5,
+    )
+    inputs = jax.random.normal(jax.random.key(101), (2, 7, 16), dtype=jnp.float32)
+    recurrent = Mamba3MIMO(
+        16,
+        config,
+        dtype=jnp.float32,
+        param_dtype=jnp.float32,
+        execution_mode="recurrent",
+    )
+    dual = Mamba3MIMO(
+        16,
+        config,
+        dtype=jnp.float32,
+        param_dtype=jnp.float32,
+        execution_mode="dual",
+    )
+    params = recurrent.init(jax.random.key(102), inputs)["params"]
+    recurrent_output = recurrent.apply({"params": params}, inputs)
+    dual_output = dual.apply({"params": params}, inputs)
+    np.testing.assert_allclose(
+        np.asarray(dual_output),
+        np.asarray(recurrent_output),
+        rtol=2e-5,
+        atol=2e-5,
     )

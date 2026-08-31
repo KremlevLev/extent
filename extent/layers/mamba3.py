@@ -52,6 +52,23 @@ def _rotate_mimo_halves(x: jax.Array, angle: jax.Array, rotary_pairs: int) -> ja
     return jnp.concatenate((real * cos - imag * sin, real * sin + imag * cos), axis=-1)
 
 
+def _rotate_mimo_sequence_halves(
+    x: jax.Array, angle: jax.Array, rotary_pairs: int
+) -> jax.Array:
+    """Rotate a full [B, L, R, H, N] tensor by [B, L, H, K] angles."""
+    half = x.shape[-1] // 2
+    real, imag = x[..., :half], x[..., half:]
+    cos, sin = jnp.cos(angle)[:, :, None], jnp.sin(angle)[:, :, None]
+    if rotary_pairs < half:
+        padding = [(0, 0)] * cos.ndim
+        padding[-1] = (0, half - rotary_pairs)
+        cos = jnp.pad(cos, padding, constant_values=1.0)
+        sin = jnp.pad(sin, padding, constant_values=0.0)
+    return jnp.concatenate(
+        (real * cos - imag * sin, real * sin + imag * cos), axis=-1
+    )
+
+
 def mamba3_reference_scan(
     x: jax.Array,
     z: jax.Array,
@@ -117,11 +134,102 @@ def mamba3_reference_scan(
     return jnp.swapaxes(output, 0, 1)
 
 
+def _trapezoidal_dual_mask(
+    alpha: jax.Array, gamma: jax.Array, beta: jax.Array
+) -> jax.Array:
+    """Materialize the exact Mamba-3 trapezoidal causal mask.
+
+    ``mask[:, head, target, source]`` is the coefficient multiplying the
+    source-token state injection when the recurrent state is read at target.
+    Keeping this deliberately quadratic gives us a training-only SSD view
+    whose parameters are identical to the deployable recurrent block.
+    """
+    batch, length, heads = alpha.shape
+    previous = jnp.zeros((batch, heads, length), jnp.float32)
+    indices = jnp.arange(length, dtype=jnp.int32)
+    values = tuple(jnp.swapaxes(value, 0, 1) for value in (alpha, gamma, beta))
+
+    def step(row, values_at_t):
+        index, alpha_t, gamma_t, beta_t = values_at_t
+        row = alpha_t[..., None] * row
+        previous_index = jnp.maximum(index - 1, 0)
+        row = row + jnp.where(index > 0, beta_t, 0.0)[..., None] * jax.nn.one_hot(
+            previous_index, length, dtype=jnp.float32
+        )
+        row = row + gamma_t[..., None] * jax.nn.one_hot(
+            index, length, dtype=jnp.float32
+        )
+        return row, row
+
+    _, rows = jax.lax.scan(step, previous, (indices, *values))
+    return jnp.transpose(rows, (1, 2, 0, 3))
+
+
+def mamba3_dual_reference(
+    x: jax.Array,
+    z: jax.Array,
+    b: jax.Array,
+    c: jax.Array,
+    dt: jax.Array,
+    decay: jax.Array,
+    trap: jax.Array,
+    angle_step: jax.Array,
+    mimo_x: jax.Array,
+    mimo_z: jax.Array,
+    mimo_o: jax.Array,
+    skip: jax.Array,
+    rotary_pairs: int,
+) -> jax.Array:
+    """Quadratic SSD-dual execution exactly equivalent to the scan.
+
+    This is a training and analysis path, not an inference kernel.  Unlike a
+    generic linear-attention bridge it retains every canonical Mamba-3 MIMO
+    degree of freedom, including complex rotation, heavy-tail decay,
+    trapezoidal injection, rank-specific value/gate/readout factors and skip.
+    Switching these parameters back to :func:`mamba3_reference_scan` therefore
+    introduces no parameter conversion or dimensional shock.
+    """
+    x32 = x.astype(jnp.float32)
+    z32 = z.astype(jnp.float32)
+    b32 = b.astype(jnp.float32)
+    c32 = c.astype(jnp.float32)
+    dt32 = dt.astype(jnp.float32)
+    alpha = jnp.exp(decay.astype(jnp.float32) * dt32)
+    trap_gate = jax.nn.sigmoid(trap.astype(jnp.float32))
+    gamma = trap_gate * dt32
+    beta = (1.0 - trap_gate) * dt32 * alpha
+
+    increments = jnp.pi * angle_step[:, :, None, :].astype(jnp.float32)
+    angle = jnp.cumsum(increments * dt32[..., None], axis=1)
+    b_rot = _rotate_mimo_sequence_halves(b32, angle, rotary_pairs)
+    c_rot = _rotate_mimo_sequence_halves(c32, angle, rotary_pairs)
+    mask = _trapezoidal_dual_mask(alpha, gamma, beta)
+
+    # Sum the R rank-specific input injections exactly as the recurrent scan
+    # does before storing them in its shared [H, P, N] state.
+    value_by_rank = x32[:, :, None] * jnp.swapaxes(
+        mimo_x.astype(jnp.float32), 0, 1
+    )[None, None]
+    injections = jnp.einsum("btrhp,btrhn->bthpn", value_by_rank, b_rot)
+    states = jnp.einsum("bhts,bshpn->bthpn", mask, injections)
+    y_rank = jnp.einsum("bthpn,btrhn->btrhp", states, c_rot)
+    y_rank += (
+        skip[None, None, None, :, None].astype(jnp.float32) * value_by_rank
+    )
+    gate_by_rank = z32[:, :, None] * jnp.swapaxes(
+        mimo_z.astype(jnp.float32), 0, 1
+    )[None, None]
+    output_weight = jnp.swapaxes(mimo_o.astype(jnp.float32), 0, 1)[None, None]
+    output = jnp.sum(y_rank * jax.nn.silu(gate_by_rank) * output_weight, axis=2)
+    return output.astype(x.dtype)
+
+
 class Mamba3MIMO(nn.Module):
     hidden_size: int
     config: Mamba3Config
     dtype: jnp.dtype = jnp.bfloat16
     param_dtype: jnp.dtype = jnp.bfloat16
+    execution_mode: str = "recurrent"
 
     @nn.compact
     def __call__(
@@ -211,7 +319,14 @@ class Mamba3MIMO(nn.Module):
             ),
         )
         skip = self.param("D", nn.initializers.ones, (heads,), self.param_dtype)
-        y = mamba3_reference_scan(
+        if self.execution_mode not in {"recurrent", "dual"}:
+            raise ValueError("Mamba3 execution_mode must be recurrent or dual")
+        execute = (
+            mamba3_reference_scan
+            if self.execution_mode == "recurrent"
+            else mamba3_dual_reference
+        )
+        y = execute(
             x,
             z,
             b,
