@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from scripts.m3q_complex_bridge_campaign import ARMS, aggregate_results
+from extent.qwen_source import QWEN_SOURCES
+from scripts.m3q_complex_bridge_campaign import ARMS, SOURCE_MODEL, aggregate_results
 
 
 def _recovery(final: float, middle: float | None = None):
@@ -38,3 +39,7 @@ def test_complex_bridge_aggregate_requires_depth_and_mechanism_wins():
     assert aggregate["mechanism_supported"]
     assert aggregate["scientific_gate_passed"]
     assert aggregate["layer_gate_counts"]["complex_phase_beats_no_complex"] == 5
+
+
+def test_campaign_uses_a_registered_qwen_source_name():
+    assert SOURCE_MODEL in QWEN_SOURCES

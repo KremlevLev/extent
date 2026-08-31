@@ -28,6 +28,7 @@ from scripts.qwen_mimo_lift import main as run_layer
 
 
 PROTOCOL = "exp065-m3q-exact-dual-complex-bridge"
+SOURCE_MODEL = "1.7b-base"
 LAYER_ORDER = (0, 6, 13, 20, 27)
 SEEDS = (123, 456, 789)
 ARMS = (
@@ -270,7 +271,7 @@ def main(argv: list[str] | None = None) -> dict:
                 sequence_length=SEQUENCE_LENGTH,
                 training_token_offset=TRAIN_OFFSET,
                 validation_token_offset=VALIDATION_OFFSET,
-                source_model="1.7b",
+                source_model=SOURCE_MODEL,
             )
             train_args, train_manifest, train_dir = _cache_arguments(
                 evaluation_only=False, **common
@@ -291,7 +292,7 @@ def main(argv: list[str] | None = None) -> dict:
                     "--evaluation-cache-manifest", str(eval_manifest),
                     "--evaluation-cache-dir", str(eval_dir),
                     "--qwen-cache-dir", args.qwen_cache_dir,
-                    "--source-model", "1.7b",
+                    "--source-model", SOURCE_MODEL,
                     "--total-steps", str(STEPS),
                     "--checkpoints", ",".join(map(str, CHECKPOINTS)),
                     "--dual-bridge-steps", str(DUAL_STEPS),
