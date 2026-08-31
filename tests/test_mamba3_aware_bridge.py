@@ -9,6 +9,7 @@ from extent.layers.mamba3 import Mamba3MIMO
 from extent.mamba3_aware_bridge import (
     create_exact_dual_bridge_train_step,
     dual_recurrent_parity,
+    token_whitened_output_loss,
     zero_complex_projection,
 )
 from extent.mamba3_transplant import mamba3_projection_slices
@@ -105,3 +106,12 @@ def test_no_complex_ablation_keeps_angle_projection_zero():
     jax.block_until_ready(metrics)
     angle = mamba3_projection_slices(config.hidden_size, config.mamba)["angle"]
     assert np.count_nonzero(np.asarray(updated["in_proj"]["kernel"][:, angle])) == 0
+
+
+def test_token_whitened_loss_is_invariant_to_per_token_teacher_scale():
+    target = jnp.asarray([[[1.0, -2.0], [100.0, -200.0]]])
+    prediction = target * 0.8
+    first = token_whitened_output_loss(prediction, target)
+    rescaled = jnp.asarray([[[7.0], [0.03]]])
+    second = token_whitened_output_loss(prediction * rescaled, target * rescaled)
+    np.testing.assert_allclose(first, second, rtol=2e-4, atol=2e-5)

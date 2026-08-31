@@ -58,7 +58,14 @@ M3Q_DUAL_BRIDGE_ARMS = (
     "M3Q-DUAL-EXACT",
     "M3Q-DUAL-EXACT-NO-COMPLEX",
 )
-REGISTERED_ARMS = ARM_ORDER + M3Q_HOMOTOPY_ARMS + M3Q_DUAL_BRIDGE_ARMS
+M3Q_STABILIZED_DUAL_ARMS = (
+    "M3Q-DUAL-RANDOM-PRECAL-WHITENED",
+    "M3Q-DUAL-RANDOM-PRECAL-WHITENED-NO-COMPLEX",
+)
+REGISTERED_ARMS = (
+    ARM_ORDER + M3Q_HOMOTOPY_ARMS + M3Q_DUAL_BRIDGE_ARMS
+    + M3Q_STABILIZED_DUAL_ARMS
+)
 VARIANT_BY_ARM = {
     "CONTROL-RANDOM": "INIT-A-random",
     "CONTROL-FLAT-QKVO": "INIT-C-prior-qkvo-port",
@@ -70,6 +77,8 @@ VARIANT_BY_ARM = {
     "M3Q-DUAL-RANDOM": "INIT-A-random",
     "M3Q-DUAL-EXACT": "INIT-K-balanced-qkvo-lift",
     "M3Q-DUAL-EXACT-NO-COMPLEX": "INIT-K-balanced-qkvo-lift",
+    "M3Q-DUAL-RANDOM-PRECAL-WHITENED": "INIT-A-random",
+    "M3Q-DUAL-RANDOM-PRECAL-WHITENED-NO-COMPLEX": "INIT-A-random",
 }
 HOMOTOPY_BY_ARM = {
     "M3Q-EXACT-LINEAR": "linear",
@@ -104,6 +113,7 @@ def _train_exact_dual_bridge(
     freeze_complex: bool,
     parity_inputs,
     deadline_monotonic: float | None,
+    loss_mode: str = "global_scale_free",
 ):
     if freeze_complex:
         params = zero_complex_projection(params, recurrent.hidden_size, config)
@@ -125,6 +135,7 @@ def _train_exact_dual_bridge(
         config=config,
         bf16_gradients=compute_dtype == jnp.bfloat16,
         freeze_complex=freeze_complex,
+        loss_mode=loss_mode,
     )
     opt_state = tx.init(params)
     training_count = training_slice.stop - training_slice.start
@@ -176,6 +187,7 @@ def _train_exact_dual_bridge(
         "completed_steps": completed,
         "learning_rate": learning_rate,
         "freeze_complex_projection": freeze_complex,
+        "loss_mode": loss_mode,
         "first_metrics": first,
         "last_metrics": last,
         "max_grad_norm": max_grad_norm,
@@ -324,11 +336,21 @@ def main(
             variant = VARIANT_BY_ARM[arm]
             initial = variants[variant]
             bridge_result = None
-            if arm in M3Q_DUAL_BRIDGE_ARMS:
+            if arm in M3Q_DUAL_BRIDGE_ARMS + M3Q_STABILIZED_DUAL_ARMS:
                 print(
                     f"exp056_layer={layer} seed={seed} arm={arm} "
                     "exact_dual_bridge=START"
                 )
+                input_readout_report = None
+                if arm in M3Q_STABILIZED_DUAL_ARMS:
+                    initial, input_readout_report = _calibrate_readout(
+                        mamba,
+                        initial,
+                        calibration_inputs,
+                        calibration_targets,
+                        compute_dtype,
+                        args.readout_ridge,
+                    )
                 initial, bridge_result, bridge_complete = _train_exact_dual_bridge(
                     params=initial,
                     recurrent=mamba,
@@ -340,9 +362,20 @@ def main(
                     steps=args.dual_bridge_steps,
                     learning_rate=args.dual_bridge_learning_rate,
                     data_seed=args.data_seed + seed + 30_000,
-                    freeze_complex=arm == "M3Q-DUAL-EXACT-NO-COMPLEX",
+                    freeze_complex=arm in {
+                        "M3Q-DUAL-EXACT-NO-COMPLEX",
+                        "M3Q-DUAL-RANDOM-PRECAL-WHITENED-NO-COMPLEX",
+                    },
                     parity_inputs=calibration_inputs[:1],
                     deadline_monotonic=deadline_monotonic,
+                    loss_mode=(
+                        "token_whitened"
+                        if arm in M3Q_STABILIZED_DUAL_ARMS
+                        else "global_scale_free"
+                    ),
+                )
+                bridge_result["input_readout_calibration"] = (
+                    input_readout_report
                 )
                 numerical_pass = numerical_pass and bool(bridge_result["finite"])
                 if not bridge_complete:
@@ -377,7 +410,7 @@ def main(
                 "readout_calibration": readout_report,
                 "recovery_recipe": (
                     "mamba3_exact_dual_then_recurrent_decoder_aware"
-                    if arm in M3Q_DUAL_BRIDGE_ARMS
+                    if arm in M3Q_DUAL_BRIDGE_ARMS + M3Q_STABILIZED_DUAL_ARMS
                     else "standard_decoder_aware"
                     if arm not in HOMOTOPY_BY_ARM
                     else f"m3q_{HOMOTOPY_BY_ARM[arm]}_attention_to_mamba3_homotopy"
@@ -402,7 +435,10 @@ def main(
         "source": f"{spec.repo_id}@{spec.revision}",
         "method": (
             "m3q_exact_ssd_dual_complex_bridge"
-            if any(arm in M3Q_DUAL_BRIDGE_ARMS for arm in arms)
+            if any(
+                arm in M3Q_DUAL_BRIDGE_ARMS + M3Q_STABILIZED_DUAL_ARMS
+                for arm in arms
+            )
             else "m3q_operator_lift_with_attention_to_mamba3_homotopy"
             if any(arm in HOMOTOPY_BY_ARM for arm in arms)
             else "operator_preserving_siso_to_mimo_qkvo_lift"

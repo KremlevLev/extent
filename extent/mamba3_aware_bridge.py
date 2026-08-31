@@ -60,6 +60,24 @@ def scale_free_output_loss(prediction: jax.Array, target: jax.Array) -> jax.Arra
     return relative_mse + cosine
 
 
+def token_whitened_output_loss(
+    prediction: jax.Array, target: jax.Array
+) -> jax.Array:
+    """Equalize token contributions using frozen teacher RMS scales.
+
+    Deep Qwen layers showed million-fold differences in uncalibrated bridge
+    loss despite RMS-normalized inputs.  Dividing both sides by the teacher's
+    per-token output RMS preserves direction and relative error while stopping
+    a few high-energy tokens from defining the construction objective.
+    """
+    prediction = prediction.astype(jnp.float32)
+    target = target.astype(jnp.float32)
+    scale = jax.lax.stop_gradient(
+        jnp.sqrt(jnp.mean(jnp.square(target), axis=-1, keepdims=True) + 1e-6)
+    )
+    return scale_free_output_loss(prediction / scale, target / scale)
+
+
 def create_exact_dual_bridge_train_step(
     apply_dual: Callable,
     tx: optax.GradientTransformation,
@@ -68,14 +86,22 @@ def create_exact_dual_bridge_train_step(
     config: Mamba3Config,
     bf16_gradients: bool,
     freeze_complex: bool = False,
+    loss_mode: str = "global_scale_free",
 ) -> Callable:
     """Train canonical Mamba-3 parameters in their exact quadratic dual form."""
+    if loss_mode not in {"global_scale_free", "token_whitened"}:
+        raise ValueError("unknown exact-dual bridge loss mode")
+    bridge_loss = (
+        scale_free_output_loss
+        if loss_mode == "global_scale_free"
+        else token_whitened_output_loss
+    )
 
     @jax.jit
     def train_step(params, opt_state, inputs, targets):
         def loss_fn(candidate):
             prediction = apply_dual(candidate, inputs)
-            return scale_free_output_loss(prediction, targets), prediction
+            return bridge_loss(prediction, targets), prediction
 
         (loss, prediction), grads = jax.value_and_grad(loss_fn, has_aux=True)(params)
         if freeze_complex:
