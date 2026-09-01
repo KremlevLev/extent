@@ -90,7 +90,7 @@ def _mean_checkpoint(seed_records: list[dict], step: int) -> float:
 
 
 def aggregate_atlas(
-    layers: dict[str, dict], *, seeds: tuple[int, ...] = SEEDS
+    layers: dict[str, dict], *, seeds: tuple[int, ...] = SEEDS, final_step: int = STEPS
 ) -> dict:
     rows = {}
     for layer, result in sorted(layers.items(), key=lambda item: int(item[0])):
@@ -154,13 +154,15 @@ def aggregate_atlas(
         "retained_attention_count": 4,
         "retained_attention_fraction": 4 / 28,
         "provisional_retained_attention_layers": retained,
-        "ranking_rule": "four largest mean step-2048 dual decoder relative-L2 values",
+        "ranking_rule": (
+            f"four largest mean step-{final_step} dual decoder relative-L2 values"
+        ),
         "spearman_step256_to_final": correlation256,
         "spearman_step1024_to_final": correlation1024,
         "early_predictor_gate_passed": predictor_pass,
         "scientific_gate_passed": bool(complete and predictor_pass),
         "gate_definition": (
-            "all 28 layers complete with two paired seeds and step-1024 ranking "
+            f"all 28 layers complete with {len(seeds)} seed(s) and step-1024 ranking "
             "correlates with final compatibility ranking at Spearman >= 0.80"
         ),
     }
@@ -199,12 +201,14 @@ def render_summary(result: dict) -> str:
         )
     comparison = result.get("exp067_comparison")
     if comparison:
+        overlap = comparison["retained_attention_overlap"]
+        overlap_text = "pending (atlas incomplete)" if overlap is None else f"{overlap}/4"
         lines += [
             "",
             "## Independent long-horizon confirmation",
             "",
             f"- EXP-067/068 rank Spearman: `{comparison['exp067_to_exp068_spearman']}`",
-            f"- Retained-layer overlap: `{comparison['retained_attention_overlap']}/4`",
+            f"- Retained-layer overlap: `{overlap_text}`",
             f"- EXP-067 layers: `{comparison['exp067_retained_attention_layers']}`",
             f"- EXP-068 layers: `{comparison['exp068_retained_attention_layers']}`",
             f"- Confirmation gate: `{comparison['confirmation_gate_passed']}`",
@@ -385,7 +389,7 @@ def main(argv: list[str] | None = None) -> dict:
             if not layer_result.get("complete"):
                 break
 
-        aggregate = aggregate_atlas(results, seeds=seeds)
+        aggregate = aggregate_atlas(results, seeds=seeds, final_step=steps)
         baseline_comparison = None
         if confirmation and hub is not None:
             baseline_path = output / "exp067-reference.json"
@@ -409,17 +413,24 @@ def main(argv: list[str] | None = None) -> dict:
                     )
                 )
                 new_selected = set(aggregate["provisional_retained_attention_layers"])
+                selection_available = aggregate["completed_layers"] == 28
+                overlap = (
+                    len(old_selected & new_selected) if selection_available else None
+                )
                 baseline_comparison = {
                     "shared_layers": len(shared),
                     "exp067_to_exp068_spearman": rank_correlation,
-                    "retained_attention_overlap": len(old_selected & new_selected),
+                    "retained_attention_overlap": overlap,
+                    "selection_available": selection_available,
                     "exp067_retained_attention_layers": sorted(old_selected),
                     "exp068_retained_attention_layers": sorted(new_selected),
                     "confirmation_gate_passed": bool(
                         len(shared) == 28
+                        and selection_available
                         and rank_correlation is not None
                         and rank_correlation >= 0.80
-                        and len(old_selected & new_selected) >= 3
+                        and overlap is not None
+                        and overlap >= 3
                     ),
                 }
         complete = aggregate["completed_layers"] == 28

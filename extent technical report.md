@@ -1402,6 +1402,11 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Secondary endpoint:** step-1,024 versus step-8,192 rank correlation measures whether the cheap allocation probe remains valid over a four-times-longer horizon.
 - **Runtime/durability:** 4.5-hour maximum inside the remaining five-hour session. Every completed layer is uploaded to `experiments/exp068-long-horizon-compatibility-confirmation/layers/`; rerunning the same cell restores and skips completed layers. Final/failure snapshots and Telegram terminal status are enabled.
 - **Interpretation boundary:** a pass freezes the small-model attention allocation for a subsequent selected-versus-even full-model comparison. It does not itself show an NLL or throughput advantage and does not yet decide the separate 14B layer indices.
+- **First execution (MEASURED, deadline-partial):** completed `12/28` layers in `4.232` hours and uploaded every completed layer to HF. All trajectories are finite. The remaining layer order begins at layer 5 and is recoverable by rerunning the same entry point in a fresh session.
+- **Partial ranking evidence (MEASURED):** across the 12 shared completed layers, EXP-067 step-2,048 versus EXP-068 step-8,192 final difficulty has Spearman `0.979021`; within EXP-068, step-1,024 versus step-8,192 Spearman is exactly `1.0`. This strongly supports ranking stability but cannot pass the pre-registered all-28-layer gate.
+- **Partial depth replication (MEASURED):** dual preparation beats random at layers `0,1,17,20,22,24,26,27` and loses at `3,6,10,13`, reproducing the boundary/depth structure on a fresh seed and four-times-longer recovery.
+- **Correction:** the first partial summary printed retained-layer overlap `0/4` because incomplete atlases intentionally emit no four-layer selection. This is not measured disagreement. Reporting now marks overlap as pending until all 28 layers complete; no numerical result changes.
+- **Artifact integrity:** full partial SHA-256 `8c6d4df2b247dacb59ca8bfa5c06ce16fe4cc5bdffb1f121b5c001272309f5b4`; summary SHA-256 `d64ef6271ec9b208215a728ca8ec9f11203de6fbdeb69cad683c4dbb067686ef`; compact artifact `results/EXP-068-long-horizon-compatibility-partial-summary.md`.
 
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
