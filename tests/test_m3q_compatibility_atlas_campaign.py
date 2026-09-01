@@ -66,3 +66,13 @@ def test_atlas_protocol_covers_every_qwen17_layer_once():
     assert set(LAYER_ORDER) == set(range(28))
     assert SOURCE_MODEL in QWEN_SOURCES
     assert ARMS == ("CONTROL-RANDOM", "M3Q-DUAL-RANDOM")
+
+
+def test_atlas_aggregation_supports_single_seed_confirmation():
+    layers = {str(layer): _layer_result(layer) for layer in range(28)}
+    for result in layers.values():
+        result["seeds"] = {"789": result["seeds"]["123"]}
+    aggregate = aggregate_atlas(layers, seeds=(789,))
+    assert aggregate["completed_layers"] == 28
+    assert aggregate["provisional_retained_attention_layers"] == [27, 26, 25, 24]
+    assert aggregate["scientific_gate_passed"]

@@ -31,6 +31,7 @@ from scripts.qwen_mimo_lift import main as run_layer
 
 
 PROTOCOL = "exp067-m3q-full-depth-compatibility-atlas"
+CONFIRMATION_PROTOCOL = "exp068-m3q-long-horizon-compatibility-confirmation"
 SOURCE_MODEL = "1.7b-base"
 # Broad depth coverage appears early if a session ends before all 28 layers.
 LAYER_ORDER = (
@@ -88,17 +89,19 @@ def _mean_checkpoint(seed_records: list[dict], step: int) -> float:
     return float(np.mean(values))
 
 
-def aggregate_atlas(layers: dict[str, dict]) -> dict:
+def aggregate_atlas(
+    layers: dict[str, dict], *, seeds: tuple[int, ...] = SEEDS
+) -> dict:
     rows = {}
     for layer, result in sorted(layers.items(), key=lambda item: int(item[0])):
         arm_records = {arm: [] for arm in ARMS}
-        for seed in map(str, SEEDS):
+        for seed in map(str, seeds):
             arms = result.get("seeds", {}).get(seed, {}).get("arms", {})
             for arm in ARMS:
                 record = arms.get(arm)
                 if record and record.get("recovery", {}).get("complete"):
                     arm_records[arm].append(record)
-        if any(len(records) != len(SEEDS) for records in arm_records.values()):
+        if any(len(records) != len(seeds) for records in arm_records.values()):
             continue
         random_endpoints = np.asarray(
             [_endpoint(record) for record in arm_records["CONTROL-RANDOM"]]
@@ -165,8 +168,13 @@ def aggregate_atlas(layers: dict[str, dict]) -> dict:
 
 def render_summary(result: dict) -> str:
     aggregate = result["aggregate"]
+    title = (
+        "# EXP-068 Qwen3-1.7B long-horizon compatibility confirmation"
+        if result["protocol"] == CONFIRMATION_PROTOCOL
+        else "# EXP-067 Qwen3-1.7B full-depth Mamba compatibility atlas"
+    )
     lines = [
-        "# EXP-067 Qwen3-1.7B full-depth Mamba compatibility atlas",
+        title,
         "",
         f"- Status: `{result['status']}`",
         f"- Duration: `{result['duration_hours']:.3f}` hours",
@@ -189,16 +197,28 @@ def render_summary(result: dict) -> str:
             f"{100 * row['dual_auc_gain_over_random']:+.2f}% | "
             f"{row['dual_step1024_decoder_relative_l2']:.8f} |"
         )
+    comparison = result.get("exp067_comparison")
+    if comparison:
+        lines += [
+            "",
+            "## Independent long-horizon confirmation",
+            "",
+            f"- EXP-067/068 rank Spearman: `{comparison['exp067_to_exp068_spearman']}`",
+            f"- Retained-layer overlap: `{comparison['retained_attention_overlap']}/4`",
+            f"- EXP-067 layers: `{comparison['exp067_retained_attention_layers']}`",
+            f"- EXP-068 layers: `{comparison['exp068_retained_attention_layers']}`",
+            f"- Confirmation gate: `{comparison['confirmation_gate_passed']}`",
+        ]
     return "\n".join(lines) + "\n"
 
 
-def _valid_layer(path: Path, layer: int) -> dict | None:
+def _valid_layer(path: Path, layer: int, protocol: str = PROTOCOL) -> dict | None:
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
     except (FileNotFoundError, OSError, json.JSONDecodeError):
         return None
     if (
-        payload.get("protocol") != PROTOCOL
+        payload.get("protocol") != protocol
         or int(payload.get("target_layer", -1)) != layer
         or not payload.get("complete")
         or not payload.get("passed")
@@ -237,7 +257,23 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--max-wall-hours", type=float, default=6.75)
     parser.add_argument("--telegram", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--hf-sync", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--long-horizon-confirmation", action="store_true")
     args = parser.parse_args(argv)
+    confirmation = args.long_horizon_confirmation
+    protocol = CONFIRMATION_PROTOCOL if confirmation else PROTOCOL
+    seeds = (789,) if confirmation else SEEDS
+    steps = 8_192 if confirmation else STEPS
+    dual_steps = 2_048 if confirmation else DUAL_STEPS
+    checkpoints = (0, 256, 1024, 4096, 8192) if confirmation else CHECKPOINTS
+    train_offset = 1_441_792 if confirmation else TRAIN_OFFSET
+    validation_offset = 229_376 if confirmation else VALIDATION_OFFSET
+    artifact_prefix = "exp068" if confirmation else "exp067"
+    hf_prefix = (
+        "experiments/exp068-long-horizon-compatibility-confirmation"
+        if confirmation else HF_PREFIX
+    )
+    if confirmation and args.max_wall_hours == 6.75:
+        args.max_wall_hours = 4.5
     devices = list(jax.devices())
     if len(devices) != 8 or any(device.platform != "tpu" for device in devices):
         raise ValueError("EXP-067 requires one TPU v5e-8")
@@ -251,10 +287,10 @@ def main(argv: list[str] | None = None) -> dict:
     deadline = started_clock + args.max_wall_hours * 3600
     started = _now()
     stage = "startup"
-    stage_path = output / "exp067-stage-manifest.json"
+    stage_path = output / f"{artifact_prefix}-stage-manifest.json"
     start_notice = _safe_notify(
         args.telegram,
-        f"Extent TPU campaign\nstatus=started\nexperiment=EXP-067 compatibility atlas"
+        f"Extent TPU campaign\nstatus=started\nexperiment={artifact_prefix.upper()} compatibility atlas"
         f"\nhost={socket.gethostname()}\nhf_sync={hub is not None}",
     )
     results = {}
@@ -264,11 +300,11 @@ def main(argv: list[str] | None = None) -> dict:
     try:
         for layer in LAYER_ORDER:
             stage = f"layer-{layer}"
-            layer_path = output / f"exp067-layer{layer}-training.json"
-            existing = _valid_layer(layer_path, layer)
-            remote = f"{HF_PREFIX}/layers/layer-{layer}.json"
+            layer_path = output / f"{artifact_prefix}-layer{layer}-training.json"
+            existing = _valid_layer(layer_path, layer, protocol)
+            remote = f"{hf_prefix}/layers/layer-{layer}.json"
             if existing is None and _try_restore(layer_path, remote, hub):
-                existing = _valid_layer(layer_path, layer)
+                existing = _valid_layer(layer_path, layer, protocol)
                 if existing:
                     restored_layers.append(layer)
             if existing:
@@ -287,12 +323,12 @@ def main(argv: list[str] | None = None) -> dict:
                 compute_dtype="bfloat16",
                 storage_dtype="float16",
                 per_device_windows=4,
-                artifact_prefix="exp067",
-                recovery_steps=STEPS,
+                artifact_prefix=artifact_prefix,
+                recovery_steps=steps,
                 validation_windows=VALIDATION_WINDOWS,
                 sequence_length=SEQUENCE_LENGTH,
-                training_token_offset=TRAIN_OFFSET,
-                validation_token_offset=VALIDATION_OFFSET,
+                training_token_offset=train_offset,
+                validation_token_offset=validation_offset,
                 source_model=SOURCE_MODEL,
             )
             train_args, train_manifest, train_dir = _cache_arguments(
@@ -317,14 +353,14 @@ def main(argv: list[str] | None = None) -> dict:
                     "--evaluation-cache-dir", str(eval_dir),
                     "--qwen-cache-dir", args.qwen_cache_dir,
                     "--source-model", SOURCE_MODEL,
-                    "--total-steps", str(STEPS),
-                    "--checkpoints", ",".join(map(str, CHECKPOINTS)),
-                    "--dual-bridge-steps", str(DUAL_STEPS),
-                    "--seeds", ",".join(map(str, SEEDS)),
+                    "--total-steps", str(steps),
+                    "--checkpoints", ",".join(map(str, checkpoints)),
+                    "--dual-bridge-steps", str(dual_steps),
+                    "--seeds", ",".join(map(str, seeds)),
                     "--arms", ",".join(ARMS),
                     "--data-seed", "20260901",
                     "--compute-dtype", "bfloat16",
-                    "--experiment-protocol", PROTOCOL,
+                    "--experiment-protocol", protocol,
                     "--result-json", str(layer_path),
                     "--output-dir", str(output),
                 ],
@@ -337,7 +373,7 @@ def main(argv: list[str] | None = None) -> dict:
                 uploaded_layers.append(layer)
             update_stage_manifest(
                 stage_path,
-                experiment=PROTOCOL,
+                experiment=protocol,
                 stage=stage,
                 status="completed" if layer_result.get("complete") else "deadline_partial",
                 details={"complete": bool(layer_result.get("complete")), "hf_remote": remote},
@@ -349,10 +385,46 @@ def main(argv: list[str] | None = None) -> dict:
             if not layer_result.get("complete"):
                 break
 
-        aggregate = aggregate_atlas(results)
+        aggregate = aggregate_atlas(results, seeds=seeds)
+        baseline_comparison = None
+        if confirmation and hub is not None:
+            baseline_path = output / "exp067-reference.json"
+            if _try_restore(baseline_path, f"{HF_PREFIX}/latest.json", hub):
+                baseline = json.loads(baseline_path.read_text(encoding="utf-8"))
+                old_rows = baseline.get("aggregate", {}).get("layers", {})
+                new_rows = aggregate["layers"]
+                shared = sorted(set(old_rows) & set(new_rows), key=int)
+                old_values = [
+                    old_rows[layer]["dual_final_decoder_relative_l2"]
+                    for layer in shared
+                ]
+                new_values = [
+                    new_rows[layer]["dual_final_decoder_relative_l2"]
+                    for layer in shared
+                ]
+                rank_correlation = _spearman(old_values, new_values)
+                old_selected = set(
+                    baseline.get("aggregate", {}).get(
+                        "provisional_retained_attention_layers", []
+                    )
+                )
+                new_selected = set(aggregate["provisional_retained_attention_layers"])
+                baseline_comparison = {
+                    "shared_layers": len(shared),
+                    "exp067_to_exp068_spearman": rank_correlation,
+                    "retained_attention_overlap": len(old_selected & new_selected),
+                    "exp067_retained_attention_layers": sorted(old_selected),
+                    "exp068_retained_attention_layers": sorted(new_selected),
+                    "confirmation_gate_passed": bool(
+                        len(shared) == 28
+                        and rank_correlation is not None
+                        and rank_correlation >= 0.80
+                        and len(old_selected & new_selected) >= 3
+                    ),
+                }
         complete = aggregate["completed_layers"] == 28
         result = {
-            "protocol": PROTOCOL,
+            "protocol": protocol,
             "source": f"{QWEN3_1_7B_BASE.repo_id}@{QWEN3_1_7B_BASE.revision}",
             "status": "completed" if complete else "deadline_partial",
             "complete": complete,
@@ -361,41 +433,46 @@ def main(argv: list[str] | None = None) -> dict:
             "completed_at_utc": _now(),
             "duration_hours": (time.monotonic() - started_clock) / 3600,
             "layer_order": list(LAYER_ORDER),
-            "seeds": list(SEEDS),
+            "seeds": list(seeds),
             "arms": list(ARMS),
-            "recovery_steps": STEPS,
-            "dual_bridge_steps": DUAL_STEPS,
+            "recovery_steps": steps,
+            "dual_bridge_steps": dual_steps,
             "sequence_length": SEQUENCE_LENGTH,
             "layer_results": results,
             "aggregate": aggregate,
             "hf_sync_enabled": hub is not None,
-            "hf_prefix": HF_PREFIX if hub else None,
+            "hf_prefix": hf_prefix if hub else None,
             "hf_restored_layers": restored_layers,
             "hf_uploaded_layers": uploaded_layers,
             "removed_regenerable_arrays": removed,
             "start_notification": start_notice,
+            "exp067_comparison": baseline_comparison,
         }
-        result_path = output / "extent-m3q-compatibility-atlas.json"
+        stem = (
+            "extent-m3q-long-horizon-compatibility-confirmation"
+            if confirmation else "extent-m3q-compatibility-atlas"
+        )
+        result_path = output / f"{stem}.json"
         _write_json_with_output_mirror(result_path, result, str(output))
-        summary = output / "extent-m3q-compatibility-atlas-summary.md"
+        summary = output / f"{stem}-summary.md"
         summary.write_text(render_summary(result), encoding="utf-8")
-        _try_upload(result_path, f"{HF_PREFIX}/latest.json", hub, "EXP-067 atlas snapshot")
-        _try_upload(summary, f"{HF_PREFIX}/latest-summary.md", hub, "EXP-067 atlas summary")
+        _try_upload(result_path, f"{hf_prefix}/latest.json", hub, f"{artifact_prefix.upper()} atlas snapshot")
+        _try_upload(summary, f"{hf_prefix}/latest-summary.md", hub, f"{artifact_prefix.upper()} atlas summary")
         _safe_notify(
             args.telegram,
-            f"Extent TPU campaign\nstatus={result['status']}\nexperiment=EXP-067"
+            f"Extent TPU campaign\nstatus={result['status']}\nexperiment={artifact_prefix.upper()}"
             f"\nduration_hours={result['duration_hours']:.3f}"
             f"\nlayers={aggregate['completed_layers']}/28"
             f"\nhf_sync={hub is not None}",
         )
         print(
-            f"EXP067-{result['status'].upper()} layers={aggregate['completed_layers']}/28 "
+            f"{artifact_prefix.upper()}-{result['status'].upper()} layers={aggregate['completed_layers']}/28 "
             f"gate={aggregate['scientific_gate_passed']}\nsummary={summary.resolve()}"
         )
         return result
     except BaseException as exc:
         failure = {
-            "protocol": PROTOCOL,
+            "protocol": protocol,
             "status": "failed",
             "stage": stage,
             "error_type": type(exc).__name__,
@@ -405,12 +482,12 @@ def main(argv: list[str] | None = None) -> dict:
             "failed_at_utc": _now(),
             "completed_layer_results": results,
         }
-        failure_path = output / "exp067-failure.json"
+        failure_path = output / f"{artifact_prefix}-failure.json"
         _write_json_with_output_mirror(failure_path, failure, str(output))
-        _try_upload(failure_path, f"{HF_PREFIX}/failure-latest.json", hub, "EXP-067 failure")
+        _try_upload(failure_path, f"{hf_prefix}/failure-latest.json", hub, f"{artifact_prefix.upper()} failure")
         _safe_notify(
             args.telegram,
-            f"Extent TPU campaign\nstatus=failed\nexperiment=EXP-067"
+            f"Extent TPU campaign\nstatus=failed\nexperiment={artifact_prefix.upper()}"
             f"\nstage={stage}\nerror={type(exc).__name__}: {exc}",
         )
         raise
