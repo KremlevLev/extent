@@ -8,6 +8,15 @@ import tempfile
 from typing import Any
 
 
+HUB_REPO_TYPES = ("model", "dataset")
+
+
+def validate_repo_type(repo_type: str) -> str:
+    if repo_type not in HUB_REPO_TYPES:
+        raise ValueError(f"repo-type must be one of {HUB_REPO_TYPES}")
+    return repo_type
+
+
 def _sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as stream:
@@ -55,6 +64,7 @@ def upload_checkpoint_to_hub(
     revision: str = "main",
     private: bool = True,
     commit_message: str | None = None,
+    repo_type: str = "model",
     api: Any | None = None,
 ):
     """Upload a verified checkpoint as one atomic Hugging Face Hub commit."""
@@ -62,10 +72,11 @@ def upload_checkpoint_to_hub(
 
     metadata, files = validate_checkpoint_directory(directory)
     prefix = normalize_hub_path(path_in_repo)
+    repo_type = validate_repo_type(repo_type)
     api = HfApi(token=token) if api is None else api
     api.create_repo(
         repo_id=repo_id,
-        repo_type="model",
+        repo_type=repo_type,
         private=private,
         exist_ok=True,
         token=token,
@@ -79,7 +90,7 @@ def upload_checkpoint_to_hub(
     message = commit_message or f"checkpoint step {int(metadata['step'])}"
     return api.create_commit(
         repo_id=repo_id,
-        repo_type="model",
+        repo_type=repo_type,
         revision=revision,
         operations=operations,
         commit_message=message,
@@ -94,6 +105,7 @@ def download_checkpoint_from_hub(
     path_in_repo: str,
     token: str | bool | None = None,
     revision: str = "main",
+    repo_type: str = "model",
 ) -> dict:
     """Download, verify, and atomically install a Hub checkpoint locally."""
     from huggingface_hub import hf_hub_download
@@ -101,6 +113,7 @@ def download_checkpoint_from_hub(
     root = Path(directory)
     root.parent.mkdir(parents=True, exist_ok=True)
     prefix = normalize_hub_path(path_in_repo)
+    repo_type = validate_repo_type(repo_type)
     with tempfile.TemporaryDirectory(
         prefix="extent-hf-checkpoint-", dir=root.parent
     ) as temporary:
@@ -108,7 +121,7 @@ def download_checkpoint_from_hub(
         metadata_download = Path(
             hf_hub_download(
                 repo_id=repo_id,
-                repo_type="model",
+                repo_type=repo_type,
                 revision=revision,
                 filename=f"{prefix}/checkpoint.json",
                 local_dir=temporary_root,
@@ -120,7 +133,7 @@ def download_checkpoint_from_hub(
         payload_download = Path(
             hf_hub_download(
                 repo_id=repo_id,
-                repo_type="model",
+                repo_type=repo_type,
                 revision=revision,
                 filename=f"{prefix}/{payload_name}",
                 local_dir=temporary_root,

@@ -20,6 +20,11 @@ def main(argv: list[str] | None = None) -> None:
         command.add_argument("--repo-id", required=True)
         command.add_argument("--path-in-repo", required=True)
         command.add_argument("--revision", default="main")
+        command.add_argument(
+            "--repo-type",
+            choices=("model", "dataset"),
+            default=os.environ.get("EXTENT_HF_REPO_TYPE", "model"),
+        )
     subparsers.choices["push"].add_argument("--public", action="store_true")
     subparsers.choices["push"].add_argument("--commit-message")
     args = parser.parse_args(argv)
@@ -33,6 +38,7 @@ def main(argv: list[str] | None = None) -> None:
             revision=args.revision,
             private=not args.public,
             commit_message=args.commit_message,
+            repo_type=args.repo_type,
             token=token,
         )
         print(f"HF-CHECKPOINT-PUSH-PASS commit={getattr(info, 'oid', 'unknown')}")
@@ -42,6 +48,7 @@ def main(argv: list[str] | None = None) -> None:
             repo_id=args.repo_id,
             path_in_repo=args.path_in_repo,
             revision=args.revision,
+            repo_type=args.repo_type,
             token=token,
         )
         print(

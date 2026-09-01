@@ -8,6 +8,7 @@ from extent.hf_checkpoint_sync import (
     normalize_hub_path,
     upload_checkpoint_to_hub,
     validate_checkpoint_directory,
+    validate_repo_type,
 )
 
 
@@ -57,10 +58,13 @@ def test_push_is_one_commit_with_only_verified_files(tmp_path):
         repo_id="owner/private-checkpoints",
         path_in_repo="exp036/step-1024",
         token="secret",
+        repo_type="dataset",
         api=api,
     )
     assert info.oid == "abc123"
     assert api.created["private"] is True
+    assert api.created["repo_type"] == "dataset"
+    assert api.commit["repo_type"] == "dataset"
     assert len(api.commit["operations"]) == 2
     assert {
         operation.path_in_repo for operation in api.commit["operations"]
@@ -68,3 +72,10 @@ def test_push_is_one_commit_with_only_verified_files(tmp_path):
         "exp036/step-1024/checkpoint.json",
         "exp036/step-1024/training_state.msgpack",
     }
+
+
+def test_repo_type_rejects_ambiguous_hub_namespaces():
+    assert validate_repo_type("model") == "model"
+    assert validate_repo_type("dataset") == "dataset"
+    with pytest.raises(ValueError, match="repo-type"):
+        validate_repo_type("space")
