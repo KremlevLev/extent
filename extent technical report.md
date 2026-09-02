@@ -1407,6 +1407,8 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Partial depth replication (MEASURED):** dual preparation beats random at layers `0,1,17,20,22,24,26,27` and loses at `3,6,10,13`, reproducing the boundary/depth structure on a fresh seed and four-times-longer recovery.
 - **Correction:** the first partial summary printed retained-layer overlap `0/4` because incomplete atlases intentionally emit no four-layer selection. This is not measured disagreement. Reporting now marks overlap as pending until all 28 layers complete; no numerical result changes.
 - **Artifact integrity:** full partial SHA-256 `8c6d4df2b247dacb59ca8bfa5c06ce16fe4cc5bdffb1f121b5c001272309f5b4`; summary SHA-256 `d64ef6271ec9b208215a728ca8ec9f11203de6fbdeb69cad683c4dbb067686ef`; compact artifact `results/EXP-068-long-horizon-compatibility-partial-summary.md`.
+- **Second execution (MEASURED, deadline-partial):** HF resume restored all first-run layers and completed 11 more in `4.172` hours, bringing cumulative coverage to `23/28`. EXP-067/068 rank Spearman is now `0.987154`; EXP-068 step-1,024/final Spearman is `0.999012`. The remaining layers are `18,9,16,11,14`; the retained-attention set and confirmation gate correctly remain pending.
+- **Second-execution integrity:** full SHA-256 `596ca6e20764a874393e0b49cf359a8c20f8cb85ef052fe562ab1ce01e5936b6`; summary SHA-256 `a85f84c64d5c5a349fd2d3e0d03eaf11cb81d2b8713bb4dc67b9ef94432a2ff3`.
 
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
