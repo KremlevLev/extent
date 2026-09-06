@@ -1416,6 +1416,17 @@ Thresholds will be frozen before final experiments after pilot variance is known
 - **Decision:** close EXP-068; no further repetitions are needed for this registered confirmation. Preserve the cheap-probe set `[0,1,20,26]` and the long-horizon candidate `[0,1,26,27]` for a locked whole-model comparison against evenly spaced attention, using fresh evaluation data. This keeps the independently confirmed cheap-probe rule distinct from the set reselected on confirmation data.
 - **Final integrity:** full SHA-256 `9a3593290a453f1c3e7aab132ddd85497bdf1af001b191c0a500c34500b85e20`; summary SHA-256 `e612689c5cfef4c3c0f5450f38415815435b78478e1f1e2a2fe5fe5818943514`; final interpretation in `results/EXP-068-long-horizon-compatibility-final-summary.md`.
 
+### EXP-069 — paired full-model attention allocation (pre-registered)
+
+- **Implementation commit title:** `feat: add resumable full-model allocation comparison`.
+- **Question:** compare EXP-068's `[0,1,26,27]` with EXP-064's evenly spaced `[6,13,20,27]` under the same new random-dual preparation recipe. EXP-064 compared initializers with one fixed placement; it cannot isolate the effect of placement under the new recipe.
+- **Controls:** pinned Qwen3-1.7B-Base; two paired seeds `123/456`; four retained GQA and 24 Mamba mixers per arm. All common Mamba positions consume the same checkpoint bytes, documented by hashes. Execution order is reversed for the second seed. Direct Qwen weights, optimizer, training order, context length, and evaluation are matched.
+- **Preparation:** one bank of the 27 Mamba positions needed by either arm, separately per seed; 1,024 dual steps, readout calibration, then 2,048 recurrent decoder-aware steps per layer at context 64. Each model consumes 24 such endpoints. No random-control or QKVO-lift sweep is repeated.
+- **Full recovery:** 3,072 updates per arm at context 256, batch one; all student parameters train with BF16 Lion, LR `3e-5`, warmup 128, no decay, FP32 clipping norm 1.0, KL temperature 2 plus CE weight 0.1. Teacher runs frozen on the same TPU host as supported by EXP-064. GQA remains unchanged to isolate placement.
+- **Evaluation/gate:** common WikiText-2 test prefix of 64 windows, separate from the atlas validation slices; metrics at `0/256/1024/2048/3072`, including window NLL. ATLAS must beat UNIFORM in final whole-model NLL and NLL AUC for both seeds. This closes a placement comparison, not universality, MLA, or long-context quality.
+- **Durability:** HF stores prepared parameters and full parameters/Lion/step/data contract/metrics. Restore validates hashes and configuration and resumes the same deterministic data order. Full states live in RAM-backed storage and sync at steps 0, every 1,024 steps, final step and controlled deadline. A numerical failure leaves the previous durable checkpoint intact. The seven-hour soft wall budget reserves 20 minutes for finalization; external hard termination cannot execute callbacks.
+- **Status:** implementation and local CPU integration tests only; no EXP-069 TPU measurement yet. Detailed fixed protocol and notebook entry point: `results/EXP-069-allocation-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.
