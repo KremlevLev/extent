@@ -125,6 +125,8 @@ def render_summary(result: dict) -> str:
              "| Seed | Placement | Step | Student NLL | Excess NLL |", "|---|---|---:|---:|---:|"]
     for seed, arms in result["arms"].items():
         for arm, row in arms.items():
+            if row.get("failed_update"):
+                lines.append(f"\nFailure seed={seed} arm={arm}: " + json.dumps(row["failed_update"], allow_nan=False) + "\n")
             if not row.get("evaluations"):
                 continue
             step = max(map(int, row["evaluations"]))
@@ -195,9 +197,27 @@ def run_training_segment(params, opt_state, row, *, step_fn, evaluate, train_tok
         params, opt_state, metrics = step_fn(params, opt_state, batch)
         jax.block_until_ready(metrics)
         if not bool(metrics["grads_finite"]) or not all(np.isfinite(float(v)) for v in metrics.values()):
-            raise FloatingPointError("non-finite update; last durable checkpoint retained")
+            # JSON must survive the very NaN/Inf that caused this failure. Do not
+            # save donated candidate buffers: they may already be corrupted.
+            scalars = {k: float(v) for k, v in metrics.items()}
+            row["finite"] = False
+            row["complete"] = False
+            row["failed_update"] = {
+                "attempted_step": zero_step + 1, "batch_index": index,
+                "last_durable_step": last_saved,
+                "nonfinite_metrics": [k for k, v in scalars.items() if not np.isfinite(v)],
+                "metrics": {k: v if np.isfinite(v) else str(v) for k, v in scalars.items()},
+            }
+            print("failed_update=" + json.dumps(row["failed_update"], allow_nan=False), flush=True)
+            raise FloatingPointError(
+                f"non-finite update at step {zero_step + 1}; "
+                f"metrics={row['failed_update']['nonfinite_metrics']}; "
+                f"grads_finite={bool(metrics['grads_finite'])}; "
+                f"last durable checkpoint step={last_saved} retained"
+            )
         step = zero_step + 1
         row["completed_steps"] = step
+        row["last_training_metrics"] = {"step": step, **_metric_record(metrics)}
         if step in checkpoints:
             evaluated = evaluate(params)
             if not evaluated["finite"]:

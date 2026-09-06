@@ -88,6 +88,25 @@ def test_nonfinite_update_keeps_last_good_checkpoint(tmp_path):
     state, meta = store.restore("good", {})
     assert meta["step"] == 0
     assert float(state["params"]["x"]) == 1.0
+    assert row["finite"] is False
+    assert row["failed_update"]["attempted_step"] == 1
+    assert row["failed_update"]["last_durable_step"] == 0
+    assert row["failed_update"]["nonfinite_metrics"] == ["loss"]
+    assert row["failed_update"]["metrics"]["loss"] == "nan"
+    import json
+    json.dumps(row, allow_nan=False)
+
+
+def test_norm_overflow_is_reported_separately_from_nonfinite_gradients():
+    row = {"completed_steps": 0, "evaluations": {}, "training_metrics": {}, "complete": False}
+    with pytest.raises(FloatingPointError, match="grads_finite=True"):
+        campaign.run_training_segment({}, (), row,
+            step_fn=lambda p, o, b: (p, o, {"loss": 1.0, "grad_norm": float("inf"), "grads_finite": True}),
+            evaluate=lambda p: {"finite": True}, train_tokens=np.zeros((1, 2), np.int32),
+            batch_layout=jax.sharding.SingleDeviceSharding(jax.devices()[0]),
+            deadline=float("inf"), save=lambda *a: None, total_steps=1)
+    assert row["failed_update"]["nonfinite_metrics"] == ["grad_norm"]
+    assert row["failed_update"]["metrics"]["grad_norm"] == "inf"
 
 
 def test_tiny_full_model_materializes_trains_saves_and_skips_completed_arms(tmp_path, monkeypatch):
