@@ -20,12 +20,32 @@ def decay_mask(params: optax.Params) -> optax.Params:
 
 
 def global_norm_fp32(tree: optax.Updates) -> jax.Array:
-    """Compute a distributed norm with FP32 squares/reductions for BF16 grads."""
+    """FP32 global L2 norm, with scaled reduction on sum-of-squares overflow.
+
+    Preserve the original reduction for ordinary finite sums, including resumed
+    runs. Large finite gradients can overflow that sum while their norm is still
+    representable. Scaling before squaring handles this without hiding NaN/Inf
+    gradients or changing the intended global clipping threshold.
+    """
     leaves = jax.tree.leaves(tree)
     if not leaves:
         return jnp.array(0.0, jnp.float32)
     squared = [jnp.sum(jnp.square(value.astype(jnp.float32))) for value in leaves]
-    return jnp.sqrt(jnp.sum(jnp.stack(squared), dtype=jnp.float32))
+    total = jnp.sum(jnp.stack(squared), dtype=jnp.float32)
+
+    def scaled_norm(_):
+        maximum = jnp.max(jnp.stack([
+            jnp.max(jnp.abs(value.astype(jnp.float32)), initial=0.0)
+            for value in leaves
+        ]))
+        denominator = jnp.where(maximum > 0, maximum, 1.0)
+        scaled_squared = [
+            jnp.sum(jnp.square(value.astype(jnp.float32) / denominator))
+            for value in leaves
+        ]
+        return maximum * jnp.sqrt(jnp.sum(jnp.stack(scaled_squared), dtype=jnp.float32))
+
+    return jax.lax.cond(jnp.isfinite(total), lambda _: jnp.sqrt(total), scaled_norm, None)
 
 
 def clip_by_global_norm_fp32(max_norm: float) -> optax.GradientTransformation:

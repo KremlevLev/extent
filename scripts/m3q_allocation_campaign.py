@@ -269,6 +269,7 @@ def main(argv: list[str] | None = None) -> dict:
     config, _ = load_config(Path(__file__).resolve().parents[1] / "config/hybrid_1_7b_gqa_v5e8.yaml")
     contract = contract_for(config)
     result = {"protocol": PROTOCOL, "contract": contract, "arms": {}, "preparation": {}, "status": "running"}
+    result["numerics"] = {"global_norm": "fp32-scaled-overflow-fallback-v1"}
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parents[1],
                               text=True, capture_output=True, check=False)
     result["git_revision"] = revision.stdout.strip() if revision.returncode == 0 else None
