@@ -12,7 +12,7 @@ from extent.qwen3_teacher import Qwen3ForCausalLM, Qwen3TeacherConfig
 from extent.initialization import abstract_parameter_tree
 from extent.sharding import create_v5e_mesh, named_sharding_tree
 from extent.layers.mamba3 import Mamba3MIMO
-from extent.composition_diagnostics import compose_parameters, make_full_probe, make_input_shift_probe, json_scalars, gradient_summary
+from extent.composition_diagnostics import compose_parameters, make_full_probe, make_input_shift_probe, make_fp32_baseline_probe, json_scalars, gradient_summary
 
 
 def fixture_models(compute_dtype="float32"):
@@ -49,6 +49,12 @@ def test_all_gqa_composition_is_exact_and_diagnostics_do_not_mutate_parameters(d
     for a, b in zip(jax.tree.leaves(p), jax.tree.leaves(composed)):
         np.testing.assert_array_equal(a, b)
     json.dumps(summary, allow_nan=False)
+    control = jax.jit(make_fp32_baseline_probe(cfg, source))(composed, p, tokens)
+    assert bool(control["passed"])
+    from flax.core import unfreeze
+    bad = unfreeze(composed)
+    bad["norm"]["scale"] = bad["norm"]["scale"] * 2
+    assert not bool(jax.jit(make_fp32_baseline_probe(cfg, source))(bad, p, tokens)["passed"])
 
 
 def test_same_input_has_same_local_error_and_composition_keeps_teacher_intact():
@@ -117,8 +123,20 @@ def test_campaign_runs_from_prepared_checkpoint_saves_and_resumes(tmp_path, monk
     result = campaign.main(args)
     assert result["status"] == "completed" and len(result["cases"]) == 2
     assert uploads and "completed" in notifications[-1]
-    stored = json.loads((tmp_path / "output/extent-m3q-input-shift-campaign.json").read_text())
+    stored = json.loads((tmp_path / "output/exp070-v2/extent-m3q-input-shift-campaign.json").read_text())
     assert stored["cases"] == result["cases"]
     monkeypatch.setattr(campaign, "require_tpu_mesh", lambda: pytest.fail("completed run used TPU"))
     assert campaign.main(args)["cases"] == result["cases"]
     assert store.metadata("prep/seed-123/layer-0", {"test": True, "seed": 123, "layer": 0, "kind": "prepared_mamba"})["step"] == 2048
+    # Rejected baseline must remain in the artifact, not disappear on raise.
+    monkeypatch.setattr(campaign, "require_tpu_mesh", lambda: (create_v5e_mesh(), jax.devices()))
+    monkeypatch.setattr(campaign, "make_fp32_baseline_probe", lambda *a: lambda *b: {"passed": jnp.asarray(False)})
+    failed_args = list(args)
+    failed_args[1] = str(tmp_path / "failed")
+    with pytest.raises(ValueError, match="raw controls saved"):
+        campaign.main(failed_args)
+    failed = json.loads((tmp_path / "failed/exp070-v2/extent-m3q-input-shift-campaign.json").read_text())
+    assert failed["status"] == "failed"
+    row = next(iter(failed["cases"].values()))
+    assert row["accepted"] is False and row["fp32_control"]["passed"] is False
+    assert "student_nll" in row["metrics"]

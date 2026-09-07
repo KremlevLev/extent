@@ -1439,6 +1439,8 @@ EXP-069 completed result (reviewed 2026-09-07, revision `a385256`): all four arm
 - **Decision boundary:** increased error on hybrid inputs supports distribution sensitivity, not a demonstrated improvement from sequential calibration. Count and position are confounded in the nested diagnostic path. A later matched recovery comparison is required for any method claim.
 - **Operations:** validated HF preparation restore, per-probe JSON/Markdown output sync, completed-probe resume, Telegram start/final notifications, seven-hour soft deadline with reserve. Runtime is unmeasured; no promise of filling a 5–8-hour session. Protocol and final-cell entry point: `results/EXP-070-input-shift-protocol.md`.
 
+EXP-070 first TPU attempt: v1 at `ec26585` stopped after ~2.27 minutes with only one all-GQA baseline saved; no replaced-layer measurements. Recorded BF16 teacher/student NLL difference -0.00159144 and KL 0.00310707 were nonzero despite identical weights; the next failed probe's metrics were not persisted. The source of the discrepancy remains unconfirmed. Version 2 adds an explicit FP32 forward math control, retains BF16 numerical-background metrics, and saves rejected baselines before raising. Separate `exp070-v2` outputs/HF namespace avoid mixing acceptance rules. Details: `results/EXP-070-baseline-failure-summary.md`. No input-shift hypothesis has been tested yet.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

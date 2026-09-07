@@ -18,7 +18,7 @@ import numpy as np
 from extent import HybridForCausalLM
 from extent.calibration_data import load_wikitext2_tokens
 from extent.campaign_checkpoint import CampaignCheckpointStore, write_json_atomic
-from extent.composition_diagnostics import compose_parameters, make_full_probe, make_input_shift_probe, json_scalars, gradient_summary
+from extent.composition_diagnostics import compose_parameters, make_full_probe, make_input_shift_probe, make_fp32_baseline_probe, json_scalars, gradient_summary
 from extent.config import load_config
 from extent.hf_artifact_sync import artifact_config_from_env, restore_artifact, upload_artifact
 from extent.initialization import abstract_parameter_tree, initialize_sharded_parameters
@@ -30,8 +30,8 @@ from scripts.m3q_allocation_campaign import contract_for, HF_PREFIX, PLACEMENTS
 from scripts.qwen17_full_model_distill_campaign import _ensure_checkpoint
 from scripts.qwen_extended_horizon_campaign import _safe_notify
 
-PROTOCOL = "exp070-frozen-input-shift-v1"
-PREFIX = "experiments/exp070-input-shift"
+PROTOCOL = "exp070-frozen-input-shift-v2"
+PREFIX = "experiments/exp070-input-shift/v2"
 SEEDS = (123, 456)
 COUNTS = (0, 1, 4, 12, 24)
 LENGTHS = (64, 256)
@@ -55,11 +55,16 @@ def case_key(seed, count, length, window):
 
 def render_summary(result):
     lines = ["# EXP-070 frozen input-shift diagnostics", "", f"Status: {result['status']}",
-             f"Completed probes: {len(result['cases'])}/{expected_cases()}", "No training or optimizer updates.", "",
+             f"Accepted probes: {sum(bool(r.get('accepted')) for r in result['cases'].values())}/{expected_cases()}", "No training or optimizer updates.", "",
              "| Case | NLL | Grad norm | Largest gradient parameter |", "|---|---:|---:|---|"]
     for key, row in result["cases"].items():
         top = row["gradient_summary"]["top_parameters"]
         lines.append(f"| {key} | {row['metrics']['student_nll']} | {row['metrics']['grad_norm']} | {top[0]['path'] if top else '-'} |")
+    lines += ["", "## All-GQA numerical controls", ""]
+    for key, row in result["cases"].items():
+        if "fp32_control" in row:
+            lines.append(f"{key}: FP32=" + json.dumps(row["fp32_control"], allow_nan=False)
+                         + f"; BF16 excess_NLL={row['metrics']['excess_nll']}, KL={row['metrics']['prediction_kl']}")
     lines += ["", "## Matched-input layer errors", "",
               "Relative L2 is normalized by the teacher decoder contribution, excluding residual identity.",
               "At most three layers per probe, ranked by increase in absolute error RMS; full layer data are in JSON.",
@@ -88,7 +93,7 @@ def main(argv=None):
         raise ValueError("wall budget must be 0.5–7.5 hours")
     started = time.monotonic()
     deadline = started + args.max_wall_hours * 3600 - 1200
-    output = Path(args.output_dir)
+    output = Path(args.output_dir) / "exp070-v2"
     output.mkdir(parents=True, exist_ok=True)
     hub = artifact_config_from_env()
     if hub is None:
@@ -127,7 +132,9 @@ def main(argv=None):
 
     _safe_notify(args.telegram, "Extent EXP-070 started: frozen input-shift diagnostics")
     try:
-        if len(result["cases"]) == expected_cases():
+        def completed(key):
+            return key in result["cases"] and result["cases"][key].get("accepted", False)
+        if len(result["cases"]) == expected_cases() and all(completed(k) for k in result["cases"]):
             result["status"] = "completed"
             return result
         mesh, devices = require_tpu_mesh()
@@ -151,7 +158,7 @@ def main(argv=None):
             prepared, hashes = {}, {}
             for count in COUNTS:
                 keys = [case_key(seed, count, length, w) for length in LENGTHS for w in range(WINDOWS)]
-                if all(key in result["cases"] for key in keys):
+                if all(completed(key) for key in keys):
                     continue
                 if time.monotonic() + 600 >= deadline:
                     result["status"] = "deadline_partial"
@@ -176,11 +183,12 @@ def main(argv=None):
                 layout = named_sharding_tree(abstract, mesh)
                 params = compose_parameters(teacher_params, prepared, replaced, abstract, layout)
                 full_probe = jax.jit(make_full_probe(model))
+                baseline_probe = jax.jit(make_fp32_baseline_probe(case_cfg, source)) if count == 0 else None
                 local_probe = jax.jit(make_input_shift_probe(case_cfg, source, replaced[0])) if replaced else None
                 for length in LENGTHS:
                     for window in range(WINDOWS):
                         key = case_key(seed, count, length, window)
-                        if key in result["cases"]:
+                        if completed(key):
                             continue
                         if time.monotonic() >= deadline:
                             result["status"] = "deadline_partial"
@@ -198,15 +206,23 @@ def main(argv=None):
                             shift[str(layer)] = local_probe(params[f"layers_{layer}"], teacher_params[f"layers_{layer}"],
                                 ti, si, teacher_states[layer], hybrid_states[layer])
                         metrics, leaves, shift = json_scalars(metrics), json_scalars(gradient_leaves), json_scalars(shift)
-                        if count == 0 and (not metrics["finite"] or abs(metrics["student_nll"] - metrics["teacher_nll"]) > 0.01):
-                            raise ValueError("all-GQA teacher/student baseline parity failed")
                         result["cases"][key] = {"metrics": metrics, "gradient_leaves": leaves,
                             "gradient_summary": gradient_summary(leaves, metrics["grad_norm"]),
                             "input_shift": shift, "prepared_hashes": {str(i): hashes[i] for i in replaced},
-                            "replaced_layers": list(replaced)}
+                            "replaced_layers": list(replaced), "accepted": count != 0}
+                        # Persist the observed BF16 failure BEFORE any extra
+                        # control/guard can abort or run out of memory.
                         persist()
+                        if baseline_probe is not None:
+                            control = json_scalars(baseline_probe(params, teacher_params, batch))
+                            row = result["cases"][key]
+                            row["fp32_control"] = control
+                            row["accepted"] = bool(metrics["finite"] and metrics["grads_finite"] and control["passed"])
+                            persist()
+                            if not row["accepted"]:
+                                raise ValueError(f"all-GQA FP32 parity or BF16 finiteness failed: {key}; raw controls saved")
                         del teacher_logits, teacher_states, hybrid_states, gradient_leaves, embedding
-                del params, full_probe, local_probe
+                del params, full_probe, local_probe, baseline_probe
                 jax.clear_caches()
                 gc.collect()
         result["status"] = "completed"

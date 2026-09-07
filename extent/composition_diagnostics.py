@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -10,8 +11,8 @@ from flax.core import unfreeze
 
 from extent.full_model_distillation import causal_cross_entropy, forward_kl, full_model_eval_metrics
 from extent.optimizer import global_norm_fp32, gradient_health
-from extent.model import HybridDecoderLayer
-from extent.qwen3_teacher import Qwen3DecoderLayer
+from extent.model import HybridDecoderLayer, HybridForCausalLM
+from extent.qwen3_teacher import Qwen3DecoderLayer, Qwen3ForCausalLM
 
 
 def amplitude(x):
@@ -22,6 +23,25 @@ def error_stats(actual, target):
     error = actual.astype(jnp.float32) - target.astype(jnp.float32)
     return {"error_rms": amplitude(error), "target_rms": amplitude(target),
             "relative_l2": global_norm_fp32({"x": error}) / jnp.maximum(global_norm_fp32({"x": target}), 1e-12)}
+
+
+def make_fp32_baseline_probe(config, source):
+    """Validate all-GQA model math in FP32, keeping checkpoint weights unchanged."""
+    if len(config.attention_layer_indices) != config.num_layers:
+        raise ValueError("FP32 baseline requires all-GQA config")
+    student = HybridForCausalLM(replace(config, compute_dtype="float32"))
+    teacher = Qwen3ForCausalLM(replace(source, compute_dtype="float32"))
+    def probe(p, tp, tokens):
+        logits = student.apply({"params": p}, tokens)
+        target = teacher.apply({"params": tp}, tokens)
+        metrics = full_model_eval_metrics(logits, target, tokens, temperature=2.0)
+        comparison = error_stats(logits, target)
+        passed = (metrics["finite"] & jnp.isfinite(comparison["relative_l2"])
+                  & (jnp.abs(metrics["excess_nll"]) <= 0.001)
+                  & (jnp.abs(metrics["prediction_kl"]) <= 0.0001)
+                  & (comparison["relative_l2"] <= 0.0001))
+        return {"passed": passed, "metrics": metrics, "logits": comparison}
+    return probe
 
 
 def compose_parameters(teacher_params, prepared, replaced, abstract, layout):
