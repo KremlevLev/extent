@@ -1431,6 +1431,14 @@ EXP-069 diagnostic update (2026-09-07): rerun at `e66b697` restored 51 preparati
 
 EXP-069 completed result (reviewed 2026-09-07, revision `a385256`): all four arms completed 3,072 updates in a resumed 1.604789-hour session, with final HF uploads confirmed in the log. Final NLL UNIFORM/ATLAS: seed 123 = 13.268912/25.793214; seed 456 = 21.141170/16.397492, versus teacher approximately 2.805. ATLAS-minus-UNIFORM final deltas +12.524302/-4.743678, AUC deltas +9.292229/+7.041444: registered gate fails. Local compatibility ranking has not shown a reliable whole-model allocation benefit. Norm-overflow fix enabled completion, but all arms worsen initially and full recovery remains poor; finite execution is not recovery success. Do not repeat the allocation sweep unchanged. Next priority is diagnosing composition/gradient-scale and recovery-schedule failure with one fixed placement. Details, learning curves, durability and source checksum: `results/EXP-069-allocation-completed-summary.md`.
 
+### EXP-070 — Frozen composition and matched-input diagnosis (pre-registered)
+
+- **Motivation:** EXP-069 showed poor whole-model recovery despite finite training; user hypothesis H3.4 motivates testing whether prepared blocks fail on hybrid-generated inputs. No stabilization method is claimed yet.
+- **Scope:** restore EXP-069 seed-123/456 prepared endpoints, retain the final UNIFORM GQA plan, and compose nested 0/1/4/12/24 replacement prefixes. Measure two paired validation-text windows at lengths 64/256 (40 probes). No training or optimizer updates; final trained models are not the target of this initial diagnosis.
+- **Measurements:** held-out NLL/KL; per-parameter and packed-Mamba-component gradient norms; gradient concentration by layer/submodule; input/activation RMS; and decoder-contribution errors with teacher and student evaluated on the same teacher inputs versus the same hybrid inputs. Save absolute error and target scale alongside relative L2. Local-versus-full execution controls expose BF16/compiler discrepancies.
+- **Decision boundary:** increased error on hybrid inputs supports distribution sensitivity, not a demonstrated improvement from sequential calibration. Count and position are confounded in the nested diagnostic path. A later matched recovery comparison is required for any method claim.
+- **Operations:** validated HF preparation restore, per-probe JSON/Markdown output sync, completed-probe resume, Telegram start/final notifications, seven-hour soft deadline with reserve. Runtime is unmeasured; no promise of filling a 5–8-hour session. Protocol and final-cell entry point: `results/EXP-070-input-shift-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.
