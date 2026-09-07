@@ -51,6 +51,7 @@ def test_all_gqa_composition_is_exact_and_diagnostics_do_not_mutate_parameters(d
     json.dumps(summary, allow_nan=False)
     control = jax.jit(make_fp32_baseline_probe(cfg, source))(composed, p, tokens)
     assert bool(control["passed"])
+    assert float(control["max_hidden_relative_l2"]) == pytest.approx(0, abs=1e-6)
     from flax.core import unfreeze
     bad = unfreeze(composed)
     bad["norm"]["scale"] = bad["norm"]["scale"] * 2
@@ -86,8 +87,10 @@ def test_same_input_has_same_local_error_and_composition_keeps_teacher_intact():
 
 
 def test_json_keeps_nonfinite_measurements_and_zero_gradient_ranking_safe():
-    value = json_scalars({"bad": jnp.inf, "nan": jnp.nan, "finite": jnp.asarray(False)})
-    assert value == {"bad": "inf", "nan": "nan", "finite": False}
+    value = json_scalars({"bad": jnp.inf, "nan": jnp.nan, "finite": jnp.asarray(False),
+                          "vector": jnp.asarray([1., jnp.inf])})
+    assert value == {"bad": "inf", "nan": "nan", "finite": False,
+                     "vector": [1.0, "inf"]}
     json.dumps(value, allow_nan=False)
     assert gradient_summary({"norm/scale": {"norm": 0., "finite": True}}, 0.)["top_parameters"][0]["squared_norm_share"] is None
 
@@ -123,7 +126,7 @@ def test_campaign_runs_from_prepared_checkpoint_saves_and_resumes(tmp_path, monk
     result = campaign.main(args)
     assert result["status"] == "completed" and len(result["cases"]) == 2
     assert uploads and "completed" in notifications[-1]
-    stored = json.loads((tmp_path / "output/exp070-v2/extent-m3q-input-shift-campaign.json").read_text())
+    stored = json.loads((tmp_path / "output/exp070-v3/extent-m3q-input-shift-campaign.json").read_text())
     assert stored["cases"] == result["cases"]
     monkeypatch.setattr(campaign, "require_tpu_mesh", lambda: pytest.fail("completed run used TPU"))
     assert campaign.main(args)["cases"] == result["cases"]
@@ -135,7 +138,7 @@ def test_campaign_runs_from_prepared_checkpoint_saves_and_resumes(tmp_path, monk
     failed_args[1] = str(tmp_path / "failed")
     with pytest.raises(ValueError, match="raw controls saved"):
         campaign.main(failed_args)
-    failed = json.loads((tmp_path / "failed/exp070-v2/extent-m3q-input-shift-campaign.json").read_text())
+    failed = json.loads((tmp_path / "failed/exp070-v3/extent-m3q-input-shift-campaign.json").read_text())
     assert failed["status"] == "failed"
     row = next(iter(failed["cases"].values()))
     assert row["accepted"] is False and row["fp32_control"]["passed"] is False

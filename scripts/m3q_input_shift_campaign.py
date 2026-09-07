@@ -30,8 +30,8 @@ from scripts.m3q_allocation_campaign import contract_for, HF_PREFIX, PLACEMENTS
 from scripts.qwen17_full_model_distill_campaign import _ensure_checkpoint
 from scripts.qwen_extended_horizon_campaign import _safe_notify
 
-PROTOCOL = "exp070-frozen-input-shift-v2"
-PREFIX = "experiments/exp070-input-shift/v2"
+PROTOCOL = "exp070-frozen-input-shift-v3"
+PREFIX = "experiments/exp070-input-shift/v3"
 SEEDS = (123, 456)
 COUNTS = (0, 1, 4, 12, 24)
 LENGTHS = (64, 256)
@@ -93,7 +93,7 @@ def main(argv=None):
         raise ValueError("wall budget must be 0.5–7.5 hours")
     started = time.monotonic()
     deadline = started + args.max_wall_hours * 3600 - 1200
-    output = Path(args.output_dir) / "exp070-v2"
+    output = Path(args.output_dir) / "exp070-v3"
     output.mkdir(parents=True, exist_ok=True)
     hub = artifact_config_from_env()
     if hub is None:

@@ -1441,6 +1441,8 @@ EXP-069 completed result (reviewed 2026-09-07, revision `a385256`): all four arm
 
 EXP-070 first TPU attempt: v1 at `ec26585` stopped after ~2.27 minutes with only one all-GQA baseline saved; no replaced-layer measurements. Recorded BF16 teacher/student NLL difference -0.00159144 and KL 0.00310707 were nonzero despite identical weights; the next failed probe's metrics were not persisted. The source of the discrepancy remains unconfirmed. Version 2 adds an explicit FP32 forward math control, retains BF16 numerical-background metrics, and saves rejected baselines before raising. Separate `exp070-v2` outputs/HF namespace avoid mixing acceptance rules. Details: `results/EXP-070-baseline-failure-summary.md`. No input-shift hypothesis has been tested yet.
 
+EXP-070 v2 TPU attempt: stopped after ~2.33 minutes with 0/40 accepted probes and no Mamba measurement. The all-GQA FP32 control had NLL difference +0.00109506, KL 0.000131511, top-1 agreement 1.0 and logit relative L2 0.00211660, failing the pre-set overly strict control. V3 uses highest matmul precision, adds per-layer hidden comparisons, and converts the control into an observed-background corruption guard rather than an equality claim. New thresholds are post-v2 and cannot serve as independent equivalence evidence. V3 artifacts have a separate namespace. Details/checksum: `results/EXP-070-v2-fp32-control-summary.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.
