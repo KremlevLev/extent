@@ -9,6 +9,8 @@ from extent.config import tiny_config
 from extent.model import HybridDecoderLayer
 from extent.sequential_recovery import make_conditional_recovery_step, recovery_examples
 from scripts.m3q_sequential_recovery_campaign import ARMS, MILESTONES, SEEDS, aggregate
+from scripts import m3q_full_depth_sequential_confirmation as confirmation
+from scripts import m3q_sequential_recovery_campaign as campaign
 
 
 def test_recovery_arms_have_expected_matched_examples():
@@ -62,3 +64,21 @@ def test_scientific_gate_requires_both_mixed_seed_pairs_and_auc():
     assert summary["scientific_gate_passed"]
     del result["branches"][str(SEEDS[-1])]["MIXED"]["evaluations"][str(MILESTONES[-1])]
     assert not aggregate(result)["scientific_gate_passed"]
+
+
+def test_full_depth_wrapper_applies_and_restores_registered_overrides(monkeypatch):
+    original = {name: getattr(campaign, name) for name in confirmation.OVERRIDES}
+    observed = {}
+
+    def fake_main(argv):
+        observed.update({name: getattr(campaign, name) for name in confirmation.OVERRIDES})
+        return {"argv": argv}
+
+    monkeypatch.setattr(campaign, "main", fake_main)
+    returned = confirmation.main(["--no-telegram"])
+    assert returned["argv"] == [
+        "--no-telegram", "--state-dir", "/dev/shm/extent-exp072-state",
+        "--qwen-cache-dir", "/dev/shm/qwen3-1.7b-exp072-weights",
+    ]
+    assert observed == confirmation.OVERRIDES
+    assert {name: getattr(campaign, name) for name in confirmation.OVERRIDES} == original

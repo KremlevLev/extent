@@ -39,6 +39,12 @@ from scripts.qwen_extended_horizon_campaign import _safe_notify
 
 PROTOCOL = "exp071-sequential-input-recovery-v1"
 HF_PREFIX = "experiments/exp071-sequential-recovery"
+OUTPUT_SUBDIR = "exp071"
+RESULT_STEM = "extent-m3q-sequential-recovery-campaign"
+SUMMARY_TITLE = "EXP-071 sequential input-distribution recovery"
+PRIMARY_ARM = "MIXED"
+CONTRACT_EXTRA = {}
+DATA_SEED = 71_000
 ARMS = ("TEACHER", "ONPOLICY", "MIXED")
 SEEDS = (123, 456)
 MILESTONES = (1, 4, 8, 12)
@@ -56,7 +62,7 @@ def replacement_order(config):
 
 
 def experiment_contract(config):
-    return {
+    contract = {
         "protocol": PROTOCOL,
         "source_contract": contract_for(config),
         "arms": list(ARMS), "seeds": list(SEEDS),
@@ -71,6 +77,8 @@ def experiment_contract(config):
         "objective": "relative MSE of decoder contribution after subtracting shared residual identity",
         "numerics": "BF16 parameters/compute/gradients; FP32 relative-MSE reduction",
     }
+    contract.update(CONTRACT_EXTRA)
+    return contract
 
 
 def endpoint_contract(contract, seed, arm, layer, depth, base_sha):
@@ -91,19 +99,22 @@ def aggregate(result):
             paired.append({"seed": seed, "arm": arm, "final_nll_delta_vs_teacher": float(delta[-1]),
                            "milestone_nll_delta_vs_teacher": delta.tolist(),
                            "nll_delta_auc": float(np.trapezoid(delta, np.asarray(MILESTONES) / MILESTONES[-1]))})
-    mixed = [p for p in paired if p["arm"] == "MIXED"]
-    complete = len(mixed) == len(SEEDS)
+    primary = [p for p in paired if p["arm"] == PRIMARY_ARM]
+    complete = len(primary) == len(SEEDS)
     return {
-        "completed_primary_pairs": len(mixed), "paired_results": paired,
-        "mean_mixed_final_nll_delta": float(np.mean([p["final_nll_delta_vs_teacher"] for p in mixed])) if mixed else None,
-        "scientific_gate_passed": bool(complete and all(p["final_nll_delta_vs_teacher"] < 0 and p["nll_delta_auc"] < 0 for p in mixed)),
-        "gate_definition": "At both seeds, MIXED must beat equal-update TEACHER recovery in final held-out NLL and milestone NLL-delta AUC.",
-        "scope": "Causal intervention on recovery input distribution over the first 12 sequential replacements; not a full 85% hybrid result.",
+        "primary_arm": PRIMARY_ARM, "completed_primary_pairs": len(primary), "paired_results": paired,
+        "mean_primary_final_nll_delta": float(np.mean([p["final_nll_delta_vs_teacher"] for p in primary])) if primary else None,
+        "mean_mixed_final_nll_delta": float(np.mean([
+            p["final_nll_delta_vs_teacher"] for p in paired if p["arm"] == "MIXED"
+        ])) if any(p["arm"] == "MIXED" for p in paired) else None,
+        "scientific_gate_passed": bool(complete and all(p["final_nll_delta_vs_teacher"] < 0 and p["nll_delta_auc"] < 0 for p in primary)),
+        "gate_definition": f"At both seeds, {PRIMARY_ARM} must beat equal-update TEACHER recovery in final held-out NLL and milestone NLL-delta AUC.",
+        "scope": f"Causal intervention on recovery input distribution over {MILESTONES[-1]} sequential replacements; not a scale-transfer or MLA result.",
     }
 
 
 def render_summary(result):
-    lines = ["# EXP-071 sequential input-distribution recovery", "",
+    lines = [f"# {SUMMARY_TITLE}", "",
              f"- Status: `{result['status']}`", f"- Duration: `{result.get('duration_hours', 0):.3f}` hours",
              f"- Scientific gate: `{result['aggregate']['scientific_gate_passed']}`", "",
              "| Seed | Arm | Depth | Student NLL | Excess NLL | KL |", "|---:|---|---:|---:|---:|---:|"]
@@ -145,10 +156,10 @@ def main(argv=None):
         raise ValueError("wall budget must be 1.0–8.25 hours")
     started = time.monotonic()
     deadline = started + args.max_wall_hours * 3600 - 20 * 60
-    output = Path(args.output_dir) / "exp071"
+    output = Path(args.output_dir) / OUTPUT_SUBDIR
     output.mkdir(parents=True, exist_ok=True)
-    result_path = output / "extent-m3q-sequential-recovery-campaign.json"
-    summary_path = output / "extent-m3q-sequential-recovery-campaign-summary.md"
+    result_path = output / f"{RESULT_STEM}.json"
+    summary_path = output / f"{RESULT_STEM}-summary.md"
     hub = artifact_config_from_env()
     if hub is None:
         raise ValueError("HF_TOKEN and EXTENT_HF_CHECKPOINT_REPO are required")
@@ -159,7 +170,7 @@ def main(argv=None):
     result = json.loads(result_path.read_text(encoding="utf-8")) if result_path.exists() else {
         "contract": contract, "status": "running", "branches": {}, "baselines": {}, "checkpoint_events": []}
     if result["contract"] != contract:
-        raise ValueError("EXP-071 resume contract mismatch")
+        raise ValueError(f"{PROTOCOL} resume contract mismatch")
     for key in ("error", "error_type", "traceback"):
         result.pop(key, None)
     result.update(status="running", git_revision=subprocess.run(
@@ -176,11 +187,11 @@ def main(argv=None):
         if upload:
             for local, remote in ((result_path, "latest.json"), (summary_path, "latest-summary.md")):
                 try:
-                    upload_artifact(local, f"{HF_PREFIX}/{remote}", hub, commit_message="EXP-071 sequential recovery progress")
+                    upload_artifact(local, f"{HF_PREFIX}/{remote}", hub, commit_message=f"{PROTOCOL} progress")
                 except Exception as exc:
                     print(f"hf_summary=FAILED file={remote} type={type(exc).__name__}; local copy retained", flush=True)
 
-    _safe_notify(args.telegram, "Extent EXP-071 started: matched sequential recovery")
+    _safe_notify(args.telegram, f"Extent {PROTOCOL} started")
     try:
         mesh, devices = require_v5e8()
         result["devices"] = [str(d) for d in devices]
@@ -343,7 +354,7 @@ def main(argv=None):
                             result["status"] = "deadline_partial"
                             return result
                         stage = f"depth-{depth}-seed-{seed}-{arm}"
-                        print(f"exp071 depth={depth}/12 layer={layer} seed={seed} arm={arm} START", flush=True)
+                        print(f"{PROTOCOL} depth={depth}/{MILESTONES[-1]} layer={layer} seed={seed} arm={arm} START", flush=True)
                         # TEACHER is the matched extra-update control and does not
                         # need an expensive hybrid-prefix cache. The other two
                         # branches receive their own on-policy residual stream.
@@ -359,14 +370,14 @@ def main(argv=None):
                         opt_state = tx.init(candidate)
                         first_loss, last_metrics = None, None
                         for step in range(STEPS_PER_LAYER):
-                            index = deterministic_batch_indices(step, 1, x.shape[0], 71000 + seed + depth)[0]
+                            index = deterministic_batch_indices(step, 1, x.shape[0], DATA_SEED + seed + depth)[0]
                             candidate, opt_state, metrics = train_step(candidate, opt_state, frozen, x[index:index + 1], y[index:index + 1])
                             if step in (0, STEPS_PER_LAYER - 1):
                                 jax.block_until_ready(metrics)
                                 record = _metric_record(metrics)
                                 first_loss = record["loss"] if first_loss is None else first_loss
                                 last_metrics = record
-                                print(f"exp071 layer={layer} seed={seed} arm={arm} step={step} loss={record['loss']:.6g} finite={record['grads_finite']}", flush=True)
+                                print(f"{PROTOCOL} layer={layer} seed={seed} arm={arm} step={step} loss={record['loss']:.6g} finite={record['grads_finite']}", flush=True)
                                 if not record["grads_finite"]:
                                     raise FloatingPointError(f"non-finite sequential recovery: {stage} step={step}")
                         metrics = {"complete": True, "steps": STEPS_PER_LAYER, "first_loss": first_loss,
@@ -402,7 +413,7 @@ def main(argv=None):
         raise
     finally:
         persist(upload=True)
-        _safe_notify(args.telegram, f"Extent EXP-071 {result['status']} stage={stage} pairs={result['aggregate']['completed_primary_pairs']}/2")
+        _safe_notify(args.telegram, f"Extent {PROTOCOL} {result['status']} stage={stage} pairs={result['aggregate']['completed_primary_pairs']}/{len(SEEDS)}")
 
 
 if __name__ == "__main__":
