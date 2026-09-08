@@ -122,7 +122,11 @@ class CampaignCheckpointStore:
         remote_meta = dict(metadata, checkpoint_file="state.msgpack")
         remote = f"{self.prefix}/{slot}"
         api = HfApi(token=self.hub.token)
-        for attempt in range(3):
+        # Hub can briefly rate-limit campaigns that publish many independent
+        # layer endpoints. Keep the local atomic checkpoint and wait long
+        # enough for transient 409/429/5xx failures to clear before giving up.
+        retry_delays = (2, 5, 15, 30, 60)
+        for attempt in range(len(retry_delays) + 1):
             try:
                 api.create_commit(
                     repo_id=self.hub.repo_id, repo_type=self.hub.repo_type,
@@ -145,8 +149,10 @@ class CampaignCheckpointStore:
                 print(f"hf_checkpoint=PASS slot={slot} step={metadata['step']}")
                 return True
             except Exception as exc:
-                if attempt < 2:
-                    time.sleep(2 ** attempt)
+                if attempt < len(retry_delays):
+                    delay = retry_delays[attempt]
+                    print(f"hf_checkpoint=RETRY slot={slot} wait_seconds={delay} type={type(exc).__name__}")
+                    time.sleep(delay)
                 else:
                     self.events.append({"operation": "upload", "slot": slot, "passed": False,
                                         "step": metadata['step'], "error_type": type(exc).__name__})

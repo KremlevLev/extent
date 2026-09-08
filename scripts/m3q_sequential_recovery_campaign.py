@@ -168,16 +168,17 @@ def main(argv=None):
     base_store = CampaignCheckpointStore(Path(args.base_state_dir), f"{EXP069_PREFIX}/checkpoints", hub)
     stage = "startup"
 
-    def persist():
+    def persist(*, upload=False):
         result.update(duration_hours=(time.monotonic() - started) / 3600,
                       checkpoint_events=store.events + base_store.events, aggregate=aggregate(result))
         write_json_atomic(result_path, result)
         summary_path.write_text(render_summary(result), encoding="utf-8")
-        for local, remote in ((result_path, "latest.json"), (summary_path, "latest-summary.md")):
-            try:
-                upload_artifact(local, f"{HF_PREFIX}/{remote}", hub, commit_message="EXP-071 sequential recovery progress")
-            except Exception as exc:
-                print(f"hf_summary=FAILED file={remote} type={type(exc).__name__}; local copy retained", flush=True)
+        if upload:
+            for local, remote in ((result_path, "latest.json"), (summary_path, "latest-summary.md")):
+                try:
+                    upload_artifact(local, f"{HF_PREFIX}/{remote}", hub, commit_message="EXP-071 sequential recovery progress")
+                except Exception as exc:
+                    print(f"hf_summary=FAILED file={remote} type={type(exc).__name__}; local copy retained", flush=True)
 
     _safe_notify(args.telegram, "Extent EXP-071 started: matched sequential recovery")
     try:
@@ -390,13 +391,17 @@ def main(argv=None):
                     if key not in result["baselines"]:
                         result["baselines"][key] = evaluate(current, {i: base[seed][i] for i in current})
                         persist()
+                # Endpoints remain durable after every layer. Compact campaign
+                # summaries only need remote publication at registered depths;
+                # uploading twice after every arm caused avoidable Hub bursts.
+                persist(upload=True)
         result["status"] = "completed"
         return result
     except BaseException as exc:
         result.update(status="failed", stage=stage, error_type=type(exc).__name__, error=str(exc), traceback=traceback.format_exc())
         raise
     finally:
-        persist()
+        persist(upload=True)
         _safe_notify(args.telegram, f"Extent EXP-071 {result['status']} stage={stage} pairs={result['aggregate']['completed_primary_pairs']}/2")
 
 

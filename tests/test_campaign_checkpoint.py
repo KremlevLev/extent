@@ -52,3 +52,28 @@ def test_hub_checkpoint_commits_matching_metadata_payload_with_stable_names(tmp_
     assert commits[0]["repo_type"] == "dataset"
     store.metadata("full", {})
     assert len(commits) == 1
+
+
+def test_hub_checkpoint_retries_transient_commit_failures(tmp_path, monkeypatch):
+    calls, sleeps = [], []
+
+    class Api:
+        def __init__(self, **kwargs):
+            pass
+
+        def create_commit(self, **kwargs):
+            calls.append(kwargs)
+            if len(calls) < 3:
+                raise RuntimeError("temporary Hub failure")
+
+    monkeypatch.setattr("huggingface_hub.HfApi", Api)
+    monkeypatch.setattr("extent.campaign_checkpoint.time.sleep", sleeps.append)
+    store = CampaignCheckpointStore(
+        tmp_path, "exp", HubArtifactConfig("user/private", "dataset", "fake")
+    )
+    store.save("layer", {"x": np.ones(2)}, contract={}, step=7, metrics={})
+    assert len(calls) == 3
+    assert sleeps == [2, 5]
+    assert store.events[-1] == {
+        "operation": "upload", "slot": "layer", "passed": True, "step": 7
+    }
