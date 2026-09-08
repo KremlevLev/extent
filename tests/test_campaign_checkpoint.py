@@ -5,7 +5,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from extent.campaign_checkpoint import CampaignCheckpointStore
+from extent.campaign_checkpoint import CHECKPOINT_RETRY_DELAYS, CampaignCheckpointStore
 from extent.hf_artifact_sync import HubArtifactConfig
 from extent.optimizer import create_lion
 
@@ -77,3 +77,8 @@ def test_hub_checkpoint_retries_transient_commit_failures(tmp_path, monkeypatch)
     assert store.events[-1] == {
         "operation": "upload", "slot": "layer", "passed": True, "step": 7
     }
+
+
+def test_checkpoint_retry_window_covers_a_long_hub_outage():
+    assert CHECKPOINT_RETRY_DELAYS == (2, 5, 15, 30, 60, 120, 240)
+    assert sum(CHECKPOINT_RETRY_DELAYS) >= 7 * 60

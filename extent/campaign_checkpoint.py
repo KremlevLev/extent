@@ -17,6 +17,9 @@ from extent.hf_checkpoint_sync import (
 )
 
 
+CHECKPOINT_RETRY_DELAYS = (2, 5, 15, 30, 60, 120, 240)
+
+
 def _json_default(value):
     if isinstance(value, np.generic):
         return value.item()
@@ -125,7 +128,7 @@ class CampaignCheckpointStore:
         # Hub can briefly rate-limit campaigns that publish many independent
         # layer endpoints. Keep the local atomic checkpoint and wait long
         # enough for transient 409/429/5xx failures to clear before giving up.
-        retry_delays = (2, 5, 15, 30, 60)
+        retry_delays = CHECKPOINT_RETRY_DELAYS
         for attempt in range(len(retry_delays) + 1):
             try:
                 api.create_commit(
