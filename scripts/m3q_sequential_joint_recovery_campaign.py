@@ -47,6 +47,24 @@ EVAL_WINDOWS = 32
 EVAL_OFFSET = 131_072
 
 
+def detach_donated_tree(tree, layout):
+    """Give the trainable student buffers distinct ownership from the teacher.
+
+    Composing from Qwen reuses immutable teacher arrays. A donated train step
+    cannot receive the same device buffer both as student and teacher input.
+    ``may_alias=False`` preserves values/sharding while forcing new storage.
+    """
+    detached = jax.tree.map(
+        lambda value, sharding: jax.device_put(
+            value, sharding, donate=False, may_alias=False
+        ),
+        tree,
+        layout,
+    )
+    jax.block_until_ready(detached)
+    return detached
+
+
 def experiment_contract(config):
     return {
         "protocol": PROTOCOL,
@@ -234,6 +252,7 @@ def main(argv=None):
                     endpoints[layer] = payload["params"]
                     endpoint_hashes[str(layer)] = meta["checkpoint_sha256"]
                 params = compose_parameters(teacher_params, endpoints, order, initialized.abstract_params, initialized.layout)
+                params = detach_donated_tree(params, initialized.layout)
                 del endpoints
                 arm_contract = dict(contract, seed=seed, arm=arm, kind="full_model",
                                     sequential_endpoint_hashes=endpoint_hashes,

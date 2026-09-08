@@ -1,9 +1,13 @@
 import copy
 
+import jax
+import jax.numpy as jnp
+
 from extent.config import tiny_config
 from scripts.m3q_full_depth_sequential_confirmation import configured_contract
 from scripts.m3q_sequential_joint_recovery_campaign import (
-    ARMS, CHECKPOINTS, SEEDS, aggregate, experiment_contract,
+    ARMS, CHECKPOINTS, SEEDS, aggregate, detach_donated_tree,
+    experiment_contract,
 )
 
 
@@ -39,3 +43,11 @@ def test_joint_contract_records_equal_update_comparison():
     assert contract["arms"] == ["TEACHER", "ONPOLICY"]
     assert contract["total_steps"] == 8192
     assert contract["trainable"] == "all student parameters"
+
+
+def test_detached_student_tree_preserves_values_and_has_distinct_buffer():
+    source = {"w": jnp.arange(8, dtype=jnp.float32)}
+    layout = {"w": source["w"].sharding}
+    detached = detach_donated_tree(source, layout)
+    assert jnp.array_equal(detached["w"], source["w"])
+    assert detached["w"].unsafe_buffer_pointer() != source["w"].unsafe_buffer_pointer()
