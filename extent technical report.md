@@ -1473,6 +1473,15 @@ EXP-072 v1 startup incident (reviewed 2026-09-08): the campaign stopped after ap
 
 EXP-072 v2 first partial result (reviewed 2026-09-08): stopped safely after `1.033192` hours when HF rejected the seed-456 `ONPOLICY` layer-22 upload after all retries. Seed 123 has matched depth-20 results; seed 456 has matched depth-16 results plus a depth-20 `MIXED` result. At the last common milestone, `ONPOLICY` NLL is `6.378428/6.504203` versus `16.957157/16.240802` for equal-update `TEACHER`, a total-NLL reduction of `62.39%/59.95%` and excess-NLL reduction of `76.16%/73.91%`. This independently reproduces the sequential-input mechanism on fresh data and a four-times-longer budget, but depth 24 and the registered gate remain unevaluable. Both sequential arms worsen modestly at seed-123 depth 20, making completion essential. Resume the identical contract; no hyperparameter change is authorized. The engineering-only uploader retry window is extended beyond seven minutes. Details/checksums: `results/EXP-072-first-partial-summary.md`.
 
+### EXP-073 — Sequential warm-start joint recovery (pre-registered)
+
+- **Implementation commit title:** `feat: chain sequential and joint recovery campaigns`.
+- **Question:** after EXP-072 completes all 24 replacements, does its `ONPOLICY` advantage survive ordinary joint training of the entire student, or do the two layerwise starting points converge immediately?
+- **Matched design:** seeds `123/456`; completed `TEACHER` versus `ONPOLICY` EXP-072 endpoints; both arms have identical layerwise update counts and receive 8,192 identical all-parameter Lion updates at context 256. Only the earlier recovery input distribution differs.
+- **Evaluation/gate:** fresh 32-window test slice at steps `0/1024/2048/4096/6144/8192`. At both seeds, `ONPOLICY` must beat `TEACHER` in final held-out NLL and NLL-delta AUC. Endpoint hashes and token hashes are resume invariants.
+- **Runtime:** expected joint phase 4–6 TPU hours. The chained entry point finishes EXP-072 and immediately starts EXP-073, preventing an otherwise mostly idle allocation. Full states and optimizer cursors are resumable through the private HF dataset.
+- **Boundary:** this establishes persistence of the sequential warm start under full-model recovery, not compute-normalized superiority to random initialization. A pass triggers that final matched random comparison; MLA/14B/long-context remain separate. Protocol: `results/EXP-073-sequential-joint-recovery-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

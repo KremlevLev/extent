@@ -44,6 +44,18 @@ def validate_data_ranges():
     return required_end
 
 
+def configured_contract(config):
+    """Build the frozen EXP-072 contract without leaking module overrides."""
+    original = {name: getattr(campaign, name) for name in OVERRIDES}
+    try:
+        for name, value in OVERRIDES.items():
+            setattr(campaign, name, value)
+        return campaign.experiment_contract(config)
+    finally:
+        for name, value in original.items():
+            setattr(campaign, name, value)
+
+
 def main(argv=None):
     validate_data_ranges()
     arguments = list(argv or ())
