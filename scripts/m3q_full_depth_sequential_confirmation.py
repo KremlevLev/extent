@@ -5,9 +5,9 @@ from scripts import m3q_sequential_recovery_campaign as campaign
 
 
 OVERRIDES = {
-    "PROTOCOL": "exp072-full-depth-sequential-confirmation-v1",
-    "HF_PREFIX": "experiments/exp072-full-depth-sequential-confirmation",
-    "OUTPUT_SUBDIR": "exp072",
+    "PROTOCOL": "exp072-full-depth-sequential-confirmation-v2",
+    "HF_PREFIX": "experiments/exp072-full-depth-sequential-confirmation-v2",
+    "OUTPUT_SUBDIR": "exp072-v2",
     "RESULT_STEM": "extent-m3q-full-depth-sequential-confirmation",
     "SUMMARY_TITLE": "EXP-072 full-depth sequential recovery confirmation",
     "PRIMARY_ARM": "ONPOLICY",
@@ -23,15 +23,32 @@ OVERRIDES = {
     "TRAIN_LENGTH": 128,
     "EVAL_WINDOWS": 32,
     "EVAL_LENGTH": 256,
-    "TRAIN_OFFSET": 2_621_440,
+    # The pinned Qwen tokenizer yields 2,540,999 tokens for WikiText-2 train.
+    # This slice is fresh relative to EXP-071 and leaves a safety margin at EOF.
+    "TRAIN_OFFSET": 2_424_832,
     "EVAL_OFFSET": 98_304,
 }
 
+PINNED_TRAIN_TOKEN_CAPACITY = 2_540_999
+
+
+def validate_data_ranges():
+    required_end = OVERRIDES["TRAIN_OFFSET"] + (
+        OVERRIDES["TRAIN_WINDOWS"] * OVERRIDES["TRAIN_LENGTH"]
+    )
+    if required_end > PINNED_TRAIN_TOKEN_CAPACITY:
+        raise ValueError(
+            "EXP-072 train slice exceeds the observed pinned WikiText/Qwen "
+            f"token capacity: {required_end} > {PINNED_TRAIN_TOKEN_CAPACITY}"
+        )
+    return required_end
+
 
 def main(argv=None):
+    validate_data_ranges()
     arguments = list(argv or ())
     defaults = {
-        "--state-dir": "/dev/shm/extent-exp072-state",
+        "--state-dir": "/dev/shm/extent-exp072-v2-state",
         "--qwen-cache-dir": "/dev/shm/qwen3-1.7b-exp072-weights",
     }
     for option, value in defaults.items():

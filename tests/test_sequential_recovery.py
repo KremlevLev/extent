@@ -77,8 +77,16 @@ def test_full_depth_wrapper_applies_and_restores_registered_overrides(monkeypatc
     monkeypatch.setattr(campaign, "main", fake_main)
     returned = confirmation.main(["--no-telegram"])
     assert returned["argv"] == [
-        "--no-telegram", "--state-dir", "/dev/shm/extent-exp072-state",
+        "--no-telegram", "--state-dir", "/dev/shm/extent-exp072-v2-state",
         "--qwen-cache-dir", "/dev/shm/qwen3-1.7b-exp072-weights",
     ]
     assert observed == confirmation.OVERRIDES
     assert {name: getattr(campaign, name) for name in confirmation.OVERRIDES} == original
+
+
+def test_full_depth_train_slice_fits_pinned_dataset_and_is_fresh():
+    required_end = confirmation.validate_data_ranges()
+    previous_end = campaign.TRAIN_OFFSET + campaign.TRAIN_WINDOWS * campaign.TRAIN_LENGTH
+    assert confirmation.OVERRIDES["TRAIN_OFFSET"] >= previous_end
+    assert required_end == 2_490_368
+    assert required_end <= confirmation.PINNED_TRAIN_TOKEN_CAPACITY

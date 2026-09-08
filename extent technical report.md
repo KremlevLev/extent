@@ -1469,6 +1469,8 @@ EXP-071 completed result (reviewed 2026-09-08): the resumed run completes both s
 - **Scale:** 589,824 optimizer updates plus full-prefix cache generation and 32-window evaluations. Expected runtime is 5–8 hours, with an eight-hour soft deadline and resumable partial completion; this estimate is operational, not scientific evidence.
 - **Durability:** each layer endpoint uploads immediately; summaries only at registered milestones/terminal states; transient HF failures use extended backoff and persistent failure halts before dependent work. Protocol and launch cell: `results/EXP-072-full-depth-sequential-protocol.md`.
 
+EXP-072 v1 startup incident (reviewed 2026-09-08): the campaign stopped after approximately `0.020` hours before any training, baseline, checkpoint or model metric. The requested WikiText training prefix ended at token `2,686,976`, but the pinned tokenizer/corpus supplies `2,540,999`. This is an operational configuration error, not a failed scientific gate; the displayed `False` gate is merely the empty-result default. Before observing outcomes, v2 moves the fresh slice to `[2,424,832, 2,490,368)`, adds a deterministic capacity guard, and uses isolated local/state/HF namespaces to prevent the failed v1 record from entering resume state. All model, arm, seed, budget and decision settings remain frozen. Supplied artifact SHA-256: full `510cc2365c72af4f98590828e1f3818a9335bfa61dc72ff47eea45bb6a1f7b46`, summary `2bec7c0cdb96adf24c14290b0967694b5a0b47a5934efd0a87ccb3e2cce6d710`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.
