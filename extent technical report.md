@@ -1506,6 +1506,17 @@ EXP-074 completed result (reviewed 2026-09-09): the registered `LR3E-6` stabilit
 - **Gate:** both primary seeds must finish below their own step-zero NLL with no registered checkpoint above `1.25×` start. The unchanged EXP-074 `LR3E-6` curve is the exact all-parameter causal control and is not rerun.
 - **Boundary:** a pass selects which parameter families may move during joint recovery. It does not yet prove compute-normalized superiority over random, 14B transfer or MLA compatibility. Protocol: `results/EXP-075-protected-joint-recovery-protocol.md`.
 
+EXP-075 completed result (reviewed 2026-09-09): the registered gate fails. `MAMBA-ONLY` changes NLL from `10.916678→11.694606` and `9.692907→11.304210`; `MAMBA-NORMS` changes it to `11.472961/11.904981`. No trained checkpoint beats step zero. Freezing Qwen nevertheless reduces final damage dramatically versus EXP-074's matched all-parameter arm (`+0.78/+1.61` instead of `+4.76/+6.25` NLL for MAMBA-ONLY), so copied-backbone movement is a major instability amplifier but not the whole cause. The protected curves spike early and recover as LR decays; norms give no consistent benefit. Keep Qwen frozen and isolate the loss geometry next. Details/checksums: `results/EXP-075-completed-summary.md`.
+
+### EXP-076 — Protected objective bridge (pre-registered)
+
+- **Implementation commit title:** `feat: add protected objective bridge campaign`.
+- **Question:** can local decoder-block alignment provide a stable full-model training signal where EXP-075's single output KL/CE objective fails?
+- **Matched arms:** `DELTA-BRIDGE` (primary) matches `h_l-h_(l-1)` at all 24 replaced positions; `STATE-BRIDGE` matches accumulated `h_l`. Both restart from exact EXP-072 ONPOLICY endpoints, train only Mamba leaves, and use identical seeds, tokens, 8,192 updates and EXP-075 Lion schedule. Output KL and causal CE have zero training weight.
+- **Historical causal control:** EXP-075 MAMBA-ONLY has the same starts, mask, data, optimizer and update count, differing in objective only. It is not rerun.
+- **Gate:** at both seeds, DELTA-BRIDGE final NLL must beat its own step-zero NLL with no checkpoint above `1.25×` start. A STATE-BRIDGE-only pass requires locked confirmation.
+- **Purpose:** this tests whether the successful sequential contribution target from EXP-072 survives when all replacements train jointly. A failure points next to optimizer dynamics rather than another initialization sweep. Protocol: `results/EXP-076-objective-bridge-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

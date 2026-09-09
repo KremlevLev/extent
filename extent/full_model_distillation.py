@@ -70,6 +70,48 @@ def hidden_state_relative_mse(
     return jnp.mean(jnp.stack(losses), dtype=jnp.float32)
 
 
+def hidden_delta_relative_mse(
+    student_states: Sequence[jax.Array],
+    teacher_states: Sequence[jax.Array],
+    layer_indices: Sequence[int],
+) -> jax.Array:
+    """Match decoder-block contributions instead of accumulated residual states.
+
+    For every layer after layer zero, the target is ``h_l - h_(l-1)``.  This
+    prevents the already-matched residual stream from dominating the loss and
+    is the full-model analogue of the successful local contribution objective
+    used by the sequential M3Q recovery campaigns.  Layer zero falls back to
+    its output state because the embedding state is intentionally not exposed
+    by the model API.
+    """
+    if not layer_indices:
+        raise ValueError("hidden delta alignment requires at least one layer")
+    losses = []
+    for index in layer_indices:
+        if index < 0 or index >= len(student_states):
+            raise ValueError(f"hidden layer index is out of range: {index}")
+        if index == 0:
+            student_delta = student_states[index].astype(jnp.float32)
+            teacher_delta = teacher_states[index].astype(jnp.float32)
+        else:
+            student_delta = (
+                student_states[index].astype(jnp.float32)
+                - student_states[index - 1].astype(jnp.float32)
+            )
+            teacher_delta = (
+                teacher_states[index].astype(jnp.float32)
+                - teacher_states[index - 1].astype(jnp.float32)
+            )
+        losses.append(
+            jnp.sum(jnp.square(student_delta - teacher_delta), dtype=jnp.float32)
+            / jnp.maximum(
+                jnp.sum(jnp.square(teacher_delta), dtype=jnp.float32),
+                jnp.finfo(jnp.float32).tiny,
+            )
+        )
+    return jnp.mean(jnp.stack(losses), dtype=jnp.float32)
+
+
 def make_prediction_distill_step(
     student_apply: Callable,
     teacher_apply: Callable,
@@ -138,11 +180,20 @@ def make_hidden_bridge_distill_step(
     prediction_weight: float,
     hidden_weight: float,
     bf16_gradients: bool,
+    hidden_mode: str = "state",
+    trainable_mask=None,
 ) -> Callable:
     """Create M3Q's joint hidden-state bridge and prediction-KL stage."""
     if min(cross_entropy_weight, prediction_weight, hidden_weight) < 0:
         raise ValueError("distillation weights must be non-negative")
+    if hidden_mode not in {"state", "delta"}:
+        raise ValueError("hidden_mode must be 'state' or 'delta'")
     selected_layers = tuple(int(index) for index in layer_indices)
+    hidden_objective = (
+        hidden_state_relative_mse
+        if hidden_mode == "state"
+        else hidden_delta_relative_mse
+    )
 
     def step(student_params, opt_state, teacher_params, token_ids):
         teacher_logits, teacher_states = teacher_apply(
@@ -159,7 +210,7 @@ def make_hidden_bridge_distill_step(
                 student_logits, teacher_logits, temperature=temperature
             )
             cross_entropy = causal_cross_entropy(student_logits, token_ids)
-            hidden = hidden_state_relative_mse(
+            hidden = hidden_objective(
                 student_states, teacher_states, selected_layers
             )
             loss = (
@@ -172,6 +223,14 @@ def make_hidden_bridge_distill_step(
         (loss, (kl, cross_entropy, hidden)), grads = jax.value_and_grad(
             loss_fn, has_aux=True
         )(student_params)
+        if trainable_mask is not None:
+            grads = jax.tree.map(
+                lambda grad, trainable: (
+                    grad if trainable else jnp.zeros_like(grad)
+                ),
+                grads,
+                trainable_mask,
+            )
         health = gradient_health(grads)
         updates, opt_state = tx.update(
             cast_grads_bf16(grads) if bf16_gradients else grads,

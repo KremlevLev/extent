@@ -50,6 +50,7 @@ CONTROL_ARM = "TEACHER"
 AGGREGATE_MODE = "paired_advantage"
 CONTRACT_EXTRA = {}
 TRAINABLE_MASK_FACTORY = None
+TRAIN_STEP_FACTORY = None
 SEEDS = (123, 456)
 TOTAL_STEPS = 8192
 CHECKPOINTS = (0, 1024, 2048, 4096, 6144, 8192)
@@ -270,6 +271,10 @@ def main(argv=None):
         model = HybridForCausalLM(config)
 
         def teacher_apply(p, tokens, return_hidden):
+            if return_hidden:
+                return teacher.apply(
+                    {"params": p}, tokens, return_hidden_states=True
+                )
             return teacher.apply({"params": p}, tokens), ()
 
         for seed in SEEDS:
@@ -328,6 +333,10 @@ def main(argv=None):
                     continue
 
                 def student_apply(p, tokens, return_hidden):
+                    if return_hidden:
+                        return model.apply(
+                            {"params": p}, tokens, return_hidden_states=True
+                        )
                     return model.apply({"params": p}, tokens), ()
 
                 metric_layout = {name: replicated_sharding(mesh) for name in (
@@ -337,10 +346,19 @@ def main(argv=None):
                     None if TRAINABLE_MASK_FACTORY is None
                     else TRAINABLE_MASK_FACTORY(arm, params)
                 )
-                train_step = jax.jit(make_prediction_distill_step(
-                    student_apply, teacher_apply, tx, temperature=2.0,
-                    cross_entropy_weight=0.1, bf16_gradients=True,
-                    trainable_mask=trainable_mask),
+                step_factory = (
+                    make_prediction_distill_step(
+                        student_apply, teacher_apply, tx, temperature=2.0,
+                        cross_entropy_weight=0.1, bf16_gradients=True,
+                        trainable_mask=trainable_mask,
+                    )
+                    if TRAIN_STEP_FACTORY is None
+                    else TRAIN_STEP_FACTORY(
+                        arm, student_apply, teacher_apply, tx, config,
+                        trainable_mask,
+                    )
+                )
+                train_step = jax.jit(step_factory,
                     in_shardings=(initialized.layout, opt_layout, teacher_layout, batch_layout),
                     out_shardings=(initialized.layout, opt_layout, metric_layout), donate_argnums=(0, 1))
 

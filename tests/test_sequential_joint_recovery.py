@@ -12,6 +12,7 @@ from scripts.m3q_sequential_joint_recovery_campaign import (
 from scripts import m3q_sequential_joint_recovery_campaign as joint
 from scripts import m3q_stable_joint_recovery_campaign as stable
 from scripts import m3q_protected_joint_recovery_campaign as protected
+from scripts import m3q_objective_bridge_campaign as objective_bridge
 
 
 def _row(values):
@@ -130,3 +131,50 @@ def test_protected_wrapper_applies_and_restores_overrides(monkeypatch):
     ]
     assert observed == protected.OVERRIDES
     assert {name: getattr(joint, name) for name in protected.OVERRIDES} == original
+
+
+def test_objective_bridge_factory_selects_registered_hidden_modes(monkeypatch):
+    calls = []
+
+    def fake_factory(*args, **kwargs):
+        calls.append(kwargs)
+        return kwargs
+
+    monkeypatch.setattr(objective_bridge, "make_hidden_bridge_distill_step", fake_factory)
+    config = tiny_config()
+    mask = {"x": True}
+    delta = objective_bridge.train_step_factory(
+        "DELTA-BRIDGE", object(), object(), object(), config, mask
+    )
+    state = objective_bridge.train_step_factory(
+        "STATE-BRIDGE", object(), object(), object(), config, mask
+    )
+    assert delta["hidden_mode"] == "delta"
+    assert state["hidden_mode"] == "state"
+    assert delta["layer_indices"] == config.mamba_layer_indices
+    assert delta["prediction_weight"] == 0.0
+    assert delta["cross_entropy_weight"] == 0.0
+    assert delta["trainable_mask"] is mask
+    assert len(calls) == 2
+
+
+def test_objective_bridge_wrapper_applies_and_restores_overrides(monkeypatch):
+    original = {name: getattr(joint, name) for name in objective_bridge.OVERRIDES}
+    observed = {}
+
+    def fake_main(argv):
+        observed.update({
+            name: getattr(joint, name) for name in objective_bridge.OVERRIDES
+        })
+        return {"argv": argv}
+
+    monkeypatch.setattr(joint, "main", fake_main)
+    result = objective_bridge.main(["--no-telegram"])
+    assert result["argv"] == [
+        "--no-telegram", "--state-dir", "/dev/shm/extent-exp076-state",
+        "--qwen-cache-dir", "/dev/shm/qwen3-1.7b-exp076-weights",
+    ]
+    assert observed == objective_bridge.OVERRIDES
+    assert {
+        name: getattr(joint, name) for name in objective_bridge.OVERRIDES
+    } == original
