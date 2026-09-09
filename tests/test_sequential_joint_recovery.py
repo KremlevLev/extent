@@ -9,6 +9,8 @@ from scripts.m3q_sequential_joint_recovery_campaign import (
     ARMS, CHECKPOINTS, SEEDS, aggregate, detach_donated_tree,
     experiment_contract,
 )
+from scripts import m3q_sequential_joint_recovery_campaign as joint
+from scripts import m3q_stable_joint_recovery_campaign as stable
 
 
 def _row(values):
@@ -51,3 +53,42 @@ def test_detached_student_tree_preserves_values_and_has_distinct_buffer():
     detached = detach_donated_tree(source, layout)
     assert jnp.array_equal(detached["w"], source["w"])
     assert detached["w"].unsafe_buffer_pointer() != source["w"].unsafe_buffer_pointer()
+
+
+def test_stability_gate_requires_final_improvement_and_bounded_curve(monkeypatch):
+    original = {name: getattr(joint, name) for name in stable.OVERRIDES}
+    try:
+        for name, value in stable.OVERRIDES.items():
+            monkeypatch.setattr(joint, name, value)
+        result = {"arms": {}}
+        for seed in SEEDS:
+            result["arms"][str(seed)] = {
+                "LR3E-6": _row([10.0, 10.5, 9.8, 9.4, 9.2, 9.0]),
+                "LR1E-6": _row([10.0, 10.1, 9.9, 9.8, 9.7, 9.6]),
+            }
+        assert joint.aggregate(result)["scientific_gate_passed"]
+        result["arms"][str(SEEDS[-1])]["LR3E-6"] = _row(
+            [10.0, 13.0, 9.8, 9.4, 9.2, 9.0]
+        )
+        assert not joint.aggregate(result)["scientific_gate_passed"]
+    finally:
+        for name, value in original.items():
+            setattr(joint, name, value)
+
+
+def test_stable_wrapper_applies_and_restores_overrides(monkeypatch):
+    original = {name: getattr(joint, name) for name in stable.OVERRIDES}
+    observed = {}
+
+    def fake_main(argv):
+        observed.update({name: getattr(joint, name) for name in stable.OVERRIDES})
+        return {"argv": argv}
+
+    monkeypatch.setattr(joint, "main", fake_main)
+    result = stable.main(["--no-telegram"])
+    assert result["argv"] == [
+        "--no-telegram", "--state-dir", "/dev/shm/extent-exp074-state",
+        "--qwen-cache-dir", "/dev/shm/qwen3-1.7b-exp074-weights",
+    ]
+    assert observed == stable.OVERRIDES
+    assert {name: getattr(joint, name) for name in stable.OVERRIDES} == original

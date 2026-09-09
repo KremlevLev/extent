@@ -1488,6 +1488,14 @@ EXP-073 first run (reviewed 2026-09-08): stopped after `0.064536` hours before o
 
 EXP-073 completed result (reviewed 2026-09-09): the pre-registered relative warm-start gate passes at both seeds after 8,192 all-parameter updates. Final `ONPOLICY-minus-TEACHER` NLL is `-22.725672/-14.060614`, with NLL-delta AUC `-16.711477/-10.608272`; mean final difference is `-18.393143`. ONPOLICY therefore preserves its advantage through joint training. Absolute recovery is unstable: seed 123 ONPOLICY improves from `10.916678` to a best/final `8.804904/9.278139`, but seed 456 reaches `8.949895` at step 2,048 before collapsing and ending at `23.089646` versus `9.692907` initially. Both TEACHER arms finish much worse than step zero. Thus this is a positive relative-method result but a negative verdict on the current constant-`3e-5`, all-parameter Lion schedule. Stabilize the shared joint optimizer before a compute-accounted random comparison. Details/checksums: `results/EXP-073-completed-summary.md`.
 
+### EXP-074 — Stabilized joint recovery (pre-registered)
+
+- **Implementation commit title:** `feat: add stabilized joint recovery campaign`.
+- **Question:** can a pre-declared lower-step Lion recipe turn the recoverable but unstable EXP-073 ONPOLICY start into consistent full-model improvement on both seeds?
+- **Arms:** `LR3E-6` is primary; `LR1E-6` is an exploratory conservative control. Both restart from the same completed EXP-072 ONPOLICY endpoints and receive 8,192 all-parameter steps on the exact EXP-073 tokens/objective. Common warmup is 512, clipping 0.3, cosine end LR 0.1× peak, and weight decay zero.
+- **Gate:** at both seeds, primary final NLL must beat its own step-zero NLL and no registered checkpoint may exceed `1.25×` step-zero NLL. Fixed checkpoints are `0/1024/2048/4096/6144/8192`; best-checkpoint selection cannot pass the gate. If only the exploratory arm passes, it requires locked confirmation.
+- **Efficiency:** the exact EXP-073 trajectories serve as historical controls and are not rerun. Four new branches should take roughly four TPU hours and are fully resumable. This selects a stable joint optimizer before the later compute-accounted random comparison. Protocol: `results/EXP-074-stable-joint-recovery-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

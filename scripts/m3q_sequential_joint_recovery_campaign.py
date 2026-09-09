@@ -36,7 +36,19 @@ from scripts.qwen_extended_horizon_campaign import _safe_notify
 
 PROTOCOL = "exp073-sequential-warmstart-joint-recovery-v1"
 HF_PREFIX = "experiments/exp073-sequential-joint-recovery"
+OUTPUT_SUBDIR = "exp073"
+RESULT_STEM = "extent-m3q-sequential-joint-recovery"
+SUMMARY_TITLE = "EXP-073 sequential warm-start joint recovery"
 ARMS = ("TEACHER", "ONPOLICY")
+SOURCE_ARM_BY_ARM = {"TEACHER": "TEACHER", "ONPOLICY": "ONPOLICY"}
+LR_BY_ARM = {"TEACHER": 3e-5, "ONPOLICY": 3e-5}
+WARMUP_STEPS = 128
+CLIP_NORM = 1.0
+OPTIMIZER_DESCRIPTION = "BF16 Lion; lr=3e-5 warmup=128 no decay clip=1.0"
+PRIMARY_ARM = "ONPOLICY"
+CONTROL_ARM = "TEACHER"
+AGGREGATE_MODE = "paired_advantage"
+CONTRACT_EXTRA = {}
 SEEDS = (123, 456)
 TOTAL_STEPS = 8192
 CHECKPOINTS = (0, 1024, 2048, 4096, 6144, 8192)
@@ -66,7 +78,7 @@ def detach_donated_tree(tree, layout):
 
 
 def experiment_contract(config):
-    return {
+    contract = {
         "protocol": PROTOCOL,
         "source": f"{QWEN3_1_7B_BASE.repo_id}@{QWEN3_1_7B_BASE.revision}",
         "source_sequential_contract": configured_contract(config),
@@ -77,19 +89,51 @@ def experiment_contract(config):
         "eval_windows": EVAL_WINDOWS, "eval_split": "test", "eval_offset": EVAL_OFFSET,
         "data_seed": 20_260_906,
         "objective": "teacher forward KL at temperature 2 plus 0.1 causal cross entropy",
-        "optimizer": "BF16 Lion; lr=3e-5 warmup=128 no decay clip=1.0",
+        "optimizer": OPTIMIZER_DESCRIPTION,
         "trainable": "all student parameters",
         "registered_primary": "ONPOLICY warm start versus equal-update TEACHER warm start",
     }
+    contract.update(CONTRACT_EXTRA)
+    return contract
 
 
 def aggregate(result):
+    if AGGREGATE_MODE == "stability":
+        rows = []
+        for seed in SEEDS:
+            for arm in ARMS:
+                row = result.get("arms", {}).get(str(seed), {}).get(arm, {})
+                if not row.get("complete"):
+                    continue
+                curve = np.asarray([
+                    row["evaluations"][str(step)]["student_nll"] for step in CHECKPOINTS
+                ], np.float64)
+                rows.append({
+                    "seed": seed, "arm": arm,
+                    "initial_nll": float(curve[0]), "final_nll": float(curve[-1]),
+                    "final_delta": float(curve[-1] - curve[0]),
+                    "maximum_nll_ratio": float(np.max(curve) / curve[0]),
+                    "best_nll": float(np.min(curve)),
+                })
+        primary = [row for row in rows if row["arm"] == PRIMARY_ARM]
+        return {
+            "primary_arm": PRIMARY_ARM, "completed_primary_seeds": len(primary),
+            "stability_results": rows,
+            "scientific_gate_passed": bool(len(primary) == len(SEEDS) and all(
+                row["final_delta"] < 0 and row["maximum_nll_ratio"] <= 1.25
+                for row in primary
+            )),
+            "gate_definition": (
+                f"At both seeds, {PRIMARY_ARM} final NLL must beat its own step-0 "
+                "NLL and no registered checkpoint may exceed 1.25x step-0 NLL."
+            ),
+        }
     pairs = []
     for seed in SEEDS:
         rows = result.get("arms", {}).get(str(seed), {})
         if not all(rows.get(arm, {}).get("complete") for arm in ARMS):
             continue
-        teacher, onpolicy = rows["TEACHER"], rows["ONPOLICY"]
+        teacher, onpolicy = rows[CONTROL_ARM], rows[PRIMARY_ARM]
         delta = np.asarray([
             onpolicy["evaluations"][str(step)]["student_nll"]
             - teacher["evaluations"][str(step)]["student_nll"]
@@ -120,10 +164,10 @@ def aggregate(result):
 
 def render_summary(result):
     lines = [
-        "# EXP-073 sequential warm-start joint recovery", "",
+        f"# {SUMMARY_TITLE}", "",
         f"- Status: `{result['status']}`",
         f"- Duration: `{result.get('duration_hours', 0):.3f}` hours",
-        f"- Completed pairs: `{result['aggregate']['completed_pairs']}/2`",
+        f"- Completed primary units: `{result['aggregate'].get('completed_pairs', result['aggregate'].get('completed_primary_seeds', 0))}/2`",
         f"- Scientific gate: `{result['aggregate']['scientific_gate_passed']}`", "",
         "| Seed | Warm start | Step | Student NLL | Excess NLL | KL |",
         "|---:|---|---:|---:|---:|---:|",
@@ -135,7 +179,7 @@ def render_summary(result):
                     f"| {seed} | {arm} | {step} | {metrics['student_nll']:.6f} | "
                     f"{metrics['excess_nll']:.6f} | {metrics['prediction_kl']:.6f} |"
                 )
-    lines += ["", "Both arms receive identical full-model updates; their only difference is the frozen EXP-072 layerwise recovery input distribution used to create the warm start."]
+    lines += ["", "All comparisons use byte-identified EXP-072 endpoints and fixed data; see the recorded contract for the sole arm difference."]
     return "\n".join(lines) + "\n"
 
 
@@ -154,10 +198,10 @@ def main(argv=None):
         raise ValueError("EXP-073 wall budget must be 1-8 hours")
     started = time.monotonic()
     deadline = started + args.max_wall_hours * 3600 - 20 * 60
-    output = Path(args.output_dir) / "exp073"
+    output = Path(args.output_dir) / OUTPUT_SUBDIR
     output.mkdir(parents=True, exist_ok=True)
-    result_path = output / "extent-m3q-sequential-joint-recovery.json"
-    summary_path = output / "extent-m3q-sequential-joint-recovery-summary.md"
+    result_path = output / f"{RESULT_STEM}.json"
+    summary_path = output / f"{RESULT_STEM}-summary.md"
     hub = artifact_config_from_env()
     if hub is None:
         raise ValueError("HF_TOKEN and EXTENT_HF_CHECKPOINT_REPO are required")
@@ -188,11 +232,11 @@ def main(argv=None):
         if upload:
             for local, remote in ((result_path, "latest.json"), (summary_path, "latest-summary.md")):
                 try:
-                    upload_artifact(local, f"{HF_PREFIX}/{remote}", hub, commit_message="EXP-073 progress")
+                    upload_artifact(local, f"{HF_PREFIX}/{remote}", hub, commit_message=f"{PROTOCOL} progress")
                 except Exception as exc:
                     print(f"hf_summary=FAILED type={type(exc).__name__}; local retained", flush=True)
 
-    _safe_notify(args.telegram, "Extent EXP-073 started: sequential warm-start joint recovery")
+    _safe_notify(args.telegram, f"Extent {PROTOCOL} started")
     try:
         devices = list(jax.devices())
         if len(devices) != 8 or any(device.platform != "tpu" for device in devices):
@@ -234,6 +278,7 @@ def main(argv=None):
                     result["status"] = "deadline_partial"
                     return result
                 stage = f"seed-{seed}-{arm}"
+                source_arm = SOURCE_ARM_BY_ARM[arm]
                 initialized = initialize_sharded_parameters(model, jax.random.key(seed), init_tokens, mesh)
                 endpoints, endpoint_hashes = {}, {}
                 for depth, layer in enumerate(order, 1):
@@ -242,9 +287,9 @@ def main(argv=None):
                     base_meta = base_store.metadata(base_slot, base_contract)
                     if base_meta is None:
                         raise FileNotFoundError(f"missing EXP-069 endpoint: {base_slot}")
-                    seq_slot = f"seed-{seed}/{arm}/layer-{layer}"
+                    seq_slot = f"seed-{seed}/{source_arm}/layer-{layer}"
                     endpoint_c = sequential.endpoint_contract(
-                        seq_contract, seed, arm, layer, depth, base_meta["checkpoint_sha256"])
+                        seq_contract, seed, source_arm, layer, depth, base_meta["checkpoint_sha256"])
                     restored = seq_store.restore(seq_slot, endpoint_c)
                     if restored is None:
                         raise FileNotFoundError(f"EXP-072 must complete before EXP-073: {seq_slot}")
@@ -257,8 +302,9 @@ def main(argv=None):
                 arm_contract = dict(contract, seed=seed, arm=arm, kind="full_model",
                                     sequential_endpoint_hashes=endpoint_hashes,
                                     data_sha256=result["data_sha256"])
-                tx = create_lion(learning_rate=3e-5, warmup_steps=128, total_steps=TOTAL_STEPS,
-                                 weight_decay=0.0, max_grad_norm=1.0)
+                tx = create_lion(learning_rate=LR_BY_ARM[arm], warmup_steps=WARMUP_STEPS,
+                                 total_steps=TOTAL_STEPS, weight_decay=0.0,
+                                 max_grad_norm=CLIP_NORM)
                 optimizer = initialize_sharded_optimizer_state(
                     tx, params, initialized.abstract_params, initialized.layout, mesh)
                 opt_state, opt_layout = optimizer.opt_state, optimizer.layout
@@ -267,7 +313,8 @@ def main(argv=None):
                 meta = store.metadata(slot, arm_contract)
                 row = {"complete": False, "finite": True, "completed_steps": 0,
                        "evaluations": {}, "training_metrics": {},
-                       "sequential_endpoint_hashes": endpoint_hashes}
+                       "sequential_endpoint_hashes": endpoint_hashes,
+                       "source_arm": source_arm, "learning_rate": LR_BY_ARM[arm]}
                 if meta is not None:
                     host, meta = store.restore(slot, arm_contract, {"params": params, "opt_state": opt_state})
                     params = jax.tree.map(jax.device_put, host["params"], initialized.layout)
@@ -335,7 +382,7 @@ def main(argv=None):
         raise
     finally:
         persist(upload=True)
-        _safe_notify(args.telegram, f"Extent EXP-073 {result['status']} gate={result['aggregate']['scientific_gate_passed']}")
+        _safe_notify(args.telegram, f"Extent {PROTOCOL} {result['status']} gate={result['aggregate']['scientific_gate_passed']}")
 
 
 if __name__ == "__main__":
