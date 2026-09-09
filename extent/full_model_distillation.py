@@ -78,6 +78,7 @@ def make_prediction_distill_step(
     temperature: float,
     cross_entropy_weight: float,
     bf16_gradients: bool,
+    trainable_mask=None,
 ) -> Callable:
     """Create the standard exact-init end-to-end KL baseline step."""
     if cross_entropy_weight < 0:
@@ -100,6 +101,14 @@ def make_prediction_distill_step(
         (loss, (kl, cross_entropy)), grads = jax.value_and_grad(
             loss_fn, has_aux=True
         )(student_params)
+        if trainable_mask is not None:
+            grads = jax.tree.map(
+                lambda grad, trainable: (
+                    grad if trainable else jnp.zeros_like(grad)
+                ),
+                grads,
+                trainable_mask,
+            )
         health = gradient_health(grads)
         updates, opt_state = tx.update(
             cast_grads_bf16(grads) if bf16_gradients else grads,

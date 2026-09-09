@@ -49,6 +49,7 @@ PRIMARY_ARM = "ONPOLICY"
 CONTROL_ARM = "TEACHER"
 AGGREGATE_MODE = "paired_advantage"
 CONTRACT_EXTRA = {}
+TRAINABLE_MASK_FACTORY = None
 SEEDS = (123, 456)
 TOTAL_STEPS = 8192
 CHECKPOINTS = (0, 1024, 2048, 4096, 6144, 8192)
@@ -332,9 +333,14 @@ def main(argv=None):
                 metric_layout = {name: replicated_sharding(mesh) for name in (
                     "loss", "prediction_kl", "cross_entropy", "hidden_loss", "grad_norm",
                     "grads_finite", "nonfinite_grad_leaves", "max_abs_grad")}
+                trainable_mask = (
+                    None if TRAINABLE_MASK_FACTORY is None
+                    else TRAINABLE_MASK_FACTORY(arm, params)
+                )
                 train_step = jax.jit(make_prediction_distill_step(
                     student_apply, teacher_apply, tx, temperature=2.0,
-                    cross_entropy_weight=0.1, bf16_gradients=True),
+                    cross_entropy_weight=0.1, bf16_gradients=True,
+                    trainable_mask=trainable_mask),
                     in_shardings=(initialized.layout, opt_layout, teacher_layout, batch_layout),
                     out_shardings=(initialized.layout, opt_layout, metric_layout), donate_argnums=(0, 1))
 

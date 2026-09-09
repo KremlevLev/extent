@@ -1496,6 +1496,16 @@ EXP-073 completed result (reviewed 2026-09-09): the pre-registered relative warm
 - **Gate:** at both seeds, primary final NLL must beat its own step-zero NLL and no registered checkpoint may exceed `1.25×` step-zero NLL. Fixed checkpoints are `0/1024/2048/4096/6144/8192`; best-checkpoint selection cannot pass the gate. If only the exploratory arm passes, it requires locked confirmation.
 - **Efficiency:** the exact EXP-073 trajectories serve as historical controls and are not rerun. Four new branches should take roughly four TPU hours and are fully resumable. This selects a stable joint optimizer before the later compute-accounted random comparison. Protocol: `results/EXP-074-stable-joint-recovery-protocol.md`.
 
+EXP-074 completed result (reviewed 2026-09-09): the registered `LR3E-6` stability gate fails at both seeds, and exploratory `LR1E-6` also fails. `LR3E-6` changes NLL from `10.916678→15.672053` and `9.692907→15.944340`, with maximum/start ratios `1.5974×/1.6783×`. `LR1E-6` is less destructive but still changes NLL to `12.653587/12.504670`, raises it by `15.91%/29.01%`, and exceeds the fixed `1.25×` excursion bound. No trained checkpoint beats step zero in any arm/seed. Global LR reduction alone therefore does not stabilize all-parameter Lion; protect copied Qwen weights before comparing against random. Details/checksums: `results/EXP-074-completed-summary.md`.
+
+### EXP-075 — Protected joint recovery (pre-registered)
+
+- **Implementation commit title:** `feat: add protected joint recovery campaign`.
+- **Question:** is full-model degradation caused primarily by updating copied Qwen parameters rather than by joint Mamba optimization itself?
+- **Arms:** registered `MAMBA-ONLY` freezes every non-Mamba leaf; exploratory `MAMBA-NORMS` additionally trains normalization scales. Both use the same ONPOLICY starts, two seeds, EXP-074 data/objective, 8,192 updates, peak LR `3e-6`, warmup 512 and clipping 0.3.
+- **Gate:** both primary seeds must finish below their own step-zero NLL with no registered checkpoint above `1.25×` start. The unchanged EXP-074 `LR3E-6` curve is the exact all-parameter causal control and is not rerun.
+- **Boundary:** a pass selects which parameter families may move during joint recovery. It does not yet prove compute-normalized superiority over random, 14B transfer or MLA compatibility. Protocol: `results/EXP-075-protected-joint-recovery-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

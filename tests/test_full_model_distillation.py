@@ -62,3 +62,27 @@ def test_prediction_and_hidden_bridge_steps_update_only_student():
     assert float(predicted["scale"]) != float(student["scale"])
     assert float(bridged["scale"]) != float(student["scale"])
     assert float(teacher["scale"]) == 1.0
+
+
+def test_prediction_step_respects_static_trainable_mask():
+    student = {
+        "train": jnp.asarray(0.5, jnp.float32),
+        "frozen": jnp.asarray(0.5, jnp.float32),
+    }
+    teacher = {"train": jnp.asarray(1.0), "frozen": jnp.asarray(1.0)}
+
+    def apply(params, tokens, return_hidden):
+        scale = params["train"] + params["frozen"]
+        hidden = tokens[..., None].astype(jnp.float32) * scale
+        logits = jnp.concatenate((hidden, -hidden, hidden * 0.5), axis=-1)
+        return logits, ()
+
+    tokens = jnp.asarray([[0, 1, 2, 1]], jnp.int32)
+    tx = optax.sgd(1e-2)
+    step = make_prediction_distill_step(
+        apply, apply, tx, temperature=1.0, cross_entropy_weight=0.1,
+        bf16_gradients=False, trainable_mask={"train": True, "frozen": False},
+    )
+    updated, _, _ = step(student, tx.init(student), teacher, tokens)
+    assert float(updated["train"]) != float(student["train"])
+    assert float(updated["frozen"]) == float(student["frozen"])

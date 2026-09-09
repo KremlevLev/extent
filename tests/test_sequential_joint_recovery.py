@@ -11,6 +11,7 @@ from scripts.m3q_sequential_joint_recovery_campaign import (
 )
 from scripts import m3q_sequential_joint_recovery_campaign as joint
 from scripts import m3q_stable_joint_recovery_campaign as stable
+from scripts import m3q_protected_joint_recovery_campaign as protected
 
 
 def _row(values):
@@ -92,3 +93,40 @@ def test_stable_wrapper_applies_and_restores_overrides(monkeypatch):
     ]
     assert observed == stable.OVERRIDES
     assert {name: getattr(joint, name) for name in stable.OVERRIDES} == original
+
+
+def test_protected_mask_freezes_copied_qwen_weights():
+    params = {
+        "layers_0": {
+            "mamba": {"in_proj": {"kernel": jnp.ones((2, 2))}},
+            "input_layernorm": {"scale": jnp.ones((2,))},
+            "mlp": {"up_proj": {"kernel": jnp.ones((2, 2))}},
+        },
+        "final_norm": {"scale": jnp.ones((2,))},
+    }
+    mamba_only = protected.trainable_mask("MAMBA-ONLY", params)
+    with_norms = protected.trainable_mask("MAMBA-NORMS", params)
+    assert mamba_only["layers_0"]["mamba"]["in_proj"]["kernel"]
+    assert not mamba_only["layers_0"]["input_layernorm"]["scale"]
+    assert not mamba_only["layers_0"]["mlp"]["up_proj"]["kernel"]
+    assert with_norms["layers_0"]["input_layernorm"]["scale"]
+    assert with_norms["final_norm"]["scale"]
+    assert not with_norms["layers_0"]["mlp"]["up_proj"]["kernel"]
+
+
+def test_protected_wrapper_applies_and_restores_overrides(monkeypatch):
+    original = {name: getattr(joint, name) for name in protected.OVERRIDES}
+    observed = {}
+
+    def fake_main(argv):
+        observed.update({name: getattr(joint, name) for name in protected.OVERRIDES})
+        return {"argv": argv}
+
+    monkeypatch.setattr(joint, "main", fake_main)
+    result = protected.main(["--no-telegram"])
+    assert result["argv"] == [
+        "--no-telegram", "--state-dir", "/dev/shm/extent-exp075-state",
+        "--qwen-cache-dir", "/dev/shm/qwen3-1.7b-exp075-weights",
+    ]
+    assert observed == protected.OVERRIDES
+    assert {name: getattr(joint, name) for name in protected.OVERRIDES} == original
