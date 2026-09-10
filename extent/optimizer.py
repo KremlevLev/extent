@@ -150,6 +150,37 @@ def create_adamw(
     return optimizer
 
 
+def create_lamb(
+    learning_rate: float = 1e-3,
+    warmup_steps: int = 2_000,
+    total_steps: int = 100_000,
+    weight_decay: float = 0.0,
+    max_grad_norm: float = 1.0,
+    accumulation_steps: int = 1,
+) -> optax.GradientTransformation:
+    """BF16 LAMB control whose per-leaf step scales with parameter norm."""
+    warmup_steps = min(warmup_steps, total_steps)
+    schedule: Callable[[jax.Array], jax.Array] = optax.warmup_cosine_decay_schedule(
+        init_value=0.0,
+        peak_value=learning_rate,
+        warmup_steps=warmup_steps,
+        decay_steps=total_steps,
+        end_value=learning_rate * 0.1,
+    )
+    optimizer = optax.chain(
+        clip_by_global_norm_fp32(max_grad_norm),
+        optax.scale_by_adam(b1=0.9, b2=0.999, eps=1e-8, mu_dtype=jnp.bfloat16),
+        optax.add_decayed_weights(weight_decay, mask=decay_mask),
+        optax.scale_by_trust_ratio(min_norm=1e-6, eps=1e-8),
+        optax.scale_by_learning_rate(schedule),
+    )
+    if accumulation_steps > 1:
+        optimizer = optax.MultiSteps(
+            optimizer, every_k_schedule=accumulation_steps, use_grad_mean=True
+        )
+    return optimizer
+
+
 def cast_grads_bf16(grads: optax.Updates) -> optax.Updates:
     """Explicit contract requested for TPU experiments; call before ``tx.update``."""
     return jax.tree.map(

@@ -1528,6 +1528,16 @@ EXP-076 completed result (reviewed 2026-09-10): the registered gate fails; neith
 - **Numerics:** BF16 gradients and BF16 first/second moments preserve the memory-aware project contract. Adam moments are explicitly sharded with their parameter leaves. Both arms use 512 warmup steps, cosine decay, zero weight decay and clip 0.3 for 8,192 updates at context 256.
 - **Gate:** at both seeds, primary final NLL must beat its own start with no fixed checkpoint above `1.25×` start. A secondary-only pass requires locked confirmation. Both failing moves the method to bounded/trust-region recovery rather than another ordinary LR/objective sweep. Protocol: `results/EXP-077-adamw-recovery-protocol.md`.
 
+EXP-077 completed result (reviewed 2026-09-10): the registered gate fails narrowly. At matched peak LR `3e-6`, AdamW changes NLL by only `+0.289210/+0.288247`, versus Lion's `+0.777928/+1.611303` in EXP-075; this reduces final degradation by `62.82%/82.11%` and maximum excursions from `1.5436×/1.4835×` to `1.2039×/1.0499×`. Optimizer family therefore matters, but step zero remains best at both seeds. AdamW `1e-5` is clearly worse (`+4.447118/+0.973362`). Move from global optimizer/LR sweeps to a per-tensor relative-step bound. Details/checksums: `results/EXP-077-completed-summary.md`.
+
+### EXP-078 — Protected trust-ratio recovery (pre-registered)
+
+- **Implementation commit title:** `feat: add trust-ratio recovery campaign`.
+- **Question:** can an update bound relative to each Mamba tensor's own norm convert EXP-077's near-stability into actual recovery?
+- **Method:** BF16 LAMB rescales each leaf's Adam direction by `||parameter||/||direction||` before the scalar schedule. This prevents large projections, small recurrent scalars and biases from receiving the same absolute normalized step. A `1e-6` norm floor handles zero/tiny leaves.
+- **Arms:** registered `TRUST-1E-4` and conservative `TRUST-3E-5`. Both preserve the EXP-077 source, frozen Qwen mask, KL+CE target, data, two seeds, context 256, 8,192 steps, warmup, cosine schedule, clipping and no-decay contract.
+- **Gate:** primary must improve final NLL from step zero at both seeds with no checkpoint above `1.25×` start. A secondary-only pass requires confirmation. Failure moves to depth/staged update boundaries, not another global LR sweep. Protocol: `results/EXP-078-trust-ratio-recovery-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

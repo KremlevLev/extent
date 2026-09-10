@@ -3,7 +3,12 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from extent.optimizer import global_norm_fp32, clip_by_global_norm_fp32, gradient_health
+from extent.optimizer import (
+    clip_by_global_norm_fp32,
+    create_lamb,
+    global_norm_fp32,
+    gradient_health,
+)
 
 
 @pytest.mark.parametrize("dtype", [jnp.float32, jnp.bfloat16])
@@ -43,3 +48,25 @@ def test_actual_nonfinite_gradients_are_not_sanitized(bad):
     assert not bool(health["grads_finite"])
     assert int(health["nonfinite_grad_leaves"]) == 1
     assert not np.isfinite(float(health["grad_norm"]))
+
+
+def test_lamb_bounds_each_leaf_update_relative_to_parameter_norm():
+    params = {
+        "large": jnp.full((32,), 2.0, jnp.bfloat16),
+        "small": jnp.full((8,), 0.01, jnp.bfloat16),
+    }
+    grads = {
+        "large": jnp.linspace(0.1, 3.2, 32, dtype=jnp.bfloat16),
+        "small": jnp.linspace(1.0, 8.0, 8, dtype=jnp.bfloat16),
+    }
+    tx = create_lamb(
+        learning_rate=1e-2, warmup_steps=0, total_steps=10,
+        weight_decay=0.0, max_grad_norm=100.0,
+    )
+    updates, _ = tx.update(grads, tx.init(params), params)
+    for name in params:
+        relative_step = float(
+            jnp.linalg.norm(updates[name].astype(jnp.float32))
+            / jnp.linalg.norm(params[name].astype(jnp.float32))
+        )
+        assert relative_step == pytest.approx(1e-2, rel=0.03)

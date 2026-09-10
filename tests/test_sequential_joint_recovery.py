@@ -14,6 +14,7 @@ from scripts import m3q_stable_joint_recovery_campaign as stable
 from scripts import m3q_protected_joint_recovery_campaign as protected
 from scripts import m3q_objective_bridge_campaign as objective_bridge
 from scripts import m3q_adamw_recovery_campaign as adamw_recovery
+from scripts import m3q_trust_ratio_recovery_campaign as trust_recovery
 
 
 def _row(values):
@@ -218,4 +219,44 @@ def test_adamw_recovery_factory_and_wrapper(monkeypatch):
     assert observed == adamw_recovery.OVERRIDES
     assert {
         name: getattr(joint, name) for name in adamw_recovery.OVERRIDES
+    } == original
+
+
+def test_trust_recovery_factory_and_wrapper(monkeypatch):
+    factory_calls = []
+
+    def fake_optimizer(**kwargs):
+        factory_calls.append(kwargs)
+        return "lamb"
+
+    monkeypatch.setattr(trust_recovery, "create_lamb", fake_optimizer)
+    assert trust_recovery.optimizer_factory(
+        "TRUST-1E-4", 1e-4, 512, 8192, 0.3
+    ) == "lamb"
+    assert factory_calls == [{
+        "learning_rate": 1e-4,
+        "warmup_steps": 512,
+        "total_steps": 8192,
+        "weight_decay": 0.0,
+        "max_grad_norm": 0.3,
+    }]
+
+    original = {name: getattr(joint, name) for name in trust_recovery.OVERRIDES}
+    observed = {}
+
+    def fake_main(argv):
+        observed.update({
+            name: getattr(joint, name) for name in trust_recovery.OVERRIDES
+        })
+        return {"argv": argv}
+
+    monkeypatch.setattr(joint, "main", fake_main)
+    result = trust_recovery.main(["--no-telegram"])
+    assert result["argv"] == [
+        "--no-telegram", "--state-dir", "/dev/shm/extent-exp078-state",
+        "--qwen-cache-dir", "/dev/shm/qwen3-1.7b-exp078-weights",
+    ]
+    assert observed == trust_recovery.OVERRIDES
+    assert {
+        name: getattr(joint, name) for name in trust_recovery.OVERRIDES
     } == original
