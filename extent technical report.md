@@ -1517,6 +1517,17 @@ EXP-075 completed result (reviewed 2026-09-09): the registered gate fails. `MAMB
 - **Gate:** at both seeds, DELTA-BRIDGE final NLL must beat its own step-zero NLL with no checkpoint above `1.25×` start. A STATE-BRIDGE-only pass requires locked confirmation.
 - **Purpose:** this tests whether the successful sequential contribution target from EXP-072 survives when all replacements train jointly. A failure points next to optimizer dynamics rather than another initialization sweep. Protocol: `results/EXP-076-objective-bridge-protocol.md`.
 
+EXP-076 completed result (reviewed 2026-09-10): the registered gate fails; neither arm ever beats its initial NLL. DELTA-BRIDGE ends at `14.093563/14.952869` versus STATE-BRIDGE `16.507872/18.012545`, from starts `10.916678/9.692907`. Delta matching therefore reduces final degradation relative to state matching by `43.18%/36.78%`, supporting contribution subtraction as the better hidden target, but it is worse than EXP-075's output-KL/CE Mamba-only trajectories. Sampled hidden losses vary from order one to above 200,000 and finite pre-clipping gradient norms reach `~2.16e19`. Reject hidden-only joint recovery; retain delta matching only as a possible staged auxiliary and isolate optimizer dynamics next. Details/checksums: `results/EXP-076-completed-summary.md`.
+
+### EXP-077 — Protected AdamW recovery (pre-registered)
+
+- **Implementation commit title:** `feat: add protected AdamW recovery campaign`.
+- **Question:** is Lion's sign-style update the remaining source of protected full-depth instability?
+- **Primary arm:** `ADAMW-3E-6` changes only optimizer family relative to EXP-075 MAMBA-ONLY while preserving source endpoints, frozen Qwen mask, tokens, KL+CE objective, update count, schedule shape, clipping and numerical peak LR.
+- **Exploratory arm:** `ADAMW-1E-5` tests a larger AdamW-specific scale; it is not treated as a one-factor causal comparison.
+- **Numerics:** BF16 gradients and BF16 first/second moments preserve the memory-aware project contract. Adam moments are explicitly sharded with their parameter leaves. Both arms use 512 warmup steps, cosine decay, zero weight decay and clip 0.3 for 8,192 updates at context 256.
+- **Gate:** at both seeds, primary final NLL must beat its own start with no fixed checkpoint above `1.25×` start. A secondary-only pass requires locked confirmation. Both failing moves the method to bounded/trust-region recovery rather than another ordinary LR/objective sweep. Protocol: `results/EXP-077-adamw-recovery-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

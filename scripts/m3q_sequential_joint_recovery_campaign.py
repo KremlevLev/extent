@@ -51,6 +51,7 @@ AGGREGATE_MODE = "paired_advantage"
 CONTRACT_EXTRA = {}
 TRAINABLE_MASK_FACTORY = None
 TRAIN_STEP_FACTORY = None
+OPTIMIZER_FACTORY = None
 SEEDS = (123, 456)
 TOTAL_STEPS = 8192
 CHECKPOINTS = (0, 1024, 2048, 4096, 6144, 8192)
@@ -308,9 +309,20 @@ def main(argv=None):
                 arm_contract = dict(contract, seed=seed, arm=arm, kind="full_model",
                                     sequential_endpoint_hashes=endpoint_hashes,
                                     data_sha256=result["data_sha256"])
-                tx = create_lion(learning_rate=LR_BY_ARM[arm], warmup_steps=WARMUP_STEPS,
-                                 total_steps=TOTAL_STEPS, weight_decay=0.0,
-                                 max_grad_norm=CLIP_NORM)
+                tx = (
+                    create_lion(
+                        learning_rate=LR_BY_ARM[arm],
+                        warmup_steps=WARMUP_STEPS,
+                        total_steps=TOTAL_STEPS,
+                        weight_decay=0.0,
+                        max_grad_norm=CLIP_NORM,
+                    )
+                    if OPTIMIZER_FACTORY is None
+                    else OPTIMIZER_FACTORY(
+                        arm, LR_BY_ARM[arm], WARMUP_STEPS, TOTAL_STEPS,
+                        CLIP_NORM,
+                    )
+                )
                 optimizer = initialize_sharded_optimizer_state(
                     tx, params, initialized.abstract_params, initialized.layout, mesh)
                 opt_state, opt_layout = optimizer.opt_state, optimizer.layout

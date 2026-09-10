@@ -6,7 +6,7 @@ from flax import traverse_util
 from types import SimpleNamespace
 
 from extent import HybridForCausalLM, tiny_config
-from extent.optimizer import create_lion
+from extent.optimizer import create_adamw, create_lion
 from extent.hardware import recommended_compute_dtype
 from extent.sharding import create_v5e_mesh
 from extent.train_step import initialize_sharded_runtime, shard_host_batch
@@ -53,3 +53,35 @@ def test_sharded_initialization_lion_layout_and_train_step():
         pytest.fail(f"non-finite gradient parameters: {bad_paths}")
     assert np.isfinite(float(metrics["grad_norm"]))
     assert int(metrics["nonfinite_grad_leaves"]) == 0
+
+
+def test_sharded_adamw_moments_follow_parameter_layout():
+    mesh = create_v5e_mesh()
+    tokens = np.arange(mesh.shape["data"] * 3, dtype=np.int32).reshape(
+        mesh.shape["data"], 3
+    )
+    batch = shard_host_batch(
+        {
+            "input_ids": tokens,
+            "labels": tokens.copy(),
+            "attention_mask": np.ones_like(tokens, dtype=np.bool_),
+            "loss_mask": np.ones_like(tokens, dtype=np.bool_),
+        },
+        mesh,
+    )
+    dtype_decision = recommended_compute_dtype()
+    model = HybridForCausalLM(
+        replace(tiny_config(), compute_dtype=dtype_decision.dtype)
+    )
+    tx = create_adamw(total_steps=4, warmup_steps=1)
+    runtime = initialize_sharded_runtime(
+        model, tx, jax.random.key(8), batch, mesh, donate_state=False
+    )
+    param = runtime.state.params["layers_0"]["mamba"]["in_proj"]["kernel"]
+    adam = runtime.state.opt_state[1]
+    momentum = adam.mu["layers_0"]["mamba"]["in_proj"]["kernel"]
+    variance = adam.nu["layers_0"]["mamba"]["in_proj"]["kernel"]
+    assert momentum.dtype == jax.numpy.bfloat16
+    assert variance.dtype == jax.numpy.bfloat16
+    assert momentum.sharding.spec == param.sharding.spec
+    assert variance.sharding.spec == param.sharding.spec

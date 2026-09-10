@@ -74,13 +74,15 @@ def optimizer_state_layout(
     param_layout: Any,
     mesh: Mesh,
 ) -> tuple[Any, Any]:
-    """Build an optimizer-state layout, keeping Lion momentum with parameters."""
+    """Build layouts that shard optimizer moments like their parameters."""
     replicated = replicated_sharding(mesh)
     abstract_opt_state = jax.eval_shape(tx.init, abstract_params)
     layout_items = []
     for item in abstract_opt_state:
         if hasattr(item, "mu"):
             replacements = {"mu": param_layout}
+            if hasattr(item, "nu"):
+                replacements["nu"] = param_layout
             if hasattr(item, "count"):
                 replacements["count"] = replicated
             layout_items.append(item._replace(**replacements))
@@ -96,7 +98,7 @@ def initialize_sharded_optimizer_state(
     param_layout: Any,
     mesh: Mesh,
 ) -> ShardedOptimizerState:
-    """Initialize Lion state directly in shards without allocating gradients."""
+    """Initialize optimizer state directly in shards without allocating gradients."""
     abstract_opt_state, layout = optimizer_state_layout(
         tx, abstract_params, param_layout, mesh
     )

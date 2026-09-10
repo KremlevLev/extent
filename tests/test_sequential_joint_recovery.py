@@ -13,6 +13,7 @@ from scripts import m3q_sequential_joint_recovery_campaign as joint
 from scripts import m3q_stable_joint_recovery_campaign as stable
 from scripts import m3q_protected_joint_recovery_campaign as protected
 from scripts import m3q_objective_bridge_campaign as objective_bridge
+from scripts import m3q_adamw_recovery_campaign as adamw_recovery
 
 
 def _row(values):
@@ -177,4 +178,44 @@ def test_objective_bridge_wrapper_applies_and_restores_overrides(monkeypatch):
     assert observed == objective_bridge.OVERRIDES
     assert {
         name: getattr(joint, name) for name in objective_bridge.OVERRIDES
+    } == original
+
+
+def test_adamw_recovery_factory_and_wrapper(monkeypatch):
+    factory_calls = []
+
+    def fake_optimizer(**kwargs):
+        factory_calls.append(kwargs)
+        return "adamw"
+
+    monkeypatch.setattr(adamw_recovery, "create_adamw", fake_optimizer)
+    assert adamw_recovery.optimizer_factory(
+        "ADAMW-3E-6", 3e-6, 512, 8192, 0.3
+    ) == "adamw"
+    assert factory_calls == [{
+        "learning_rate": 3e-6,
+        "warmup_steps": 512,
+        "total_steps": 8192,
+        "weight_decay": 0.0,
+        "max_grad_norm": 0.3,
+    }]
+
+    original = {name: getattr(joint, name) for name in adamw_recovery.OVERRIDES}
+    observed = {}
+
+    def fake_main(argv):
+        observed.update({
+            name: getattr(joint, name) for name in adamw_recovery.OVERRIDES
+        })
+        return {"argv": argv}
+
+    monkeypatch.setattr(joint, "main", fake_main)
+    result = adamw_recovery.main(["--no-telegram"])
+    assert result["argv"] == [
+        "--no-telegram", "--state-dir", "/dev/shm/extent-exp077-state",
+        "--qwen-cache-dir", "/dev/shm/qwen3-1.7b-exp077-weights",
+    ]
+    assert observed == adamw_recovery.OVERRIDES
+    assert {
+        name: getattr(joint, name) for name in adamw_recovery.OVERRIDES
     } == original
