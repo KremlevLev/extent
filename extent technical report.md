@@ -1538,6 +1538,17 @@ EXP-077 completed result (reviewed 2026-09-10): the registered gate fails narrow
 - **Arms:** registered `TRUST-1E-4` and conservative `TRUST-3E-5`. Both preserve the EXP-077 source, frozen Qwen mask, KL+CE target, data, two seeds, context 256, 8,192 steps, warmup, cosine schedule, clipping and no-decay contract.
 - **Gate:** primary must improve final NLL from step zero at both seeds with no checkpoint above `1.25×` start. A secondary-only pass requires confirmation. Failure moves to depth/staged update boundaries, not another global LR sweep. Protocol: `results/EXP-078-trust-ratio-recovery-protocol.md`.
 
+EXP-078 completed result (reviewed 2026-09-10): the registered `TRUST-1E-4` gate fails badly (`+2.185281/+5.178166` final NLL). Exploratory `TRUST-3E-5` is the first joint recipe to cross below its own start at both seeds at any registered checkpoint: seed 123 reaches `10.732380` versus `10.916678` at step 4096 before regressing, while seed 456 ends at `9.341055` versus `9.692907`. This is not a pass or valid per-seed early stopping. Paired-window evidence is weak (mean/SE `-0.184/0.624` and `-0.352/0.266`; only `18/32` and `11/32` windows improve), but it warrants retaining the conservative trust ratio while isolating depth coupling. Details/checksums: `results/EXP-078-completed-summary.md`.
+
+### EXP-079 — Attention-bounded depth segment recovery (pre-registered)
+
+- **Implementation commit title:** `feat: add depth-segment recovery campaign`.
+- **Question:** which natural six-Mamba run can improve under global KL+CE when the other 18 replacements are frozen?
+- **Segments:** layers `(0-5)`, `(7-12)`, `(14-19)`, and `(21-26)` are bounded by retained GQA at `6/13/20/27`. Each arm trains exactly one segment from identical EXP-072 ONPOLICY starts; all other Mamba and Qwen leaves remain frozen.
+- **Registered primary:** deepest `SEGMENT-4`, because its updates do not perturb the input distribution of any downstream Mamba block. The other three segments form a locked depth atlas, with reversed execution order at seed 456.
+- **Training:** selected exploratory EXP-078 trust ratio `3e-5`, BF16 LAMB, 6,144 steps, context 256, two seeds and fixed KL+CE/data/evaluation. This totals 49,152 full-model optimizer steps and targets 5.5–7 TPU hours.
+- **Gate:** primary final NLL must improve from step zero at both seeds with no checkpoint above `1.25×`. Any secondary selection requires confirmation. The depth ranking determines a later staged coordinate-recovery order. Protocol: `results/EXP-079-depth-segment-recovery-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

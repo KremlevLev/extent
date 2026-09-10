@@ -15,6 +15,7 @@ from scripts import m3q_protected_joint_recovery_campaign as protected
 from scripts import m3q_objective_bridge_campaign as objective_bridge
 from scripts import m3q_adamw_recovery_campaign as adamw_recovery
 from scripts import m3q_trust_ratio_recovery_campaign as trust_recovery
+from scripts import m3q_depth_segment_recovery_campaign as segment_recovery
 
 
 def _row(values):
@@ -259,4 +260,53 @@ def test_trust_recovery_factory_and_wrapper(monkeypatch):
     assert observed == trust_recovery.OVERRIDES
     assert {
         name: getattr(joint, name) for name in trust_recovery.OVERRIDES
+    } == original
+
+
+def test_depth_segments_cover_each_mamba_layer_once():
+    # The production campaign has four exact attention-bounded runs.
+    flattened = [
+        layer for layers in segment_recovery.SEGMENTS.values() for layer in layers
+    ]
+    assert len(flattened) == len(set(flattened)) == 24
+    assert tuple(sorted(flattened)) == tuple(
+        layer for layer in range(28) if layer not in (6, 13, 20, 27)
+    )
+
+    params = {
+        "layers_0": {
+            "mamba": {"w": jnp.ones((2,))},
+            "mlp": {"w": jnp.ones((2,))},
+        },
+        "layers_7": {"mamba": {"w": jnp.ones((2,))}},
+        "norm": {"scale": jnp.ones((2,))},
+    }
+    first = segment_recovery.trainable_mask("SEGMENT-1", params)
+    second = segment_recovery.trainable_mask("SEGMENT-2", params)
+    assert first["layers_0"]["mamba"]["w"]
+    assert not first["layers_0"]["mlp"]["w"]
+    assert not first["layers_7"]["mamba"]["w"]
+    assert second["layers_7"]["mamba"]["w"]
+    assert not second["norm"]["scale"]
+
+
+def test_depth_segment_wrapper_applies_and_restores_overrides(monkeypatch):
+    original = {name: getattr(joint, name) for name in segment_recovery.OVERRIDES}
+    observed = {}
+
+    def fake_main(argv):
+        observed.update({
+            name: getattr(joint, name) for name in segment_recovery.OVERRIDES
+        })
+        return {"argv": argv}
+
+    monkeypatch.setattr(joint, "main", fake_main)
+    result = segment_recovery.main(["--no-telegram"])
+    assert result["argv"] == [
+        "--no-telegram", "--state-dir", "/dev/shm/extent-exp079-state",
+        "--qwen-cache-dir", "/dev/shm/qwen3-1.7b-exp079-weights",
+    ]
+    assert observed == segment_recovery.OVERRIDES
+    assert {
+        name: getattr(joint, name) for name in segment_recovery.OVERRIDES
     } == original
