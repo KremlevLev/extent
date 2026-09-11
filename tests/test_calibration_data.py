@@ -1,6 +1,11 @@
 import numpy as np
 
-from extent.calibration_data import WIKITEXT_FILES, pack_tokenized_texts
+from extent.calibration_data import (
+    PG19_REVISION,
+    WIKITEXT_CONFIG_FILES,
+    WIKITEXT_FILES,
+    pack_tokenized_texts,
+)
 
 
 class _Tokenizer:
@@ -27,3 +32,7 @@ def test_wikitext_split_files_are_pinned_explicitly():
     assert WIKITEXT_FILES["validation"] == (
         "wikitext-2-raw-v1/validation-00000-of-00001.parquet"
     )
+    assert WIKITEXT_CONFIG_FILES["wikitext-103-raw-v1"]["validation"] == (
+        "wikitext-103-raw-v1/validation-00000-of-00001.parquet",
+    )
+    assert PG19_REVISION == "4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b"

@@ -41,8 +41,11 @@ class CampaignCheckpointStore:
     live in a sufficiently large RAM filesystem on Kaggle.
     """
 
-    def __init__(self, root: Path, prefix: str, hub=None):
+    def __init__(self, root: Path, prefix: str, hub=None, retry_delays=None):
         self.root, self.prefix, self.hub = Path(root), prefix, hub
+        self.retry_delays = (
+            CHECKPOINT_RETRY_DELAYS if retry_delays is None else tuple(retry_delays)
+        )
         self.events: list[dict] = []
         self.checked_remote: set[str] = set()
 
@@ -128,7 +131,7 @@ class CampaignCheckpointStore:
         # Hub can briefly rate-limit campaigns that publish many independent
         # layer endpoints. Keep the local atomic checkpoint and wait long
         # enough for transient 409/429/5xx failures to clear before giving up.
-        retry_delays = CHECKPOINT_RETRY_DELAYS
+        retry_delays = self.retry_delays
         for attempt in range(len(retry_delays) + 1):
             try:
                 api.create_commit(

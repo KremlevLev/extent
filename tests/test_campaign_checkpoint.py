@@ -82,3 +82,27 @@ def test_hub_checkpoint_retries_transient_commit_failures(tmp_path, monkeypatch)
 def test_checkpoint_retry_window_covers_a_long_hub_outage():
     assert CHECKPOINT_RETRY_DELAYS == (2, 5, 15, 30, 60, 120, 240)
     assert sum(CHECKPOINT_RETRY_DELAYS) >= 7 * 60
+
+
+def test_campaign_can_bound_retry_window_without_losing_local_state(tmp_path, monkeypatch):
+    calls, sleeps = [], []
+
+    class Api:
+        def __init__(self, **kwargs):
+            pass
+
+        def create_commit(self, **kwargs):
+            calls.append(kwargs)
+            raise RuntimeError("persistent outage")
+
+    monkeypatch.setattr("huggingface_hub.HfApi", Api)
+    monkeypatch.setattr("extent.campaign_checkpoint.time.sleep", sleeps.append)
+    store = CampaignCheckpointStore(
+        tmp_path, "exp", HubArtifactConfig("user/private", "dataset", "fake"),
+        retry_delays=(1, 3),
+    )
+    metadata = store.save("layer", {"x": np.ones(2)}, contract={}, step=7, metrics={})
+    assert len(calls) == 3
+    assert sleeps == [1, 3]
+    assert store.events[-1]["passed"] is False
+    assert (tmp_path / "layer" / metadata["checkpoint_file"]).exists()

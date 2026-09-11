@@ -16,7 +16,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from extent import HybridForCausalLM
-from extent.calibration_data import load_wikitext2_tokens
+from extent.calibration_data import load_pg19_tokens, load_wikitext2_tokens
 from extent.campaign_checkpoint import CampaignCheckpointStore, write_json_atomic
 from extent.composition_diagnostics import compose_parameters
 from extent.config import load_config
@@ -44,6 +44,7 @@ from scripts.qwen_extended_horizon_campaign import _safe_notify
 PROTOCOL = "exp081-assembled-trust-region-sweep-v1"
 HF_PREFIX = "experiments/exp081-trust-region-sweep"
 RESULT_STEM = "extent-m3q-trust-region-sweep"
+OUTPUT_SUBDIR = "exp081"
 ARMS = ("HARD-ACCEPT", "TRUST-LINE")
 PRIMARY_ARM = "TRUST-LINE"
 SEEDS = (123, 456)
@@ -57,7 +58,10 @@ MILESTONES = (6, 12, 18, 24)
 TRAIN_WINDOWS, TRAIN_LENGTH, TRAIN_OFFSET = 512, 128, 1_572_864
 CALIBRATION_WINDOWS, CALIBRATION_LENGTH, CALIBRATION_OFFSET = 32, 128, 1_638_400
 EVAL_WINDOWS, EVAL_LENGTH, EVAL_OFFSET = 32, 256, 196_608
+EVAL_SPLIT = "test"
+EVAL_DATASET_CONFIG = "wikitext-2-raw-v1"
 DATA_SEED = 81_000
+CHECKPOINT_RETRY_DELAYS = None
 
 
 def alpha_key(alpha: float) -> str:
@@ -101,7 +105,11 @@ def experiment_contract(config):
         "calibration": [
             "train", CALIBRATION_OFFSET, CALIBRATION_WINDOWS, CALIBRATION_LENGTH
         ],
-        "locked_evaluation": ["test", EVAL_OFFSET, EVAL_WINDOWS, EVAL_LENGTH],
+        "locked_evaluation": (
+            [EVAL_SPLIT, EVAL_OFFSET, EVAL_WINDOWS, EVAL_LENGTH]
+            if EVAL_DATASET_CONFIG == "wikitext-2-raw-v1"
+            else [EVAL_DATASET_CONFIG, EVAL_SPLIT, EVAL_OFFSET, EVAL_WINDOWS, EVAL_LENGTH]
+        ),
         "data_seed": DATA_SEED,
         "proposal_objective": "conditional decoder-contribution relative MSE",
         "acceptance_objective": "assembled-model prediction KL against frozen Qwen",
@@ -211,7 +219,7 @@ def main(argv=None):
 
     started = time.monotonic()
     deadline = started + args.max_wall_hours * 3600 - 20 * 60
-    output = Path(args.output_dir) / "exp081"
+    output = Path(args.output_dir) / OUTPUT_SUBDIR
     output.mkdir(parents=True, exist_ok=True)
     result_path = output / f"{RESULT_STEM}.json"
     summary_path = output / f"{RESULT_STEM}-summary.md"
@@ -244,7 +252,10 @@ def main(argv=None):
             capture_output=True, text=True, check=True,
         ).stdout.strip(),
     )
-    store = CampaignCheckpointStore(Path(args.state_dir), f"{HF_PREFIX}/checkpoints", hub)
+    store = CampaignCheckpointStore(
+        Path(args.state_dir), f"{HF_PREFIX}/checkpoints", hub,
+        retry_delays=CHECKPOINT_RETRY_DELAYS,
+    )
     seq_store = CampaignCheckpointStore(
         Path(args.exp072_state_dir), f"{EXP072['HF_PREFIX']}/checkpoints", hub
     )
@@ -292,19 +303,31 @@ def main(argv=None):
         teacher_params, _ = stream_teacher_qwen_weights(initialized.params, reader, source)
         del initialized
 
-        def tokens(count, length, offset, split):
+        def tokens(count, length, offset, split, dataset_config="wikitext-2-raw-v1"):
             return load_wikitext2_tokens(
                 count * length, args.dataset_cache_dir,
                 tokenizer_repo=QWEN3_1_7B_BASE.repo_id,
                 tokenizer_revision=QWEN3_1_7B_BASE.revision,
                 token_offset=offset, dataset_split=split,
+                dataset_config=dataset_config,
             ).reshape(count, length)
 
         train_tokens = tokens(TRAIN_WINDOWS, TRAIN_LENGTH, TRAIN_OFFSET, "train")
         calibration_tokens = tokens(
             CALIBRATION_WINDOWS, CALIBRATION_LENGTH, CALIBRATION_OFFSET, "train"
         )
-        eval_tokens = tokens(EVAL_WINDOWS, EVAL_LENGTH, EVAL_OFFSET, "test")
+        if EVAL_DATASET_CONFIG == "pg19-pinned-manifest":
+            eval_tokens = load_pg19_tokens(
+                EVAL_WINDOWS * EVAL_LENGTH, args.dataset_cache_dir,
+                tokenizer_repo=QWEN3_1_7B_BASE.repo_id,
+                tokenizer_revision=QWEN3_1_7B_BASE.revision,
+                token_offset=EVAL_OFFSET, dataset_split=EVAL_SPLIT,
+            ).reshape(EVAL_WINDOWS, EVAL_LENGTH)
+        else:
+            eval_tokens = tokens(
+                EVAL_WINDOWS, EVAL_LENGTH, EVAL_OFFSET, EVAL_SPLIT,
+                EVAL_DATASET_CONFIG,
+            )
         hashes = {
             "train": hashlib.sha256(train_tokens.tobytes()).hexdigest(),
             "calibration": hashlib.sha256(calibration_tokens.tobytes()).hexdigest(),
@@ -421,12 +444,14 @@ def main(argv=None):
                 jax.block_until_ready(metrics)
                 records.append(_metric_record(metrics))
             del params
-            return {
+            summary = {
                 name: bool(all(row[name] for row in records))
                 if name == "finite"
                 else float(np.mean([row[name] for row in records]))
                 for name in records[0]
             }
+            summary["window_nll"] = [row["student_nll"] for row in records]
+            return summary
 
         def branch_inputs(endpoints, layer):
             if layer == 0:
