@@ -1549,6 +1549,16 @@ EXP-078 completed result (reviewed 2026-09-10): the registered `TRUST-1E-4` gate
 - **Training:** selected exploratory EXP-078 trust ratio `3e-5`, BF16 LAMB, 6,144 steps, context 256, two seeds and fixed KL+CE/data/evaluation. This totals 49,152 full-model optimizer steps and targets 5.5–7 TPU hours.
 - **Gate:** primary final NLL must improve from step zero at both seeds with no checkpoint above `1.25×`. Any secondary selection requires confirmation. The depth ranking determines a later staged coordinate-recovery order. Protocol: `results/EXP-079-depth-segment-recovery-protocol.md`.
 
+EXP-079 completed result (reviewed 2026-09-11): the registered gate fails. Training only one six-Mamba segment keeps every trajectory within the `1.25×` bound, so depth restriction removes the violent full-stack excursions, but no segment improves final NLL at both seeds. Deepest SEGMENT-4 is best for seed 123 (`10.916678→10.374044`, `-0.542634`) yet worsens seed 456 (`9.692907→10.176323`, `+0.483416`). Segment 3 briefly improves seed 123 at step 2048; every seed-456 segment otherwise remains above start. The depth hypothesis is seed-dependent and cannot select a segment. Combined with EXP-072, this favors local conditional targets over protected global KL even after optimizer and depth controls. Details/checksums: `results/EXP-079-completed-summary.md`.
+
+### EXP-080 — Second on-policy coordinate sweep (pre-registered)
+
+- **Implementation commit title:** `feat: add second-sweep recovery campaign`.
+- **Question:** does revisiting all 24 already recovered Mamba layers on the current full-hybrid input distribution reduce residual composition error, and does sweep direction matter?
+- **Arms:** registered `FORWARD-SWEEP` updates layers in causal order; matched `REVERSE-SWEEP` updates the same layers in reverse. Both begin from identical complete EXP-072 ONPOLICY endpoints. Each current layer receives the same local Qwen-conditioned contribution target and 2,048 BF16 Lion updates; every other parameter is frozen.
+- **Evaluation:** full 24-Mamba NLL before the sweep and after 6/12/18/24 coordinate updates on the fixed 32-window test slice. Training uses a distinct 512-window length-128 slice. Total is 196,608 local updates with per-layer HF resume boundaries.
+- **Gate:** at both seeds, forward final NLL must beat its own start, remain within `1.25×`, and beat reverse final NLL. This tests iterative coordinate recovery as a method; it is not another global optimizer sweep. Protocol: `results/EXP-080-second-sweep-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

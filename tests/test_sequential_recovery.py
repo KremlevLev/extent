@@ -11,6 +11,7 @@ from extent.sequential_recovery import make_conditional_recovery_step, recovery_
 from scripts.m3q_sequential_recovery_campaign import ARMS, MILESTONES, SEEDS, aggregate
 from scripts import m3q_full_depth_sequential_confirmation as confirmation
 from scripts import m3q_sequential_recovery_campaign as campaign
+from scripts import m3q_second_sweep_recovery_campaign as second_sweep
 
 
 def test_recovery_arms_have_expected_matched_examples():
@@ -90,3 +91,42 @@ def test_full_depth_train_slice_fits_pinned_dataset_and_is_fresh():
     assert confirmation.OVERRIDES["TRAIN_OFFSET"] >= previous_end
     assert required_end == 2_490_368
     assert required_end <= confirmation.PINNED_TRAIN_TOKEN_CAPACITY
+
+
+def _sweep_row(values):
+    return {
+        "complete": True,
+        "evaluations": {
+            str(position): {"student_nll": value}
+            for position, value in zip((0, *second_sweep.MILESTONES), values)
+        },
+    }
+
+
+def test_second_sweep_gate_requires_absolute_and_order_wins():
+    result = {"branches": {}}
+    for seed in second_sweep.SEEDS:
+        result["branches"][str(seed)] = {
+            "FORWARD-SWEEP": _sweep_row([10.0, 9.9, 9.7, 9.5, 9.0]),
+            "REVERSE-SWEEP": _sweep_row([10.0, 10.0, 9.9, 9.8, 9.5]),
+        }
+    summary = second_sweep.aggregate(result)
+    assert summary["scientific_gate_passed"]
+    result["branches"][str(second_sweep.SEEDS[-1])]["FORWARD-SWEEP"] = (
+        _sweep_row([10.0, 10.1, 10.2, 10.3, 10.4])
+    )
+    assert not second_sweep.aggregate(result)["scientific_gate_passed"]
+
+
+def test_second_sweep_contract_registers_exact_reverse_order():
+    contract = second_sweep.experiment_contract(tiny_config())
+    assert contract["forward_order"] == list(tiny_config().mamba_layer_indices)
+    assert contract["reverse_order"] == list(
+        reversed(tiny_config().mamba_layer_indices)
+    )
+    assert contract["steps_per_layer"] == 2048
+    endpoint = second_sweep.sweep_endpoint_contract(
+        contract, 123, "FORWARD-SWEEP", 0, 1, "abc"
+    )
+    assert endpoint["source_exp072_checkpoint_sha256"] == "abc"
+    assert endpoint["sweep_position"] == 1
