@@ -515,7 +515,22 @@ def main(argv=None):
                             for event in reversed(store.events)
                         )
                         if not synced:
-                            raise IOError(f"EXP-080 checkpoint upload failed: {slot}")
+                            # The local endpoint is valid and the next coordinate
+                            # does not depend on Hub availability.  Treat a long
+                            # transient Hub outage as reduced resumability instead
+                            # of throwing away the active TPU campaign.
+                            warning = {
+                                "slot": slot,
+                                "position": position,
+                                "layer": layer,
+                                "reason": "hf_checkpoint_upload_failed_after_retries",
+                            }
+                            result.setdefault("durability_warnings", []).append(warning)
+                            print(
+                                f"EXP-080 durability warning: {slot}; "
+                                "continuing from the verified local endpoint",
+                                flush=True,
+                            )
                         endpoints[layer] = jax.device_get(candidate)
                         row["layers"][str(position)] = dict(
                             metrics, checkpoint_sha256=meta["checkpoint_sha256"]
