@@ -4,6 +4,7 @@ import numpy as np
 from scripts.m3q_trust_region_sweep_campaign import (
     aggregate,
     blend_parameters,
+    choose_consensus_alpha,
     choose_trust_alpha,
     experiment_contract,
 )
@@ -19,6 +20,20 @@ def test_trust_alpha_requires_registered_relative_gain():
     assert alpha == 0.0
     assert np.isclose(gain, 0.0005)
     assert choose_trust_alpha({"0": 10.0, "1": 10.1}) == (0.0, 0.0)
+
+
+def test_consensus_alpha_must_improve_both_domains():
+    assert choose_consensus_alpha(
+        {"0": 10.0, "0.5": 9.0, "1": 8.0},
+        {"0": 5.0, "0.5": 5.1, "1": 5.2},
+    ) == (0.0, 0.0, 0.0)
+    alpha, primary_gain, secondary_gain = choose_consensus_alpha(
+        {"0": 10.0, "0.5": 9.5, "1": 9.0},
+        {"0": 5.0, "0.5": 4.5, "1": 4.9},
+    )
+    assert alpha == 0.5
+    assert np.isclose(primary_gain, 0.05)
+    assert np.isclose(secondary_gain, 0.1)
 
 
 def test_blend_parameters_preserves_dtype_and_endpoints():

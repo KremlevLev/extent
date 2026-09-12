@@ -45,8 +45,10 @@ PROTOCOL = "exp081-assembled-trust-region-sweep-v1"
 HF_PREFIX = "experiments/exp081-trust-region-sweep"
 RESULT_STEM = "extent-m3q-trust-region-sweep"
 OUTPUT_SUBDIR = "exp081"
+SUMMARY_TITLE = "EXP-081 assembled-model trust-region sweep"
 ARMS = ("HARD-ACCEPT", "TRUST-LINE")
 PRIMARY_ARM = "TRUST-LINE"
+CONTROL_ARM = "HARD-ACCEPT"
 SEEDS = (123, 456)
 ALPHAS = {
     "HARD-ACCEPT": (0.0, 1.0),
@@ -57,6 +59,10 @@ STEPS_PER_LAYER = 2048
 MILESTONES = (6, 12, 18, 24)
 TRAIN_WINDOWS, TRAIN_LENGTH, TRAIN_OFFSET = 512, 128, 1_572_864
 CALIBRATION_WINDOWS, CALIBRATION_LENGTH, CALIBRATION_OFFSET = 32, 128, 1_638_400
+TRAIN_DATASET_CONFIG = "wikitext-2-raw-v1"
+CALIBRATION_DATASET_CONFIG = "wikitext-2-raw-v1"
+SECONDARY_CALIBRATION = None
+ARM_SELECTION_MODE = {arm: "primary" for arm in ARMS}
 EVAL_WINDOWS, EVAL_LENGTH, EVAL_OFFSET = 32, 256, 196_608
 EVAL_SPLIT = "test"
 EVAL_DATASET_CONFIG = "wikitext-2-raw-v1"
@@ -79,6 +85,37 @@ def choose_trust_alpha(scores: dict[str, float], minimum_relative_gain=MIN_RELAT
     return float(best_key), float(gain)
 
 
+def choose_consensus_alpha(
+    primary_scores: dict[str, float],
+    secondary_scores: dict[str, float],
+    minimum_relative_gain=MIN_RELATIVE_GAIN,
+):
+    """Minimize worst-domain KL ratio among candidates improving both domains."""
+    primary_base = float(primary_scores[alpha_key(0.0)])
+    secondary_base = float(secondary_scores[alpha_key(0.0)])
+    eligible = []
+    for key in primary_scores:
+        alpha = float(key)
+        if alpha == 0.0:
+            continue
+        primary_gain = (primary_base - float(primary_scores[key])) / max(
+            abs(primary_base), 1e-12
+        )
+        secondary_gain = (secondary_base - float(secondary_scores[key])) / max(
+            abs(secondary_base), 1e-12
+        )
+        if primary_gain >= minimum_relative_gain and secondary_gain >= minimum_relative_gain:
+            worst_ratio = max(
+                float(primary_scores[key]) / max(abs(primary_base), 1e-12),
+                float(secondary_scores[key]) / max(abs(secondary_base), 1e-12),
+            )
+            eligible.append((worst_ratio, alpha, primary_gain, secondary_gain))
+    if not eligible:
+        return 0.0, 0.0, 0.0
+    _, alpha, primary_gain, secondary_gain = min(eligible)
+    return float(alpha), float(primary_gain), float(secondary_gain)
+
+
 def blend_parameters(current, proposal, alpha: float):
     def blend(old, new):
         value = old.astype(jnp.float32) + alpha * (
@@ -89,7 +126,7 @@ def blend_parameters(current, proposal, alpha: float):
 
 
 def experiment_contract(config):
-    return {
+    contract = {
         "protocol": PROTOCOL,
         "source": f"{QWEN3_1_7B_BASE.repo_id}@{QWEN3_1_7B_BASE.revision}",
         "source_sequential_contract": configured_contract(config),
@@ -116,6 +153,21 @@ def experiment_contract(config):
         "optimizer": "BF16 Lion lr=3e-5 warmup=64 cosine no-decay clip=1.0",
         "trainable": "one proposed Mamba subtree; accepted interpolation only",
     }
+    if (
+        TRAIN_DATASET_CONFIG != "wikitext-2-raw-v1"
+        or CALIBRATION_DATASET_CONFIG != "wikitext-2-raw-v1"
+        or SECONDARY_CALIBRATION is not None
+        or CONTROL_ARM != "HARD-ACCEPT"
+        or any(ARM_SELECTION_MODE.get(arm) != "primary" for arm in ARMS)
+    ):
+        contract["dataset_and_selection_extension"] = {
+            "train_dataset_config": TRAIN_DATASET_CONFIG,
+            "calibration_dataset_config": CALIBRATION_DATASET_CONFIG,
+            "secondary_calibration": SECONDARY_CALIBRATION,
+            "arm_selection_mode": dict(ARM_SELECTION_MODE),
+            "control_arm": CONTROL_ARM,
+        }
+    return contract
 
 
 def checkpoint_contract(contract, seed, arm, position, source_hashes):
@@ -154,7 +206,7 @@ def aggregate(result):
                 "seed": seed,
                 "trust_minus_hard_final_nll": float(
                     branches[PRIMARY_ARM]["evaluations"]["24"]["student_nll"]
-                    - branches["HARD-ACCEPT"]["evaluations"]["24"]["student_nll"]
+                    - branches[CONTROL_ARM]["evaluations"]["24"]["student_nll"]
                 ),
             })
     primary = [row for row in rows if row["arm"] == PRIMARY_ARM]
@@ -171,14 +223,14 @@ def aggregate(result):
         "scientific_gate_passed": passed,
         "gate_definition": (
             "At both seeds TRUST-LINE improves locked final NLL, stays within "
-            "1.25x start, accepts a nonzero coordinate, and beats HARD-ACCEPT."
+            f"1.25x start, accepts a nonzero coordinate, and beats {CONTROL_ARM}."
         ),
     }
 
 
 def render_summary(result):
     lines = [
-        "# EXP-081 assembled-model trust-region sweep", "",
+        f"# {SUMMARY_TITLE}", "",
         f"- Status: `{result['status']}`",
         f"- Duration: `{result.get('duration_hours', 0):.3f}` hours",
         f"- Scientific gate: `{result['aggregate']['scientific_gate_passed']}`",
@@ -304,6 +356,13 @@ def main(argv=None):
         del initialized
 
         def tokens(count, length, offset, split, dataset_config="wikitext-2-raw-v1"):
+            if dataset_config == "pg19-pinned-manifest":
+                return load_pg19_tokens(
+                    count * length, args.dataset_cache_dir,
+                    tokenizer_repo=QWEN3_1_7B_BASE.repo_id,
+                    tokenizer_revision=QWEN3_1_7B_BASE.revision,
+                    token_offset=offset, dataset_split=split,
+                ).reshape(count, length)
             return load_wikitext2_tokens(
                 count * length, args.dataset_cache_dir,
                 tokenizer_repo=QWEN3_1_7B_BASE.repo_id,
@@ -312,27 +371,34 @@ def main(argv=None):
                 dataset_config=dataset_config,
             ).reshape(count, length)
 
-        train_tokens = tokens(TRAIN_WINDOWS, TRAIN_LENGTH, TRAIN_OFFSET, "train")
-        calibration_tokens = tokens(
-            CALIBRATION_WINDOWS, CALIBRATION_LENGTH, CALIBRATION_OFFSET, "train"
+        train_tokens = tokens(
+            TRAIN_WINDOWS, TRAIN_LENGTH, TRAIN_OFFSET, "train",
+            TRAIN_DATASET_CONFIG,
         )
-        if EVAL_DATASET_CONFIG == "pg19-pinned-manifest":
-            eval_tokens = load_pg19_tokens(
-                EVAL_WINDOWS * EVAL_LENGTH, args.dataset_cache_dir,
-                tokenizer_repo=QWEN3_1_7B_BASE.repo_id,
-                tokenizer_revision=QWEN3_1_7B_BASE.revision,
-                token_offset=EVAL_OFFSET, dataset_split=EVAL_SPLIT,
-            ).reshape(EVAL_WINDOWS, EVAL_LENGTH)
-        else:
-            eval_tokens = tokens(
-                EVAL_WINDOWS, EVAL_LENGTH, EVAL_OFFSET, EVAL_SPLIT,
-                EVAL_DATASET_CONFIG,
+        calibration_tokens = tokens(
+            CALIBRATION_WINDOWS, CALIBRATION_LENGTH, CALIBRATION_OFFSET, "train",
+            CALIBRATION_DATASET_CONFIG,
+        )
+        secondary_calibration_tokens = None
+        if SECONDARY_CALIBRATION is not None:
+            secondary_calibration_tokens = tokens(
+                SECONDARY_CALIBRATION["windows"], SECONDARY_CALIBRATION["length"],
+                SECONDARY_CALIBRATION["offset"], SECONDARY_CALIBRATION["split"],
+                SECONDARY_CALIBRATION["dataset_config"],
             )
+        eval_tokens = tokens(
+            EVAL_WINDOWS, EVAL_LENGTH, EVAL_OFFSET, EVAL_SPLIT,
+            EVAL_DATASET_CONFIG,
+        )
         hashes = {
             "train": hashlib.sha256(train_tokens.tobytes()).hexdigest(),
             "calibration": hashlib.sha256(calibration_tokens.tobytes()).hexdigest(),
             "eval": hashlib.sha256(eval_tokens.tobytes()).hexdigest(),
         }
+        if secondary_calibration_tokens is not None:
+            hashes["secondary_calibration"] = hashlib.sha256(
+                secondary_calibration_tokens.tobytes()
+            ).hexdigest()
         if result.get("data_sha256", hashes) != hashes:
             raise ValueError("EXP-081 token content changed")
         result["data_sha256"] = hashes
@@ -375,6 +441,10 @@ def main(argv=None):
             return values
 
         calibration_teacher_logits = teacher_logits(calibration_tokens)
+        secondary_calibration_teacher_logits = (
+            teacher_logits(secondary_calibration_tokens)
+            if secondary_calibration_tokens is not None else None
+        )
         eval_teacher_logits = teacher_logits(eval_tokens)
 
         generic_cfg = replace(
@@ -549,6 +619,7 @@ def main(argv=None):
                                 raise FloatingPointError(f"non-finite proposal: {stage}")
 
                     scores, trial_metrics = {}, {}
+                    secondary_scores, secondary_trial_metrics = {}, {}
                     trial_endpoints = None
                     for alpha in ALPHAS[arm]:
                         trial_endpoints = dict(endpoints)
@@ -560,7 +631,24 @@ def main(argv=None):
                         key = alpha_key(alpha)
                         scores[key] = metrics["prediction_kl"]
                         trial_metrics[key] = metrics
-                    selected_alpha, relative_gain = choose_trust_alpha(scores)
+                        if secondary_calibration_tokens is not None:
+                            secondary_metrics = evaluate(
+                                trial_endpoints, secondary_calibration_tokens,
+                                secondary_calibration_teacher_logits,
+                            )
+                            secondary_scores[key] = secondary_metrics["prediction_kl"]
+                            secondary_trial_metrics[key] = secondary_metrics
+                    if ARM_SELECTION_MODE[arm] == "dual_consensus":
+                        selected_alpha, relative_gain, secondary_relative_gain = (
+                            choose_consensus_alpha(scores, secondary_scores)
+                        )
+                    elif ARM_SELECTION_MODE[arm] == "primary":
+                        selected_alpha, relative_gain = choose_trust_alpha(scores)
+                        secondary_relative_gain = None
+                    else:
+                        raise ValueError(
+                            f"unsupported alpha selection mode: {ARM_SELECTION_MODE[arm]}"
+                        )
                     if selected_alpha > 0:
                         endpoints[layer] = jax.device_get(
                             blend_parameters(current, proposal, selected_alpha)
@@ -573,6 +661,12 @@ def main(argv=None):
                         "proposal_final_loss": last["loss"],
                         "proposal_final_grad_norm": last["grad_norm"],
                     }
+                    if secondary_calibration_tokens is not None:
+                        row["decisions"][str(position)].update(
+                            secondary_calibration=secondary_trial_metrics,
+                            secondary_relative_calibration_kl_gain=secondary_relative_gain,
+                            selection_mode=ARM_SELECTION_MODE[arm],
+                        )
                     print(
                         f"{stage} selected_alpha={selected_alpha:g} "
                         f"relative_kl_gain={relative_gain:.6g}", flush=True,
