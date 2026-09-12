@@ -55,6 +55,7 @@ ALPHAS = {
     "TRUST-LINE": (0.0, 0.125, 0.25, 0.5, 0.75, 1.0),
 }
 MIN_RELATIVE_GAIN = 0.001
+MIN_WINDOW_IMPROVEMENT_FRACTION = 0.60
 STEPS_PER_LAYER = 2048
 MILESTONES = (6, 12, 18, 24)
 TRAIN_WINDOWS, TRAIN_LENGTH, TRAIN_OFFSET = 512, 128, 1_572_864
@@ -116,6 +117,66 @@ def choose_consensus_alpha(
     return float(alpha), float(primary_gain), float(secondary_gain)
 
 
+def choose_robust_consensus_alpha(
+    primary_metrics: dict[str, dict],
+    secondary_metrics: dict[str, dict],
+    minimum_relative_gain=MIN_RELATIVE_GAIN,
+    minimum_window_fraction=MIN_WINDOW_IMPROVEMENT_FRACTION,
+):
+    """Require mean and paired-window improvement in both calibration domains."""
+    primary_scores = {
+        key: float(value["prediction_kl"]) for key, value in primary_metrics.items()
+    }
+    secondary_scores = {
+        key: float(value["prediction_kl"]) for key, value in secondary_metrics.items()
+    }
+    primary_base = primary_scores[alpha_key(0.0)]
+    secondary_base = secondary_scores[alpha_key(0.0)]
+    primary_windows = np.asarray(
+        primary_metrics[alpha_key(0.0)]["window_prediction_kl"], np.float64
+    )
+    secondary_windows = np.asarray(
+        secondary_metrics[alpha_key(0.0)]["window_prediction_kl"], np.float64
+    )
+    eligible = []
+    for key in primary_scores:
+        alpha = float(key)
+        if alpha == 0.0:
+            continue
+        primary_gain = (primary_base - primary_scores[key]) / max(abs(primary_base), 1e-12)
+        secondary_gain = (secondary_base - secondary_scores[key]) / max(abs(secondary_base), 1e-12)
+        primary_fraction = float(np.mean(
+            np.asarray(primary_metrics[key]["window_prediction_kl"], np.float64)
+            < primary_windows
+        ))
+        secondary_fraction = float(np.mean(
+            np.asarray(secondary_metrics[key]["window_prediction_kl"], np.float64)
+            < secondary_windows
+        ))
+        if (
+            primary_gain >= minimum_relative_gain
+            and secondary_gain >= minimum_relative_gain
+            and primary_fraction >= minimum_window_fraction
+            and secondary_fraction >= minimum_window_fraction
+        ):
+            worst_ratio = max(
+                primary_scores[key] / max(abs(primary_base), 1e-12),
+                secondary_scores[key] / max(abs(secondary_base), 1e-12),
+            )
+            eligible.append((
+                worst_ratio, -min(primary_fraction, secondary_fraction), alpha,
+                primary_gain, secondary_gain, primary_fraction, secondary_fraction,
+            ))
+    if not eligible:
+        return 0.0, 0.0, 0.0, 0.0, 0.0
+    (_, _, alpha, primary_gain, secondary_gain,
+     primary_fraction, secondary_fraction) = min(eligible)
+    return (
+        float(alpha), float(primary_gain), float(secondary_gain),
+        float(primary_fraction), float(secondary_fraction),
+    )
+
+
 def blend_parameters(current, proposal, alpha: float):
     def blend(old, new):
         value = old.astype(jnp.float32) + alpha * (
@@ -160,13 +221,18 @@ def experiment_contract(config):
         or CONTROL_ARM != "HARD-ACCEPT"
         or any(ARM_SELECTION_MODE.get(arm) != "primary" for arm in ARMS)
     ):
-        contract["dataset_and_selection_extension"] = {
+        extension = {
             "train_dataset_config": TRAIN_DATASET_CONFIG,
             "calibration_dataset_config": CALIBRATION_DATASET_CONFIG,
             "secondary_calibration": SECONDARY_CALIBRATION,
             "arm_selection_mode": dict(ARM_SELECTION_MODE),
             "control_arm": CONTROL_ARM,
         }
+        if any(ARM_SELECTION_MODE.get(arm) == "robust_consensus" for arm in ARMS):
+            extension["minimum_window_improvement_fraction"] = (
+                MIN_WINDOW_IMPROVEMENT_FRACTION
+            )
+        contract["dataset_and_selection_extension"] = extension
     return contract
 
 
@@ -521,6 +587,9 @@ def main(argv=None):
                 for name in records[0]
             }
             summary["window_nll"] = [row["student_nll"] for row in records]
+            summary["window_prediction_kl"] = [
+                row["prediction_kl"] for row in records
+            ]
             return summary
 
         def branch_inputs(endpoints, layer):
@@ -642,9 +711,18 @@ def main(argv=None):
                         selected_alpha, relative_gain, secondary_relative_gain = (
                             choose_consensus_alpha(scores, secondary_scores)
                         )
+                        primary_window_fraction = secondary_window_fraction = None
+                    elif ARM_SELECTION_MODE[arm] == "robust_consensus":
+                        (
+                            selected_alpha, relative_gain, secondary_relative_gain,
+                            primary_window_fraction, secondary_window_fraction,
+                        ) = choose_robust_consensus_alpha(
+                            trial_metrics, secondary_trial_metrics
+                        )
                     elif ARM_SELECTION_MODE[arm] == "primary":
                         selected_alpha, relative_gain = choose_trust_alpha(scores)
                         secondary_relative_gain = None
+                        primary_window_fraction = secondary_window_fraction = None
                     else:
                         raise ValueError(
                             f"unsupported alpha selection mode: {ARM_SELECTION_MODE[arm]}"
@@ -667,6 +745,15 @@ def main(argv=None):
                             secondary_relative_calibration_kl_gain=secondary_relative_gain,
                             selection_mode=ARM_SELECTION_MODE[arm],
                         )
+                        if primary_window_fraction is not None:
+                            row["decisions"][str(position)].update(
+                                primary_window_improvement_fraction=(
+                                    primary_window_fraction
+                                ),
+                                secondary_window_improvement_fraction=(
+                                    secondary_window_fraction
+                                ),
+                            )
                     print(
                         f"{stage} selected_alpha={selected_alpha:g} "
                         f"relative_kl_gain={relative_gain:.6g}", flush=True,

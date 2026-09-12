@@ -5,6 +5,7 @@ from scripts.m3q_trust_region_sweep_campaign import (
     aggregate,
     blend_parameters,
     choose_consensus_alpha,
+    choose_robust_consensus_alpha,
     choose_trust_alpha,
     experiment_contract,
 )
@@ -34,6 +35,27 @@ def test_consensus_alpha_must_improve_both_domains():
     assert alpha == 0.5
     assert np.isclose(primary_gain, 0.05)
     assert np.isclose(secondary_gain, 0.1)
+
+
+def test_robust_consensus_rejects_mean_gain_without_window_majority():
+    def metrics(mean, windows):
+        return {"prediction_kl": mean, "window_prediction_kl": windows}
+
+    primary = {
+        "0": metrics(10.0, [1.0, 1.0, 1.0, 1.0]),
+        "0.5": metrics(9.0, [0.5, 0.5, 1.1, 1.1]),
+    }
+    secondary = {
+        "0": metrics(5.0, [1.0, 1.0, 1.0, 1.0]),
+        "0.5": metrics(4.0, [0.5, 0.5, 0.5, 1.1]),
+    }
+    assert choose_robust_consensus_alpha(primary, secondary) == (
+        0.0, 0.0, 0.0, 0.0, 0.0
+    )
+    primary["0.5"] = metrics(9.0, [0.5, 0.5, 0.5, 1.1])
+    selected = choose_robust_consensus_alpha(primary, secondary)
+    assert selected[0] == 0.5
+    assert selected[3:] == (0.75, 0.75)
 
 
 def test_blend_parameters_preserves_dtype_and_endpoints():

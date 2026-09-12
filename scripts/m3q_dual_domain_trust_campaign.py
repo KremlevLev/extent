@@ -21,6 +21,11 @@ from scripts.qwen_extended_horizon_campaign import _safe_notify
 PROTOCOL = "exp083-dual-domain-assembled-trust-v1"
 HF_PREFIX = "experiments/exp083-dual-domain-trust"
 RESULT_STEM = "extent-m3q-dual-domain-trust"
+SUMMARY_TITLE = "EXP-083 dual-domain assembled trust recovery"
+OUTPUT_SUBDIR = "exp083"
+STATE_PREFIX = "extent-exp083"
+QWEN_CACHE_DIR = "/dev/shm/qwen3-1.7b-exp083-weights"
+DERIVED_FROM = "EXP-082 single-domain cross-corpus failure"
 REPLICATIONS = tuple(range(8))
 SOURCE_SEEDS = (123, 456)
 PRIMARY_ARM = "DUAL-CONSENSUS"
@@ -29,12 +34,18 @@ MILESTONES = (0, 6, 12, 18, 24)
 TRAIN_STRIDE = 69_632
 SECONDARY_STRIDE = 4_096
 EVAL_STRIDE = 8_192
+BASE_TRAIN_OFFSET = 0
+BASE_SECONDARY_OFFSET = 0
+BASE_EVAL_OFFSET = 0
+SECONDARY_WINDOWS = 16
+CONTROL_SELECTION_MODE = "primary"
+PRIMARY_SELECTION_MODE = "dual_consensus"
 
 
 def experiment_contract():
-    return {
+    contract = {
         "protocol": PROTOCOL,
-        "derived_from": "EXP-082 single-domain cross-corpus failure",
+        "derived_from": DERIVED_FROM,
         "replications": list(REPLICATIONS),
         "source_seeds": list(SOURCE_SEEDS),
         "arms": [CONTROL_ARM, PRIMARY_ARM],
@@ -47,9 +58,12 @@ def experiment_contract():
                 "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3/"
                 "wikitext-103-raw-v1/train"
             ),
-            "proposal_offsets": [rep * TRAIN_STRIDE for rep in REPLICATIONS],
+            "proposal_offsets": [
+                BASE_TRAIN_OFFSET + rep * TRAIN_STRIDE for rep in REPLICATIONS
+            ],
             "calibration_offsets": [
-                rep * TRAIN_STRIDE + sweep.TRAIN_WINDOWS * sweep.TRAIN_LENGTH
+                BASE_TRAIN_OFFSET + rep * TRAIN_STRIDE
+                + sweep.TRAIN_WINDOWS * sweep.TRAIN_LENGTH
                 for rep in REPLICATIONS
             ],
         },
@@ -58,8 +72,11 @@ def experiment_contract():
                 "deepmind/pg19@4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b/"
                 "validation manifest and Google-hosted assets"
             ),
-            "offsets": [rep * SECONDARY_STRIDE for rep in REPLICATIONS],
-            "windows": 16,
+            "offsets": [
+                BASE_SECONDARY_OFFSET + rep * SECONDARY_STRIDE
+                for rep in REPLICATIONS
+            ],
+            "windows": SECONDARY_WINDOWS,
             "length": 256,
         },
         "locked_evaluation": {
@@ -67,17 +84,28 @@ def experiment_contract():
                 "deepmind/pg19@4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b/"
                 "test manifest and Google-hosted assets"
             ),
-            "offsets": [rep * EVAL_STRIDE for rep in REPLICATIONS],
+            "offsets": [
+                BASE_EVAL_OFFSET + rep * EVAL_STRIDE for rep in REPLICATIONS
+            ],
             "windows": 32,
             "length": 256,
         },
         "uncertainty_unit": "data replication, reported separately by source seed",
         "gate": (
-            "For each seed: all 8 runs; negative DUAL-CONSENSUS mean final-minus-start "
+            f"For each seed: all 8 runs; negative {PRIMARY_ARM} mean final-minus-start "
             "and upper normal 95% bound; >=6/8 negative; negative mean final versus "
-            "WIKI-ONLY; <=1.25x excursion; nonzero acceptance in >=6/8."
+            f"{CONTROL_ARM}; <=1.25x excursion; nonzero acceptance in >=6/8."
         ),
     }
+    if PRIMARY_SELECTION_MODE == "robust_consensus":
+        contract["robust_selection_extension"] = {
+            "primary_selection_mode": PRIMARY_SELECTION_MODE,
+            "control_selection_mode": CONTROL_SELECTION_MODE,
+            "minimum_window_improvement_fraction_per_domain": (
+                sweep.MIN_WINDOW_IMPROVEMENT_FRACTION
+            ),
+        }
+    return contract
 
 
 def aggregate(result):
@@ -140,6 +168,9 @@ def aggregate(result):
             "negative_replications": int(sum(value < 0 for value in deltas)),
             "dual_minus_wiki_final_nll": controls,
             "mean_dual_minus_wiki": float(np.mean(controls)) if controls else None,
+            "mean_primary_minus_control": (
+                float(np.mean(controls)) if controls else None
+            ),
             "maximum_nll_ratio": max(ratios) if ratios else None,
             "accepted_coordinates": accepted_counts,
             "nonzero_acceptance_replications": int(sum(x > 0 for x in accepted_counts)),
@@ -170,13 +201,13 @@ def aggregate(result):
 def render_summary(result):
     agg = result["aggregate"]
     lines = [
-        "# EXP-083 dual-domain assembled trust recovery", "",
+        f"# {SUMMARY_TITLE}", "",
         f"- Status: `{result['status']}`",
         f"- Invocation duration: `{result.get('duration_hours', 0):.3f}` hours",
         f"- Completed replications: `{agg['completed_replications']}/8`",
         f"- Scientific gate: `{agg['scientific_gate_passed']}`", "",
         "| Seed | Repeats | Mean ΔNLL | Replicate SE | 95% upper | Negative | "
-        "Mean vs wiki | Nonzero | Max ratio | Gate |",
+        f"Mean vs {CONTROL_ARM} | Nonzero | Max ratio | Gate |",
         "|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     number = lambda value: "pending" if value is None else f"{value:.6f}"
@@ -186,7 +217,7 @@ def render_summary(result):
             f"| {seed} | {row['completed_replications']}/8 | {number(row['mean_delta'])} "
             f"| {number(row['replication_standard_error'])} "
             f"| {number(row['normal_95_upper'])} | {row['negative_replications']}/8 "
-            f"| {number(row['mean_dual_minus_wiki'])} "
+            f"| {number(row['mean_primary_minus_control'])} "
             f"| {row['nonzero_acceptance_replications']}/8 "
             f"| {number(row['maximum_nll_ratio'])} | {row['gate_passed']} |"
         )
@@ -199,18 +230,21 @@ def render_summary(result):
 
 def replication_overrides(replication):
     alpha_grid = tuple(sweep.ALPHAS["TRUST-LINE"])
-    train_offset = replication * TRAIN_STRIDE
+    train_offset = BASE_TRAIN_OFFSET + replication * TRAIN_STRIDE
     return {
         "PROTOCOL": f"exp083-dual-domain-replication-{replication}-v1",
         "HF_PREFIX": f"{HF_PREFIX}/replication-{replication}",
         "RESULT_STEM": f"exp083-dual-domain-replication-{replication}",
         "OUTPUT_SUBDIR": f"exp083/replication-{replication}",
-        "SUMMARY_TITLE": f"EXP-083 dual-domain replication {replication}",
+        "SUMMARY_TITLE": f"{SUMMARY_TITLE} replication {replication}",
         "ARMS": (CONTROL_ARM, PRIMARY_ARM),
         "PRIMARY_ARM": PRIMARY_ARM,
         "CONTROL_ARM": CONTROL_ARM,
         "ALPHAS": {CONTROL_ARM: alpha_grid, PRIMARY_ARM: alpha_grid},
-        "ARM_SELECTION_MODE": {CONTROL_ARM: "primary", PRIMARY_ARM: "dual_consensus"},
+        "ARM_SELECTION_MODE": {
+            CONTROL_ARM: CONTROL_SELECTION_MODE,
+            PRIMARY_ARM: PRIMARY_SELECTION_MODE,
+        },
         "TRAIN_OFFSET": train_offset,
         "CALIBRATION_OFFSET": train_offset + sweep.TRAIN_WINDOWS * sweep.TRAIN_LENGTH,
         "TRAIN_DATASET_CONFIG": "wikitext-103-raw-v1",
@@ -218,11 +252,11 @@ def replication_overrides(replication):
         "SECONDARY_CALIBRATION": {
             "dataset_config": "pg19-pinned-manifest",
             "split": "validation",
-            "offset": replication * SECONDARY_STRIDE,
-            "windows": 16,
+            "offset": BASE_SECONDARY_OFFSET + replication * SECONDARY_STRIDE,
+            "windows": SECONDARY_WINDOWS,
             "length": 256,
         },
-        "EVAL_OFFSET": replication * EVAL_STRIDE,
+        "EVAL_OFFSET": BASE_EVAL_OFFSET + replication * EVAL_STRIDE,
         "EVAL_SPLIT": "test",
         "EVAL_DATASET_CONFIG": "pg19-pinned-manifest",
         "DATA_SEED": 83_000 + replication * 1_000,
@@ -235,7 +269,7 @@ def run_replication(replication, args):
     original = {name: getattr(sweep, name) for name in overrides}
     arguments = [
         "--output-dir", args.output_dir,
-        "--state-dir", f"/dev/shm/extent-exp083-rep-{replication}-state",
+        "--state-dir", f"/dev/shm/{STATE_PREFIX}-rep-{replication}-state",
         "--exp069-state-dir", args.exp069_state_dir,
         "--exp072-state-dir", args.exp072_state_dir,
         "--qwen-cache-dir", args.qwen_cache_dir,
@@ -256,7 +290,7 @@ def main(argv=None):
     parser.add_argument("--output-dir", default="/kaggle/working/output")
     parser.add_argument("--exp069-state-dir", default="/dev/shm/extent-exp069-state")
     parser.add_argument("--exp072-state-dir", default="/dev/shm/extent-exp072-v2-state")
-    parser.add_argument("--qwen-cache-dir", default="/dev/shm/qwen3-1.7b-exp083-weights")
+    parser.add_argument("--qwen-cache-dir", default=QWEN_CACHE_DIR)
     parser.add_argument("--dataset-cache-dir", default="/kaggle/working/extent-dataset-cache")
     parser.add_argument("--max-wall-hours", type=float, default=8.1)
     parser.add_argument("--telegram", action=argparse.BooleanOptionalAction, default=True)
@@ -266,7 +300,7 @@ def main(argv=None):
 
     started = time.monotonic()
     deadline = started + args.max_wall_hours * 3600 - 20 * 60
-    output = Path(args.output_dir) / "exp083"
+    output = Path(args.output_dir) / OUTPUT_SUBDIR
     output.mkdir(parents=True, exist_ok=True)
     result_path = output / f"{RESULT_STEM}.json"
     summary_path = output / f"{RESULT_STEM}-summary.md"
@@ -288,7 +322,7 @@ def main(argv=None):
         result["aggregate"] = aggregate(result)
         write_json_atomic(result_path, result)
         summary_path.write_text(render_summary(result), encoding="utf-8")
-        print("EXP-083 already completed; restored result is unchanged", flush=True)
+        print(f"{PROTOCOL} already completed; restored result is unchanged", flush=True)
         return result
     for key in ("error", "error_type", "traceback"):
         result.pop(key, None)
@@ -326,13 +360,13 @@ def main(argv=None):
         for replication in REPLICATIONS:
             existing = result["replications"].get(str(replication))
             if existing and existing.get("status") == "completed":
-                print(f"EXP-083 replication={replication} SKIP completed", flush=True)
+                print(f"{PROTOCOL} replication={replication} SKIP completed", flush=True)
                 continue
             if time.monotonic() + 90 * 60 >= deadline:
                 result["status"] = "deadline_partial"
                 return result
             stage = f"replication-{replication}"
-            print(f"EXP-083 replication={replication}/7 START", flush=True)
+            print(f"{PROTOCOL} replication={replication}/7 START", flush=True)
             inner = run_replication(replication, args)
             result["replications"][str(replication)] = inner
             persist(upload=True)
