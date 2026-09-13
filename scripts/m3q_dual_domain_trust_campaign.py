@@ -40,6 +40,18 @@ BASE_EVAL_OFFSET = 0
 SECONDARY_WINDOWS = 16
 CONTROL_SELECTION_MODE = "primary"
 PRIMARY_SELECTION_MODE = "dual_consensus"
+DECISION_GROUP_SIZE = 1
+CONTROL_GROUP_SELECTION_MODE = "coordinate"
+PRIMARY_GROUP_SELECTION_MODE = "coordinate"
+REQUIRED_NEGATIVE_REPLICATIONS = 6
+REQUIRED_NONZERO_REPLICATIONS = 6
+REQUIRED_JOINT_RESCUE_REPLICATIONS = 0
+INNER_MAX_WALL_HOURS = 1.75
+MINIMUM_START_HEADROOM_MINUTES = 90
+INNER_PROTOCOL_PREFIX = "exp083-dual-domain-replication"
+INNER_RESULT_PREFIX = "exp083-dual-domain-replication"
+INNER_OUTPUT_PREFIX = "exp083/replication"
+BASE_DATA_SEED = 83_000
 
 
 def experiment_contract():
@@ -92,9 +104,12 @@ def experiment_contract():
         },
         "uncertainty_unit": "data replication, reported separately by source seed",
         "gate": (
-            f"For each seed: all 8 runs; negative {PRIMARY_ARM} mean final-minus-start "
-            "and upper normal 95% bound; >=6/8 negative; negative mean final versus "
-            f"{CONTROL_ARM}; <=1.25x excursion; nonzero acceptance in >=6/8."
+            f"For each seed: all {len(REPLICATIONS)} runs; negative {PRIMARY_ARM} "
+            "mean final-minus-start and upper normal 95% bound; "
+            f">={REQUIRED_NEGATIVE_REPLICATIONS}/{len(REPLICATIONS)} negative; "
+            f"negative mean final versus {CONTROL_ARM}; <=1.25x excursion; "
+            f"nonzero acceptance in >={REQUIRED_NONZERO_REPLICATIONS}/"
+            f"{len(REPLICATIONS)}."
         ),
     }
     if PRIMARY_SELECTION_MODE == "robust_consensus":
@@ -105,6 +120,27 @@ def experiment_contract():
                 sweep.MIN_WINDOW_IMPROVEMENT_FRACTION
             ),
         }
+    if DECISION_GROUP_SIZE != 1:
+        contract["interaction_aware_extension"] = {
+            "decision_group_size": DECISION_GROUP_SIZE,
+            "control_group_selection_mode": CONTROL_GROUP_SELECTION_MODE,
+            "primary_group_selection_mode": PRIMARY_GROUP_SELECTION_MODE,
+            "required_joint_only_rescue_replications_per_seed": (
+                REQUIRED_JOINT_RESCUE_REPLICATIONS
+            ),
+            "proposal_compute": (
+                "matched: two independent local proposals from each group-start state"
+            ),
+            "selection_compute": (
+                "matched: both arms evaluate the complete two-alpha Cartesian grid "
+                "on both calibration domains"
+            ),
+        }
+        if REQUIRED_JOINT_RESCUE_REPLICATIONS:
+            contract["gate"] += (
+                f" Joint-only rescue in >={REQUIRED_JOINT_RESCUE_REPLICATIONS}/"
+                f"{len(REPLICATIONS)} replications per seed."
+            )
     return contract
 
 
@@ -112,6 +148,7 @@ def aggregate(result):
     per_seed = {}
     for seed in SOURCE_SEEDS:
         deltas, controls, ratios, accepted_counts, window_deltas = [], [], [], [], []
+        joint_rescue_counts = []
         accepted_layers = {}
         completed = 0
         for replication in REPLICATIONS:
@@ -132,13 +169,16 @@ def aggregate(result):
                 float(primary["evaluations"][str(step)]["student_nll"]) / start
                 for step in MILESTONES
             ))
-            accepted = [
-                decision for decision in primary.get("decisions", {}).values()
-                if float(decision["selected_alpha"]) > 0
-            ]
+            accepted = []
+            for decision in primary.get("decisions", {}).values():
+                accepted.extend(sweep.selected_layers(decision))
             accepted_counts.append(len(accepted))
-            for decision in accepted:
-                layer = str(decision["layer"])
+            joint_rescue_counts.append(sum(
+                bool(decision.get("joint_only_rescue"))
+                for decision in primary.get("decisions", {}).values()
+            ))
+            for layer in accepted:
+                layer = str(layer)
                 accepted_layers[layer] = accepted_layers.get(layer, 0) + 1
             before = np.asarray(primary["evaluations"]["0"]["window_nll"], np.float64)
             after = np.asarray(primary["evaluations"]["24"]["window_nll"], np.float64)
@@ -154,10 +194,13 @@ def aggregate(result):
         passed = bool(
             completed == len(REPLICATIONS)
             and mean < 0 and upper < 0
-            and sum(value < 0 for value in deltas) >= 6
+            and sum(value < 0 for value in deltas) >= REQUIRED_NEGATIVE_REPLICATIONS
             and float(np.mean(controls)) < 0
             and max(ratios) <= 1.25
-            and sum(count > 0 for count in accepted_counts) >= 6
+            and sum(count > 0 for count in accepted_counts)
+            >= REQUIRED_NONZERO_REPLICATIONS
+            and sum(count > 0 for count in joint_rescue_counts)
+            >= REQUIRED_JOINT_RESCUE_REPLICATIONS
         )
         per_seed[str(seed)] = {
             "completed_replications": completed,
@@ -174,6 +217,10 @@ def aggregate(result):
             "maximum_nll_ratio": max(ratios) if ratios else None,
             "accepted_coordinates": accepted_counts,
             "nonzero_acceptance_replications": int(sum(x > 0 for x in accepted_counts)),
+            "joint_only_rescue_pairs": joint_rescue_counts,
+            "joint_only_rescue_replications": int(sum(
+                count > 0 for count in joint_rescue_counts
+            )),
             "accepted_layer_frequency": accepted_layers,
             "descriptive_window_delta_mean": (
                 float(np.mean(window_deltas)) if window_deltas else None
@@ -204,7 +251,7 @@ def render_summary(result):
         f"# {SUMMARY_TITLE}", "",
         f"- Status: `{result['status']}`",
         f"- Invocation duration: `{result.get('duration_hours', 0):.3f}` hours",
-        f"- Completed replications: `{agg['completed_replications']}/8`",
+        f"- Completed replications: `{agg['completed_replications']}/{len(REPLICATIONS)}`",
         f"- Scientific gate: `{agg['scientific_gate_passed']}`", "",
         "| Seed | Repeats | Mean ΔNLL | Replicate SE | 95% upper | Negative | "
         f"Mean vs {CONTROL_ARM} | Nonzero | Max ratio | Gate |",
@@ -214,17 +261,28 @@ def render_summary(result):
     for seed in SOURCE_SEEDS:
         row = agg["per_seed"][str(seed)]
         lines.append(
-            f"| {seed} | {row['completed_replications']}/8 | {number(row['mean_delta'])} "
+            f"| {seed} | {row['completed_replications']}/{len(REPLICATIONS)} "
+            f"| {number(row['mean_delta'])} "
             f"| {number(row['replication_standard_error'])} "
-            f"| {number(row['normal_95_upper'])} | {row['negative_replications']}/8 "
+            f"| {number(row['normal_95_upper'])} | {row['negative_replications']}/"
+            f"{len(REPLICATIONS)} "
             f"| {number(row['mean_primary_minus_control'])} "
-            f"| {row['nonzero_acceptance_replications']}/8 "
+            f"| {row['nonzero_acceptance_replications']}/{len(REPLICATIONS)} "
             f"| {number(row['maximum_nll_ratio'])} | {row['gate_passed']} |"
         )
     lines += [
         "", "Both arms compute both calibration domains; only selection differs.",
         "Primary uncertainty uses data-replication means, not correlated windows.",
     ]
+    if DECISION_GROUP_SIZE != 1:
+        lines += [
+            "", "Joint-only rescue replications: " + ", ".join(
+                f"seed {seed}="
+                f"{agg['per_seed'][str(seed)]['joint_only_rescue_replications']}/"
+                f"{len(REPLICATIONS)}"
+                for seed in SOURCE_SEEDS
+            ),
+        ]
     return "\n".join(lines) + "\n"
 
 
@@ -232,10 +290,10 @@ def replication_overrides(replication):
     alpha_grid = tuple(sweep.ALPHAS["TRUST-LINE"])
     train_offset = BASE_TRAIN_OFFSET + replication * TRAIN_STRIDE
     return {
-        "PROTOCOL": f"exp083-dual-domain-replication-{replication}-v1",
+        "PROTOCOL": f"{INNER_PROTOCOL_PREFIX}-{replication}-v1",
         "HF_PREFIX": f"{HF_PREFIX}/replication-{replication}",
-        "RESULT_STEM": f"exp083-dual-domain-replication-{replication}",
-        "OUTPUT_SUBDIR": f"exp083/replication-{replication}",
+        "RESULT_STEM": f"{INNER_RESULT_PREFIX}-{replication}",
+        "OUTPUT_SUBDIR": f"{INNER_OUTPUT_PREFIX}-{replication}",
         "SUMMARY_TITLE": f"{SUMMARY_TITLE} replication {replication}",
         "ARMS": (CONTROL_ARM, PRIMARY_ARM),
         "PRIMARY_ARM": PRIMARY_ARM,
@@ -244,6 +302,11 @@ def replication_overrides(replication):
         "ARM_SELECTION_MODE": {
             CONTROL_ARM: CONTROL_SELECTION_MODE,
             PRIMARY_ARM: PRIMARY_SELECTION_MODE,
+        },
+        "DECISION_GROUP_SIZE": DECISION_GROUP_SIZE,
+        "GROUP_SELECTION_MODE": {
+            CONTROL_ARM: CONTROL_GROUP_SELECTION_MODE,
+            PRIMARY_ARM: PRIMARY_GROUP_SELECTION_MODE,
         },
         "TRAIN_OFFSET": train_offset,
         "CALIBRATION_OFFSET": train_offset + sweep.TRAIN_WINDOWS * sweep.TRAIN_LENGTH,
@@ -259,7 +322,7 @@ def replication_overrides(replication):
         "EVAL_OFFSET": BASE_EVAL_OFFSET + replication * EVAL_STRIDE,
         "EVAL_SPLIT": "test",
         "EVAL_DATASET_CONFIG": "pg19-pinned-manifest",
-        "DATA_SEED": 83_000 + replication * 1_000,
+        "DATA_SEED": BASE_DATA_SEED + replication * 1_000,
         "CHECKPOINT_RETRY_DELAYS": (2, 5, 15, 30),
     }
 
@@ -274,7 +337,7 @@ def run_replication(replication, args):
         "--exp072-state-dir", args.exp072_state_dir,
         "--qwen-cache-dir", args.qwen_cache_dir,
         "--dataset-cache-dir", args.dataset_cache_dir,
-        "--max-wall-hours", "1.75", "--no-telegram",
+        "--max-wall-hours", str(INNER_MAX_WALL_HOURS), "--no-telegram",
     ]
     try:
         for name, value in overrides.items():
@@ -296,7 +359,7 @@ def main(argv=None):
     parser.add_argument("--telegram", action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args(argv)
     if not 2.0 <= args.max_wall_hours <= 8.25:
-        raise ValueError("EXP-083 wall budget must be 2-8.25 hours")
+        raise ValueError(f"{PROTOCOL} wall budget must be 2-8.25 hours")
 
     started = time.monotonic()
     deadline = started + args.max_wall_hours * 3600 - 20 * 60
@@ -353,7 +416,7 @@ def main(argv=None):
                 except Exception as exc:
                     warning = {"artifact": remote, "error_type": type(exc).__name__}
                     result.setdefault("durability_warnings", []).append(warning)
-                    print(f"EXP-083 hf_summary=FAILED {warning}; local retained", flush=True)
+                    print(f"{PROTOCOL} hf_summary=FAILED {warning}; local retained", flush=True)
 
     _safe_notify(args.telegram, f"Extent {PROTOCOL} started")
     try:
@@ -362,7 +425,7 @@ def main(argv=None):
             if existing and existing.get("status") == "completed":
                 print(f"{PROTOCOL} replication={replication} SKIP completed", flush=True)
                 continue
-            if time.monotonic() + 90 * 60 >= deadline:
+            if time.monotonic() + MINIMUM_START_HEADROOM_MINUTES * 60 >= deadline:
                 result["status"] = "deadline_partial"
                 return result
             stage = f"replication-{replication}"

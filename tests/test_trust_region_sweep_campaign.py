@@ -5,9 +5,14 @@ from scripts.m3q_trust_region_sweep_campaign import (
     aggregate,
     blend_parameters,
     choose_consensus_alpha,
+    choose_greedy_from_pair_grid,
+    choose_pair_consensus,
     choose_robust_consensus_alpha,
     choose_trust_alpha,
     experiment_contract,
+    is_joint_only_rescue,
+    pair_key,
+    selected_coordinate_count,
 )
 from extent.config import load_config
 from pathlib import Path
@@ -68,6 +73,37 @@ def test_blend_parameters_preserves_dtype_and_endpoints():
     np.testing.assert_array_equal(np.asarray(zero["w"], np.float32), [0.0, 2.0])
     np.testing.assert_array_equal(np.asarray(half["w"], np.float32), [1.0, 3.0])
     np.testing.assert_array_equal(np.asarray(one["w"], np.float32), [2.0, 4.0])
+
+
+def test_pair_lookahead_recovers_jointly_useful_updates_greedy_rejects():
+    alphas = (0.0, 0.5)
+    primary = {
+        pair_key(0, 0): 10.0,
+        pair_key(0.5, 0): 10.1,
+        pair_key(0, 0.5): 10.1,
+        pair_key(0.5, 0.5): 8.0,
+    }
+    secondary = {
+        pair_key(0, 0): 5.0,
+        pair_key(0.5, 0): 5.1,
+        pair_key(0, 0.5): 5.1,
+        pair_key(0.5, 0.5): 4.0,
+    }
+    selected, primary_gain, secondary_gain = choose_pair_consensus(
+        primary, secondary
+    )
+    assert selected == (0.5, 0.5)
+    assert np.isclose(primary_gain, 0.2)
+    assert np.isclose(secondary_gain, 0.2)
+    assert is_joint_only_rescue(selected, primary, secondary)
+    assert choose_greedy_from_pair_grid(primary, secondary, alphas)[0] == (0.0, 0.0)
+
+
+def test_selected_coordinate_count_supports_single_and_pair_decisions():
+    assert selected_coordinate_count({
+        "1": {"layer": 0, "selected_alpha": 0.25},
+        "3": {"layers": [1, 2], "selected_alphas": [0.0, 0.5]},
+    }) == 2
 
 
 def test_registered_gate_requires_both_seeds_and_matched_control():

@@ -69,10 +69,36 @@ EVAL_SPLIT = "test"
 EVAL_DATASET_CONFIG = "wikitext-2-raw-v1"
 DATA_SEED = 81_000
 CHECKPOINT_RETRY_DELAYS = None
+DECISION_GROUP_SIZE = 1
+GROUP_SELECTION_MODE = {arm: "coordinate" for arm in ARMS}
 
 
 def alpha_key(alpha: float) -> str:
     return f"{alpha:g}"
+
+
+def pair_key(first: float, second: float) -> str:
+    return f"{first:g},{second:g}"
+
+
+def selected_layers(decision: dict) -> list[int]:
+    if "selected_alphas" in decision:
+        return [
+            int(layer) for layer, alpha in zip(
+                decision["layers"], decision["selected_alphas"], strict=True
+            ) if float(alpha) > 0
+        ]
+    return [int(decision["layer"])] if float(decision["selected_alpha"]) > 0 else []
+
+
+def selected_coordinate_count(decisions: dict) -> int:
+    total = 0
+    for decision in decisions.values():
+        if "selected_alphas" in decision:
+            total += sum(float(alpha) > 0 for alpha in decision["selected_alphas"])
+        else:
+            total += int(float(decision["selected_alpha"]) > 0)
+    return int(total)
 
 
 def choose_trust_alpha(scores: dict[str, float], minimum_relative_gain=MIN_RELATIVE_GAIN):
@@ -177,6 +203,105 @@ def choose_robust_consensus_alpha(
     )
 
 
+def choose_pair_consensus(
+    primary_scores: dict[str, float],
+    secondary_scores: dict[str, float],
+    minimum_relative_gain=MIN_RELATIVE_GAIN,
+):
+    """Choose a two-coordinate point that improves both domain means."""
+    baseline_key = pair_key(0.0, 0.0)
+    primary_base = float(primary_scores[baseline_key])
+    secondary_base = float(secondary_scores[baseline_key])
+    eligible = []
+    for key in primary_scores:
+        first, second = (float(value) for value in key.split(","))
+        if first == 0.0 and second == 0.0:
+            continue
+        primary_gain = (primary_base - float(primary_scores[key])) / max(
+            abs(primary_base), 1e-12
+        )
+        secondary_gain = (secondary_base - float(secondary_scores[key])) / max(
+            abs(secondary_base), 1e-12
+        )
+        if primary_gain >= minimum_relative_gain and secondary_gain >= minimum_relative_gain:
+            worst_ratio = max(
+                float(primary_scores[key]) / max(abs(primary_base), 1e-12),
+                float(secondary_scores[key]) / max(abs(secondary_base), 1e-12),
+            )
+            eligible.append((
+                worst_ratio, first + second, first, second,
+                primary_gain, secondary_gain,
+            ))
+    if not eligible:
+        return (0.0, 0.0), 0.0, 0.0
+    _, _, first, second, primary_gain, secondary_gain = min(eligible)
+    return (float(first), float(second)), float(primary_gain), float(secondary_gain)
+
+
+def choose_greedy_from_pair_grid(
+    primary_scores: dict[str, float],
+    secondary_scores: dict[str, float],
+    alphas,
+    minimum_relative_gain=MIN_RELATIVE_GAIN,
+):
+    """Make two sequential decisions while paying for the complete pair grid."""
+    first_primary = {
+        alpha_key(alpha): primary_scores[pair_key(alpha, 0.0)] for alpha in alphas
+    }
+    first_secondary = {
+        alpha_key(alpha): secondary_scores[pair_key(alpha, 0.0)] for alpha in alphas
+    }
+    first, _, _ = choose_consensus_alpha(
+        first_primary, first_secondary, minimum_relative_gain
+    )
+    second_primary = {
+        alpha_key(alpha): primary_scores[pair_key(first, alpha)] for alpha in alphas
+    }
+    second_secondary = {
+        alpha_key(alpha): secondary_scores[pair_key(first, alpha)] for alpha in alphas
+    }
+    second, _, _ = choose_consensus_alpha(
+        second_primary, second_secondary, minimum_relative_gain
+    )
+    baseline_key = pair_key(0.0, 0.0)
+    selected_key = pair_key(first, second)
+    primary_base = float(primary_scores[baseline_key])
+    secondary_base = float(secondary_scores[baseline_key])
+    primary_gain = (primary_base - float(primary_scores[selected_key])) / max(
+        abs(primary_base), 1e-12
+    )
+    secondary_gain = (secondary_base - float(secondary_scores[selected_key])) / max(
+        abs(secondary_base), 1e-12
+    )
+    return (float(first), float(second)), float(primary_gain), float(secondary_gain)
+
+
+def is_joint_only_rescue(
+    selected: tuple[float, float],
+    primary_scores: dict[str, float],
+    secondary_scores: dict[str, float],
+    minimum_relative_gain=MIN_RELATIVE_GAIN,
+) -> bool:
+    """True when a selected pair works although neither component does alone."""
+    first, second = selected
+    if first <= 0 or second <= 0:
+        return False
+    base = pair_key(0.0, 0.0)
+
+    def eligible(key):
+        return all(
+            (float(scores[base]) - float(scores[key]))
+            / max(abs(float(scores[base])), 1e-12) >= minimum_relative_gain
+            for scores in (primary_scores, secondary_scores)
+        )
+
+    return (
+        eligible(pair_key(first, second))
+        and not eligible(pair_key(first, 0.0))
+        and not eligible(pair_key(0.0, second))
+    )
+
+
 def blend_parameters(current, proposal, alpha: float):
     def blend(old, new):
         value = old.astype(jnp.float32) + alpha * (
@@ -220,6 +345,7 @@ def experiment_contract(config):
         or SECONDARY_CALIBRATION is not None
         or CONTROL_ARM != "HARD-ACCEPT"
         or any(ARM_SELECTION_MODE.get(arm) != "primary" for arm in ARMS)
+        or DECISION_GROUP_SIZE != 1
     ):
         extension = {
             "train_dataset_config": TRAIN_DATASET_CONFIG,
@@ -228,6 +354,16 @@ def experiment_contract(config):
             "arm_selection_mode": dict(ARM_SELECTION_MODE),
             "control_arm": CONTROL_ARM,
         }
+        if DECISION_GROUP_SIZE != 1:
+            extension.update(
+                decision_group_size=DECISION_GROUP_SIZE,
+                group_selection_mode=dict(GROUP_SELECTION_MODE),
+                pair_proposal_contract=(
+                    "Both proposals are trained from the unchanged group-start "
+                    "assembled state; both arms evaluate the complete Cartesian "
+                    "alpha grid on both calibration domains."
+                ),
+            )
         if any(ARM_SELECTION_MODE.get(arm) == "robust_consensus" for arm in ARMS):
             extension["minimum_window_improvement_fraction"] = (
                 MIN_WINDOW_IMPROVEMENT_FRACTION
@@ -262,10 +398,9 @@ def aggregate(result):
                 "initial_nll": float(curve[0]), "final_nll": float(curve[-1]),
                 "final_delta": float(curve[-1] - curve[0]),
                 "maximum_nll_ratio": float(np.max(curve) / curve[0]),
-                "accepted_coordinates": int(sum(
-                    decision["selected_alpha"] > 0
-                    for decision in row.get("decisions", {}).values()
-                )),
+                "accepted_coordinates": selected_coordinate_count(
+                    row.get("decisions", {})
+                ),
             })
         if all(branches.get(arm, {}).get("complete") for arm in ARMS):
             pairs.append({
@@ -305,10 +440,7 @@ def render_summary(result):
     ]
     for seed, branches in result.get("branches", {}).items():
         for arm, row in branches.items():
-            accepted = sum(
-                value["selected_alpha"] > 0
-                for value in row.get("decisions", {}).values()
-            )
+            accepted = selected_coordinate_count(row.get("decisions", {}))
             for position, metrics in row.get("evaluations", {}).items():
                 lines.append(
                     f"| {seed} | {arm} | {position} | {metrics['student_nll']:.6f} "
@@ -652,6 +784,195 @@ def main(argv=None):
                         endpoints, eval_tokens, eval_teacher_logits
                     )
                     persist(upload=True)
+                if DECISION_GROUP_SIZE == 2:
+                    if secondary_calibration_tokens is None:
+                        raise ValueError("paired selection requires secondary calibration")
+                    if len(order) % 2 or any(step % 2 for step in MILESTONES):
+                        raise ValueError("paired selection requires even order and milestones")
+                    for group_start in range(0, len(order), 2):
+                        position = group_start + 2
+                        if position <= start_position:
+                            continue
+                        if time.monotonic() + 20 * 60 >= deadline:
+                            result["status"] = "deadline_partial"
+                            return result
+                        layers = (order[group_start], order[group_start + 1])
+                        stage = (
+                            f"seed-{seed}-{arm}-positions-{group_start + 1}-{position}"
+                            f"-layers-{layers[0]}-{layers[1]}"
+                        )
+                        print(f"{stage} START", flush=True)
+                        group_endpoints = dict(endpoints)
+                        currents, proposals, proposal_records = {}, {}, {}
+                        for local_index, layer in enumerate(layers):
+                            coordinate_position = group_start + local_index + 1
+                            inputs = branch_inputs(group_endpoints, layer)
+                            targets = condition_targets(layer, inputs)
+                            current = jax.tree.map(jnp.asarray, group_endpoints[layer])
+                            proposal = current
+                            frozen = local_layer_params(
+                                teacher_params[f"layers_{layer}"], proposal
+                            )
+                            opt_state = tx.init(proposal)
+                            first = last = None
+                            for zero_step in range(STEPS_PER_LAYER):
+                                index = deterministic_batch_indices(
+                                    zero_step, 1, TRAIN_WINDOWS,
+                                    DATA_SEED + seed + coordinate_position,
+                                )[0]
+                                proposal, opt_state, metrics = train_step(
+                                    proposal, opt_state, frozen,
+                                    jnp.asarray(inputs[index:index + 1], jnp.bfloat16),
+                                    jnp.asarray(targets[index:index + 1], jnp.bfloat16),
+                                )
+                                if zero_step in (0, STEPS_PER_LAYER - 1):
+                                    jax.block_until_ready(metrics)
+                                    record = _metric_record(metrics)
+                                    first = record if first is None else first
+                                    last = record
+                                    if not record["grads_finite"]:
+                                        raise FloatingPointError(
+                                            f"non-finite pair proposal: {stage} layer={layer}"
+                                        )
+                            currents[layer] = current
+                            proposals[layer] = proposal
+                            proposal_records[str(layer)] = {
+                                "first_loss": first["loss"],
+                                "final_loss": last["loss"],
+                                "final_grad_norm": last["grad_norm"],
+                            }
+                            del inputs, targets, opt_state, frozen
+
+                        primary_scores, secondary_scores = {}, {}
+                        primary_metrics, secondary_metrics = {}, {}
+                        alpha_grid = tuple(ALPHAS[arm])
+                        for first_alpha in alpha_grid:
+                            for second_alpha in alpha_grid:
+                                trial_endpoints = dict(group_endpoints)
+                                for layer, alpha in zip(
+                                    layers, (first_alpha, second_alpha), strict=True
+                                ):
+                                    trial_endpoints[layer] = blend_parameters(
+                                        currents[layer], proposals[layer], alpha
+                                    )
+                                key = pair_key(first_alpha, second_alpha)
+                                metrics = evaluate(
+                                    trial_endpoints, calibration_tokens,
+                                    calibration_teacher_logits,
+                                )
+                                secondary = evaluate(
+                                    trial_endpoints, secondary_calibration_tokens,
+                                    secondary_calibration_teacher_logits,
+                                )
+                                primary_scores[key] = metrics["prediction_kl"]
+                                secondary_scores[key] = secondary["prediction_kl"]
+                                primary_metrics[key] = metrics
+                                secondary_metrics[key] = secondary
+
+                        mode = GROUP_SELECTION_MODE[arm]
+                        if mode == "pair_consensus":
+                            selected, primary_gain, secondary_gain = (
+                                choose_pair_consensus(
+                                    primary_scores, secondary_scores
+                                )
+                            )
+                        elif mode == "greedy_pair_grid":
+                            selected, primary_gain, secondary_gain = (
+                                choose_greedy_from_pair_grid(
+                                    primary_scores, secondary_scores, alpha_grid
+                                )
+                            )
+                        else:
+                            raise ValueError(f"unsupported group selection mode: {mode}")
+
+                        for layer, alpha in zip(layers, selected, strict=True):
+                            if alpha > 0:
+                                endpoints[layer] = jax.device_get(
+                                    blend_parameters(
+                                        currents[layer], proposals[layer], alpha
+                                    )
+                                )
+                        rescue = is_joint_only_rescue(
+                            selected, primary_scores, secondary_scores
+                        )
+                        row["decisions"][str(position)] = {
+                            "layers": [int(layer) for layer in layers],
+                            "selected_alphas": [float(alpha) for alpha in selected],
+                            "relative_calibration_kl_gain": primary_gain,
+                            "secondary_relative_calibration_kl_gain": secondary_gain,
+                            "selection_mode": mode,
+                            "joint_only_rescue": rescue,
+                            "calibration": primary_metrics,
+                            "secondary_calibration": secondary_metrics,
+                            "proposal_metrics": proposal_records,
+                        }
+                        print(
+                            f"{stage} selected_alphas={selected} "
+                            f"primary_gain={primary_gain:.6g} "
+                            f"secondary_gain={secondary_gain:.6g} "
+                            f"joint_only_rescue={rescue}",
+                            flush=True,
+                        )
+                        del (
+                            group_endpoints, currents, proposals, proposal_records,
+                            primary_scores, secondary_scores, primary_metrics,
+                            secondary_metrics, trial_endpoints,
+                        )
+                        if position in MILESTONES:
+                            row["evaluations"][str(position)] = evaluate(
+                                endpoints, eval_tokens, eval_teacher_logits
+                            )
+                            slot = f"seed-{seed}/{arm}/position-{position}"
+                            meta = store.save(
+                                slot,
+                                {
+                                    "endpoints": {
+                                        str(key): value
+                                        for key, value in endpoints.items()
+                                    },
+                                    "row": row,
+                                },
+                                contract=checkpoint_contract(
+                                    contract, seed, arm, position,
+                                    base_hashes[seed],
+                                ),
+                                step=position,
+                                metrics={
+                                    "student_nll": row["evaluations"][str(position)][
+                                        "student_nll"
+                                    ],
+                                    "accepted_coordinates": selected_coordinate_count(
+                                        row["decisions"]
+                                    ),
+                                },
+                            )
+                            synced = any(
+                                event.get("operation") == "upload"
+                                and event.get("slot") == slot
+                                and event.get("passed")
+                                for event in reversed(store.events)
+                            )
+                            if not synced:
+                                result.setdefault("durability_warnings", []).append({
+                                    "slot": slot,
+                                    "checkpoint_sha256": meta["checkpoint_sha256"],
+                                    "reason": "hf_checkpoint_upload_failed_after_retries",
+                                })
+                                print(
+                                    f"EXP-081 durability warning: {slot}; continuing",
+                                    flush=True,
+                                )
+                            persist(upload=True)
+                        else:
+                            persist()
+                        gc.collect()
+                    row["complete"] = True
+                    persist(upload=True)
+                    continue
+                if DECISION_GROUP_SIZE != 1:
+                    raise ValueError(
+                        f"unsupported decision group size: {DECISION_GROUP_SIZE}"
+                    )
                 for position, layer in enumerate(order, 1):
                     if position <= start_position:
                         continue
@@ -774,9 +1095,8 @@ def main(argv=None):
                             step=position,
                             metrics={
                                 "student_nll": row["evaluations"][str(position)]["student_nll"],
-                                "accepted_coordinates": sum(
-                                    value["selected_alpha"] > 0
-                                    for value in row["decisions"].values()
+                                "accepted_coordinates": selected_coordinate_count(
+                                    row["decisions"]
                                 ),
                             },
                         )

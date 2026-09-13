@@ -1614,6 +1614,17 @@ EXP-084 partial result (reviewed 2026-09-13): seven of eight replications comple
 - `scripts.hf_retention_audit` is intentionally read-only. It reports current bytes by experiment and separates reusable source states from older checkpoint payloads that may be reviewed later; it contains no deletion or history-rewrite mode.
 - Storage will be audited periodically. Deletion decisions are manual and experiment-specific: a state is removable only after confirming that no planned comparison or resume path consumes it. Repository history is not squashed merely to reduce the displayed commit count.
 
+First measured inventory (2026-09-13): the remote working tree contains 2,684 files and `457.801 GiB`. Reusable EXP-069/072-v2 payloads occupy `28.909 GiB`; 559 historical checkpoint payloads occupy `428.812 GiB`. The largest groups are EXP-079 (`74.892 GiB`), EXP-082 (`61.213 GiB`), EXP-083 (`53.566 GiB`), and EXP-084 (`53.572 GiB`). No files were changed or deleted.
+
+### EXP-085 — Interaction-aware paired-coordinate lookahead (pre-registered)
+
+- **Implementation commit title:** `feat: add paired-lookahead recovery campaign`.
+- **Question:** can two recovered Mamba coordinates be jointly useful even when greedy one-coordinate selection misses their interaction? This follows EXP-082–084's failure of single-domain means, dual-domain means, and paired-window-majority filters.
+- **Matched arms:** GREEDY-PAIR-GRID and PAIR-LOOKAHEAD both train two proposals from the unchanged assembled state at the start of each consecutive coordinate pair and both pay for the complete 6×6 alpha grid on WikiText-103 plus PG-19 validation. The control chooses the first alpha and then the second; the primary chooses the pair jointly. Proposal procedure, 2,048 steps per coordinate, data, optimizer and evaluation compute are matched.
+- **Scale:** all 24 Mamba coordinates form 12 causal adjacent pairs; four fresh data replications × two source seeds × two arms yield 786,432 local proposal updates plus the matched pair grids. Fresh ranges begin at WikiText-103 train token `1,114,112`, PG-19 validation `98,304`, and locked PG-19 test `131,072`.
+- **Gate:** at each seed, all four replications, negative mean final-minus-start NLL with negative upper normal 95% bound, at least `3/4` improving runs, lower mean final NLL than the greedy control, bounded `1.25×` excursions, and nonzero acceptance in at least `3/4`. At least one replication per seed must contain a joint-only rescue where the pair passes both calibration domains although neither selected component passes alone.
+- **Interpretation:** a pass would demonstrate measurable multi-layer synergy and justify wider beam/block recovery. A failure closes adjacent pair lookahead at this budget instead of returning to post-hoc threshold tuning. Runtime is expected to be 6–8 v5e-8 hours; HF checkpoints make deadline-partial runs resumable. Protocol: `results/EXP-085-paired-lookahead-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.
