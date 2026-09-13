@@ -423,7 +423,7 @@ def aggregate(result):
         "results": rows, "paired_results": pairs,
         "scientific_gate_passed": passed,
         "gate_definition": (
-            "At both seeds TRUST-LINE improves locked final NLL, stays within "
+            f"At both seeds {PRIMARY_ARM} improves locked final NLL, stays within "
             f"1.25x start, accepts a nonzero coordinate, and beats {CONTROL_ARM}."
         ),
     }

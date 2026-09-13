@@ -47,7 +47,8 @@ def test_exp085_contract_freezes_matched_pair_grid_and_fresh_ranges():
     assert contract["proposal_and_primary_calibration"]["proposal_offsets"][0] == 1_114_112
     assert contract["secondary_calibration"]["offsets"][0] == 98_304
     assert contract["locked_evaluation"]["offsets"][0] == 131_072
-    assert OVERRIDES["INNER_MAX_WALL_HOURS"] == 2.0
+    assert OVERRIDES["INNER_MAX_WALL_HOURS"] == 3.25
+    assert OVERRIDES["MINIMUM_START_HEADROOM_MINUTES"] == 210
 
 
 def test_exp085_gate_requires_replication_and_joint_rescue():

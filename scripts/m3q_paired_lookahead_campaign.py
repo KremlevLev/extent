@@ -24,8 +24,10 @@ OVERRIDES = {
     "REQUIRED_NEGATIVE_REPLICATIONS": 3,
     "REQUIRED_NONZERO_REPLICATIONS": 3,
     "REQUIRED_JOINT_RESCUE_REPLICATIONS": 1,
-    "INNER_MAX_WALL_HOURS": 2.0,
-    "MINIMUM_START_HEADROOM_MINUTES": 130,
+    # One source seed needs about 1.34 h including both matched arms. Give an
+    # inner replication enough time to finish both seeds before returning.
+    "INNER_MAX_WALL_HOURS": 3.25,
+    "MINIMUM_START_HEADROOM_MINUTES": 210,
     "INNER_PROTOCOL_PREFIX": "exp085-paired-lookahead-replication",
     "INNER_RESULT_PREFIX": "exp085-paired-lookahead-replication",
     "INNER_OUTPUT_PREFIX": "exp085/replication",
