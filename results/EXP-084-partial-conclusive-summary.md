@@ -1,0 +1,8 @@
+# EXP-084 — paired-window robust dual consensus (partial, conclusive negative)
+
+- Seven of eight registered data replications completed in `6.452758` TPU hours without durability warnings. The missing eighth replication cannot rescue the primary gate: seed 456 has only `2/7` negative robust trajectories and can reach at most `3/8`, below the required `6/8`.
+- Seed 123 robust consensus changes locked PG-19 test NLL by mean `-0.364612` (replication SE `0.151500`, provisional upper normal 95% bound `-0.067671`) and improves in `5/7` runs. Seed 456 changes it by mean `-0.093681` (SE `0.252624`, upper bound `+0.401461`) and improves in only `2/7`.
+- The robustness constraint mostly turns recovery off: accepted-coordinate counts are `0,1,1,2,1,3,0` for seed 123 and `0,1,1,1,0,1,0` for seed 456. In the final completed replication it accepts zero coordinates at both seeds, exactly preserving step-zero NLL.
+- The registered matched comparison fails decisively. ROBUST-CONSENSUS ends worse than MEAN-CONSENSUS by mean `+0.598592` NLL at seed 123 and `+0.608054` at seed 456. The stricter window-majority rule is safe but does not identify better composable updates.
+- Decision: reject further threshold/filter tuning on isolated coordinates. EXP-082–084 jointly show that local proposal acceptance is not reliably predicted by one-domain means, two-domain means, or paired-window majorities. The next method must represent interactions among multiple replacements, rather than add another scalar acceptance statistic.
+- Full artifact SHA-256: `d7a6fb5f6ca9e3a950e4b2b973b42ab5fb73114b34ab2a932bd55bfc3912b2d8`; user summary SHA-256: `17cbc6649e0168e6770b4d8547d3c5aad7ae981e1bff16c411e90ee51b5af5d7`.

@@ -1605,6 +1605,15 @@ EXP-083 partial result (reviewed 2026-09-12): seven of eight data replications c
 - **Gate:** for each source seed, robust selection needs negative mean final-minus-start and negative 95% upper bound, at least `6/8` improving replications, lower mean final NLL than mean consensus, bounded excursions, and nonzero acceptance in at least six runs. Both seeds must pass.
 - **Decision boundary:** stable no-op behavior means proposal quality is limiting; continued instability rejects greedy assembled filtering and motivates beam/multi-path composition or a different local proposal. Protocol: `results/EXP-084-robust-consensus-protocol.md`.
 
+EXP-084 partial result (reviewed 2026-09-13): seven of eight replications complete in `6.452758` TPU hours without durability warnings, and the registered gate is already impossible. Seed 123 changes locked PG-19 test NLL by mean `-0.364612` (replication SE `0.151500`, provisional upper 95% bound `-0.067671`) with `5/7` improving runs. Seed 456 changes it by `-0.093681` (SE `0.252624`, upper bound `+0.401461`) with only `2/7` improving runs; the missing run can reach at most `3/8`, below the required `6/8`. More importantly, ROBUST-CONSENSUS loses to matched MEAN-CONSENSUS by mean `+0.598592/+0.608054` final NLL. The window-majority constraint usually selects alpha zero and is therefore safe but unproductive; it does not identify more composable updates. Reject further scalar-filter tuning and move to an interaction-aware multi-coordinate method. Full/summary SHA-256: `d7a6fb5f6ca9e3a950e4b2b973b42ab5fb73114b34ab2a932bd55bfc3912b2d8` / `17cbc6649e0168e6770b4d8547d3c5aad7ae981e1bff16c411e90ee51b5af5d7`. Details: `results/EXP-084-partial-conclusive-summary.md`.
+
+### Hugging Face experiment-state inventory policy
+
+- The public experiment dataset currently reports roughly 492 GB. Under the user's available storage allowance this does not require immediate deletion, so historical checkpoints remain untouched.
+- Compact result JSON, summaries, contracts, data hashes and checkpoint hashes are permanent scientific records. EXP-069 prepared endpoints and EXP-072-v2 ONPOLICY endpoints are also marked as currently reusable inputs.
+- `scripts.hf_retention_audit` is intentionally read-only. It reports current bytes by experiment and separates reusable source states from older checkpoint payloads that may be reviewed later; it contains no deletion or history-rewrite mode.
+- Storage will be audited periodically. Deletion decisions are manual and experiment-specific: a state is removable only after confirming that no planned comparison or resume path consumes it. Repository history is not squashed merely to reduce the displayed commit count.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.
