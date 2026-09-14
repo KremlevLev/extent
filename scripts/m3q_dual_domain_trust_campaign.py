@@ -429,7 +429,10 @@ def main(argv=None):
                 result["status"] = "deadline_partial"
                 return result
             stage = f"replication-{replication}"
-            print(f"{PROTOCOL} replication={replication}/7 START", flush=True)
+            print(
+                f"{PROTOCOL} replication={replication + 1}/{len(REPLICATIONS)} START",
+                flush=True,
+            )
             inner = run_replication(replication, args)
             result["replications"][str(replication)] = inner
             persist(upload=True)
@@ -451,7 +454,8 @@ def main(argv=None):
         _safe_notify(
             args.telegram,
             f"Extent {PROTOCOL} {result['status']} "
-            f"replications={result['aggregate']['completed_replications']}/8 "
+            f"replications={result['aggregate']['completed_replications']}/"
+            f"{len(REPLICATIONS)} "
             f"gate={result['aggregate']['scientific_gate_passed']}",
         )
 
