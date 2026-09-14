@@ -145,6 +145,12 @@ def experiment_contract():
 
 
 def aggregate(result):
+    def ordered_window_values(values):
+        """Accept both legacy lists and checkpoint-restored JSON dictionaries."""
+        if isinstance(values, dict):
+            values = [values[key] for key in sorted(values, key=lambda key: int(key))]
+        return np.asarray(values, np.float64)
+
     per_seed = {}
     for seed in SOURCE_SEEDS:
         deltas, controls, ratios, accepted_counts, window_deltas = [], [], [], [], []
@@ -180,8 +186,12 @@ def aggregate(result):
             for layer in accepted:
                 layer = str(layer)
                 accepted_layers[layer] = accepted_layers.get(layer, 0) + 1
-            before = np.asarray(primary["evaluations"]["0"]["window_nll"], np.float64)
-            after = np.asarray(primary["evaluations"]["24"]["window_nll"], np.float64)
+            before = ordered_window_values(
+                primary["evaluations"]["0"]["window_nll"]
+            )
+            after = ordered_window_values(
+                primary["evaluations"]["24"]["window_nll"]
+            )
             window_deltas.extend((after - before).tolist())
 
         values = np.asarray(deltas, np.float64)

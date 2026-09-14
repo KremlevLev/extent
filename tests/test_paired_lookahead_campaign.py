@@ -64,3 +64,26 @@ def test_exp085_gate_requires_replication_and_joint_rescue():
                 "joint_only_rescue"
             ] = False
     assert not configured_aggregate(result)["scientific_gate_passed"]
+
+
+def test_exp085_aggregate_accepts_json_round_tripped_window_metrics():
+    result = {
+        "replications": {
+            str(rep): completed_replication() for rep in range(4)
+        }
+    }
+    for replication in result["replications"].values():
+        for seed in ("123", "456"):
+            evaluations = replication["branches"][seed]["PAIR-LOOKAHEAD"][
+                "evaluations"
+            ]
+            for evaluation in evaluations.values():
+                evaluation["window_nll"] = {
+                    str(index): value
+                    for index, value in enumerate(evaluation["window_nll"])
+                }
+
+    summary = configured_aggregate(result)
+
+    assert summary["completed_replications"] == 4
+    assert summary["scientific_gate_passed"]
