@@ -1631,6 +1631,14 @@ EXP-085 replication 0 completion (reviewed 2026-09-14): both arms now complete f
 
 EXP-085 resume incident (2026-09-14): a resumed Kaggle invocation reached replication 1, restored its completed inner checkpoint, and then failed before further TPU work because the outer descriptive-window aggregator accepted in-memory lists but not their JSON-round-tripped dictionary representation. This was reporting-path schema incompatibility, not a TPU, numerical, training, or checkpoint failure. Aggregation now orders numeric dictionary keys and supports both representations; a regression test uses the actual restored schema. The completed HF artifact remains reusable, so the next invocation resumes rather than retrains the recovered replication.
 
+### EXP-086 — Conservative pair-acceptance threshold (pre-registered)
+
+- **Question:** EXP-085 replication 0 found genuine pair interactions but also seed-dependent over-acceptance: on seed 456 pair lookahead accepted ten coordinates and lost by `+0.846459 NLL` to greedy selection, which accepted only three. EXP-086 tests whether requiring a stronger two-domain improvement makes interacting updates more composable.
+- **Matched comparison:** `STANDARD-PAIR-0.1PCT` reproduces the EXP-085 pair-consensus threshold; primary `STRICT-PAIR-0.5PCT` changes only the required relative assembled prediction-KL gain from 0.1% to 0.5% on each of WikiText-103 and PG-19 validation. Both pay for the same proposals and complete 6x6 pair grid.
+- **Scale and isolation:** four fresh data replications, seeds 123/456, all 24 Mamba coordinates, and 2,048 proposal updates per coordinate. Ranges start after all planned EXP-085 ranges. Dedicated `exp086` output, RAM, and HF namespaces allow simultaneous execution on a second Kaggle account without overwriting EXP-085.
+- **Gate:** at both seeds, strict selection must improve in at least 3/4 replications, have negative mean delta and negative upper normal 95% bound, beat the standard threshold in mean final NLL, stay below 1.25x start, and accept a nonzero coordinate in at least 3/4. Joint-only rescues are descriptive rather than required because the intervention may deliberately reject marginal pairs.
+- **Boundary:** this is a pre-registered response to the observed replication-0 mechanism, not post-hoc alteration of EXP-085. A failure rejects fixed 0.5% filtering and should move attention away from further threshold tuning. Protocol: `results/EXP-086-pair-threshold-protocol.md`.
+
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.

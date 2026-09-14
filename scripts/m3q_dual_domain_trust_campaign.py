@@ -40,6 +40,10 @@ BASE_EVAL_OFFSET = 0
 SECONDARY_WINDOWS = 16
 CONTROL_SELECTION_MODE = "primary"
 PRIMARY_SELECTION_MODE = "dual_consensus"
+ARM_MIN_RELATIVE_GAIN = {
+    CONTROL_ARM: sweep.MIN_RELATIVE_GAIN,
+    PRIMARY_ARM: sweep.MIN_RELATIVE_GAIN,
+}
 DECISION_GROUP_SIZE = 1
 CONTROL_GROUP_SELECTION_MODE = "coordinate"
 PRIMARY_GROUP_SELECTION_MODE = "coordinate"
@@ -136,6 +140,14 @@ def experiment_contract():
                 "on both calibration domains"
             ),
         }
+        if any(
+            ARM_MIN_RELATIVE_GAIN.get(arm, sweep.MIN_RELATIVE_GAIN)
+            != sweep.MIN_RELATIVE_GAIN
+            for arm in (CONTROL_ARM, PRIMARY_ARM)
+        ):
+            contract["interaction_aware_extension"][
+                "arm_minimum_relative_calibration_kl_gain"
+            ] = dict(ARM_MIN_RELATIVE_GAIN)
         if REQUIRED_JOINT_RESCUE_REPLICATIONS:
             contract["gate"] += (
                 f" Joint-only rescue in >={REQUIRED_JOINT_RESCUE_REPLICATIONS}/"
@@ -312,6 +324,10 @@ def replication_overrides(replication):
         "ARM_SELECTION_MODE": {
             CONTROL_ARM: CONTROL_SELECTION_MODE,
             PRIMARY_ARM: PRIMARY_SELECTION_MODE,
+        },
+        "ARM_MIN_RELATIVE_GAIN": {
+            CONTROL_ARM: ARM_MIN_RELATIVE_GAIN[CONTROL_ARM],
+            PRIMARY_ARM: ARM_MIN_RELATIVE_GAIN[PRIMARY_ARM],
         },
         "DECISION_GROUP_SIZE": DECISION_GROUP_SIZE,
         "GROUP_SELECTION_MODE": {

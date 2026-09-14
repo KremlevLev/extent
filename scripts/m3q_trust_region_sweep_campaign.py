@@ -64,6 +64,7 @@ TRAIN_DATASET_CONFIG = "wikitext-2-raw-v1"
 CALIBRATION_DATASET_CONFIG = "wikitext-2-raw-v1"
 SECONDARY_CALIBRATION = None
 ARM_SELECTION_MODE = {arm: "primary" for arm in ARMS}
+ARM_MIN_RELATIVE_GAIN = {arm: MIN_RELATIVE_GAIN for arm in ARMS}
 EVAL_WINDOWS, EVAL_LENGTH, EVAL_OFFSET = 32, 256, 196_608
 EVAL_SPLIT = "test"
 EVAL_DATASET_CONFIG = "wikitext-2-raw-v1"
@@ -364,6 +365,14 @@ def experiment_contract(config):
                     "alpha grid on both calibration domains."
                 ),
             )
+            if any(
+                ARM_MIN_RELATIVE_GAIN.get(arm, MIN_RELATIVE_GAIN)
+                != MIN_RELATIVE_GAIN
+                for arm in ARMS
+            ):
+                extension["arm_minimum_relative_calibration_kl_gain"] = dict(
+                    ARM_MIN_RELATIVE_GAIN
+                )
         if any(ARM_SELECTION_MODE.get(arm) == "robust_consensus" for arm in ARMS):
             extension["minimum_window_improvement_fraction"] = (
                 MIN_WINDOW_IMPROVEMENT_FRACTION
@@ -870,16 +879,22 @@ def main(argv=None):
                                 secondary_metrics[key] = secondary
 
                         mode = GROUP_SELECTION_MODE[arm]
+                        minimum_relative_gain = ARM_MIN_RELATIVE_GAIN[arm]
                         if mode == "pair_consensus":
                             selected, primary_gain, secondary_gain = (
                                 choose_pair_consensus(
-                                    primary_scores, secondary_scores
+                                    primary_scores,
+                                    secondary_scores,
+                                    minimum_relative_gain,
                                 )
                             )
                         elif mode == "greedy_pair_grid":
                             selected, primary_gain, secondary_gain = (
                                 choose_greedy_from_pair_grid(
-                                    primary_scores, secondary_scores, alpha_grid
+                                    primary_scores,
+                                    secondary_scores,
+                                    alpha_grid,
+                                    minimum_relative_gain,
                                 )
                             )
                         else:
@@ -893,7 +908,10 @@ def main(argv=None):
                                     )
                                 )
                         rescue = is_joint_only_rescue(
-                            selected, primary_scores, secondary_scores
+                            selected,
+                            primary_scores,
+                            secondary_scores,
+                            minimum_relative_gain,
                         )
                         row["decisions"][str(position)] = {
                             "layers": [int(layer) for layer in layers],
