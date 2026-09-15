@@ -2,6 +2,7 @@ from scripts.m3q_paired_lookahead_campaign import (
     OVERRIDES,
     configured_aggregate,
     configured_contract,
+    configured_replication_overrides,
 )
 
 
@@ -49,6 +50,10 @@ def test_exp085_contract_freezes_matched_pair_grid_and_fresh_ranges():
     assert contract["locked_evaluation"]["offsets"][0] == 131_072
     assert OVERRIDES["INNER_MAX_WALL_HOURS"] == 3.25
     assert OVERRIDES["MINIMUM_START_HEADROOM_MINUTES"] == 210
+    assert OVERRIDES["ARM_MIN_RELATIVE_GAIN"] == {
+        "GREEDY-PAIR-GRID": 0.001,
+        "PAIR-LOOKAHEAD": 0.001,
+    }
 
 
 def test_exp085_gate_requires_replication_and_joint_rescue():
@@ -87,3 +92,12 @@ def test_exp085_aggregate_accepts_json_round_tripped_window_metrics():
 
     assert summary["completed_replications"] == 4
     assert summary["scientific_gate_passed"]
+
+
+def test_exp085_replication_builds_arm_thresholds_before_tpu_work():
+    overrides = configured_replication_overrides(1)
+
+    assert overrides["ARM_MIN_RELATIVE_GAIN"] == {
+        "GREEDY-PAIR-GRID": 0.001,
+        "PAIR-LOOKAHEAD": 0.001,
+    }

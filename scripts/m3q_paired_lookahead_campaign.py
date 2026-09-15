@@ -18,6 +18,10 @@ OVERRIDES = {
     "CONTROL_ARM": "GREEDY-PAIR-GRID",
     "PRIMARY_SELECTION_MODE": "dual_consensus",
     "CONTROL_SELECTION_MODE": "dual_consensus",
+    "ARM_MIN_RELATIVE_GAIN": {
+        "GREEDY-PAIR-GRID": 0.001,
+        "PAIR-LOOKAHEAD": 0.001,
+    },
     "DECISION_GROUP_SIZE": 2,
     "PRIMARY_GROUP_SELECTION_MODE": "pair_consensus",
     "CONTROL_GROUP_SELECTION_MODE": "greedy_pair_grid",
@@ -56,6 +60,17 @@ def configured_aggregate(result):
         for name, value in OVERRIDES.items():
             setattr(campaign, name, value)
         return campaign.aggregate(result)
+    finally:
+        for name, value in original.items():
+            setattr(campaign, name, value)
+
+
+def configured_replication_overrides(replication):
+    original = {name: getattr(campaign, name) for name in OVERRIDES}
+    try:
+        for name, value in OVERRIDES.items():
+            setattr(campaign, name, value)
+        return campaign.replication_overrides(replication)
     finally:
         for name, value in original.items():
             setattr(campaign, name, value)

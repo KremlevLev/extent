@@ -326,8 +326,12 @@ def replication_overrides(replication):
             PRIMARY_ARM: PRIMARY_SELECTION_MODE,
         },
         "ARM_MIN_RELATIVE_GAIN": {
-            CONTROL_ARM: ARM_MIN_RELATIVE_GAIN[CONTROL_ARM],
-            PRIMARY_ARM: ARM_MIN_RELATIVE_GAIN[PRIMARY_ARM],
+            CONTROL_ARM: ARM_MIN_RELATIVE_GAIN.get(
+                CONTROL_ARM, sweep.MIN_RELATIVE_GAIN
+            ),
+            PRIMARY_ARM: ARM_MIN_RELATIVE_GAIN.get(
+                PRIMARY_ARM, sweep.MIN_RELATIVE_GAIN
+            ),
         },
         "DECISION_GROUP_SIZE": DECISION_GROUP_SIZE,
         "GROUP_SELECTION_MODE": {
