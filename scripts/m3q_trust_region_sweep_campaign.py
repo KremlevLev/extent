@@ -82,11 +82,19 @@ def pair_key(first: float, second: float) -> str:
     return f"{first:g},{second:g}"
 
 
+def restored_sequence(values):
+    """Read sequence fields from memory or numeric-key checkpoint JSON."""
+    if isinstance(values, dict):
+        return [values[key] for key in sorted(values, key=lambda key: int(key))]
+    return values
+
+
 def selected_layers(decision: dict) -> list[int]:
     if "selected_alphas" in decision:
         return [
             int(layer) for layer, alpha in zip(
-                decision["layers"], decision["selected_alphas"], strict=True
+                restored_sequence(decision["layers"]),
+                restored_sequence(decision["selected_alphas"]), strict=True
             ) if float(alpha) > 0
         ]
     return [int(decision["layer"])] if float(decision["selected_alpha"]) > 0 else []
@@ -96,7 +104,10 @@ def selected_coordinate_count(decisions: dict) -> int:
     total = 0
     for decision in decisions.values():
         if "selected_alphas" in decision:
-            total += sum(float(alpha) > 0 for alpha in decision["selected_alphas"])
+            total += sum(
+                float(alpha) > 0
+                for alpha in restored_sequence(decision["selected_alphas"])
+            )
         else:
             total += int(float(decision["selected_alpha"]) > 0)
     return int(total)
