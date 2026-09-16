@@ -16,6 +16,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from extent import HybridForCausalLM
+from extent.block_recovery import make_block_recovery_step
 from extent.calibration_data import load_pg19_tokens, load_wikitext2_tokens
 from extent.campaign_checkpoint import CampaignCheckpointStore, write_json_atomic
 from extent.composition_diagnostics import compose_parameters
@@ -29,6 +30,7 @@ from extent.optimizer import create_lion
 from extent.qwen3_teacher import Qwen3DecoderLayer, Qwen3ForCausalLM
 from extent.qwen_source import QWEN3_1_7B_BASE, teacher_config_from_spec
 from extent.sequential_recovery import make_conditional_recovery_step
+from extent.sequential_recovery import replace_mamba
 from extent.sharding import batch_sharding, named_sharding_tree, validate_partition_specs
 from extent.weight_mapping import stream_teacher_qwen_weights
 from scripts.m3q_allocation_campaign import HF_PREFIX as EXP069_PREFIX
@@ -72,6 +74,7 @@ DATA_SEED = 81_000
 CHECKPOINT_RETRY_DELAYS = None
 DECISION_GROUP_SIZE = 1
 GROUP_SELECTION_MODE = {arm: "coordinate" for arm in ARMS}
+GROUP_PROPOSAL_MODE = {arm: "independent" for arm in ARMS}
 
 
 def alpha_key(alpha: float) -> str:
@@ -384,6 +387,12 @@ def experiment_contract(config):
                 extension["arm_minimum_relative_calibration_kl_gain"] = dict(
                     ARM_MIN_RELATIVE_GAIN
                 )
+            if any(GROUP_PROPOSAL_MODE.get(arm, "independent") != "independent" for arm in ARMS):
+                extension["group_proposal_mode"] = dict(GROUP_PROPOSAL_MODE)
+                extension["pair_proposal_contract"] = (
+                    "Independent local targets versus composed teacher segment target; "
+                    "same updates per Mamba subtree, not equal measured FLOPs."
+                )
         if any(ARM_SELECTION_MODE.get(arm) == "robust_consensus" for arm in ARMS):
             extension["minimum_window_improvement_fraction"] = (
                 MIN_WINDOW_IMPROVEMENT_FRACTION
@@ -688,6 +697,38 @@ def main(argv=None):
         )
         embedding_table = teacher_params["embed_tokens"]["embedding"]
         model_cache, prefix_forward_cache = {}, {}
+        joint_step_cache, teacher_segment_cache = {}, {}
+
+        def segment_functions(layers):
+            if layers not in joint_step_cache:
+                def forward(candidate, frozen, inputs):
+                    value = inputs
+                    positions = jnp.arange(inputs.shape[1], dtype=jnp.int32)[None]
+                    for index in range(layers[0], layers[1] + 1):
+                        key = str(index)
+                        if index in layers:
+                            value = student_layer.apply(
+                                {"params": replace_mamba(frozen[key], candidate[key])},
+                                value, positions, None,
+                            )
+                        else:
+                            value = teacher_layer.apply(
+                                {"params": frozen[key]}, value, positions, None,
+                            )
+                    return value
+
+                def teacher_segment(frozen, inputs):
+                    value = inputs
+                    positions = jnp.arange(inputs.shape[1], dtype=jnp.int32)[None]
+                    for index in range(layers[0], layers[1] + 1):
+                        value = teacher_layer.apply(
+                            {"params": frozen[str(index)]}, value, positions, None,
+                        )
+                    return value
+
+                joint_step_cache[layers] = jax.jit(make_block_recovery_step(forward, tx))
+                teacher_segment_cache[layers] = jax.jit(teacher_segment)
+            return joint_step_cache[layers], teacher_segment_cache[layers]
 
         def model_parts(replaced):
             replaced = tuple(replaced)
@@ -823,8 +864,63 @@ def main(argv=None):
                         )
                         print(f"{stage} START", flush=True)
                         group_endpoints = dict(endpoints)
+                        proposal_started = time.monotonic()
                         currents, proposals, proposal_records = {}, {}, {}
-                        for local_index, layer in enumerate(layers):
+                        proposal_mode = GROUP_PROPOSAL_MODE.get(arm, "independent")
+                        if proposal_mode not in ("independent", "joint_segment"):
+                            raise ValueError(f"unsupported pair proposal mode: {proposal_mode}")
+                        if proposal_mode == "joint_segment":
+                            inputs = branch_inputs(group_endpoints, layers[0])
+                            segment_teacher = {
+                                str(index): teacher_params[f"layers_{index}"]
+                                for index in range(layers[0], layers[1] + 1)
+                            }
+                            run_joint, run_target = segment_functions(layers)
+                            targets = np.concatenate([
+                                np.asarray(jax.device_get(run_target(
+                                    segment_teacher,
+                                    jax.device_put(inputs[start:start + 4], batch_layout),
+                                )), np.float32)
+                                for start in range(0, len(inputs), 4)
+                            ])
+                            candidate = {
+                                str(layer): jax.tree.map(jnp.asarray, group_endpoints[layer])
+                                for layer in layers
+                            }
+                            frozen = dict(segment_teacher)
+                            for layer in layers:
+                                frozen[str(layer)] = local_layer_params(
+                                    segment_teacher[str(layer)], candidate[str(layer)]
+                                )
+                                currents[layer] = candidate[str(layer)]
+                            opt_state = tx.init(candidate)
+                            first = last = None
+                            for zero_step in range(STEPS_PER_LAYER):
+                                index = deterministic_batch_indices(
+                                    zero_step, 1, TRAIN_WINDOWS,
+                                    DATA_SEED + seed + group_start + 1,
+                                )[0]
+                                candidate, opt_state, metrics = run_joint(
+                                    candidate, opt_state, frozen,
+                                    jnp.asarray(inputs[index:index + 1], jnp.bfloat16),
+                                    jnp.asarray(targets[index:index + 1], jnp.bfloat16),
+                                )
+                                if zero_step in (0, STEPS_PER_LAYER - 1):
+                                    jax.block_until_ready(metrics)
+                                    record = _metric_record(metrics)
+                                    first = record if first is None else first
+                                    last = record
+                                    if not record["grads_finite"]:
+                                        raise FloatingPointError(f"non-finite joint proposal: {stage}")
+                            proposals = {layer: candidate[str(layer)] for layer in layers}
+                            proposal_records["joint_segment"] = {
+                                "first_loss": first["loss"], "final_loss": last["loss"],
+                                "final_grad_norm": last["grad_norm"],
+                            }
+                            del inputs, targets, opt_state, frozen, candidate, segment_teacher
+                        for local_index, layer in (
+                            enumerate(layers) if proposal_mode == "independent" else ()
+                        ):
                             coordinate_position = group_start + local_index + 1
                             inputs = branch_inputs(group_endpoints, layer)
                             targets = condition_targets(layer, inputs)
@@ -863,6 +959,7 @@ def main(argv=None):
                             }
                             del inputs, targets, opt_state, frozen
 
+                        proposal_duration_seconds = time.monotonic() - proposal_started
                         primary_scores, secondary_scores = {}, {}
                         primary_metrics, secondary_metrics = {}, {}
                         alpha_grid = tuple(ALPHAS[arm])
@@ -934,6 +1031,9 @@ def main(argv=None):
                             "calibration": primary_metrics,
                             "secondary_calibration": secondary_metrics,
                             "proposal_metrics": proposal_records,
+                            "proposal_mode": proposal_mode,
+                            "proposal_duration_seconds": proposal_duration_seconds,
+                            "updates_per_mamba_subtree": STEPS_PER_LAYER,
                         }
                         print(
                             f"{stage} selected_alphas={selected} "

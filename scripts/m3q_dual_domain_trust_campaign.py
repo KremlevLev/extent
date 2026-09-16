@@ -47,6 +47,8 @@ ARM_MIN_RELATIVE_GAIN = {
 DECISION_GROUP_SIZE = 1
 CONTROL_GROUP_SELECTION_MODE = "coordinate"
 PRIMARY_GROUP_SELECTION_MODE = "coordinate"
+CONTROL_PROPOSAL_MODE = "independent"
+PRIMARY_PROPOSAL_MODE = "independent"
 REQUIRED_NEGATIVE_REPLICATIONS = 6
 REQUIRED_NONZERO_REPLICATIONS = 6
 REQUIRED_JOINT_RESCUE_REPLICATIONS = 0
@@ -148,6 +150,14 @@ def experiment_contract():
             contract["interaction_aware_extension"][
                 "arm_minimum_relative_calibration_kl_gain"
             ] = dict(ARM_MIN_RELATIVE_GAIN)
+        if (CONTROL_PROPOSAL_MODE, PRIMARY_PROPOSAL_MODE) != ("independent", "independent"):
+            contract["interaction_aware_extension"]["group_proposal_mode"] = {
+                CONTROL_ARM: CONTROL_PROPOSAL_MODE,
+                PRIMARY_ARM: PRIMARY_PROPOSAL_MODE,
+            }
+            contract["interaction_aware_extension"]["proposal_compute"] = (
+                "same updates per Mamba subtree; composed backward FLOPs differ"
+            )
         if REQUIRED_JOINT_RESCUE_REPLICATIONS:
             contract["gate"] += (
                 f" Joint-only rescue in >={REQUIRED_JOINT_RESCUE_REPLICATIONS}/"
@@ -337,6 +347,10 @@ def replication_overrides(replication):
         "GROUP_SELECTION_MODE": {
             CONTROL_ARM: CONTROL_GROUP_SELECTION_MODE,
             PRIMARY_ARM: PRIMARY_GROUP_SELECTION_MODE,
+        },
+        "GROUP_PROPOSAL_MODE": {
+            CONTROL_ARM: CONTROL_PROPOSAL_MODE,
+            PRIMARY_ARM: PRIMARY_PROPOSAL_MODE,
         },
         "TRAIN_OFFSET": train_offset,
         "CALIBRATION_OFFSET": train_offset + sweep.TRAIN_WINDOWS * sweep.TRAIN_LENGTH,
