@@ -1649,6 +1649,8 @@ EXP-085 found real interactions but did not establish cross-seed superiority of 
 
 ### Full 15/85 hybrid transplant preflight — production integration milestone
 
+EXP-087 first partial result (reviewed 2026-09-17): three of four fresh data replications complete in `5.293` TPU hours without outer durability warnings. JOINT-PAIR improves the unchanged start in all six trajectories, with mean final-minus-start NLL `-1.420622/-0.807370` and provisional normal upper bounds `-0.638980/-0.496121`. Comparative benefit is inconsistent: joint-minus-independent means are `+0.222466/-0.074296`, with only `1/3` and `2/3` wins. The gate remains reachable, unlike EXP-086; resume unchanged to finish replication 3, which must reverse seed-123 comparator sum. Proposal-phase wall time happens to be lower for joint training, but includes compilation/cache preparation and execution-order effects and is not equal-FLOP evidence. Details/checksums: `results/EXP-087-first-partial-summary.md`.
+
 - **Implementation commit title:** `feat: add full hybrid transplant preflight`.
 - **Purpose:** convert the separately selected Mamba and MLA research results into one auditable 40-layer production initialization contract before any full checkpoint import or recovery run.
 - **Layer contract:** exactly six retained attention layers `(5,12,19,25,32,39)` and 34 Mamba-3 MIMO layers, i.e. exactly 15% attention / 85% Mamba. Every layer owns exactly the six Qwen mixer tensors Q/K/V/O plus Q/K norms.
