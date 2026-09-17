@@ -1,7 +1,7 @@
 # EXP-087 completed result
 
-Reviewed 2026-09-18. Four of four data replications complete for both seeds.
-Final resumed invocation: 1.7967 hours (rounded summary 1.797); previous invocation
+Four of four data replications complete for both seeds.
+Final resumed invocation: 1.797 hours (rounded summary); previous invocation
 5.293 hours. No outer durability warnings. Overall registered gate fails.
 
 | Seed | Joint mean final-start NLL | Normal 95% upper | Improving | Joint minus independent | Gate |
