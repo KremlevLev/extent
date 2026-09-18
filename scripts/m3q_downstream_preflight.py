@@ -8,10 +8,10 @@ import jax.numpy as jnp
 from extent import HybridForCausalLM, tiny_config
 from extent.config import load_config
 from extent.campaign_checkpoint import write_json_atomic
-from extent.downstream_recovery import HybridDecoderSuffix, suffix_parameters, make_downstream_recovery_step
-from extent.initialization import initialize_sharded_parameters
+from extent.downstream_recovery import HybridDecoderSuffix, suffix_parameters, make_downstream_recovery_step, layout_stable_downstream_step
+from extent.initialization import initialize_sharded_parameters, initialize_sharded_optimizer_state
 from extent.optimizer import create_lion
-from extent.sharding import create_v5e_mesh, batch_sharding
+from extent.sharding import create_v5e_mesh, batch_sharding, replicated_sharding
 from scripts.qwen_extended_horizon_campaign import _safe_notify
 
 
@@ -43,10 +43,19 @@ def main(argv=None):
     candidate = {f"layers_{index}": params[f"layers_{index}"]["mamba"] for index in pair}
     suffix = HybridDecoderSuffix(config, first)
     tx = create_lion(learning_rate=1e-5, total_steps=10, warmup_steps=1)
-    state = tx.init(candidate)
+    candidate_layout = jax.tree.map(lambda value: value.sharding, candidate)
+    state = initialize_sharded_optimizer_state(
+        tx, candidate, candidate, candidate_layout, mesh,
+    ).opt_state
     # Deliberately synthetic nonzero-gradient target; never treated as experiment evidence.
-    targets = jnp.zeros((1, args.sequence_length, config.vocab_size), jnp.float32)
-    step = jax.jit(make_downstream_recovery_step(suffix, tx))
+    targets = jax.device_put(
+        jnp.zeros((1, args.sequence_length, config.vocab_size), jnp.float32),
+        replicated_sharding(mesh),
+    )
+    step = layout_stable_downstream_step(
+        make_downstream_recovery_step(suffix, tx),
+        candidate, state, frozen, hidden, targets,
+    )
     result = {"protocol": "exp088-downstream-engineering-preflight-v1",
               "scientific_experiment": False, "status": "running", "steps": [],
               "pair": list(pair), "sequence_length": args.sequence_length,

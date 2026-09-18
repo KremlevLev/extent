@@ -64,3 +64,11 @@ def make_downstream_recovery_step(suffix, tx, *, bf16_gradients=True):
         return optax.apply_updates(candidate, updates), opt_state, {"loss": loss, **health}
 
     return step
+
+
+def layout_stable_downstream_step(step, candidate, state, frozen, hidden, targets):
+    """Pin recurrent outputs to their input layouts for repeated AOT calls."""
+    layouts = tuple(jax.tree.map(lambda value: value.sharding, tree)
+                    for tree in (candidate, state, frozen, hidden, targets))
+    return jax.jit(step, in_shardings=layouts,
+                   out_shardings=(layouts[0], layouts[1], None))
