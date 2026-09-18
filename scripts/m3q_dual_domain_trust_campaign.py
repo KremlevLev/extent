@@ -158,6 +158,14 @@ def experiment_contract():
             contract["interaction_aware_extension"]["proposal_compute"] = (
                 "same updates per Mamba subtree; composed backward FLOPs differ"
             )
+        if "downstream_kl" in (CONTROL_PROPOSAL_MODE, PRIMARY_PROPOSAL_MODE):
+            contract["downstream_training_extension"] = {
+                "train_windows": sweep.TRAIN_WINDOWS,
+                "train_length": sweep.TRAIN_LENGTH,
+                "target": "offline frozen full-Qwen logits on natural training tokens",
+                "temperature": 1.0,
+                "trainable": "current Mamba pair only; prefix cached and suffix frozen",
+            }
         if REQUIRED_JOINT_RESCUE_REPLICATIONS:
             contract["gate"] += (
                 f" Joint-only rescue in >={REQUIRED_JOINT_RESCUE_REPLICATIONS}/"

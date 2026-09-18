@@ -17,13 +17,14 @@ import numpy as np
 
 from extent import HybridForCausalLM
 from extent.block_recovery import make_block_recovery_step
+from extent.downstream_recovery import HybridDecoderSuffix, suffix_parameters, make_downstream_recovery_step, layout_stable_downstream_step
 from extent.calibration_data import load_pg19_tokens, load_wikitext2_tokens
 from extent.campaign_checkpoint import CampaignCheckpointStore, write_json_atomic
 from extent.composition_diagnostics import compose_parameters
 from extent.config import load_config
 from extent.full_model_distillation import full_model_eval_metrics
 from extent.hf_artifact_sync import artifact_config_from_env, restore_artifact, upload_artifact
-from extent.initialization import abstract_parameter_tree, initialize_sharded_parameters
+from extent.initialization import abstract_parameter_tree, initialize_sharded_parameters, initialize_sharded_optimizer_state
 from extent.model import HybridDecoderLayer
 from extent.offline_distillation import deterministic_batch_indices
 from extent.optimizer import create_lion
@@ -31,7 +32,7 @@ from extent.qwen3_teacher import Qwen3DecoderLayer, Qwen3ForCausalLM
 from extent.qwen_source import QWEN3_1_7B_BASE, teacher_config_from_spec
 from extent.sequential_recovery import make_conditional_recovery_step
 from extent.sequential_recovery import replace_mamba
-from extent.sharding import batch_sharding, named_sharding_tree, validate_partition_specs
+from extent.sharding import batch_sharding, named_sharding_tree, validate_partition_specs, replicated_sharding
 from extent.weight_mapping import stream_teacher_qwen_weights
 from scripts.m3q_allocation_campaign import HF_PREFIX as EXP069_PREFIX
 from scripts.m3q_allocation_campaign import contract_for
@@ -673,6 +674,10 @@ def main(argv=None):
             if secondary_calibration_tokens is not None else None
         )
         eval_teacher_logits = teacher_logits(eval_tokens)
+        downstream_targets = (
+            teacher_logits(train_tokens)
+            if "downstream_kl" in GROUP_PROPOSAL_MODE.values() else None
+        )
 
         generic_cfg = replace(
             config,
@@ -698,6 +703,7 @@ def main(argv=None):
         embedding_table = teacher_params["embed_tokens"]["embedding"]
         model_cache, prefix_forward_cache = {}, {}
         joint_step_cache, teacher_segment_cache = {}, {}
+        downstream_step_cache = {}
 
         def segment_functions(layers):
             if layers not in joint_step_cache:
@@ -867,8 +873,63 @@ def main(argv=None):
                         proposal_started = time.monotonic()
                         currents, proposals, proposal_records = {}, {}, {}
                         proposal_mode = GROUP_PROPOSAL_MODE.get(arm, "independent")
-                        if proposal_mode not in ("independent", "joint_segment"):
+                        if proposal_mode not in ("independent", "joint_segment", "downstream_kl"):
                             raise ValueError(f"unsupported pair proposal mode: {proposal_mode}")
+                        if proposal_mode == "downstream_kl":
+                            inputs = branch_inputs(group_endpoints, layers[0])
+                            _, full_params = assemble(order, group_endpoints)
+                            frozen = suffix_parameters(full_params, layers[0])
+                            candidate = {
+                                f"layers_{layer}": full_params[f"layers_{layer}"]["mamba"]
+                                for layer in layers
+                            }
+                            candidate_layout = jax.tree.map(lambda value: value.sharding, candidate)
+                            opt_state = initialize_sharded_optimizer_state(
+                                tx, candidate, candidate, candidate_layout, mesh,
+                            ).opt_state
+                            hidden = jax.device_put(inputs[:1].astype(jnp.bfloat16), replicated_sharding(mesh))
+                            target = jax.device_put(downstream_targets[0], replicated_sharding(mesh))
+                            if layers not in downstream_step_cache:
+                                raw_step = make_downstream_recovery_step(
+                                    HybridDecoderSuffix(config, layers[0]), tx,
+                                )
+                                downstream_step_cache[layers] = layout_stable_downstream_step(
+                                    raw_step, candidate, opt_state, frozen, hidden, target,
+                                )
+                            run_downstream = downstream_step_cache[layers]
+                            currents = {layer: candidate[f"layers_{layer}"] for layer in layers}
+                            first = last = None
+                            for zero_step in range(STEPS_PER_LAYER):
+                                index = deterministic_batch_indices(
+                                    zero_step, 1, TRAIN_WINDOWS,
+                                    DATA_SEED + seed + group_start + 1,
+                                )[0]
+                                candidate, opt_state, metrics = run_downstream(
+                                    candidate, opt_state, frozen,
+                                    jax.device_put(inputs[index:index + 1].astype(jnp.bfloat16), replicated_sharding(mesh)),
+                                    jax.device_put(downstream_targets[index], replicated_sharding(mesh)),
+                                )
+                                if zero_step == 0 or (zero_step + 1) % 64 == 0 or zero_step == STEPS_PER_LAYER - 1:
+                                    jax.block_until_ready(metrics)
+                                    record = _metric_record(metrics)
+                                    first = record if first is None else first
+                                    last = record
+                                    result["active_downstream_proposal"] = {
+                                        "stage": stage, "step": zero_step + 1,
+                                        "loss": record["loss"] if np.isfinite(record["loss"]) else None,
+                                        "grad_norm": record["grad_norm"] if np.isfinite(record["grad_norm"]) else None,
+                                        "grads_finite": record["grads_finite"],
+                                    }
+                                    persist()
+                                    if not record["grads_finite"]:
+                                        raise FloatingPointError(f"non-finite downstream proposal: {stage}")
+                                    print(f"{stage} step={zero_step + 1} kl={record['loss']:.6g} finite=True", flush=True)
+                            proposals = {layer: candidate[f"layers_{layer}"] for layer in layers}
+                            proposal_records["downstream_kl"] = {
+                                "first_loss": first["loss"], "final_loss": last["loss"],
+                                "final_grad_norm": last["grad_norm"],
+                            }
+                            del inputs, full_params, frozen, candidate, opt_state, hidden, target
                         if proposal_mode == "joint_segment":
                             inputs = branch_inputs(group_endpoints, layers[0])
                             segment_teacher = {
