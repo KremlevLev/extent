@@ -72,7 +72,7 @@ def _now() -> str:
 
 
 def experiment_contract(config) -> dict:
-    return {
+    contract = {
         "protocol": PROTOCOL,
         "source": f"{QWEN3_1_7B_BASE.repo_id}@{QWEN3_1_7B_BASE.revision}",
         "model": asdict(config),
@@ -112,6 +112,9 @@ def experiment_contract(config) -> dict:
             "initialization during 25.166M-token whole-model recovery?"
         ),
     }
+    # Checkpoint metadata makes a JSON round trip locally and on HF.  Normalize
+    # tuples now so a resumed session cannot reject its own immutable contract.
+    return json.loads(json.dumps(contract, allow_nan=False))
 
 
 def aggregate(result: dict) -> dict:
