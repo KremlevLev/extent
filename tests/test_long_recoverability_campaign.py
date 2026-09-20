@@ -28,6 +28,7 @@ def test_contract_is_long_horizon_and_pins_model_shape():
     assert contract["tokens_per_trajectory"] == TOTAL_STEPS * 256
     assert contract["checkpoints"] == list(CHECKPOINTS)
     assert contract["model"]["attention_layer_indices"] == [0]
+    assert "intervention" not in contract
 
 
 def test_aggregate_requires_exact_to_win_both_metrics_at_both_seeds():

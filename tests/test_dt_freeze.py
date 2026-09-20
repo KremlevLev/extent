@@ -61,3 +61,13 @@ def test_exp090_entrypoint_selects_separate_resumable_contract(monkeypatch):
     assert result["arms"] == ("RANDOM", "RANDOM-DT-FROZEN")
     assert result["primary"] == "RANDOM-DT-FROZEN"
     assert result["frozen_steps"] == 32_768
+
+
+def test_exp090_contract_records_dt_intervention():
+    original = base_campaign.FROZEN_DT_STEPS
+    try:
+        base_campaign.FROZEN_DT_STEPS = 32_768
+        contract = base_campaign.experiment_contract(tiny_config())
+    finally:
+        base_campaign.FROZEN_DT_STEPS = original
+    assert contract["intervention"] == {"frozen_dt_steps": 32_768}

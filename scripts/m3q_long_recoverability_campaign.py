@@ -118,8 +118,9 @@ def experiment_contract(config) -> dict:
             "true_token_cross_entropy_weight": 0.1,
         },
         "primary_question": PRIMARY_QUESTION,
-        "intervention": {"frozen_dt_steps": FROZEN_DT_STEPS},
     }
+    if FROZEN_DT_STEPS:
+        contract["intervention"] = {"frozen_dt_steps": FROZEN_DT_STEPS}
     # Checkpoint metadata makes a JSON round trip locally and on HF.  Normalize
     # tuples now so a resumed session cannot reject its own immutable contract.
     return json.loads(json.dumps(contract, allow_nan=False))
