@@ -15,6 +15,15 @@ def main(argv: list[str] | None = None) -> dict:
     campaign.ARTIFACT_STEM = "extent-m3q-dt-freeze"
     campaign.EXPERIMENT_LABEL = "long-horizon dt-freeze recovery"
     campaign.FROZEN_DT_STEPS = 32_768
+    # EXP-089 and the first EXP-090 session already provide the byte-identical
+    # deterministic control.  Prioritize both intervention trajectories so a
+    # scarce TPU session measures the hypothesis rather than repeating control.
+    campaign.EXECUTION_ORDER = (
+        (123, "RANDOM-DT-FROZEN"),
+        (456, "RANDOM-DT-FROZEN"),
+        (123, "RANDOM"),
+        (456, "RANDOM"),
+    )
     campaign.PRIMARY_QUESTION = (
         "Does freezing Mamba-3 dt for the first 8.389M tokens improve "
         "25.166M-token whole-model recovery from canonical random initialization?"

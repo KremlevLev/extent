@@ -66,6 +66,7 @@ PRIMARY_QUESTION = (
     "initialization during 25.166M-token whole-model recovery?"
 )
 FROZEN_DT_STEPS = 0
+EXECUTION_ORDER = None
 TOTAL_STEPS = 98_304
 SEQUENCE_LENGTH = 256
 TOKENS_PER_TRAJECTORY = TOTAL_STEPS * SEQUENCE_LENGTH
@@ -338,7 +339,7 @@ def main(argv: list[str] | None = None) -> dict:
         def teacher_apply(params, tokens, return_hidden):
             return teacher_model.apply({"params": params}, tokens), ()
 
-        execution_order = (
+        execution_order = EXECUTION_ORDER or (
             (123, CONTROL_ARM), (123, PRIMARY_ARM),
             (456, PRIMARY_ARM), (456, CONTROL_ARM),
         )

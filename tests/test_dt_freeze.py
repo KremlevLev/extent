@@ -37,6 +37,7 @@ def test_exp090_entrypoint_selects_separate_resumable_contract(monkeypatch):
             "PROTOCOL", "HF_PREFIX", "ARMS", "CONTROL_ARM", "PRIMARY_ARM",
             "EXPERIMENT_ID", "ARTIFACT_STEM", "EXPERIMENT_LABEL",
             "FROZEN_DT_STEPS", "PRIMARY_QUESTION",
+            "EXECUTION_ORDER",
         )
     }
 
@@ -47,6 +48,7 @@ def test_exp090_entrypoint_selects_separate_resumable_contract(monkeypatch):
             arms=base_campaign.ARMS,
             primary=base_campaign.PRIMARY_ARM,
             frozen_steps=base_campaign.FROZEN_DT_STEPS,
+            execution_order=base_campaign.EXECUTION_ORDER,
         )
         return captured
 
@@ -61,6 +63,7 @@ def test_exp090_entrypoint_selects_separate_resumable_contract(monkeypatch):
     assert result["arms"] == ("RANDOM", "RANDOM-DT-FROZEN")
     assert result["primary"] == "RANDOM-DT-FROZEN"
     assert result["frozen_steps"] == 32_768
+    assert result["execution_order"][0] == (123, "RANDOM-DT-FROZEN")
 
 
 def test_exp090_contract_records_dt_intervention():
