@@ -56,6 +56,16 @@ PROTOCOL = "exp089-long-full-model-recoverability-v1"
 HF_PREFIX = "experiments/exp089-long-recoverability"
 SEEDS = (123, 456)
 ARMS = ("RANDOM", "EXACT-LIFT")
+CONTROL_ARM = "RANDOM"
+PRIMARY_ARM = "EXACT-LIFT"
+EXPERIMENT_ID = "EXP-089"
+ARTIFACT_STEM = "extent-m3q-long-recoverability"
+EXPERIMENT_LABEL = "long recoverability"
+PRIMARY_QUESTION = (
+    "Does exact MIMO QKVO lift cross below canonical random Mamba-3 "
+    "initialization during 25.166M-token whole-model recovery?"
+)
+FROZEN_DT_STEPS = 0
 TOTAL_STEPS = 98_304
 SEQUENCE_LENGTH = 256
 TOKENS_PER_TRAJECTORY = TOTAL_STEPS * SEQUENCE_LENGTH
@@ -107,10 +117,8 @@ def experiment_contract(config) -> dict:
             "teacher_to_student_kl_temperature": 2.0,
             "true_token_cross_entropy_weight": 0.1,
         },
-        "primary_question": (
-            "Does exact MIMO QKVO lift cross below canonical random Mamba-3 "
-            "initialization during 25.166M-token whole-model recovery?"
-        ),
+        "primary_question": PRIMARY_QUESTION,
+        "intervention": {"frozen_dt_steps": FROZEN_DT_STEPS},
     }
     # Checkpoint metadata makes a JSON round trip locally and on HF.  Normalize
     # tuples now so a resumed session cannot reject its own immutable contract.
@@ -121,8 +129,8 @@ def aggregate(result: dict) -> dict:
     paired = {}
     for seed in SEEDS:
         rows = result.get("trajectories", {}).get(str(seed), {})
-        random = rows.get("RANDOM", {})
-        exact = rows.get("EXACT-LIFT", {})
+        random = rows.get(CONTROL_ARM, {})
+        exact = rows.get(PRIMARY_ARM, {})
         shared = sorted(
             set(map(int, random.get("evaluations", {})))
             & set(map(int, exact.get("evaluations", {})))
@@ -132,14 +140,14 @@ def aggregate(result: dict) -> dict:
             r = random["evaluations"][str(step)]
             e = exact["evaluations"][str(step)]
             comparisons[str(step)] = {
-                "exact_minus_random_excess_nll": float(
+                "primary_minus_control_excess_nll": float(
                     e["excess_nll"] - r["excess_nll"]
                 ),
-                "exact_minus_random_prediction_kl": float(
+                "primary_minus_control_prediction_kl": float(
                     e["prediction_kl"] - r["prediction_kl"]
                 ),
-                "exact_wins_nll": bool(e["excess_nll"] < r["excess_nll"]),
-                "exact_wins_kl": bool(e["prediction_kl"] < r["prediction_kl"]),
+                "primary_wins_nll": bool(e["excess_nll"] < r["excess_nll"]),
+                "primary_wins_kl": bool(e["prediction_kl"] < r["prediction_kl"]),
             }
         paired[str(seed)] = {
             "shared_checkpoints": shared,
@@ -151,7 +159,7 @@ def aggregate(result: dict) -> dict:
     if complete:
         for row in paired.values():
             endpoint = row["comparisons"][str(TOTAL_STEPS)]
-            final_wins += int(endpoint["exact_wins_nll"] and endpoint["exact_wins_kl"])
+            final_wins += int(endpoint["primary_wins_nll"] and endpoint["primary_wins_kl"])
     return {
         "paired": paired,
         "completed_trajectories": sum(
@@ -160,10 +168,10 @@ def aggregate(result: dict) -> dict:
             for row in rows.values()
         ),
         "complete": complete,
-        "exact_endpoint_wins": final_wins,
+        "primary_endpoint_wins": final_wins,
         "scientific_gate_passed": bool(complete and final_wins == len(SEEDS)),
         "gate_definition": (
-            "At step 98,304 exact lift must beat random in both held-out "
+            f"At step 98,304 {PRIMARY_ARM} must beat {CONTROL_ARM} in held-out "
             "excess NLL and prediction KL for both paired seeds. Curves and "
             "first crossover checkpoints remain primary diagnostic outputs."
         ),
@@ -173,7 +181,7 @@ def aggregate(result: dict) -> dict:
 def render_summary(result: dict) -> str:
     agg = result["aggregate"]
     lines = [
-        "# EXP-089 long-horizon full-model recoverability",
+        f"# {EXPERIMENT_ID} {EXPERIMENT_LABEL}",
         "",
         f"- Status: `{result['status']}`",
         f"- This invocation: `{result['duration_hours']:.3f}` hours",
@@ -236,8 +244,8 @@ def main(argv: list[str] | None = None) -> dict:
     store = CampaignCheckpointStore(state_root, f"{HF_PREFIX}/checkpoints", hub)
     config, _ = load_config(Path(__file__).resolve().parents[1] / "config/hybrid_1_7b_gqa_v5e8.yaml")
     contract = experiment_contract(config)
-    result_path = output / "extent-m3q-long-recoverability.json"
-    summary_path = output / "extent-m3q-long-recoverability-summary.md"
+    result_path = output / f"{ARTIFACT_STEM}.json"
+    summary_path = output / f"{ARTIFACT_STEM}-summary.md"
     result = {
         "protocol": PROTOCOL,
         "contract": contract,
@@ -277,7 +285,7 @@ def main(argv: list[str] | None = None) -> dict:
 
     _safe_notify(
         args.telegram,
-        "Extent TPU campaign\nstatus=started\nexperiment=EXP-089 long recoverability"
+        f"Extent TPU campaign\nstatus=started\nexperiment={EXPERIMENT_ID} {EXPERIMENT_LABEL}"
         f"\nhost={socket.gethostname()}\nsoft_budget_hours={args.max_wall_hours}",
     )
     try:
@@ -330,8 +338,8 @@ def main(argv: list[str] | None = None) -> dict:
             return teacher_model.apply({"params": params}, tokens), ()
 
         execution_order = (
-            (123, "RANDOM"), (123, "EXACT-LIFT"),
-            (456, "EXACT-LIFT"), (456, "RANDOM"),
+            (123, CONTROL_ARM), (123, PRIMARY_ARM),
+            (456, PRIMARY_ARM), (456, CONTROL_ARM),
         )
         for seed, arm in execution_order:
             if time.monotonic() + 15 * 60 >= deadline:
@@ -347,9 +355,10 @@ def main(argv: list[str] | None = None) -> dict:
                 continue
 
             model = HybridForCausalLM(config)
+            uses_exact_lift = arm == "EXACT-LIFT"
             initialized, params, direct_report, mixer_reports = _materialize_student(
                 model, config, source, reader, mesh, init_tokens,
-                exact_mamba=arm == "EXACT-LIFT",
+                exact_mamba=uses_exact_lift,
             )
             layout, abstract = initialized.layout, initialized.abstract_params
             tx = create_lion(
@@ -361,7 +370,7 @@ def main(argv: list[str] | None = None) -> dict:
             )
             opt_state, opt_layout = optimizer.opt_state, optimizer.layout
             row = {
-                "initializer": "random_mamba3" if arm == "RANDOM" else "exact_mimo_lift",
+                "initializer": "exact_mimo_lift" if uses_exact_lift else "random_mamba3",
                 "complete": False, "finite": True, "completed_steps": 0,
                 "tokens_seen": 0, "evaluations": {}, "training_metrics": {},
                 "direct_tensor_count": direct_report.tensor_count,
@@ -388,7 +397,7 @@ def main(argv: list[str] | None = None) -> dict:
                     "max_abs_grad",
                 )
             }
-            train_step = jax.jit(
+            standard_train_step = jax.jit(
                 make_prediction_distill_step(
                     student_apply, teacher_apply, tx, temperature=2.0,
                     cross_entropy_weight=0.1, bf16_gradients=True,
@@ -397,6 +406,22 @@ def main(argv: list[str] | None = None) -> dict:
                 out_shardings=(layout, opt_layout, metric_layout),
                 donate_argnums=(0, 1),
             )
+            frozen_dt_train_step = None
+            if arm == PRIMARY_ARM and FROZEN_DT_STEPS:
+                from extent.dt_freeze import freeze_mamba_dt_gradients
+
+                frozen_dt_train_step = jax.jit(
+                    make_prediction_distill_step(
+                        student_apply, teacher_apply, tx, temperature=2.0,
+                        cross_entropy_weight=0.1, bf16_gradients=True,
+                        gradient_transform=lambda grads: freeze_mamba_dt_gradients(
+                            grads, config
+                        ),
+                    ),
+                    in_shardings=(layout, opt_layout, teacher_layout, batch_layout),
+                    out_shardings=(layout, opt_layout, metric_layout),
+                    donate_argnums=(0, 1),
+                )
 
             @jax.jit
             def eval_batch(p, teacher, tokens):
@@ -445,7 +470,12 @@ def main(argv: list[str] | None = None) -> dict:
                     zero_step, 1, len(train), DATA_SEED + seed
                 )[0])
                 batch = jax.device_put(train[index:index + 1], batch_layout)
-                params, opt_state, metrics = train_step(
+                active_step = (
+                    frozen_dt_train_step
+                    if frozen_dt_train_step is not None and zero_step < FROZEN_DT_STEPS
+                    else standard_train_step
+                )
+                params, opt_state, metrics = active_step(
                     params, opt_state, teacher_params, batch
                 )
                 jax.block_until_ready(metrics)
@@ -475,7 +505,8 @@ def main(argv: list[str] | None = None) -> dict:
             row["complete"] = row["completed_steps"] == TOTAL_STEPS
             if row["completed_steps"] != last_saved:
                 save()
-            del params, opt_state, optimizer, initialized, train_step, eval_batch
+            del params, opt_state, optimizer, initialized, standard_train_step
+            del frozen_dt_train_step, eval_batch
             jax.clear_caches()
             gc.collect()
             if not row["complete"]:
@@ -487,11 +518,11 @@ def main(argv: list[str] | None = None) -> dict:
         persist(upload=True)
         _safe_notify(
             args.telegram,
-            f"Extent TPU campaign\nstatus={result['status']}\nexperiment=EXP-089"
+            f"Extent TPU campaign\nstatus={result['status']}\nexperiment={EXPERIMENT_ID}"
             f"\nduration_hours={result['duration_hours']:.3f}"
             f"\ntrajectories={result['aggregate']['completed_trajectories']}/4",
         )
-        print(f"EXP089-{result['status'].upper()}\nsummary={summary_path.resolve()}")
+        print(f"{EXPERIMENT_ID.replace('-', '')}-{result['status'].upper()}\nsummary={summary_path.resolve()}")
         return result
     except BaseException as exc:
         result.update(
@@ -501,7 +532,7 @@ def main(argv: list[str] | None = None) -> dict:
         persist(upload=True)
         _safe_notify(
             args.telegram,
-            f"Extent TPU campaign\nstatus=failed\nexperiment=EXP-089"
+            f"Extent TPU campaign\nstatus=failed\nexperiment={EXPERIMENT_ID}"
             f"\nstage={stage}\nerror={type(exc).__name__}: {exc}",
         )
         raise

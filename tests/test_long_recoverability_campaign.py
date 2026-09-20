@@ -43,7 +43,7 @@ def test_aggregate_requires_exact_to_win_both_metrics_at_both_seeds():
     )
     summary = aggregate(result)
     assert not summary["scientific_gate_passed"]
-    assert summary["exact_endpoint_wins"] == 1
+    assert summary["primary_endpoint_wins"] == 1
 
 
 def test_partial_resume_curve_is_reported_but_cannot_pass():

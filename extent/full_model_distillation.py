@@ -121,6 +121,7 @@ def make_prediction_distill_step(
     cross_entropy_weight: float,
     bf16_gradients: bool,
     trainable_mask=None,
+    gradient_transform=None,
 ) -> Callable:
     """Create the standard exact-init end-to-end KL baseline step."""
     if cross_entropy_weight < 0:
@@ -151,6 +152,8 @@ def make_prediction_distill_step(
                 grads,
                 trainable_mask,
             )
+        if gradient_transform is not None:
+            grads = gradient_transform(grads)
         health = gradient_health(grads)
         updates, opt_state = tx.update(
             cast_grads_bf16(grads) if bf16_gradients else grads,
