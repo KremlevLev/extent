@@ -1,5 +1,14 @@
 # Extent: JAX Mamba-3/MLA hybrid prototype
 
+Research status (September 2026): the 1.7B full-model experiments have not
+yet established a reliable Qwen-to-Mamba-3 recovery method. In EXP-089, the
+exact QKVO lift lost to random initialization after 25.17M training tokens
+for the completed paired seed. EXP-090 tested freezing Mamba-3's timestep
+parameters for the first 8.39M tokens: it slightly improved one seed but
+substantially worsened the other at the 25.17M-token endpoint. The registered
+two-seed gate failed. Full measurements and limitations are recorded in
+`extent technical report.md`.
+
 `Extent-14B` is the model built in this repository. It is a research bring-up
 path for a parameter-matched Qwen 14B-class hybrid: 34 Mamba-3 MIMO mixers,
 6 MLA mixers, and the Qwen3 SwiGLU MLPs. It targets one TPU v5e-8 slice, but all
