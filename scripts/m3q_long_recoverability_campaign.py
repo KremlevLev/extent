@@ -27,6 +27,7 @@ import numpy as np
 
 from extent import HybridForCausalLM
 from extent.calibration_data import load_wikitext2_tokens
+from extent.backbone_anchor import scale_copied_backbone_updates
 from extent.campaign_checkpoint import CampaignCheckpointStore, write_json_atomic
 from extent.config import load_config
 from extent.full_model_distillation import (
@@ -66,6 +67,8 @@ PRIMARY_QUESTION = (
     "initialization during 25.166M-token whole-model recovery?"
 )
 FROZEN_DT_STEPS = 0
+WARM_START_ARMS = ()
+BACKBONE_UPDATE_SCALE = {}
 EXECUTION_ORDER = None
 TOTAL_STEPS = 98_304
 SEQUENCE_LENGTH = 256
@@ -122,6 +125,15 @@ def experiment_contract(config) -> dict:
     }
     if FROZEN_DT_STEPS:
         contract["intervention"] = {"frozen_dt_steps": FROZEN_DT_STEPS}
+    if WARM_START_ARMS:
+        from scripts.m3q_full_depth_sequential_confirmation import configured_contract
+
+        contract["warm_start"] = {
+            "source": "EXP-072-v2 ONPOLICY layer endpoints",
+            "source_contract": configured_contract(config),
+            "arms": list(WARM_START_ARMS),
+            "backbone_update_scale": BACKBONE_UPDATE_SCALE,
+        }
     # Checkpoint metadata makes a JSON round trip locally and on HF.  Normalize
     # tuples now so a resumed session cannot reject its own immutable contract.
     return json.loads(json.dumps(contract, allow_nan=False))
@@ -173,7 +185,7 @@ def aggregate(result: dict) -> dict:
         "primary_endpoint_wins": final_wins,
         "scientific_gate_passed": bool(complete and final_wins == len(SEEDS)),
         "gate_definition": (
-            f"At step 98,304 {PRIMARY_ARM} must beat {CONTROL_ARM} in held-out "
+            f"At step {TOTAL_STEPS:,} {PRIMARY_ARM} must beat {CONTROL_ARM} in held-out "
             "excess NLL and prediction KL for both paired seeds. Curves and "
             "first crossover checkpoints remain primary diagnostic outputs."
         ),
@@ -223,6 +235,8 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--state-dir", default="/dev/shm/extent-exp089-state")
     parser.add_argument("--qwen-cache-dir", default="/dev/shm/qwen3-1.7b-exp089-weights")
     parser.add_argument("--dataset-cache-dir", default="/kaggle/working/extent-dataset-cache")
+    parser.add_argument("--exp069-state-dir", default="/dev/shm/extent-exp069-state")
+    parser.add_argument("--exp072-state-dir", default="/dev/shm/extent-exp072-v2-state")
     parser.add_argument("--max-wall-hours", type=float, default=8.35)
     parser.add_argument("--hf-sync", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--telegram", action=argparse.BooleanOptionalAction, default=True)
@@ -281,7 +295,7 @@ def main(argv: list[str] | None = None) -> dict:
             ):
                 try:
                     upload_artifact(local, f"{HF_PREFIX}/{remote}", hub,
-                                    commit_message="EXP-089 progress")
+                                    commit_message=f"{EXPERIMENT_ID} progress")
                 except Exception as exc:
                     print(f"hf_summary=FAILED type={type(exc).__name__}; local retained", flush=True)
 
@@ -294,7 +308,7 @@ def main(argv: list[str] | None = None) -> dict:
         devices = list(jax.devices())
         result["devices"] = [str(device) for device in devices]
         if len(devices) != 8 or any(device.platform != "tpu" for device in devices):
-            raise ValueError("EXP-089 requires one TPU v5e-8")
+            raise ValueError(f"{EXPERIMENT_ID} requires one TPU v5e-8")
         mesh = create_v5e_mesh(devices)
         batch_layout = batch_sharding(mesh)
         replicated = replicated_sharding(mesh)
@@ -351,6 +365,8 @@ def main(argv: list[str] | None = None) -> dict:
             checkpoint_contract = dict(
                 contract, kind="full_model_trajectory", seed=seed, arm=arm
             )
+            if arm in WARM_START_ARMS:
+                checkpoint_contract["data_sha256"] = result["data_sha256"]
             meta = store.metadata(slot, checkpoint_contract)
             if meta is not None and meta["metrics"].get("complete"):
                 result["trajectories"].setdefault(str(seed), {})[arm] = meta["metrics"]
@@ -363,6 +379,52 @@ def main(argv: list[str] | None = None) -> dict:
                 exact_mamba=uses_exact_lift,
             )
             layout, abstract = initialized.layout, initialized.abstract_params
+            warm_start_hashes = {}
+            if arm in WARM_START_ARMS and meta is None:
+                from extent.composition_diagnostics import compose_parameters
+                from scripts.m3q_allocation_campaign import HF_PREFIX as EXP069_PREFIX
+                from scripts.m3q_full_depth_sequential_confirmation import OVERRIDES as EXP072
+                from scripts import m3q_sequential_recovery_campaign as sequential
+                from scripts.m3q_sequential_joint_recovery_campaign import detach_donated_tree
+
+                if hub is None:
+                    raise ValueError("ONPOLICY warm start requires HF endpoint access")
+                seq_contract = contract["warm_start"]["source_contract"]
+                order = tuple(seq_contract["replacement_order"])
+                if set(order) != set(range(config.num_layers)) - set(config.attention_layer_indices):
+                    raise ValueError("EXP-072 replacement order does not match model")
+                base_store = CampaignCheckpointStore(
+                    Path(args.exp069_state_dir), f"{EXP069_PREFIX}/checkpoints", hub
+                )
+                seq_store = CampaignCheckpointStore(
+                    Path(args.exp072_state_dir), f"{EXP072['HF_PREFIX']}/checkpoints", hub
+                )
+                endpoints = {}
+                for depth, layer in enumerate(order, 1):
+                    base_slot = f"prep/seed-{seed}/layer-{layer}"
+                    base_contract = dict(
+                        seq_contract["source_contract"], seed=seed, layer=layer,
+                        kind="prepared_mamba",
+                    )
+                    base_meta = base_store.metadata(base_slot, base_contract)
+                    if base_meta is None:
+                        raise FileNotFoundError(f"missing EXP-069 source: {base_slot}")
+                    seq_slot = f"seed-{seed}/ONPOLICY/layer-{layer}"
+                    endpoint_contract = sequential.endpoint_contract(
+                        seq_contract, seed, "ONPOLICY", layer, depth,
+                        base_meta["checkpoint_sha256"],
+                    )
+                    restored = seq_store.restore(seq_slot, endpoint_contract)
+                    if restored is None:
+                        raise FileNotFoundError(f"missing EXP-072 endpoint: {seq_slot}")
+                    payload, endpoint_meta = restored
+                    endpoints[layer] = payload["params"]
+                    warm_start_hashes[str(layer)] = endpoint_meta["checkpoint_sha256"]
+                params = compose_parameters(
+                    teacher_params, endpoints, order, abstract, layout
+                )
+                params = detach_donated_tree(params, layout)
+                del endpoints
             tx = create_lion(
                 learning_rate=3e-5, warmup_steps=512, total_steps=TOTAL_STEPS,
                 weight_decay=0.0, max_grad_norm=1.0,
@@ -372,7 +434,11 @@ def main(argv: list[str] | None = None) -> dict:
             )
             opt_state, opt_layout = optimizer.opt_state, optimizer.layout
             row = {
-                "initializer": "exact_mimo_lift" if uses_exact_lift else "random_mamba3",
+                "initializer": (
+                    "exp072_onpolicy" if arm in WARM_START_ARMS else
+                    "exact_mimo_lift" if uses_exact_lift else "random_mamba3"
+                ),
+                "warm_start_hashes": warm_start_hashes,
                 "complete": False, "finite": True, "completed_steps": 0,
                 "tokens_seen": 0, "evaluations": {}, "training_metrics": {},
                 "direct_tensor_count": direct_report.tensor_count,
@@ -403,6 +469,12 @@ def main(argv: list[str] | None = None) -> dict:
                 make_prediction_distill_step(
                     student_apply, teacher_apply, tx, temperature=2.0,
                     cross_entropy_weight=0.1, bf16_gradients=True,
+                    update_transform=(
+                        None if arm not in BACKBONE_UPDATE_SCALE else
+                        lambda updates: scale_copied_backbone_updates(
+                            updates, scale=BACKBONE_UPDATE_SCALE[arm]
+                        )
+                    ),
                 ),
                 in_shardings=(layout, opt_layout, teacher_layout, batch_layout),
                 out_shardings=(layout, opt_layout, metric_layout),
@@ -461,7 +533,7 @@ def main(argv: list[str] | None = None) -> dict:
                 row["evaluations"]["0"] = evaluate(params)
                 save()
             print(
-                f"exp089 seed={seed} arm={arm} resume_step={row['completed_steps']}",
+                f"{EXPERIMENT_ID.lower()} seed={seed} arm={arm} resume_step={row['completed_steps']}",
                 flush=True,
             )
             last_saved = row["completed_steps"]
@@ -493,7 +565,7 @@ def main(argv: list[str] | None = None) -> dict:
                     row["evaluations"][str(step)] = evaluate(params)
                     row["training_metrics"][str(step)] = _metric_record(metrics)
                     print(
-                        f"exp089 seed={seed} arm={arm} step={step} "
+                        f"{EXPERIMENT_ID.lower()} seed={seed} arm={arm} step={step} "
                         f"tokens={row['tokens_seen']} "
                         f"excess_nll={row['evaluations'][str(step)]['excess_nll']:.6f}",
                         flush=True,

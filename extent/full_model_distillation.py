@@ -122,6 +122,7 @@ def make_prediction_distill_step(
     bf16_gradients: bool,
     trainable_mask=None,
     gradient_transform=None,
+    update_transform=None,
 ) -> Callable:
     """Create the standard exact-init end-to-end KL baseline step."""
     if cross_entropy_weight < 0:
@@ -160,6 +161,8 @@ def make_prediction_distill_step(
             opt_state,
             student_params,
         )
+        if update_transform is not None:
+            updates = update_transform(updates)
         student_params = optax.apply_updates(student_params, updates)
         return student_params, opt_state, {
             "loss": loss,
