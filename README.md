@@ -9,6 +9,9 @@ substantially worsened the other at the 25.17M-token endpoint. The registered
 two-seed gate failed. Full measurements and limitations are recorded in
 `extent technical report.md`.
 
+For the paired EXP-090 endpoint numbers and the exact stop decision, see
+[`results/EXP-090-completed-summary.md`](results/EXP-090-completed-summary.md).
+
 `Extent-14B` is the model built in this repository. It is a research bring-up
 path for a parameter-matched Qwen 14B-class hybrid: 34 Mamba-3 MIMO mixers,
 6 MLA mixers, and the Qwen3 SwiGLU MLPs. It targets one TPU v5e-8 slice, but all
