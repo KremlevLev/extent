@@ -55,7 +55,7 @@ def preflight_source_endpoints(*, api=None):
     print(f"exp091_source_preflight=PASS manifests={len(required)}", flush=True)
 
 
-def main(argv: list[str] | None = None) -> dict:
+def configure() -> None:
     campaign.PROTOCOL = "exp091-onpolicy-backbone-anchor-v1"
     campaign.HF_PREFIX = "experiments/exp091-onpolicy-backbone-anchor"
     campaign.ARMS = ("ONPOLICY-PLAIN", "ONPOLICY-ANCHOR")
@@ -83,6 +83,10 @@ def main(argv: list[str] | None = None) -> dict:
         (456, "ONPOLICY-ANCHOR"),
         (456, "ONPOLICY-PLAIN"),
     )
+
+
+def main(argv: list[str] | None = None) -> dict:
+    configure()
     preflight_source_endpoints()
     return campaign.main(argv)
 
