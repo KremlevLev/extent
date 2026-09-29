@@ -68,6 +68,42 @@ def upload_artifact(
     )
 
 
+def upload_artifacts_together(
+    files: list[tuple[str | Path, str]],
+    config: HubArtifactConfig,
+    *,
+    commit_message: str,
+    api: Any | None = None,
+):
+    """Upload several small artifacts in one Hub commit, not one per file."""
+    from huggingface_hub import CommitOperationAdd, HfApi
+
+    if not files:
+        raise ValueError("at least one artifact is required")
+    operations = []
+    destinations = set()
+    for local_path, path_in_repo in files:
+        source = Path(local_path)
+        if not source.is_file():
+            raise FileNotFoundError(source)
+        destination = normalize_hub_path(path_in_repo)
+        if destination in destinations:
+            raise ValueError(f"duplicate Hub artifact path: {destination}")
+        destinations.add(destination)
+        operations.append(CommitOperationAdd(
+            path_in_repo=destination, path_or_fileobj=source,
+        ))
+    api = HfApi(token=config.token) if api is None else api
+    return api.create_commit(
+        repo_id=config.repo_id,
+        repo_type=config.repo_type,
+        revision=config.revision,
+        operations=operations,
+        commit_message=commit_message,
+        token=config.token,
+    )
+
+
 def restore_artifact(
     local_path: str | Path,
     path_in_repo: str,

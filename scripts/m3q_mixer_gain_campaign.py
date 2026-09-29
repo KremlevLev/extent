@@ -29,7 +29,9 @@ from extent.campaign_checkpoint import CampaignCheckpointStore, write_json_atomi
 from extent.composition_diagnostics import compose_parameters
 from extent.config import load_config
 from extent.full_model_distillation import causal_cross_entropy
-from extent.hf_artifact_sync import artifact_config_from_env, restore_artifact, upload_artifact
+from extent.hf_artifact_sync import (
+    artifact_config_from_env, restore_artifact, upload_artifacts_together,
+)
 from extent.initialization import initialize_sharded_parameters
 from extent.mixer_gain import effective_gains, scaled_mamba_parameters
 from extent.qwen3_teacher import Qwen3ForCausalLM
@@ -50,6 +52,11 @@ SEEDS = (123, 456)
 ARMS = ("GLOBAL", "PER-LAYER")
 STEPS = 2048
 SAVE_EVERY = 128
+REMOTE_SAVE_EVERY = 256
+RATE_LIMIT_COOLDOWN_SECONDS = 3600
+ALLOWED_PREVIOUS_REVISIONS = {
+    "35526fca70c0a503ba6f664b98396e72c86302e2",  # EXP-093 before the HF commit fix.
+}
 LENGTH = 256
 TRAIN_WINDOWS = 2048
 TRAIN_OFFSET = 7_340_032
@@ -135,6 +142,28 @@ def _optimizer_record(state):
             "nu": np.asarray(adam.nu).tolist()}
 
 
+def _is_hub_rate_limit(error):
+    response = getattr(error, "response", None)
+    return getattr(response, "status_code", None) == 429
+
+
+def _upload_result_pair(result_path, summary_path, hub):
+    return upload_artifacts_together(
+        [(result_path, f"{HF_PREFIX}/latest.json"),
+         (summary_path, f"{HF_PREFIX}/latest-summary.md")],
+        hub, commit_message="EXP-093 resumable progress",
+    )
+
+
+def _record_resume_revision(result, revision):
+    previous = result.get("git_revision", revision)
+    if previous != revision:
+        if previous not in ALLOWED_PREVIOUS_REVISIONS:
+            raise ValueError("EXP-093 code revision changed during resume")
+        result.setdefault("code_revisions", [previous]).append(revision)
+    result["git_revision"] = revision
+
+
 def main(argv: list[str] | None = None) -> dict:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default="/kaggle/working/output")
@@ -143,6 +172,8 @@ def main(argv: list[str] | None = None) -> dict:
     parser.add_argument("--dataset-cache-dir", default="/kaggle/working/extent-dataset-cache")
     parser.add_argument("--max-wall-hours", type=float, default=8.25)
     parser.add_argument("--telegram", action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument("--sync-only", action="store_true",
+                        help="upload local result without initializing a TPU")
     args = parser.parse_args(argv)
     if not 1 <= args.max_wall_hours <= 8.5:
         raise ValueError("max-wall-hours must be between 1 and 8.5")
@@ -155,10 +186,28 @@ def main(argv: list[str] | None = None) -> dict:
     hub = artifact_config_from_env()
     if hub is None:
         raise ValueError("HF_TOKEN and EXTENT_HF_CHECKPOINT_REPO are required")
+    if args.sync_only:
+        if not result_path.is_file():
+            raise FileNotFoundError(f"no local EXP-093 result to sync: {result_path}")
+        local_result = json.loads(result_path.read_text(encoding="utf-8"))
+        pending = {key: local_result[key] for key in
+                   ("remote_sync_pending", "remote_sync_error") if key in local_result}
+        local_result.pop("remote_sync_pending", None)
+        local_result.pop("remote_sync_error", None)
+        local_result["aggregate"] = aggregate(local_result)
+        write_json_atomic(result_path, local_result)
+        summary_path.write_text(render_summary(local_result), encoding="utf-8")
+        try:
+            _upload_result_pair(result_path, summary_path, hub)
+        except Exception:
+            local_result.update(pending)
+            write_json_atomic(result_path, local_result)
+            raise
+        print(f"EXP093-SYNC-PASS result={result_path.resolve()}", flush=True)
+        return local_result
     stage = "preflight"
     _safe_notify(args.telegram, f"Extent EXP-093 started host={socket.gethostname()}")
     try:
-        exp091.preflight_source_endpoints()
         config, _ = load_config(
             Path(__file__).resolve().parents[1] / "config/hybrid_1_7b_gqa_v5e8.yaml"
         )
@@ -172,32 +221,51 @@ def main(argv: list[str] | None = None) -> dict:
             result = {"contract": contract, "status": "running", "branches": {}}
         if result["contract"] != contract:
             raise ValueError("EXP-093 resume contract mismatch")
-        result.pop("traceback", None)
+        if not result.get("branches"):
+            exp091.preflight_source_endpoints()
+        else:
+            print("exp093_source_preflight=RESUME; individual source hashes will be verified", flush=True)
+        if result.get("status") == "failed":
+            result.setdefault("previous_failures", []).append({
+                key: result[key] for key in
+                ("stage", "error_type", "error", "completed_at_utc")
+                if key in result
+            })
+        for key in ("traceback", "stage", "error_type", "error", "completed_at_utc"):
+            result.pop(key, None)
         result["status"] = "running"
         revision = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parents[1],
             capture_output=True, text=True, check=True,
         ).stdout.strip()
-        if result.get("git_revision", revision) != revision:
-            raise ValueError("EXP-093 code revision changed during resume")
-        result["git_revision"] = revision
+        _record_resume_revision(result, revision)
 
-        def persist():
+        next_remote_sync = 0.0
+
+        def persist(*, sync=False):
+            nonlocal next_remote_sync
             result["duration_hours"] = (time.monotonic() - started) / 3600
             result["aggregate"] = aggregate(result)
             write_json_atomic(result_path, result)
             summary_path.write_text(render_summary(result), encoding="utf-8")
-            for path, name in ((result_path, "latest.json"),
-                               (summary_path, "latest-summary.md")):
-                for attempt in range(3):
-                    try:
-                        upload_artifact(path, f"{HF_PREFIX}/{name}", hub,
-                                        commit_message="EXP-093 resumable progress")
-                        break
-                    except Exception:
-                        if attempt == 2:
-                            raise
-                        time.sleep((2, 5)[attempt])
+            if not sync or time.monotonic() < next_remote_sync:
+                return False
+            result.pop("remote_sync_pending", None)
+            result.pop("remote_sync_error", None)
+            write_json_atomic(result_path, result)
+            try:
+                _upload_result_pair(result_path, summary_path, hub)
+            except Exception as exc:
+                if not _is_hub_rate_limit(exc):
+                    raise
+                result["remote_sync_pending"] = True
+                result["remote_sync_error"] = str(exc)
+                write_json_atomic(result_path, result)
+                next_remote_sync = time.monotonic() + RATE_LIMIT_COOLDOWN_SECONDS
+                print("exp093_hf_rate_limited=LOCAL_STATE_SAVED "
+                      "remote_sync_deferred=3600s", flush=True)
+                return False
+            return True
 
         stage = "tpu-and-data"
         devices = list(jax.devices())
@@ -329,14 +397,14 @@ def main(argv: list[str] | None = None) -> dict:
                     row["start_validation_nll"] = evaluate(base, raw, arm, "validation")
                     row.update(step=0, raw=np.asarray(raw).tolist(),
                                optimizer=_optimizer_record(state))
-                    persist()
+                    persist(sync=True)
                 train_step = make_step(arm)
                 for step_number in range(start_step + 1, STEPS + 1):
                     if time.monotonic() >= deadline:
                         row.update(step=step_number - 1, raw=np.asarray(raw).tolist(),
                                    optimizer=_optimizer_record(state))
                         result["status"] = "deadline_partial"
-                        persist()
+                        persist(sync=True)
                         _safe_notify(args.telegram, f"Extent EXP-093 deadline_partial "
                                      f"seed={seed} arm={arm} step={step_number - 1}")
                         return result
@@ -354,7 +422,8 @@ def main(argv: list[str] | None = None) -> dict:
                         row.setdefault("validation", {})[str(step_number)] = evaluate(
                             base, raw, arm, "validation"
                         )
-                        persist()
+                        persist(sync=step_number % REMOTE_SAVE_EVERY == 0
+                                or step_number == STEPS)
                         print(f"exp093 seed={seed} arm={arm} step={step_number} "
                               f"train_nll={float(loss):.6f} "
                               f"val_nll={row['validation'][str(step_number)]:.6f}", flush=True)
@@ -366,7 +435,7 @@ def main(argv: list[str] | None = None) -> dict:
                     effective_gains(raw, arm, len(order))
                 ).tolist()
                 row["complete"] = True
-                persist()
+                persist(sync=True)
                 del raw, state, train_step
                 gc.collect()
             del base
@@ -374,9 +443,10 @@ def main(argv: list[str] | None = None) -> dict:
         result["status"] = "completed"
         result["completed_at_utc"] = datetime.now(timezone.utc).isoformat()
         result["checkpoint_events"] = base_store.events + seq_store.events
-        persist()
+        persist(sync=True)
         _safe_notify(args.telegram, "Extent EXP-093 completed "
-                     f"gate={result['aggregate']['scientific_gate_passed']}")
+                     f"gate={result['aggregate']['scientific_gate_passed']} "
+                     f"remote_synced={not result.get('remote_sync_pending', False)}")
         print(f"EXP093-COMPLETED summary={summary_path.resolve()}", flush=True)
         return result
     except BaseException as exc:
@@ -386,7 +456,7 @@ def main(argv: list[str] | None = None) -> dict:
                            error=str(exc), traceback=traceback.format_exc(),
                            completed_at_utc=datetime.now(timezone.utc).isoformat())
             try:
-                persist()
+                persist(sync=True)
             except Exception:
                 write_json_atomic(result_path, failure)
         else:

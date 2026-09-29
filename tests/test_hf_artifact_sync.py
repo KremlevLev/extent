@@ -7,6 +7,7 @@ from extent.hf_artifact_sync import (
     artifact_config_from_env,
     restore_artifact,
     upload_artifact,
+    upload_artifacts_together,
 )
 
 
@@ -59,3 +60,27 @@ def test_upload_and_restore_use_dataset_namespace(tmp_path):
         download=fake_download,
     )
     assert destination.read_text(encoding="utf-8") == '{"restored": true}'
+
+
+def test_small_artifacts_share_one_commit(tmp_path):
+    first, second = tmp_path / "latest.json", tmp_path / "latest-summary.md"
+    first.write_text("{}", encoding="utf-8")
+    second.write_text("# summary", encoding="utf-8")
+    config = HubArtifactConfig("owner/extent", "dataset", "secret")
+
+    class FakeApi:
+        calls = []
+
+        def create_commit(self, **kwargs):
+            self.calls.append(kwargs)
+            return "committed"
+
+    api = FakeApi()
+    assert upload_artifacts_together(
+        [(first, "experiments/exp093/latest.json"),
+         (second, "experiments/exp093/latest-summary.md")],
+        config, commit_message="progress", api=api,
+    ) == "committed"
+    assert len(api.calls) == 1
+    assert len(api.calls[0]["operations"]) == 2
+    assert api.calls[0]["repo_type"] == "dataset"
