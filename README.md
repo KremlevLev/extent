@@ -854,3 +854,34 @@ EXP-056 tests an operator-preserving QKVO SISO-to-MIMO lift. Single-channel and
 balanced-rank initializations are functionally equal before training, allowing
 their paired recovery trajectories to isolate MIMO optimization geometry. The
 resilient v5e-8 entry point is `scripts.qwen_mimo_lift_campaign`.
+
+### Parallel long recovery campaigns (EXP-094--096)
+
+Use one entry point per Kaggle account after the existing clone/install/secrets
+cells. Each has an independent HF namespace and resumes when rerun:
+
+```python
+# Account 1
+from scripts.m3q_subspace_campaign import main as run_exp094
+result = run_exp094([])
+```
+
+```python
+# Account 2
+from scripts.m3q_subspace_objective_campaign import main as run_exp095
+result = run_exp095([])
+```
+
+```python
+# Account 3
+from scripts.m3q_subspace_capacity_campaign import main as run_exp096
+result = run_exp096([])
+```
+
+Four methods and two source seeds per campaign; balanced2048/4096/8192-step
+horizons. Default8.25h wall cap with30min reserve, not a runtime guarantee.
+Small adapter+Adam binary checkpoints sync directly to HF, compact summaries
+stay in `/kaggle/working/output`. Telegram reports start and final status.
+Details: [registered protocol](results/EXP-094-096-parallel-recovery-protocol.md).
+Each entry point accepts `--plan-only` without TPU/Hub and `--sync-only` for a
+pending local upload. Run no second process that tries to own the notebook TPU.
