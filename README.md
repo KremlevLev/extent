@@ -885,3 +885,15 @@ stay in `/kaggle/working/output`. Telegram reports start and final status.
 Details: [registered protocol](results/EXP-094-096-parallel-recovery-protocol.md).
 Each entry point accepts `--plan-only` without TPU/Hub and `--sync-only` for a
 pending local upload. Run no second process that tries to own the notebook TPU.
+
+EXP-097 diagnoses whether nonfinite stops originate from the naive gradient
+norm or the actual forward/backward computation, with six paired clipping/LR
+arms and resumable8.25h sessions:
+
+```python
+from scripts.m3q_numerical_stability_campaign import main as run_exp097
+result = run_exp097([])
+```
+
+Its small summary includes separate numerical-health flags. Details:
+[EXP-097 protocol](results/EXP-097-numerical-stability-protocol.md).

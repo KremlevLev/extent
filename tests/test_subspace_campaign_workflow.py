@@ -12,7 +12,7 @@ from extent.sharding import create_v5e_mesh
 from scripts import m3q_subspace_engine as engine
 
 
-@pytest.mark.parametrize("mode", ["normal", "interruption", "rate-limit"])
+@pytest.mark.parametrize("mode", ["normal", "interruption", "rate-limit", "diagnostics"])
 def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_path, monkeypatch, mode):
     config = tiny_config()
     real_devices = jax.devices()
@@ -78,13 +78,25 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
             return step
         monkeypatch.setattr(engine, "make_train_step", interrupt_once)
     args = ["--output-dir", str(tmp_path / "output"), "--state-dir", str(tmp_path / "state"), "--no-telegram"]
+    options = {}
+    if mode == "diagnostics":
+        def factory(*values):
+            actual = engine.make_train_step(*values)
+            def run(*inputs):
+                proposal = actual(*inputs)
+                return (*proposal, {"forward_finite": np.bool_(True),
+                    "gradients_finite": np.bool_(True), "norm_only_overflow": np.bool_(True),
+                    "log10_grad_norm": np.float32(1.0), "naive_norm": np.float32(np.inf)})
+            return run
+        options = {"step_factory": factory, "contract_extra": {"test_diagnostics": True,
+                   "evaluate_teacher_baseline": True}}
     if mode == "interruption":
         with pytest.raises(RuntimeError, match="injected session interruption"):
             engine.run_campaign(spec, args)
         partial = json.loads((tmp_path / "output" / f"{spec.stem}.json").read_text())
         assert partial["status"] == "failed"
         assert all(row["step"] == 1 for row in partial["branches"]["123"].values())
-    result = engine.run_campaign(spec, args)
+    result = engine.run_campaign(spec, args, **options)
     assert result["status"] == "completed"
     assert not result["remote_sync_pending"]
     assert all(row["step"] == 3 and row["complete"] for row in result["branches"]["123"].values())
@@ -92,5 +104,12 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
     assert all(path.startswith(spec.prefix) for batch in uploads for path in batch)
     local = json.loads((tmp_path / "output" / f"{spec.stem}.json").read_text())
     assert "optimizer" not in local["branches"]["123"]["OUT"]
+    if mode == "diagnostics":
+        assert np.isfinite(local["original_teacher_test_nll"])
+        assert local["branches"]["123"]["OUT"]["latest_health"]["naive_norm"] is None
+        event = local["branches"]["123"]["OUT"]["first_norm_only_overflow"]
+        assert event["step"] == 1
+        meta = json.loads((tmp_path / "state" / "adapters" / event["checkpoint_slot"] / "checkpoint.json").read_text())
+        assert meta["step"] == 0  # The exact state BEFORE the overflow-producing proposal.
     monkeypatch.setattr(engine, "initialize_sharded_parameters", lambda *args: (_ for _ in ()).throw(AssertionError("unexpected allocation")))
-    assert engine.run_campaign(spec, args)["status"] == "completed"
+    assert engine.run_campaign(spec, args, **options)["status"] == "completed"

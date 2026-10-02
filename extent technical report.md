@@ -1750,6 +1750,21 @@ EXP-087 first partial result (reviewed 2026-09-17): three of four fresh data rep
 
 ## 10. Rules for future entries
 
+### EXP-097 — Same-gradient norm-overflow diagnosis (prepared 2026-10-03)
+
+The full EXP094--096 JSONs confirm their final NLLs but do not isolate the reason
+for their combined nonfinite guard. Some last finite norms approach1e17, and even
+completed rank32 endpoints have large, oscillating gradients. EXP097 registers
+six arms ×two seeds: original/stable clipping/stable clipping with10x lower LR
+for ordinary rank8 and protected rank32. Same-gradient shadow Adam proposals
+separate naive-norm failure from true nonfinite forward/gradient/moment values.
+No invalid gradients are silently repaired, no batches skipped, and no optimizer
+resets performed. Sources/data match the earlier runs; reused test data is not
+fresh confirmation. Up to98,304 steps /25,165,824 input tokens, with8.25h invocation
+cap and HF resume. Numerical gate requires a matched norm-only event and final
+SAFE-R8 unchanged-start improvement at both seeds after all arms reach terminal
+outcomes. Full protocol: `results/EXP-097-numerical-stability-protocol.md`.
+
 ### EXP-094--096 submitted summaries (reviewed 2026-10-03)
 
 All three campaigns report branch failures and fail their registered scientific

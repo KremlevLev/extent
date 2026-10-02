@@ -32,6 +32,29 @@ or inference speed follows. Numerical instability is a major unresolved issue;
 its cause cannot be diagnosed from these summaries alone. Failed endpoints must
 not be replaced by their best intermediate validation values.
 
-The next research decision requires full failure diagnostics and unchanged-start
-teacher metrics; no additional experiment or runtime fix is authorized by this
-documentation-only request.
+At this initial documentation review, full diagnostics were unavailable.
+
+## Full-file addendum (2026-10-03)
+
+The subsequently submitted three full JSON files confirm the same final numbers
+and identical rank8 CE checkpoint hashes across campaigns. The first failed
+updates are OUT-R8 steps5761/3900; INOUT-R8 seed456 step4228; delta bridge91/44;
+teacher KD seed4567358; self-anchor seed4565555; rank64 steps4772/6338;
+protected rank32 seed1234025. The recorded last-good norms include1.6374e17
+before the rank8 failure and6.3729e17 before the seed123 rank64 failure.
+
+The guard combines loss, gradients, their naive norm, new coordinates and Adam
+state, so these files **do not identify the offending quantity**. Even successful
+ordinary rank32 endpoints have last norms1.6565e7 /4.1451e10. Their validation
+curves oscillate substantially; survival must not be called numerical stability.
+Protected rank32 seed456 is smoother after3072 steps, but its other seed fails.
+
+EXP097 is now separately authorized and preregistered to diagnose same-gradient
+norm overflow, compare stable clipping, and test reduced learning rate without
+silently replacing nonfinite gradients. Original experiment results remain fixed.
+
+Full submitted file SHA256 (subspace /objectives /capacity respectively):
+
+- `25cf4e209db3c8d395047450e24b0a37a3087e086fb2c0a8e3ed5e875057ad88`
+- `375280b13cde346924e1a0326a1fcb6958c481da5a49d573d38de968d3902bf3`
+- `35061281c1af59decc7a200de31940f1c8a0884c3cec4d2bb4a8dfc569a6b113`
