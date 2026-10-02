@@ -1750,6 +1750,19 @@ EXP-087 first partial result (reviewed 2026-09-17): three of four fresh data rep
 
 ## 10. Rules for future entries
 
+### EXP-094--096 submitted summaries (reviewed 2026-10-03)
+
+All three campaigns report branch failures and fail their registered scientific
+gates; no HF uploads are pending. Rank32 input/output CE corrections complete in
+both source seeds and reduce locked-test NLL12.968006 ->7.643549 and12.276975 ->9.342761.
+The shared rank8 CE control completes only for seed123 (NLL7.349788), while its
+seed456 branch fails at4227 in all three jobs; those duplicated controls are not
+independent replications. Protected rank32 improves seed456 to7.315458 but fails
+for seed123, so its primary comparison remains unsupported. Output-only, rank64
+and delta-bridge branches also fail; MLP readout worsens final NLL. Only supplied
+summaries were reviewed, not full traces: do not assign a numerical root cause
+or claim full model recovery. Detailed ledger: `results/EXP-094-096-first-results.md`.
+
 For every experiment record:
 
 - experiment ID, date, commit hash, config hash, checkpoint revision;
