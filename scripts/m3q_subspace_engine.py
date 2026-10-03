@@ -23,7 +23,7 @@ import numpy as np
 import optax
 
 from extent import HybridForCausalLM
-from extent.calibration_data import load_wikitext2_tokens
+from extent.calibration_data import load_wikitext2_tokens, load_pg19_tokens, PG19_REVISION, WIKITEXT_REVISION
 from extent.campaign_checkpoint import CampaignCheckpointStore, write_json_atomic
 from extent.composition_diagnostics import compose_parameters
 from extent.config import load_config
@@ -53,6 +53,9 @@ LR = 3e-4
 # Frozen scientific implementation digest for the completed legacy protocols.
 # New hooks below do not change their objective, optimizer or step function.
 LEGACY_ENGINE_SHA256 = "c3e17745b12e2d1bbab225ead5db3db705343327c1caa5241e10a8512dfb36e6"
+# New schedule/evaluation extensions are opt-in. EXP-097 keeps its unchanged
+# diagnostic factory and its completed/resumable scientific source contract.
+EXP097_ENGINE_SHA256 = "dbd4803090b19c5d35634e332ddeceb2619dd904b9849d49326592dfe3213e9c"
 
 @dataclass(frozen=True)
 class Arm:
@@ -78,6 +81,37 @@ class Campaign:
     def stem(self):
         return f"extent-m3q-{self.name}"
 
+
+@dataclass(frozen=True)
+class Schedule:
+    """Per-invocation immutable settings; never mutate the legacy module globals."""
+    horizons: tuple[int, ...]
+    train_windows: int
+    data: tuple[tuple[str, str, int, int], ...]
+    pg19_test_offset: int
+    pg19_test_windows: int = 64
+    max_wall_hours: float = 8.0
+    reserve_minutes: int = 45
+
+    def __post_init__(self):
+        if not self.horizons or tuple(sorted(set(self.horizons))) != self.horizons or self.horizons[0] < 1:
+            raise ValueError("horizons must be strictly increasing positive steps")
+        rows = {name: (split, offset, windows) for name, split, offset, windows in self.data}
+        if len(rows) != len(self.data) or set(rows) != {"train", "validation", "locked_test"}:
+            raise ValueError("schedule must contain unique train/validation/locked_test rows")
+        if rows["train"][2] != self.train_windows or self.train_windows < self.horizons[-1]:
+            raise ValueError("new campaigns require enough unique train windows for the final horizon")
+        if any(offset < 0 or windows < 1 for _, offset, windows in rows.values()):
+            raise ValueError("invalid data range")
+        if self.pg19_test_offset < 0 or self.pg19_test_windows < 1 or not 0 < self.reserve_minutes < self.max_wall_hours * 60:
+            raise ValueError("invalid evaluation range or saving reserve")
+
+
+def terminal_result(spec, result):
+    return all(result.get("branches", {}).get(str(s), {}).get(a.name, {}).get("complete")
+               or result.get("branches", {}).get(str(s), {}).get(a.name, {}).get("failed")
+               for s in SEEDS for a in spec.arms)
+
 def contract_for(spec, config):
     root = Path(__file__).resolve().parents[1]
     return {
@@ -99,8 +133,9 @@ def contract_for(spec, config):
         "selection": "no early stopping/model selection; validation diagnostic; locked test only at8192",
         "gate": "registered primary beats control by >=0.1 test NLL and unchanged start at BOTH seeds",
         "comparison": "equal student tokens, NOT equal parameters/FLOPs; repeated rank8 CE controls are not independent evidence",
-        "implementation_sha256": {p: (LEGACY_ENGINE_SHA256 if spec.number in (94, 95, 96)
-            and p == "scripts/m3q_subspace_engine.py" else hashlib.sha256((root / p).read_bytes()).hexdigest())
+        "implementation_sha256": {p: ((LEGACY_ENGINE_SHA256 if spec.number in (94, 95, 96) else EXP097_ENGINE_SHA256)
+            if spec.number in (94, 95, 96, 97) and p == "scripts/m3q_subspace_engine.py"
+            else hashlib.sha256((root / p).read_bytes()).hexdigest())
             for p in ("scripts/m3q_subspace_engine.py", "extent/recovery_subspace.py",
                       "extent/full_model_distillation.py")},
     }
@@ -124,9 +159,10 @@ def coordinate_plan(config, arm, layer_count):
             "adapter_gradient_bytes_per_device": count * 4,
             "excludes": "frozen model weights, activations and compiler temporaries"}
 
-def needs_work(row, target):
+def needs_work(row, target, final_target=None):
+    final_target = HORIZONS[-1] if final_target is None else final_target
     return not row.get("failed") and (row.get("step", 0) < target
-            or target == HORIZONS[-1] and not row.get("complete"))
+            or target == final_target and not row.get("complete"))
 
 def aggregate(spec, result):
     branches = result.get("branches", {})
@@ -162,6 +198,13 @@ def render_summary(spec, result):
               "Frozen Qwen3-1.7B hybrid, 24 Mamba + 4 GQA. No claim of full recovery or MLA quality."]
     if "original_teacher_test_nll" in result:
         lines += [f"Original Qwen locked-test NLL: {fmt(result['original_teacher_test_nll'])}."]
+    if "original_teacher_pg19_nll" in result:
+        lines += [f"Original Qwen PG-19 test NLL: {fmt(result['original_teacher_pg19_nll'])}.", "",
+            "| Seed | Arm | Start PG-19 NLL | Final PG-19 NLL |", "|---|---|---:|---:|"]
+        for seed, rows in result.get("branches", {}).items():
+            for name, row in rows.items():
+                lines.append(f"| {seed} | {name} | {fmt(row.get('start_pg19_nll'))} | {fmt(row.get('pg19_test_nll'))} |")
+        lines += ["", f"Cross-domain gate: {result['aggregate'].get('cross_domain_gate_passed', False)}."]
     if any("latest_health" in row for rows in result.get("branches", {}).values() for row in rows.values()):
         lines += ["", "## Numerical health (last attempted training step)", "",
             "| Seed | Arm | Forward finite | Gradients finite | Naive norm finite | Safe proposal finite | log10 norm | Norm-only events | Failure step |",
@@ -217,23 +260,42 @@ def make_train_step(model, teacher, tx, arm, order, protected_columns, head_dim)
         return new, new_state, loss, norm, finite
     return step
 
-def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, aggregate_factory=None):
+def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, aggregate_factory=None, schedule=None):
+    horizons = HORIZONS if schedule is None else schedule.horizons
+    train_windows = TRAIN_WINDOWS if schedule is None else schedule.train_windows
+    data = DATA if schedule is None else schedule.data
+    reserve_minutes = 30 if schedule is None else schedule.reserve_minutes
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default="/kaggle/working/output")
     parser.add_argument("--state-dir", default=f"/dev/shm/extent-exp{spec.number}-state")
     parser.add_argument("--qwen-cache-dir", default=f"/dev/shm/qwen3-exp{spec.number}-weights")
     parser.add_argument("--dataset-cache-dir", default="/kaggle/working/extent-dataset-cache")
-    parser.add_argument("--max-wall-hours", type=float, default=8.25)
+    parser.add_argument("--max-wall-hours", type=float, default=8.25 if schedule is None else schedule.max_wall_hours)
     parser.add_argument("--telegram", action=argparse.BooleanOptionalAction, default=True)
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--sync-only", action="store_true")
     args = parser.parse_args(argv)
     if not 1 <= args.max_wall_hours <= 8.5:
         raise ValueError("max-wall-hours must be in [1, 8.5]")
+    if schedule is not None and args.max_wall_hours > schedule.max_wall_hours:
+        raise ValueError("new campaigns cannot exceed the registered eight-hour session cap")
+    if args.max_wall_hours * 60 <= reserve_minutes:
+        raise ValueError("wall budget must leave time after the saving reserve")
     config, _ = load_config(Path(__file__).resolve().parents[1] / "config/hybrid_1_7b_gqa_v5e8.yaml")
     contract = json.loads(json.dumps(contract_for(spec, config)))
     if contract_extra:
         contract.update(contract_extra)
+    if schedule is not None:
+        contract.update(horizons=list(horizons), data=[list(row) for row in data],
+            student_training_tokens=len(SEEDS) * len(spec.arms) * horizons[-1] * LENGTH,
+            schedule=asdict(schedule),
+            execution_order={str(s): [a.name for a in (spec.arms if s == SEEDS[0] else tuple(reversed(spec.arms)))]
+                             for s in SEEDS},
+            datasets={"wiki": f"Salesforce/wikitext@{WIKITEXT_REVISION}/wikitext-103-raw-v1",
+                      "pg19": f"deepmind/pg19@{PG19_REVISION}/test"},
+            selection=f"no selection; validation diagnostic; both locked tests only at start/final {horizons[-1]}")
+    # Schedule tuples must survive JSON/Hub roundtrips identically on resume.
+    contract = json.loads(json.dumps(contract))
     summarize = (lambda result: aggregate(spec, result)) if aggregate_factory is None else aggregate_factory
     if args.plan_only:
         plan = {"contract": contract, "memory": {a.name: coordinate_plan(config, a,
@@ -241,7 +303,7 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
         print(json.dumps(plan, indent=2))
         return plan
     started = time.monotonic()
-    deadline = started + args.max_wall_hours * 3600 - 30 * 60
+    deadline = started + args.max_wall_hours * 3600 - reserve_minutes * 60
     output = Path(args.output_dir)
     output.mkdir(parents=True, exist_ok=True)
     result_path, summary_path = output / f"{spec.stem}.json", output / f"{spec.stem}-summary.md"
@@ -312,6 +374,11 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
         persist(sync=True)
         print("Already completed; no TPU model allocation.", flush=True)
         return result
+    if schedule is not None and terminal_result(spec, result):
+        result["status"] = "branch_failure"
+        persist(sync=True)
+        print("All branches terminal; no TPU model allocation.", flush=True)
+        return result
     stage = "preflight"
     _safe_notify(args.telegram, f"Extent EXP-{spec.number} started; budget={args.max_wall_hours}h")
     try:
@@ -321,20 +388,33 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
             exp091.preflight_source_endpoints()
         result["status"] = "running"
         persist(sync=True)  # Verify write authorization before expensive model allocation.
+        token_sets = {name: load_wikitext2_tokens(windows * LENGTH, args.dataset_cache_dir,
+            tokenizer_repo=QWEN3_1_7B_BASE.repo_id, tokenizer_revision=QWEN3_1_7B_BASE.revision,
+            token_offset=offset, dataset_split=split, dataset_config="wikitext-103-raw-v1"
+        ).reshape(windows, LENGTH) for name, split, offset, windows in data}
+        if schedule is not None:
+            token_sets["pg19_test"] = load_pg19_tokens(schedule.pg19_test_windows * LENGTH,
+                args.dataset_cache_dir, tokenizer_repo=QWEN3_1_7B_BASE.repo_id,
+                tokenizer_revision=QWEN3_1_7B_BASE.revision, dataset_split="test",
+                token_offset=schedule.pg19_test_offset).reshape(schedule.pg19_test_windows, LENGTH)
+        hashes = {name: hashlib.sha256(x.tobytes()).hexdigest() for name, x in token_sets.items()}
+        if contract.get("expected_data_sha256") and hashes != contract["expected_data_sha256"]:
+            raise ValueError("token SHA differs from registered local data preflight")
+        if result.get("data_sha256", hashes) != hashes:
+            raise ValueError("resume token SHA mismatch")
+        result["data_sha256"] = hashes
         devices = list(jax.devices())
         if len(devices) != 8 or any(d.platform != "tpu" for d in devices):
             raise ValueError("requires a single-host TPU v5e-8")
         mesh = create_v5e_mesh(devices)
         batch_layout = batch_sharding(mesh)
         init_tokens = jax.device_put(np.zeros((1, 1), np.int32), batch_layout)
-        token_sets = {name: load_wikitext2_tokens(windows * LENGTH, args.dataset_cache_dir,
-            tokenizer_repo=QWEN3_1_7B_BASE.repo_id, tokenizer_revision=QWEN3_1_7B_BASE.revision,
-            token_offset=offset, dataset_split=split, dataset_config="wikitext-103-raw-v1"
-        ).reshape(windows, LENGTH) for name, split, offset, windows in DATA}
-        hashes = {name: hashlib.sha256(x.tobytes()).hexdigest() for name, x in token_sets.items()}
-        if result.get("data_sha256", hashes) != hashes:
-            raise ValueError("resume token SHA mismatch")
-        result["data_sha256"] = hashes
+        if schedule is not None and time.monotonic() >= deadline:
+            result["status"] = "deadline_partial"
+            next_sync = 0.0
+            persist(sync=True)
+            _safe_notify(args.telegram, f"Extent EXP-{spec.number} deadline_partial during data preflight")
+            return result
         stage = "load-model"
         source = teacher_config_from_spec(QWEN3_1_7B_BASE, param_dtype="bfloat16",
                                           compute_dtype="bfloat16", remat_policy="full")
@@ -361,9 +441,13 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
             apply_corrections(base, c, head_dim=config.mamba.head_dim,
                 protected_input_columns=protected_columns if a.protected else None)}, t), t)) for a in spec.arms}
 
+        evaluation_windows = {}
+
         def evaluate(base, c, arm, name):
-            return float(np.mean([float(jax.block_until_ready(evals[arm.name](base, c,
-                jax.device_put(w[None, :], batch_layout)))) for w in token_sets[name]]))
+            values = [float(jax.block_until_ready(evals[arm.name](base, c,
+                jax.device_put(w[None, :], batch_layout)))) for w in token_sets[name]]
+            evaluation_windows[name] = values
+            return float(np.mean(values))
 
         def checked_evaluate(row, base, c, arm, name):
             value = evaluate(base, c, arm, name)
@@ -373,7 +457,8 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
                 return None
             return value
 
-        if contract.get("evaluate_teacher_baseline") and "original_teacher_test_nll" not in result:
+        if contract.get("evaluate_teacher_baseline") and ("original_teacher_test_nll" not in result
+                or schedule is not None and "original_teacher_pg19_nll" not in result):
             stage = "original-qwen-locked-test-baseline"
             teacher_eval = jax.jit(lambda weights, t: causal_cross_entropy(teacher.apply({"params": weights}, t), t))
             values = [float(jax.block_until_ready(teacher_eval(teacher_params,
@@ -382,6 +467,14 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
             if not np.isfinite(baseline):
                 raise FloatingPointError("original Qwen baseline is nonfinite")
             result["original_teacher_test_nll"] = baseline
+            if schedule is not None:
+                result["original_teacher_test_windows"] = values
+                values = [float(jax.block_until_ready(teacher_eval(teacher_params,
+                    jax.device_put(w[None, :], batch_layout)))) for w in token_sets["pg19_test"]]
+                if not np.all(np.isfinite(values)):
+                    raise FloatingPointError("original Qwen PG19 baseline is nonfinite")
+                result["original_teacher_pg19_nll"] = float(np.mean(values))
+                result["original_teacher_pg19_windows"] = values
             persist(sync=True)
 
         def compose(seed):
@@ -402,18 +495,19 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
 
         result["status"] = "running"
         # Rotate every method/seed through each horizon before extending it.
-        for target in HORIZONS:
+        for target in horizons:
             for seed in SEEDS:
                 rows = result["branches"].setdefault(str(seed), {})
-                if not any(needs_work(rows.get(a.name, {}), target) for a in spec.arms):
+                if not any(needs_work(rows.get(a.name, {}), target, horizons[-1]) for a in spec.arms):
                     continue
                 if time.monotonic() >= deadline:
                     break
                 stage = f"compose-seed-{seed}"
                 base, source_hashes = compose(seed)
-                for arm in spec.arms:
+                arm_order = spec.arms if schedule is None or seed == SEEDS[0] else tuple(reversed(spec.arms))
+                for arm in arm_order:
                     row = rows.setdefault(arm.name, {"step": 0})
-                    if not needs_work(row, target):
+                    if not needs_work(row, target, horizons[-1]):
                         continue
                     stage = f"seed-{seed}-{arm.name}"
                     slot = f"seed-{seed}/{arm.name.lower()}"
@@ -439,6 +533,17 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
                         raise ValueError("runtime adapter shapes differ from registered memory plan")
                     if "start_validation_nll" not in row:
                         row["start_validation_nll"] = checked_evaluate(row, base, coords, arm, "validation")
+                    if schedule is not None and not row.get("failed") and any(
+                            key not in row for key in ("start_test_nll", "start_test_windows",
+                                                       "start_pg19_nll", "start_pg19_windows")):
+                        zero = initialize_corrections(base, order, arm.subspace, seed=seed, rank=arm.rank, head_dim=config.mamba.head_dim)
+                        row["start_test_nll"] = checked_evaluate(row, base, zero, arm, "locked_test")
+                        if not row.get("failed"):
+                            row["start_test_windows"] = evaluation_windows["locked_test"]
+                            row["start_pg19_nll"] = checked_evaluate(row, base, zero, arm, "pg19_test")
+                        if not row.get("failed"):
+                            row["start_pg19_windows"] = evaluation_windows["pg19_test"]
+                        del zero
 
                     def save():
                         meta = store.save(slot, {"coordinates": coords, "optimizer": state},
@@ -456,10 +561,14 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
                         if time.monotonic() >= deadline:
                             save()
                             break
-                        tokens = jax.device_put(token_sets["train"][(number - 1) % TRAIN_WINDOWS][None, :], batch_layout)
+                        tokens = jax.device_put(token_sets["train"][(number - 1) % train_windows][None, :], batch_layout)
+                        step_started = time.monotonic()
                         proposal = steps[arm.name](base, coords, state, teacher_params, tokens, jnp.asarray(number))
                         new, new_state, loss, norm, finite = proposal[:5]
                         jax.block_until_ready(loss)
+                        if schedule is not None:
+                            row["training_step_seconds"] = row.get("training_step_seconds", 0.0) + time.monotonic() - step_started
+                            row["attempted_training_steps"] = row.get("attempted_training_steps", 0) + 1
                         if len(proposal) == 6:
                             health = jax.device_get(proposal[5])
                             def encode(value):
@@ -470,11 +579,17 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
                                 value = np.asarray(value).item()
                                 return value if not isinstance(value, float) or np.isfinite(value) else None
                             row["latest_health"] = encode(health)
+                            if schedule is not None:
+                                logarithm = row["latest_health"].get("log10_grad_norm")
+                                if logarithm is not None:
+                                    row["max_observed_log10_grad_norm"] = max(row.get("max_observed_log10_grad_norm", -30.0), logarithm)
+                                row["forward_gradient_nonfinite_steps"] = row.get("forward_gradient_nonfinite_steps", 0) + int(
+                                    not bool(health.get("forward_finite", False)) or not bool(health.get("gradients_finite", False)))
                             if bool(health.get("norm_only_overflow", False)):
                                 row["norm_only_overflow_steps"] = row.get("norm_only_overflow_steps", 0) + 1
                                 if "first_norm_only_overflow" not in row:
                                     event_slot = f"{slot}/norm-only-event"
-                                    event = {"step": number, "train_window": (number - 1) % TRAIN_WINDOWS,
+                                    event = {"step": number, "train_window": (number - 1) % train_windows,
                                              "health": encode(health)}
                                     metadata = store.save(event_slot, {"coordinates": coords, "optimizer": state},
                                         contract=dict(checkpoint_contract, kind="norm_only_event"),
@@ -487,7 +602,7 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
                             row.update(failed=True, error=f"nonfinite step {number}; last finite state retained")
                             if len(proposal) == 6:
                                 row["failure_diagnostics"] = {"attempted_step": number,
-                                    "train_window": (number - 1) % TRAIN_WINDOWS, "health": row["latest_health"]}
+                                    "train_window": (number - 1) % train_windows, "health": row["latest_health"]}
                             save()
                             break
                         coords, state = new, new_state
@@ -497,10 +612,16 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
                                 row.setdefault("validation", {})[str(number)] = checked_evaluate(row, base, coords, arm, "validation")
                             save()
                             print(f"EXP{spec.number} seed={seed} arm={arm.name} step={number} loss={float(loss):.6f}", flush=True)
-                    if row["step"] == HORIZONS[-1] and not row.get("failed") and not row.get("complete"):
+                    if row["step"] == horizons[-1] and not row.get("failed") and not row.get("complete"):
                         row["locked_test_nll"] = checked_evaluate(row, base, coords, arm, "locked_test")
-                        zero = initialize_corrections(base, order, arm.subspace, seed=seed, rank=arm.rank, head_dim=config.mamba.head_dim)
-                        row["start_test_nll"] = checked_evaluate(row, base, zero, arm, "locked_test")
+                        if schedule is None:
+                            zero = initialize_corrections(base, order, arm.subspace, seed=seed, rank=arm.rank, head_dim=config.mamba.head_dim)
+                            row["start_test_nll"] = checked_evaluate(row, base, zero, arm, "locked_test")
+                        elif not row.get("failed"):
+                            row["locked_test_windows"] = evaluation_windows["locked_test"]
+                            row["pg19_test_nll"] = checked_evaluate(row, base, coords, arm, "pg19_test")
+                            if not row.get("failed"):
+                                row["pg19_test_windows"] = evaluation_windows["pg19_test"]
                         row["complete"] = not row.get("failed", False)
                         save()
                     del coords, state, template, restored

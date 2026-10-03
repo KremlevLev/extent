@@ -12,7 +12,9 @@ from extent.sharding import create_v5e_mesh
 from scripts import m3q_subspace_engine as engine
 
 
-@pytest.mark.parametrize("mode", ["normal", "interruption", "rate-limit", "diagnostics"])
+@pytest.mark.parametrize("mode", ["normal", "interruption", "rate-limit", "diagnostics",
+    "new", "new-interruption", "new-rate-limit", "new-failure", "new-final-interruption", "new-auth-error",
+    "new-data-mismatch", "new-budget-stop", "new-start-interruption"])
 def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_path, monkeypatch, mode):
     config = tiny_config()
     real_devices = jax.devices()
@@ -34,6 +36,7 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
     monkeypatch.setattr(engine.jax, "devices", lambda: [SimpleNamespace(platform="tpu") for _ in range(8)])
     monkeypatch.setattr(engine, "create_v5e_mesh", lambda _: mesh)
     monkeypatch.setattr(engine, "load_wikitext2_tokens", lambda count, *args, **kwargs: np.arange(count, dtype=np.int32) % 128)
+    monkeypatch.setattr(engine, "load_pg19_tokens", lambda count, *args, **kwargs: np.arange(count, dtype=np.int32) % 128)
     monkeypatch.setattr(engine, "teacher_config_from_spec", lambda *args, **kwargs: config)
     monkeypatch.setattr(engine, "Qwen3ForCausalLM", HybridForCausalLM)
     monkeypatch.setattr(engine, "_ensure_checkpoint", lambda _: None)
@@ -41,7 +44,15 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
     monkeypatch.setattr(engine, "compose_parameters", lambda teacher, *args: teacher)
     monkeypatch.setattr(engine.sequential, "endpoint_contract", lambda *args: {})
 
+    final_checkpoint = []
+    evaluation_interrupted = []
     class MockSourceStore(CampaignCheckpointStore):
+        def save(self, *values, **options):
+            meta = super().save(*values, **options)
+            if mode == "new-final-interruption" and options["step"] == 3:
+                final_checkpoint.append(True)
+            return meta
+
         def metadata(self, slot, contract):
             if self.prefix.startswith(spec.prefix):
                 if not (self.root / slot / "checkpoint.json").exists():
@@ -58,9 +69,9 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
     uploads = []
     def upload(files, *args, **kwargs):
         uploads.append([destination for _, destination in files])
-        if mode == "rate-limit" and len(uploads) == 1:
+        if mode in ("rate-limit", "new-rate-limit", "new-auth-error") and len(uploads) == 1:
             error = RuntimeError("injected Hub 429")
-            error.response = SimpleNamespace(status_code=429)
+            error.response = SimpleNamespace(status_code=403 if mode == "new-auth-error" else 429)
             raise error
         for source, _ in files:
             assert source.is_file()
@@ -79,6 +90,61 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
         monkeypatch.setattr(engine, "make_train_step", interrupt_once)
     args = ["--output-dir", str(tmp_path / "output"), "--state-dir", str(tmp_path / "state"), "--no-telegram"]
     options = {}
+    if mode.startswith("new"):
+        from scripts.m3q_safe_recovery_campaign import make_step
+        schedule = engine.Schedule((1, 2, 3), 3, engine.DATA, 0, pg19_test_windows=1)
+        events = []
+        def factory(*values):
+            actual = make_step(*values)
+            def run(*inputs):
+                if mode == "new-interruption" and int(inputs[-1]) == 2 and not events:
+                    events.append(True)
+                    raise RuntimeError("injected session interruption")
+                proposal = actual(*inputs)
+                if mode == "new-failure" and int(inputs[-1]) == 2:
+                    return (*proposal[:4], np.bool_(False), proposal[5])
+                return proposal
+            return run
+        options = {"step_factory": factory, "schedule": schedule,
+                   "contract_extra": {"evaluate_teacher_baseline": True}}
+        if mode == "new-data-mismatch":
+            options["contract_extra"]["expected_data_sha256"] = {"train": "wrong"}
+            monkeypatch.setattr(engine, "initialize_sharded_parameters", lambda *args: pytest.fail("data guard did not run before model allocation"))
+            with pytest.raises(ValueError, match="registered local data preflight"):
+                engine.run_campaign(spec, args, **options)
+            failed = json.loads((tmp_path / "output" / f"{spec.stem}.json").read_text())
+            assert failed["status"] == "failed" and not failed["branches"]
+            return
+        if mode == "new-budget-stop":
+            clock = [0.0]
+            monkeypatch.setattr(engine.time, "monotonic", lambda: clock[0])
+            def delayed_data(count, *values, **kwargs):
+                clock[0] = 8 * 3600
+                return np.arange(count, dtype=np.int32) % 128
+            monkeypatch.setattr(engine, "load_pg19_tokens", delayed_data)
+            monkeypatch.setattr(engine, "initialize_sharded_parameters", lambda *args: pytest.fail("budget stop allocated model"))
+            stopped = engine.run_campaign(spec, args, **options)
+            assert stopped["status"] == "deadline_partial" and not stopped["branches"]
+            return
+        if mode == "new-final-interruption":
+            # A structural failure AFTER final training must resume evaluations,
+            # including a missing PG-19 result, instead of skipping the branch.
+            actual_block = engine.jax.block_until_ready
+            def interrupted_evaluation(value):
+                if final_checkpoint and not evaluation_interrupted:
+                    evaluation_interrupted.append(True)
+                    raise RuntimeError("injected final evaluation interruption")
+                return actual_block(value)
+            monkeypatch.setattr(engine.jax, "block_until_ready", interrupted_evaluation)
+    if mode == "new-start-interruption":
+        actual_block = engine.jax.block_until_ready
+        calls = []
+        def interrupted_start(value):
+            calls.append(True)
+            if len(calls) == 5:
+                raise RuntimeError("injected initial PG19 evaluation interruption")
+            return actual_block(value)
+        monkeypatch.setattr(engine.jax, "block_until_ready", interrupted_start)
     if mode == "diagnostics":
         def factory(*values):
             actual = engine.make_train_step(*values)
@@ -90,16 +156,21 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
             return run
         options = {"step_factory": factory, "contract_extra": {"test_diagnostics": True,
                    "evaluate_teacher_baseline": True}}
-    if mode == "interruption":
-        with pytest.raises(RuntimeError, match="injected session interruption"):
-            engine.run_campaign(spec, args)
+    if mode in ("interruption", "new-interruption", "new-final-interruption", "new-auth-error", "new-start-interruption"):
+        match = "Hub 429" if mode == "new-auth-error" else "interruption"
+        with pytest.raises(RuntimeError, match=match):
+            engine.run_campaign(spec, args, **options)
         partial = json.loads((tmp_path / "output" / f"{spec.stem}.json").read_text())
         assert partial["status"] == "failed"
-        assert all(row["step"] == 1 for row in partial["branches"]["123"].values())
+        if mode in ("interruption", "new-interruption"):
+            assert all(row["step"] == 1 for row in partial["branches"]["123"].values())
     result = engine.run_campaign(spec, args, **options)
-    assert result["status"] == "completed"
+    assert result["status"] == ("branch_failure" if mode == "new-failure" else "completed")
     assert not result["remote_sync_pending"]
-    assert all(row["step"] == 3 and row["complete"] for row in result["branches"]["123"].values())
+    if mode == "new-failure":
+        assert all(row["step"] == 1 and row["failed"] for row in result["branches"]["123"].values())
+    else:
+        assert all(row["step"] == 3 and row["complete"] for row in result["branches"]["123"].values())
     assert any(path.endswith("state.msgpack") for batch in uploads for path in batch)
     assert all(path.startswith(spec.prefix) for batch in uploads for path in batch)
     local = json.loads((tmp_path / "output" / f"{spec.stem}.json").read_text())
@@ -111,5 +182,10 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
         assert event["step"] == 1
         meta = json.loads((tmp_path / "state" / "adapters" / event["checkpoint_slot"] / "checkpoint.json").read_text())
         assert meta["step"] == 0  # The exact state BEFORE the overflow-producing proposal.
+    if mode.startswith("new") and mode != "new-failure":
+        for row in result["branches"]["123"].values():
+            assert len(row["pg19_test_windows"]) == len(row["start_test_windows"]) == len(row["start_pg19_windows"]) == 1
+            assert row["attempted_training_steps"] >= 3
+        assert np.isfinite(result["original_teacher_pg19_nll"])
     monkeypatch.setattr(engine, "initialize_sharded_parameters", lambda *args: (_ for _ in ()).throw(AssertionError("unexpected allocation")))
-    assert engine.run_campaign(spec, args, **options)["status"] == "completed"
+    assert engine.run_campaign(spec, args, **options)["status"] == result["status"]

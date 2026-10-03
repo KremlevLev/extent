@@ -1,15 +1,20 @@
 # Kaggle Operations Runbook
 
 This file is operational documentation, not part of the scientific report or
-paper. Kaggle accelerator sessions are assumed to have a 10-hour ceiling.
+paper. Current user budget (2026-10-03): **8 hours per TPU v5e-8 session** for
+EXP-098--100. The older experiment entries below are historical operations.
 
 ## Session timing
 
-- Treat 9 hours as the training deadline for a session.
-- Stop launching long evaluations or new compiled shapes after 8 h 30 min.
-- Begin the final checkpoint no later than 9 h 10 min.
-- Reserve the remaining time for checkpoint validation, upload/export, logs,
-  and a Telegram success or failure notification.
+- New EXP-098--100 runner cap is 8.0 hours including a 45-minute saving reserve.
+- Training stops by 7 h 15 min from runner entry; startup/data/JIT consume that
+  budget too. Earlier setup cells are outside this timer.
+- Preserve the fixed scientific endpoint when partial; rerun the same cell to
+  resume rather than changing step count or restarting Adam.
+- Use existing clone/install/secrets cells, with the updated main checkout.
+  No JAX subprocess after the notebook has acquired the TPU.
+- Ready account-specific final cells and independent HF paths:
+  [EXP-098--100 protocol](results/EXP-098-100-three-account-protocol.md).
 
 ## Recoverable checkpoint contract
 

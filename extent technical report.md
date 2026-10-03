@@ -1778,6 +1778,77 @@ and delta-bridge branches also fail; MLP readout worsens final NLL. Only supplie
 summaries were reviewed, not full traces: do not assign a numerical root cause
 or claim full model recovery. Detailed ledger: `results/EXP-094-096-first-results.md`.
 
+### EXP-097 completed result (reviewed 2026-10-03)
+
+**MEASURED, user-supplied full JSON:** completed12/12 terminal trajectories in
+7.329166 cumulative invocation hours; registered diagnostic gate PASS; no pending
+HF uploads reported. Full artifact SHA256
+`ea63119ea8b5b556e9292a14441aa63d2c763cc850db1f5ff4d3e59c16f6f72d`;
+auditable raw copy `results/EXP-097-numerical-stability.json`, independent branch
+adjudication and interpretation `results/EXP-097-completed-summary.md`.
+
+All four NAIVE arms stop at attempted steps4341/3207/5331/4752 due to nonfinite
+sum-of-squares norm while forward/loss/gradient elements/current coordinates,
+Adam moments and stable proposals are finite. Their ordinary proposal parameters
+also remain finite; the norm guard is the rejection point. Same-gradient evidence
+establishes norm-calculation overflow, not that switching a failed trajectory
+would subsequently recover. SAFE trajectories diverge earlier and record no
+norm-only events themselves. This does not retroactively diagnose old EXP094--096.
+
+All eight SAFE arms reach8192. Primary SAFE-R8 locked-test NLL changes
+12.968006->7.288451 and12.276975->11.756609, satisfying the registered own-start
+clause at both seeds; seed456 improvement is modest and its curve remains erratic.
+Prespecified secondary SAFE-PROTECTED-R32 reaches7.266784/7.309761 from the same
+starts. **DERIVED:** total-NLL reductions43.96%/40.46%, removed excess above
+same-test Qwen57.08%/53.43%. Original Qwen NLL2.980255: full recovery remains unmet.
+After3072 protected32 validation is near7.2--7.6 at both seeds, but seed456 has
+an earlier excursion to22.402059. Last norms are about59/4000, not full-run maxima.
+All four LOWLR3e-5 arms finish but worsen final test NLL to18.13--20.04.
+
+**Decision:** pursue protected32/stable clipping/CE3e-4 as a candidate. Protection
+and rank are confounded versus rank8 and need rank-matched controls. The test was
+reused from EXP094--096 and only two existing source seeds are available; no fresh
+confirmation, initialization win, equal-total-compute random superiority,
+capability/long-context/MLA/14B quality or inference speed claim follows.
+**DERIVED timing:**83,163 completed steps /7.329166h implies0.317268 campaign
+seconds/step including overhead, not a steady-state TPU throughput benchmark.
+
+### EXP-098--100: three parallel independent recovery campaigns (prepared 2026-10-03)
+
+**TARGET/HYPOTHESIS, no new TPU results:** user authorizes three independent
+TPU v5e-8 account sessions,8h each. EXP098 compares ordinary/protected rank32 at
+16,384 steps per seed (65,536 steps /16,777,216 input tokens total), isolating
+protection and inspecting the longer horizon. EXP099 compares protected ranks
+16/32/64 at12,288 steps (73,728 /18,874,368), primary64 versus32. EXP100 compares
+protected32 CE against CE+0.1 Qwen-KL and CE+0.1 unchanged-start-KL at8192 steps
+(49,152 /12,582,912), primary Qwen-anchor versus CE. KL usesT2 and includesT².
+All start from unchanged EXP072-v2 ONPOLICY seeds123/456 with zero-change FP32
+corrections, frozen BF16 base, stable clip1, Adam3e-4, batch1/context256; no MLA.
+
+New pinned WikiText103 training prefix begins33,554,432, validation81,920,
+locked test262,144. Secondary PG19 test begins262,144, after EXP088's reserved
+test ranges. Runtime hashes and source hashes enforce resume; start/final
+per-window NLL and same-test original-Qwen baselines are retained. These are
+new packed ranges, not guaranteed semantic/document disjointness or new model
+initializations. Shared controls are consistency checks, not extra replications.
+
+Registered primary gates require all arms complete, final primary Wiki NLL
+at least0.1 below control and below own start at both seeds; EXP100 additionally
+requires CE below start. PG19 comparative/own-start replication is a separate
+secondary gate. Validation is diagnostic and never selects endpoints or methods.
+Each runner defaults8h including45min finalization reserve; partial sessions
+resume fixed final horizons. Local atomic saves256 steps, bundled HF saves10min,
+429 cooldown1h, Telegram and detailed numerical health are retained.
+Old scientific contracts094--097 remain fixed through recorded compatibility
+digests; new schedules/PG19 evaluation are opt-in, without module-global overrides.
+No new runtime, HBM or quality result is asserted before these TPU campaigns.
+
+Full frozen contracts, exact offsets, budget limitations and notebook cells:
+`results/EXP-098-100-three-account-protocol.md`,
+`results/EXP-098-dynamics-protection-protocol.md`,
+`results/EXP-099-protected-capacity-protocol.md`,
+`results/EXP-100-weak-anchor-protocol.md`.
+
 For every experiment record:
 
 - experiment ID, date, commit hash, config hash, checkpoint revision;
