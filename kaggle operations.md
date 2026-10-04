@@ -331,3 +331,13 @@ print("summary: /kaggle/working/output/extent-exact-lift-scaling-campaign-summar
 ```
 
 The campaign resumes at completed layer boundaries when the same Kaggle output is still present. Download only `extent-exact-lift-scaling-campaign-summary.md` and `extent-exact-lift-scaling-campaign.json`. On failure download `exp060-failure.json` and `exp060-stage-manifest.json`; endpoint checkpoints are large and only useful for resuming/debugging.
+
+
+## EXP-101--103: plateau continuation, 8h/session
+
+Use existing notebook preparation/secrets, fresh main, one final import/main cell
+from `results/EXP-101-103-three-account-protocol.md`. Source adapters are pinned
+EXP098 final16384 protected32, both seeds; never substitute newer/best states.
+Per-invocation8h includes45min saving reserve, but preceding notebook setup does
+not count: deduct it with `--max-wall-hours`. Same cell resumes partial compatible
+new-stage states, including new Adam moments. Send summary AND full JSON.

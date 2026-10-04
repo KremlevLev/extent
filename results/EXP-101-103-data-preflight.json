@@ -1,0 +1,22 @@
+{
+  "train": {
+    "offset": 37748736,
+    "tokens": 2097152,
+    "sha256": "8f25b7fef127fc68b5ed5090f9fc55fba0a402ffd6c5c44d34ad9f2b44250474"
+  },
+  "validation": {
+    "offset": 98304,
+    "tokens": 8192,
+    "sha256": "32cdbca82cbeca42908e804886f3f17ea27fa9d38cba4250da3953bdeee3ddc8"
+  },
+  "locked_test": {
+    "offset": 278528,
+    "tokens": 16384,
+    "sha256": "a6fa20cd355b85884efc90572d71a5811492e9fd214d4c8cf0d31a9613d9b188"
+  },
+  "pg19_test": {
+    "offset": 278528,
+    "tokens": 16384,
+    "sha256": "4be0697787985615cc311a259f2a265a41a9e9c57d2dd48a305e4cc2e93069fc"
+  }
+}

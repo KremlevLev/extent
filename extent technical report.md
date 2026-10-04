@@ -1861,3 +1861,21 @@ For every experiment record:
 - artifact/checkpoint location and whether it is reproducible.
 
 Failed experiments stay in the ledger. They are evidence for engineering decisions and prevent accidental repetition.
+
+
+## 2026-10-05: EXP-098--100 completed; EXP-101--103 prepared
+
+Measured full JSON evidence and gate audit in
+`results/EXP-098-100-completed-summary.md`. All three registered primary gates FALSE.
+098 protection helps Wiki strongly in seed123, only0.0556 in456; PG19 improves both.
+099 protected32 Wiki7.2885/7.2851; protected64 no gain at same horizon; plateau persists.
+100 late-stage idea NOT tested: anchoring started from original ONPOLICY; Qwen0.1
+helps one Wiki seed, harms other and both PG19. Do not claim universal distillation failure.
+
+NEXT/HYPOTHESES:101 late teacher weights0.1/0.5 vs CE at LR3e-5;
+102 late LR3e-4/1e-4/3e-5;103 late unprotected vs protected at LR3e-5.
+All fixed098 protected32 final16384 starts, fresh common Adam, new packed ranges,
+8192 additional steps per branch, two existing source seeds, eight-hour invocation
+with45min saving reserve. Source revision/checkpoint contract and SHA pinned;
+no test-best source selection or fallback. See registered three-session protocol.
+No TPU outcome or recovered-Qwen/random-compute/14B claim for101--103.

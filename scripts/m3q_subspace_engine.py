@@ -55,6 +55,7 @@ LR = 3e-4
 LEGACY_ENGINE_SHA256 = "c3e17745b12e2d1bbab225ead5db3db705343327c1caa5241e10a8512dfb36e6"
 # New schedule/evaluation extensions are opt-in. EXP-097 keeps its unchanged
 # diagnostic factory and its completed/resumable scientific source contract.
+EXP098_100_ENGINE_SHA256 = "0792674fc289ba8c82dac9148cd52f7670f2fa7c0bae04c24ceeea418c56a8e1"
 EXP097_ENGINE_SHA256 = "dbd4803090b19c5d35634e332ddeceb2619dd904b9849d49326592dfe3213e9c"
 
 @dataclass(frozen=True)
@@ -133,8 +134,8 @@ def contract_for(spec, config):
         "selection": "no early stopping/model selection; validation diagnostic; locked test only at8192",
         "gate": "registered primary beats control by >=0.1 test NLL and unchanged start at BOTH seeds",
         "comparison": "equal student tokens, NOT equal parameters/FLOPs; repeated rank8 CE controls are not independent evidence",
-        "implementation_sha256": {p: ((LEGACY_ENGINE_SHA256 if spec.number in (94, 95, 96) else EXP097_ENGINE_SHA256)
-            if spec.number in (94, 95, 96, 97) and p == "scripts/m3q_subspace_engine.py"
+        "implementation_sha256": {p: ((LEGACY_ENGINE_SHA256 if spec.number in (94, 95, 96) else EXP097_ENGINE_SHA256 if spec.number == 97 else EXP098_100_ENGINE_SHA256)
+            if spec.number in (94, 95, 96, 97, 98, 99, 100) and p == "scripts/m3q_subspace_engine.py"
             else hashlib.sha256((root / p).read_bytes()).hexdigest())
             for p in ("scripts/m3q_subspace_engine.py", "extent/recovery_subspace.py",
                       "extent/full_model_distillation.py")},
@@ -260,7 +261,7 @@ def make_train_step(model, teacher, tx, arm, order, protected_columns, head_dim)
         return new, new_state, loss, norm, finite
     return step
 
-def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, aggregate_factory=None, schedule=None):
+def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, aggregate_factory=None, schedule=None, initialization_factory=None):
     horizons = HORIZONS if schedule is None else schedule.horizons
     train_windows = TRAIN_WINDOWS if schedule is None else schedule.train_windows
     data = DATA if schedule is None else schedule.data
@@ -516,6 +517,9 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
                     coords = initialize_corrections(base, order, arm.subspace, seed=seed,
                                                    rank=arm.rank, head_dim=config.mamba.head_dim)
                     state = tx.init(coords)
+                    if initialization_factory is not None:
+                        coords = initialization_factory(seed, arm, {"coordinates": coords, "optimizer": state}, source_hashes)
+                        state = tx.init(coords)  # Registered stage transition: fresh Adam for every arm.
                     template = {"coordinates": coords, "optimizer": state}
                     restored = store.restore(slot, checkpoint_contract, template)
                     if restored is None:
@@ -537,6 +541,8 @@ def run_campaign(spec, argv=None, *, step_factory=None, contract_extra=None, agg
                             key not in row for key in ("start_test_nll", "start_test_windows",
                                                        "start_pg19_nll", "start_pg19_windows")):
                         zero = initialize_corrections(base, order, arm.subspace, seed=seed, rank=arm.rank, head_dim=config.mamba.head_dim)
+                        if initialization_factory is not None:
+                            zero = initialization_factory(seed, arm, template, source_hashes)
                         row["start_test_nll"] = checked_evaluate(row, base, zero, arm, "locked_test")
                         if not row.get("failed"):
                             row["start_test_windows"] = evaluation_windows["locked_test"]

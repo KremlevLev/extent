@@ -14,7 +14,7 @@ from scripts import m3q_subspace_engine as engine
 
 @pytest.mark.parametrize("mode", ["normal", "interruption", "rate-limit", "diagnostics",
     "new", "new-interruption", "new-rate-limit", "new-failure", "new-final-interruption", "new-auth-error",
-    "new-data-mismatch", "new-budget-stop", "new-start-interruption"])
+    "new-data-mismatch", "new-budget-stop", "new-start-interruption", "new-stage2-interruption"])
 def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_path, monkeypatch, mode):
     config = tiny_config()
     real_devices = jax.devices()
@@ -97,7 +97,7 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
         def factory(*values):
             actual = make_step(*values)
             def run(*inputs):
-                if mode == "new-interruption" and int(inputs[-1]) == 2 and not events:
+                if mode in ("new-interruption", "new-stage2-interruption") and int(inputs[-1]) == 2 and not events:
                     events.append(True)
                     raise RuntimeError("injected session interruption")
                 proposal = actual(*inputs)
@@ -107,6 +107,13 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
             return run
         options = {"step_factory": factory, "schedule": schedule,
                    "contract_extra": {"evaluate_teacher_baseline": True}}
+        if mode == "new-stage2-interruption":
+            def recovered(seed, arm, template, source_hashes):
+                coords = jax.tree.map(lambda x: x.copy(), template["coordinates"])
+                for factors in coords.values():
+                    factors["b"] = jax.numpy.full_like(factors["b"], 0.02)
+                return coords
+            options["initialization_factory"] = recovered
         if mode == "new-data-mismatch":
             options["contract_extra"]["expected_data_sha256"] = {"train": "wrong"}
             monkeypatch.setattr(engine, "initialize_sharded_parameters", lambda *args: pytest.fail("data guard did not run before model allocation"))
@@ -156,15 +163,19 @@ def test_cloud_campaign_saves_binary_states_and_completed_rerun_skips_model(tmp_
             return run
         options = {"step_factory": factory, "contract_extra": {"test_diagnostics": True,
                    "evaluate_teacher_baseline": True}}
-    if mode in ("interruption", "new-interruption", "new-final-interruption", "new-auth-error", "new-start-interruption"):
+    if mode in ("interruption", "new-interruption", "new-final-interruption", "new-auth-error", "new-start-interruption", "new-stage2-interruption"):
         match = "Hub 429" if mode == "new-auth-error" else "interruption"
         with pytest.raises(RuntimeError, match=match):
             engine.run_campaign(spec, args, **options)
         partial = json.loads((tmp_path / "output" / f"{spec.stem}.json").read_text())
         assert partial["status"] == "failed"
-        if mode in ("interruption", "new-interruption"):
+        if mode in ("interruption", "new-interruption", "new-stage2-interruption"):
             assert all(row["step"] == 1 for row in partial["branches"]["123"].values())
     result = engine.run_campaign(spec, args, **options)
+    if mode == "new-stage2-interruption":
+        # Its measured stage2 start must be the recovered coordinates, not zero.
+        row = result["branches"]["123"]["OUT"]
+        assert row["start_test_nll"] == pytest.approx(row["start_validation_nll"])
     assert result["status"] == ("branch_failure" if mode == "new-failure" else "completed")
     assert not result["remote_sync_pending"]
     if mode == "new-failure":

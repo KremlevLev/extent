@@ -1,0 +1,18 @@
+{
+  "revision": "9c031f6e615d7afb0133f5611ace78f8cc5cc5fc",
+  "metadata_verified": true,
+  "binary_local_verification": "not_completed",
+  "reason": "Direct HTTP payload download ended with IncompleteRead; resumable HTTP/Xet attempts did not complete locally. No source payload changed. Kaggle initializer requires exact SHA, step, base hashes, finite coordinates and zero protected B columns before use.",
+  "branches": {
+    "123": {
+      "step": 16384,
+      "sha256": "c63aa174dde0e8fff78e30f9b44c8f25c08f127bcd136504177b5995eb6dc819",
+      "bytes": 85758140
+    },
+    "456": {
+      "step": 16384,
+      "sha256": "940745e477d27b7884d2a9be23eca848ef435505ecee3b8be1fb5757bf2f53c3",
+      "bytes": 85758140
+    }
+  }
+}
