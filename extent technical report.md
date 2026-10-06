@@ -1898,3 +1898,31 @@ FP32 masters and sharded moments required;2048 new steps/trajectory, eight-hour
 session with1.5h large-checkpoint reserve. See registered protocol for exact gate,
 data capacity and required implementation checks. No runner104, local training
 checks, TPU outcome or paper-level recovery result claimed yet.
+
+## 2026-10-06: EXP-104 runner prepared (no TPU outcome)
+
+Implementation: `scripts/m3q_paper_decoder_recovery_campaign.py`,
+`extent/decoder_recovery.py`, `extent/chunked_checkpoint.py`. Registered source,
+data, optimizer, horizons and scientific gates retained. AdamW mask excludes
+vectors and named biases, including multidimensional Mamba B/C biases; adapter
+A/B and non-bias matrix/tensor weights receive0.1 decay. Frozen vocabulary never
+enters optimizer. Production abstract shapes:1,364,139,136 internal masters,
+311,164,928 fixed vocabulary weights,16,369,669,640 raw checkpoint bytes.
+
+Real tokenizer/data range preflight completed; exact hashes/capacity stored in
+`results/EXP-104-data-preflight.json`. `EXP-104-memory-preflight.json` is ONLY a
+CPU abstract/virtual-eight-device calculation. Runtime rejects unsupported HBM,
+measures compiler/allocator footprint and upload timing, checks host RAM/disk.
+Actual full-size TPU memory and speed NOT measured. Teacher arrays are released
+before training; both source BF16 trees retained on host, not eight-way device
+replicas. Conservative memory accounting includes both current/proposed optimizer
+states and a6GiB workspace policy reserve; it is not a throughput guarantee.
+
+Local compiled tiny-model checks confirm updates, BF16 forward parity, fixed
+embedding/readout, optimizer layouts and bitwise-identical next update after
+chunked resume. Mock interruptions/checksum failures/auth/429/deadline/cursor
+checks are engineering evidence only. Immutable chunks uploaded before remote
+manifest; latest result cannot advance beyond durable state. Partial unsynced
+local progress may be lost when Kaggle deletes the runtime. Expect large uploads;
+one8h invocation may finish only a paired partial horizon. See launch document.
+No EXP104 recovery, gate, teacher-quality or14B claim.

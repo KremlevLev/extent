@@ -1,8 +1,8 @@
 # EXP-104: paper-inspired full-decoder CE recovery
 
-Status: REGISTERED DESIGN ONLY; no runner or TPU results yet. One experiment,
-one Kaggle TPU v5e8 session up to8h. Implementation must satisfy the checks below
-before a launch cell is advertised. EXP102 full results still unavailable.
+Status: RUNNER PREPARED, CPU checks and real token preflight; no TPU results.
+One experiment, one Kaggle TPU v5e8 session up to8h. Launch and limitations in
+`EXP-104-kaggle-launch.md`. EXP102 full results still unavailable.
 
 ## Hypothesis and literature basis
 
@@ -38,8 +38,9 @@ Two branches per seed:
   input embedding and final vocabulary readout (one shared weight if tied).
 
 Both fresh AdamW at transition; same registered LR schedule, betas, clipping,
-data order, steps and endpoints. Weight decay applies to trainable matrix weights,
-not biases/norm vectors; document treatment of adapter A/B. This compares complete
+data order, steps and endpoints. Weight decay applies to non-bias trainable weights
+with >=2 dimensions (including MIMO tensors), not biases/norm vectors; adapter A/B
+both receive decay. This compares complete
 training strategies, not a mathematical single-factor parameter-count intervention.
 Original source optimizer is not reused; compatible resume preserves NEW moments.
 Teacher forwards are needed only for original-Qwen evaluation, not training loss.
@@ -123,7 +124,39 @@ and total-compute controls before14B; do not return to blind rank/anchor sweeps.
    remaining save reserve. Use chunked checkpoint payloads, no huge JSON states;
    source checkpoints read-only. Original-Qwen model released before full training.
 
-Expected future stem `extent-m3q-paper-decoder-recovery`, separate HF prefix
+Stem `extent-m3q-paper-decoder-recovery`, separate HF prefix
 `experiments/exp104-paper-decoder-recovery`. Same notebook setup retained; final
-import/main cell is published only after runner and checks exist. This file is a
-concrete scientific plan, not an assertion that runnable code is already prepared.
+import/main cell in the launch document. Preparation does not establish a TPU result.
+
+## Implementation update (6 October)
+
+Runner `scripts/m3q_paper_decoder_recovery_campaign.py`; numerical core
+`extent/decoder_recovery.py`, binary storage `extent/chunked_checkpoint.py`.
+Matrix/tensor decay includes both adapter A/B; named biases are excluded even when
+multidimensional (Mamba B/C bias). New Adam and schedule counters are
+checked against the restored cursor. Source stores cannot upload. Source binary
+SHA/contracts and data hashes are checked before production weights are allocated.
+Teacher device arrays are released; two frozen BF16 sources are cached on HOST.
+Initial dense BF16 materialization is bitwise checked; start window NLL parity
+checked at1e-4. Final embeddings/readout checked bitwise.
+
+Actual token preflight completed locally with pinned tokenizer/datasets; hashes
+in `EXP-104-data-preflight.json`. CPU abstract production-shape/virtual-eight-device
+memory preflight in `EXP-104-memory-preflight.json`:1,364,139,136 internal trainable
+parameters,311,164,928 frozen vocabulary parameters; raw checkpoint16,369,669,640B.
+Conservative per-device estimate12,321,462,528B includes current/proposed states,
+gradients/updates/BF16 forward and6GiB POLICY allowance for workspace/compilation.
+It is NOT measured TPU HBM. Runtime also checks reported capacity, compiler memory,
+host RAM/disk, and logs allocator/upload sizes/timing. Refuse unsupported capacity.
+
+Eight virtual-device CPU tests cover both real tiny-model compiled updates,
+FP32->BF16 updates, frozen vocabulary, exact next-step binary resume, preserved
+moment sharding, checksum corruption, interrupted save, auth/429 handling,
+mock campaign deadline/resume and unavailable gate for incomplete branches.
+No real full-size TPU allocation, throughput or full source-payload local validation
+is claimed. Checkpoints use <=128MiB chunks with bounded upload batches; manifest
+advances only after all chunks. Local obsolete generations are removed only after
+atomic new manifest publication; immutable remote generations remain for durability.
+HF summaries cannot advance beyond durable optimizer checkpoints. A deferred upload
+is explicitly pending; it cannot promise survival of unsynced local progress after
+Kaggle destroys the session. Same cell resumes the last durable remote cursor.

@@ -341,3 +341,17 @@ EXP098 final16384 protected32, both seeds; never substitute newer/best states.
 Per-invocation8h includes45min saving reserve, but preceding notebook setup does
 not count: deduct it with `--max-wall-hours`. Same cell resumes partial compatible
 new-stage states, including new Adam moments. Send summary AND full JSON.
+
+## EXP-104: paper-inspired full-decoder CE, 8h/session
+
+See `results/EXP-104-kaggle-launch.md`. Keep existing setup/secrets and import
+`main` from `scripts.m3q_paper_decoder_recovery_campaign` in the notebook process.
+Fixed098 warm starts, two strategies/two seeds,2048 steps each; decoder embeddings
+and vocabulary readout fixed, internal FP32 masters and sharded AdamW states.
+Eight-hour invocation includes1.5h saving reserve; deduct preceding setup time.
+One dense checkpoint is~16.4GB, chunked; final completion within one session is
+NOT guaranteed. Pending uploads do not establish remote durability. Same cell
+continues the last durable compatible state; gate unavailable for partial runs.
+Send both `extent-m3q-paper-decoder-recovery-summary.txt` and corresponding JSON.
+Only CPU and virtual-device checks completed locally; real TPU memory/throughput
+and upload timing are runtime checks, not prior experimental evidence.
