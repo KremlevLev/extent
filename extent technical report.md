@@ -1879,3 +1879,22 @@ All fixed098 protected32 final16384 starts, fresh common Adam, new packed ranges
 with45min saving reserve. Source revision/checkpoint contract and SHA pinned;
 no test-best source selection or fallback. See registered three-session protocol.
 No TPU outcome or recovered-Qwen/random-compute/14B claim for101--103.
+
+
+## 2026-10-06: EXP-101/103 measured; EXP-104 design only
+
+Full evidence `results/EXP-101-completed.json`, `EXP-103-completed.json` and
+`EXP-101-103-completed-summary.md`. Both complete, finite, primary gates FALSE.
+101 Qwen0.1 Wiki effect mixed and <0.1; Qwen0.5 worsens Wiki but improves PG19
+against CE in both seeds. 103 release slightly worse Wiki and PG19. Shared CE/
+protected controls agree exactly. EXP102 only user-reported gate FALSE, no metrics.
+
+User requested ONE new experiment strongly based on Attention to Mamba
+(arXiv2604.14191). EXP104 DESIGN: adapt its stage2 strategy (full internal CE
+fine-tuning, embeddings/readout fixed, AdamW/warmup/cosine) to fixed098 final warm
+starts; compare against matched adapter strategy in two existing seeds. No rerun
+of failed054/055 bridge adaptations, no HedgeMamba architectural change. Full
+FP32 masters and sharded moments required;2048 new steps/trajectory, eight-hour
+session with1.5h large-checkpoint reserve. See registered protocol for exact gate,
+data capacity and required implementation checks. No runner104, local training
+checks, TPU outcome or paper-level recovery result claimed yet.
