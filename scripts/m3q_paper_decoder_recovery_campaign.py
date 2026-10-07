@@ -1,5 +1,6 @@
 """EXP-104: paper stage-2 CE strategy on the fixed EXP098 recovered hybrid."""
 import argparse
+import ast
 from dataclasses import replace
 from datetime import datetime, timezone
 import gc
@@ -7,6 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 import shutil
+import sys
 import time
 import traceback
 
@@ -21,7 +23,7 @@ from extent.calibration_data import load_wikitext2_tokens, load_pg19_tokens, WIK
 from extent.campaign_checkpoint import CampaignCheckpointStore, write_json_atomic
 from extent.chunked_checkpoint import ChunkedCheckpointStore, digest
 from extent.config import load_config
-from extent.decoder_recovery import split_decoder, forward_parameters, optimizer, make_step, schedule
+from extent.decoder_recovery import split_decoder, split_mamba, forward_parameters, optimizer, make_step, schedule
 from extent.full_model_distillation import causal_cross_entropy
 from extent.initialization import abstract_parameter_tree, initialize_sharded_optimizer_state
 from extent.recovery_subspace import initialize_corrections, apply_corrections, coordinates_finite
@@ -58,14 +60,14 @@ def token_manifest(tokens):
                    dtype=str(x.dtype)) for k, x in tokens.items()}
 
 
-def contract_for(config):
+def contract_for(config, experiment=104):
     from dataclasses import asdict
     source = json.loads((ROOT / "results/EXP-101-103-source-manifest.json").read_text())
     data = json.loads((ROOT / "results/EXP-104-data-preflight.json").read_text())
     files = ("scripts/m3q_paper_decoder_recovery_campaign.py", "extent/decoder_recovery.py",
              "extent/chunked_checkpoint.py", "extent/initialization.py", "extent/model.py",
              "extent/recovery_subspace.py", "extent/stable_gradient_clip.py", "extent/calibration_data.py")
-    return dict(experiment=104, model=asdict(config), source=source,
+    contract = dict(experiment=experiment, model=asdict(config), source=source,
         data=[list(row) for row in DATA], pg19=[294_912, 64], data_manifest=data,
         datasets=dict(wiki=WIKITEXT_REVISION, pg19=PG19_REVISION),
         tokenizer=dict(repo=engine.QWEN3_1_7B_BASE.repo_id, revision=engine.QWEN3_1_7B_BASE.revision),
@@ -75,6 +77,32 @@ def contract_for(config):
         precision="FP32 masters and moments; BF16 forward; frozen input/output vocabulary",
         selection="fixed EXP098 final16384; no validation selection; locked start/final2048",
         implementation={name: digest(ROOT / name) for name in files})
+    contract = json.loads(json.dumps(contract))
+    if experiment == 104:
+        # Explicit, narrowly scoped continuation of the measured v1 run:
+        # objective/optimizer/source/data contract remains exactly unchanged.
+        legacy = json.loads((ROOT / "results/EXP-104-v1-contract.json").read_text(encoding="utf-8-sig"))
+        contract["implementation"] = legacy["implementation"]
+        if contract != legacy:
+            raise ValueError("EXP104 scientific settings differ from approved v1 continuation")
+        for path, expected in legacy["implementation"].items():
+            if path not in ("scripts/m3q_paper_decoder_recovery_campaign.py", "extent/decoder_recovery.py"):
+                actual = hashlib.sha256((ROOT/path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
+                if actual != expected:
+                    raise ValueError(f"EXP104 unchanged scientific dependency differs: {path}")
+        functions = {n.name:n for n in ast.parse((ROOT/"extent/decoder_recovery.py").read_text()).body if isinstance(n,ast.FunctionDef)}
+        fingerprints = json.loads((ROOT/"results/EXP-104-v1-training-fingerprints.json").read_text())
+        nodes = {name:functions[name] for name in ("optimizer", "schedule", "make_step", "split_decoder", "decoder_parameters")}
+        nodes.update(decoder_branch=functions["forward_parameters"].body[0], adapter_branch=functions["forward_parameters"].body[2])
+        if any(hashlib.sha256(ast.dump(node).encode()).hexdigest() != fingerprints[name] for name,node in nodes.items()):
+            raise ValueError("EXP104 v1 training math changed; explicit new contract required")
+    elif experiment == 105:
+        contract["arms"] = ["ADAPTER-CE", "MAMBA-CE"]
+        contract["precision"] = "FP32 Mamba-only masters/moments; BF16 forward; all non-Mamba source leaves frozen"
+        contract["evaluation_reuse"] = "pre-registered shared EXP104 windows; prior starts visible, no final outcome used for selection; not independent replication"
+    else:
+        raise ValueError("unregistered experiment")
+    return contract
 
 
 def trainable_layout(tree, mesh):
@@ -115,8 +143,11 @@ def memory_estimate(parameters, fixed, layout, fixed_layout):
 
 def evaluate(model, parameters, tokens, batch):
     # Reuse one executable for all equal-length windows and branch evaluations.
+    layout = named_sharding_tree(parameters, batch.mesh)
+    parameters = jax.device_put(parameters, layout)
     call = _EVALUATORS.setdefault(id(model), jax.jit(
-        lambda p, t: causal_cross_entropy(model.apply({"params": p}, t), t)))
+        lambda p, t: causal_cross_entropy(model.apply({"params": p}, t), t),
+        in_shardings=(layout, batch), out_shardings=replicated_sharding(batch.mesh)))
     values = [float(call(parameters, jax.device_put(w[None], batch))) for w in tokens]
     if not np.all(np.isfinite(values)):
         raise FloatingPointError("nonfinite evaluation")
@@ -172,9 +203,12 @@ def load_sources(config, mesh, args, hub, tokens, result, persist, deadline):
     abstract = abstract_parameter_tree(model)
     layout = named_sharding_tree(abstract, mesh)
     initialize = source_initializer(manifest, pinned_store)
-    if "original_qwen" not in result:
+    if not result.get("original_qwen_canonical_v2"):
+        if "original_qwen" in result:
+            result["original_qwen_uncanonical_v1"] = result["original_qwen"]
         result["original_qwen"] = {name: evaluate(teacher, teacher_params, tokens[name], batch_sharding(mesh))
                                    for name in ("locked_test", "pg19_test")}
+        result["original_qwen_canonical_v2"] = True
         persist()
     sources = {}
     for seed in SEEDS:
@@ -207,14 +241,15 @@ def load_sources(config, mesh, args, hub, tokens, result, persist, deadline):
 
 
 def aggregate(result):
-    rows = [result.get("branches", {}).get(str(seed), {}).get(arm, {}) for seed in SEEDS for arm in ARMS]
+    arms = result.get("contract", {}).get("arms", ARMS)
+    rows = [result.get("branches", {}).get(str(seed), {}).get(arm, {}) for seed in SEEDS for arm in arms]
     complete = all(r.get("step") == 2048 and "final" in r and not r.get("failed") for r in rows)
     if not complete:
         return dict(complete=False, primary_gate=None, transfer_gate=None)
     comparisons = {}
     gate, transfer = True, True
     for seed in SEEDS:
-        c, p = (result["branches"][str(seed)][a] for a in ARMS)
+        c, p = (result["branches"][str(seed)][a] for a in arms)
         wiki_gain = c["final"]["locked_test"]["nll"] - p["final"]["locked_test"]["nll"]
         start_gain = p["start"]["locked_test"]["nll"] - p["final"]["locked_test"]["nll"]
         pg_gain = c["final"]["pg19_test"]["nll"] - p["final"]["pg19_test"]["nll"]
@@ -228,17 +263,22 @@ def aggregate(result):
     return dict(complete=True, primary_gate=bool(gate), transfer_gate=bool(gate and transfer), comparisons=comparisons)
 
 
-def main(argv=None):
+def main(argv=None, *, experiment=104):
+    arms = ARMS if experiment == 104 else ("ADAPTER-CE", "MAMBA-CE")
+    prefix = PREFIX if experiment == 104 else "experiments/exp105-mamba-capacity-recovery"
+    stem = STEM if experiment == 104 else "extent-m3q-mamba-capacity-recovery"
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output-dir", default="/kaggle/working/output")
-    parser.add_argument("--state-dir", default="/kaggle/working/extent-exp104-state")
+    parser.add_argument("--state-dir", default=f"/kaggle/working/extent-exp{experiment}-state")
+    parser.add_argument("--checkpoint-dir", default=None)
     parser.add_argument("--qwen-cache-dir", default="/kaggle/working/qwen3-exp104-weights")
     parser.add_argument("--dataset-cache-dir", default="/kaggle/working/extent-dataset-cache")
     parser.add_argument("--max-wall-hours", type=float, default=8)
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--data-preflight-only", action="store_true")
     parser.add_argument("--sync-only", action="store_true")
-    args = parser.parse_args(argv)
+    arguments = sys.argv[1:] if argv is None else argv
+    args = parser.parse_args(arguments)
     if not 1.5 < args.max_wall_hours <= 8:
         raise ValueError("wall budget must be >1.5h and <=8h")
     config, _ = load_config(ROOT / "config/hybrid_1_7b_gqa_v5e8.yaml")
@@ -246,26 +286,38 @@ def main(argv=None):
         data = token_manifest(load_tokens(args.dataset_cache_dir))
         write_json_atomic(ROOT / "results/EXP-104-data-preflight.json", data)
         return data
-    contract = contract_for(config)
+    contract = contract_for(config) if experiment == 104 else contract_for(config, experiment)
     if args.plan_only:
-        plan = dict(contract=contract, memory=json.loads((ROOT / "results/EXP-104-memory-preflight.json").read_text()))
+        plan = dict(contract=contract, memory=json.loads((ROOT / f"results/EXP-{experiment}-memory-preflight.json").read_text()))
         print(json.dumps(plan, indent=2))
         return plan
     started = time.monotonic()
     deadline = started + args.max_wall_hours * 3600 - 5400
     output = Path(args.output_dir)
     output.mkdir(parents=True, exist_ok=True)
-    path = output / f"{STEM}.json"
-    summary_path = output / f"{STEM}-summary.txt"
+    path = output / f"{stem}.json"
+    summary_path = output / f"{stem}-summary.txt"
     hub = artifact_config_from_env()
     if hub is None:
         raise ValueError("HF_TOKEN and EXTENT_HF_CHECKPOINT_REPO required")
     if not path.exists():
-        restore_artifact(path, f"{PREFIX}/latest.json", hub)
+        restore_artifact(path, f"{prefix}/latest.json", hub)
     result = json.loads(path.read_text()) if path.exists() else dict(contract=contract, branches={}, pending_slots=[], sessions=[])
     if result["contract"] != contract:
         raise ValueError("EXP104 resume contract mismatch")
-    store = ChunkedCheckpointStore(args.state_dir, f"{PREFIX}/checkpoints", hub)
+    if result.get("error"):
+        result.setdefault("previous_failures", []).append({k:result[k] for k in
+            ("status", "stage", "error_type", "error", "traceback") if k in result})
+        for key in ("stage", "error_type", "error", "traceback"):
+            result.pop(key, None)
+    # Kaggle supplies much more host RAM than writable disk. Explicit state-dir
+    # overrides retain the legacy/test location unless checkpoint-dir is given.
+    explicit_state = any(x == "--state-dir" or x.startswith("--state-dir=") for x in arguments)
+    checkpoint_root = args.checkpoint_dir or (args.state_dir if explicit_state or not Path("/dev/shm").is_dir()
+                       else f"/dev/shm/extent-exp{experiment}-checkpoints")
+    store = ChunkedCheckpointStore(checkpoint_root, f"{prefix}/checkpoints", hub)
+    result["runtime_revision"] = dict(evaluation="canonical-BF16-materialization-and-layout-v2",
+        implementation={p:digest(ROOT/p) for p in contract.get("implementation", {})}, checkpoint_root=str(checkpoint_root))
     session = dict(started_at_utc=datetime.now(timezone.utc).isoformat())
     result["sessions"].append(session)
     next_summary_sync = 0.0
@@ -313,7 +365,7 @@ def main(argv=None):
                     write_json_atomic(path, result)
                     return
         try:
-            upload_artifacts_together([(path, f"{PREFIX}/latest.json"), (summary_path, f"{PREFIX}/latest-summary.txt")],
+            upload_artifacts_together([(path, f"{prefix}/latest.json"), (summary_path, f"{prefix}/latest-summary.txt")],
                                       hub, commit_message="EXP104 progress")
         except Exception as exc:
             status = getattr(getattr(exc, "response", None), "status_code", None)
@@ -350,6 +402,10 @@ def main(argv=None):
             result["resources"]["host_available_ram_bytes"] = psutil.virtual_memory().available
             shapes = abstract_parameter_tree(HybridForCausalLM(config))
             required_ram = 2 * sum(x.size*x.dtype.itemsize for x in jax.tree.leaves(shapes)) + (2 << 30)
+            if str(checkpoint_root).startswith("/dev/shm/"):
+                shape_trainable = ({k:v for k,v in shapes.items() if k not in ("embed_tokens", "lm_head")}
+                    if experiment == 104 else {k:{"mamba":v["mamba"]} for k,v in shapes.items() if "mamba" in v})
+                required_ram += 3 * sum(x.size*12 for x in jax.tree.leaves(shape_trainable))
             result["resources"]["source_host_cache_required_with_staging_bytes"] = required_ram
             if result["resources"]["host_available_ram_bytes"] < required_ram:
                 raise MemoryError("host RAM cannot hold both fixed BF16 sources and bounded staging")
@@ -358,10 +414,42 @@ def main(argv=None):
         model, order, sources = load_sources(config, mesh, args, hub, tokens, result, persist, deadline)
         compiled_steps = {}
         columns = 2 * int(config.hidden_size * config.mamba.expand) + 2 * config.mamba.mimo_rank * config.mamba.groups * config.mamba.d_state
+        materializer = jax.jit(lambda b,c: apply_corrections(b,c, protected_input_columns=columns,
+                                   head_dim=config.mamba.head_dim),
+                                   out_shardings=named_sharding_tree(sources[123][0], mesh))
+        # Fix historical starts from the ORIGINAL warm source, before any
+        # resumed state is restored or any new trajectory is trained.
+        for seed in SEEDS:
+            rows = result["branches"].setdefault(str(seed), {})
+            if all(rows.get(a, {}).get("canonical_start_checked_v2") for a in arms):
+                continue
+            base, c = sources[seed]
+            base = jax.device_put(base, named_sharding_tree(base, mesh))
+            c = jax.device_put(c, trainable_layout(c, mesh))
+            recovered = materializer(base, c)
+            masters, frozen = split_decoder(recovered) if experiment == 104 else split_mamba(recovered)
+            reconstructed = forward_parameters(arms[1], masters, frozen, columns, config.mamba.head_dim)
+            if not all(bool(jnp.all(x == y)) for x,y in zip(jax.tree.leaves(recovered),jax.tree.leaves(reconstructed))):
+                raise ValueError("canonical seed preflight changed initial weights")
+            reference = {name:evaluate(model,recovered,tokens[name],batch) for name in ("validation", "locked_test", "pg19_test")}
+            check = {name:evaluate(model,reconstructed,tokens[name],batch) for name in reference}
+            if any(max(abs(x-y) for x,y in zip(reference[n]["windows"],check[n]["windows"]))>1e-4 for n in reference):
+                raise ValueError("canonical source start NLL differs >1e-4")
+            for arm in arms:
+                row = rows.setdefault(arm, dict(step=0, diagnostics=[]))
+                if "start" in row and not row.get("canonical_start_checked_v2"):
+                    row["start_uncanonical_v1"] = row["start"]
+                    for diagnostic in row["diagnostics"]:
+                        diagnostic.setdefault("evaluation_layout", "v1-uncanonical")
+                row["start"] = reference
+                row["canonical_start_checked_v2"] = True
+            del base,c,recovered,masters,frozen,reconstructed
+            gc.collect()
+            persist()
         for target in HORIZONS:
             for seed in SEEDS:
                 rows = result["branches"].setdefault(str(seed), {})
-                for arm in (ARMS if seed == 123 else ARMS[::-1]):
+                for arm in (arms if seed == 123 else arms[::-1]):
                     row = rows.setdefault(arm, dict(step=0, diagnostics=[]))
                     if row.get("failed") or row["step"] >= target and (target != 2048 or "final" in row):
                         continue
@@ -371,17 +459,29 @@ def main(argv=None):
                     host_base, host_c = sources[seed]
                     base = jax.device_put(host_base, named_sharding_tree(host_base, mesh))
                     c = jax.device_put(host_c, trainable_layout(host_c, mesh))
-                    recovered = jax.jit(lambda b,c: apply_corrections(b,c, protected_input_columns=columns,
-                                        head_dim=config.mamba.head_dim))(base,c)
-                    masters, frozen = split_decoder(recovered)
-                    restored_start = forward_parameters("DECODER-CE", masters, frozen, columns, config.mamba.head_dim)
+                    recovered = materializer(base,c)
+                    dense_arm = arms[1]
+                    masters, frozen = split_decoder(recovered) if experiment == 104 else split_mamba(recovered)
+                    restored_start = forward_parameters(dense_arm, masters, frozen, columns, config.mamba.head_dim)
                     if not all(bool(jnp.all(x == y)) for x,y in zip(jax.tree.leaves(recovered), jax.tree.leaves(restored_start))):
                         raise ValueError("FP32 master/BF16 forward differs from adapter materialization")
                     del restored_start
-                    initial_parameters = (masters, frozen) if arm == "DECODER-CE" else (c, base)
+                    initial_parameters = (masters, frozen) if arm == dense_arm else (c, base)
                     parameters, fixed = initial_parameters
                     layout, fixed_layout = trainable_layout(parameters, mesh), named_sharding_tree(fixed, mesh)
                     parameters, fixed = jax.device_put(parameters, layout), jax.device_put(fixed, fixed_layout)
+                    # Always evaluate the INITIAL registered source before a
+                    # checkpoint restore; never relabel step512 as a new start.
+                    initial = materializer(fixed, parameters) if arm == "ADAPTER-CE" else forward_parameters(arm, parameters, fixed, columns, config.mamba.head_dim)
+                    if not all(bool(jnp.all(x == y)) for x,y in zip(jax.tree.leaves(recovered),jax.tree.leaves(initial))):
+                        raise ValueError("initial materialized kernels differ after sharding")
+                    if not row.get("canonical_start_checked_v2"):
+                        if "start" in row:
+                            row["start_uncanonical_v1"] = row.pop("start")
+                        row["start"] = {name:evaluate(model, initial, tokens[name], batch)
+                                        for name in ("validation", "locked_test", "pg19_test")}
+                        row["canonical_start_checked_v2"] = True
+                    del initial
                     del base, c, recovered, masters, frozen, initial_parameters
                     plan = memory_estimate(parameters, fixed, layout, fixed_layout)
                     row["memory_estimate"] = plan
@@ -419,12 +519,12 @@ def main(argv=None):
                     if int(state[1].count) != row["step"] or int(state[3].count) != row["step"]:
                         raise ValueError("restored Adam/schedule counters differ from checkpoint cursor")
                     def current():
-                        return forward_parameters(arm, parameters, fixed, columns, config.mamba.head_dim)
+                        return materializer(fixed, parameters) if arm == "ADAPTER-CE" else forward_parameters(arm, parameters, fixed, columns, config.mamba.head_dim)
                     if "start" not in row:
                         row["start"] = {name: evaluate(model, current(), tokens[name], batch)
                                         for name in ("validation", "locked_test", "pg19_test")}
-                    other = rows.get(ARMS[1] if arm == ARMS[0] else ARMS[0], {})
-                    if "start" in other:
+                    other = rows.get(arms[1] if arm == arms[0] else arms[0], {})
+                    if other.get("canonical_start_checked_v2"):
                         for name in row["start"]:
                             if max(abs(x-y) for x,y in zip(row["start"][name]["windows"], other["start"][name]["windows"])) > 1e-4:
                                 raise ValueError("initial adapter/decoder NLL differs >1e-4")
@@ -470,9 +570,9 @@ def main(argv=None):
                             row["norm_only_overflow_count"] = row.get("norm_only_overflow_count", 0) + int(not health.get("naive_norm_finite", True))
                             row["last_learning_rate"] = float(schedule(row["step"] - 1))
                             if row["step"] % 256 == 0:
-                                row["diagnostics"].append(dict(step=row["step"], health=health,
+                                row["diagnostics"].append(dict(step=row["step"], health=health, evaluation_layout="canonical-v2",
                                     validation=evaluate(model, current(), tokens["validation"], batch)))
-                                print(f"EXP104 seed={seed} arm={arm} step={row['step']} CE={health['loss']:.5f}", flush=True)
+                                print(f"EXP{experiment} seed={seed} arm={arm} step={row['step']} CE={health['loss']:.5f}", flush=True)
                             if row["step"] % 512 == 0:
                                 save()
                                 persist(sync=True)

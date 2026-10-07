@@ -355,3 +355,25 @@ continues the last durable compatible state; gate unavailable for partial runs.
 Send both `extent-m3q-paper-decoder-recovery-summary.txt` and corresponding JSON.
 Only CPU and virtual-device checks completed locally; real TPU memory/throughput
 and upload timing are runtime checks, not prior experimental evidence.
+
+## 7 October: EXP104-v2 and EXP105 on two accounts
+
+Current launch cells in `results/EXP-104-105-kaggle-launch.md`. V1 EXP104
+stopped on noncanonical start NLL parity, not a training divergence; control123
+checkpoint512 durable. V2 uses explicit shared BF16 materialization/evaluation
+layout, same1e-4 threshold and exact approved v1 scientific/optimizer contract.
+Re-evaluate original-source starts before restore, archive old metrics/errors;
+do not reset trained control or silently accept arbitrary changed protocols.
+Default binary checkpoint directory is RAM `/dev/shm/extent-exp104-checkpoints`
+(exp105 for second campaign). Keep source/data caches and small results on disk;
+check tmpfs/RAM capacity. This avoids measured20.6GB free-disk limitation.
+Explicit `--state-dir` overrides retain legacy/test checkpoint location unless
+`--checkpoint-dir` is also specified. Completed compatibility/auth/source guards
+remain; real full dense TPU training and upload timing still unverified.
+
+EXP105 opens all24 Mamba blocks while every non-Mamba leaf stays frozen.
+It shares registered104 data/source/control/optimizer, but has its own HF prefix
+and stem `extent-m3q-mamba-capacity-recovery`, fresh moments, no104 checkpoint reuse.
+Two seeds,512/1024/2048 horizons,8h cap including1.5h reserve. Expect3.08GB raw
+Mamba state versus16.37GB dense. Shared tests/controls are matched comparisons,
+not independent replication. CPU/virtual8 checks only; send both summary and JSON.

@@ -1,0 +1,1304 @@
+{
+  "contract": {
+    "experiment": 104,
+    "model": {
+      "vocab_size": 151936,
+      "hidden_size": 2048,
+      "intermediate_size": 6144,
+      "num_layers": 28,
+      "attention_layer_indices": [
+        6,
+        13,
+        20,
+        27
+      ],
+      "rms_norm_eps": 1e-06,
+      "max_position_embeddings": 32768,
+      "tie_word_embeddings": true,
+      "param_dtype": "bfloat16",
+      "compute_dtype": "bfloat16",
+      "logits_dtype": "float32",
+      "remat_policy": "full",
+      "scan_layers": false,
+      "mamba": {
+        "d_state": 64,
+        "expand": 0.75,
+        "head_dim": 64,
+        "groups": 1,
+        "mimo_rank": 4,
+        "rope_fraction": 0.5,
+        "dt_min": 0.001,
+        "dt_max": 0.1,
+        "dt_init_floor": 0.0001,
+        "a_floor": 0.0001,
+        "conv_kernel": 4
+      },
+      "mla": {
+        "implementation": "qwen3_gqa",
+        "num_heads": 16,
+        "num_kv_heads": 8,
+        "num_key_rope_heads": 1,
+        "q_lora_rank": 0,
+        "kv_lora_rank": 448,
+        "qk_nope_head_dim": 0,
+        "qk_rope_head_dim": 128,
+        "v_head_dim": 128,
+        "rope_theta": 1000000.0,
+        "rope_original_head_dim": 128,
+        "partial_rope_strategy": "high",
+        "use_qk_norm": true,
+        "use_kv_latent_norm": false,
+        "qk_head_chunk_size": 4
+      }
+    },
+    "source": {
+      "repo_id": "levkremlev888/extent",
+      "revision": "9c031f6e615d7afb0133f5611ace78f8cc5cc5fc",
+      "prefix": "experiments/exp098-dynamics-protection/checkpoints",
+      "branches": {
+        "123": {
+          "slot": "seed-123/safe-protected-r32",
+          "metadata": {
+            "format_version": 1,
+            "step": 16384,
+            "contract": {
+              "protocol": "exp098-dynamics-protection-v1",
+              "campaign": {
+                "number": 98,
+                "name": "dynamics-protection",
+                "arms": [
+                  {
+                    "name": "SAFE-R32",
+                    "subspace": "INOUT-LORA",
+                    "rank": 32,
+                    "objective": "ce",
+                    "protected": false
+                  },
+                  {
+                    "name": "SAFE-PROTECTED-R32",
+                    "subspace": "INOUT-LORA",
+                    "rank": 32,
+                    "objective": "ce",
+                    "protected": true
+                  }
+                ],
+                "primary": "SAFE-PROTECTED-R32",
+                "control": "SAFE-R32"
+              },
+              "model": {
+                "vocab_size": 151936,
+                "hidden_size": 2048,
+                "intermediate_size": 6144,
+                "num_layers": 28,
+                "attention_layer_indices": [
+                  6,
+                  13,
+                  20,
+                  27
+                ],
+                "rms_norm_eps": 1e-06,
+                "max_position_embeddings": 32768,
+                "tie_word_embeddings": true,
+                "param_dtype": "bfloat16",
+                "compute_dtype": "bfloat16",
+                "logits_dtype": "float32",
+                "remat_policy": "full",
+                "scan_layers": false,
+                "mamba": {
+                  "d_state": 64,
+                  "expand": 0.75,
+                  "head_dim": 64,
+                  "groups": 1,
+                  "mimo_rank": 4,
+                  "rope_fraction": 0.5,
+                  "dt_min": 0.001,
+                  "dt_max": 0.1,
+                  "dt_init_floor": 0.0001,
+                  "a_floor": 0.0001,
+                  "conv_kernel": 4
+                },
+                "mla": {
+                  "implementation": "qwen3_gqa",
+                  "num_heads": 16,
+                  "num_kv_heads": 8,
+                  "num_key_rope_heads": 1,
+                  "q_lora_rank": 0,
+                  "kv_lora_rank": 448,
+                  "qk_nope_head_dim": 0,
+                  "qk_rope_head_dim": 128,
+                  "v_head_dim": 128,
+                  "rope_theta": 1000000.0,
+                  "rope_original_head_dim": 128,
+                  "partial_rope_strategy": "high",
+                  "use_qk_norm": true,
+                  "use_kv_latent_norm": false,
+                  "qk_head_chunk_size": 4
+                }
+              },
+              "source": "Qwen/Qwen3-1.7B-Base@ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+              "source_protocol": "exp072-full-depth-sequential-confirmation-v2",
+              "replacement_order": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26
+              ],
+              "seeds": [
+                123,
+                456
+              ],
+              "horizons": [
+                4096,
+                8192,
+                16384
+              ],
+              "sequence_length": 256,
+              "data": [
+                [
+                  "train",
+                  "train",
+                  33554432,
+                  16384
+                ],
+                [
+                  "validation",
+                  "validation",
+                  81920,
+                  32
+                ],
+                [
+                  "locked_test",
+                  "test",
+                  262144,
+                  64
+                ]
+              ],
+              "student_training_tokens": 16777216,
+              "optimizer": {
+                "name": "Adam",
+                "lr": 0.0003,
+                "clip": "max-scaled FP32 global norm 1.0",
+                "base_weights": "frozen BF16",
+                "coordinates_and_moments": "FP32"
+              },
+              "objectives": {
+                "ce": "CE",
+                "weak_teacher": "CE +0.1*KL(Qwen||student,T=2)*T^2",
+                "self": "CE +0.1*KL(unchanged ONPOLICY||student,T=2)*T^2"
+              },
+              "delta_layers": "replaced layers >0 only; teacher/student see their own upstream streams",
+              "protected": "in_proj dt/raw_a/trap/angle projection columns unchanged; B/C/x/z may adapt",
+              "selection": "no selection; validation diagnostic; both locked tests only at start/final 16384",
+              "gate": "all arms complete; primary beats control >=0.1 Wiki test NLL and improves own start at BOTH seeds",
+              "comparison": "equal student tokens, NOT equal parameters/FLOPs; repeated rank8 CE controls are not independent evidence",
+              "implementation_sha256": {
+                "scripts/m3q_subspace_engine.py": "0792674fc289ba8c82dac9148cd52f7670f2fa7c0bae04c24ceeea418c56a8e1",
+                "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+                "extent/full_model_distillation.py": "711478deb14052b3721564cb2f2182de1f300897f84d6fdb3eedb78ff7f7071d"
+              },
+              "evaluate_teacher_baseline": true,
+              "expected_data_sha256": {
+                "train": "e80a8699d40cd68f219153129e61d499d62d06d3ce31a0655981b2803234767f",
+                "validation": "f4383da5e6dc14f231b826e79d0aacb8806db5a0c6ddbd531112475d7a288977",
+                "locked_test": "33306342dcbb774423725924893e008989503acc837c3fb07bca964f910f237c",
+                "pg19_test": "147d5fbe6fb0d8599ce51107dc27c1cac3c5a84d980ad3840d777c2729bfb134"
+              },
+              "diagnostic_rule": "no nonfinite repair, skipped batches or optimizer reset",
+              "secondary_gate": "primary also beats control >=0.1 PG19 NLL and own PG19 start at BOTH seeds",
+              "evaluation_freshness": "new packed ranges relative to registered project ranges; same source seeds, not new initialization replication; no universal contamination claim",
+              "additional_implementation_sha256": {
+                "scripts/m3q_safe_recovery_campaign.py": "a3bb97eed13e6cfffa8d76692f9f8727850b1f449b3b803af160cba29ad24b35",
+                "scripts/m3q_dynamics_protection_campaign.py": "3e3b38a7d26e1861fa770d5e63a86b08b348bd532f99f7ec1b3f6bc7e51769f2",
+                "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+                "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+                "extent/campaign_checkpoint.py": "882430689f586d39695752a745b8fb6285b2815d56319821afe0dbe3356c6a82",
+                "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+                "extent/hf_checkpoint_sync.py": "d5c5469d06762a90570574c7dd0bd588103fb4bac73b03e60f23f482e6206d5f"
+              },
+              "schedule": {
+                "horizons": [
+                  4096,
+                  8192,
+                  16384
+                ],
+                "train_windows": 16384,
+                "data": [
+                  [
+                    "train",
+                    "train",
+                    33554432,
+                    16384
+                  ],
+                  [
+                    "validation",
+                    "validation",
+                    81920,
+                    32
+                  ],
+                  [
+                    "locked_test",
+                    "test",
+                    262144,
+                    64
+                  ]
+                ],
+                "pg19_test_offset": 262144,
+                "pg19_test_windows": 64,
+                "max_wall_hours": 8.0,
+                "reserve_minutes": 45
+              },
+              "execution_order": {
+                "123": [
+                  "SAFE-R32",
+                  "SAFE-PROTECTED-R32"
+                ],
+                "456": [
+                  "SAFE-PROTECTED-R32",
+                  "SAFE-R32"
+                ]
+              },
+              "datasets": {
+                "wiki": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1",
+                "pg19": "deepmind/pg19@4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b/test"
+              },
+              "seed": 123,
+              "arm": {
+                "name": "SAFE-PROTECTED-R32",
+                "subspace": "INOUT-LORA",
+                "rank": 32,
+                "objective": "ce",
+                "protected": true
+              },
+              "source_sha256": {
+                "0": "83bdfdaf71bedee099428e3a7eed60754dd7a10b6c11c7dade63dc31102419af",
+                "1": "ab5d9afaa8ac9d7b7e66c7b2ac3e0af118d2068fd9fa870d334c0f9ebec0dd61",
+                "2": "f17405bac00faf20ec81396a2806f12b57ead165d7fedb3f74ccae5b43fb6395",
+                "3": "c2cbd039b5375217d949947a3096aca259e90b913a9eba04907f0d07a881489e",
+                "4": "07b21132a6396cb968f56cc7c35405382cff58955ad2f9e9cd76bd3f8fd3d32b",
+                "5": "d92829e4144c6e38828c8101fe8daa2fd41bffb28411695a9fcff1bdf0e473fd",
+                "7": "8c94deb49bdd78e9034f5b5e2b52555aa28796f9c2578e708a926b9f88cc18c3",
+                "8": "918e5f7bfc0723ea0532beef9ee9a27aeee240f3ceb29613e740980057529de7",
+                "9": "8a791ff8a4a830a4cf693ec7c005af99846dd1fc09622b987a4b9dbebc111a8d",
+                "10": "dad63b69a134304f7ece8e4e080d36234049f125ff05b82ed5b4f79d4c1fd379",
+                "11": "6557415894d0b9c7380141bb9d6292040019e2d95209ca7ba6af0cc9a706977d",
+                "12": "b8a07681b50942a71fc44cebb5bbb2ed75ce0b6ecfd8ce6e2a6c8777c636f892",
+                "14": "cfe35742bdb1e022fd9c3ccc9d2daf9ed1dec317a752034e28a7a7300ade859c",
+                "15": "fd67c3ea1aaf86744d2e4876b3d196880efb14051b524aa2ba9229730acd3eb6",
+                "16": "bdcb52caaaaf4924490ece2c50670b86048a80b044b88790c6e40ba5bbee8557",
+                "17": "c986b96d4e5a81e33212f3383109351f95c8bec48c03934fe823776ecc83ebd8",
+                "18": "ac6dc952c639fc294e16ad3cf8d533cb6628fbe6296f4df7af3efa156ba93a6d",
+                "19": "08cb0eeefd3b6cb4a40647d8913c85e81815d753d9b0d7808c393fe28c99d9bb",
+                "21": "344c57985e29391ab4bd43cd57b179ea936a99537c045bc3948c6820a99228cb",
+                "22": "1881d547d0448308cdd0bd489e9717657c2a204540b681cd84377b27b0ed6e90",
+                "23": "b8cb904e77bd9e7c6719de200259ff7dbb144f41b982fdfcc92858f065cf9ca2",
+                "24": "00a9f58fb0548bdc8547adcdf36d488b7d9ea5a3e8ec93d329d3c8607e7c5859",
+                "25": "424bcd61945776be2aa8285017e0d24d1889a7dbca4545261688d15ef867b1e4",
+                "26": "887f5399bec4229eb11436ccd06fd56384a447c8b08161d38427dd317ad68b7d"
+              },
+              "data_sha256": {
+                "train": "e80a8699d40cd68f219153129e61d499d62d06d3ce31a0655981b2803234767f",
+                "validation": "f4383da5e6dc14f231b826e79d0aacb8806db5a0c6ddbd531112475d7a288977",
+                "locked_test": "33306342dcbb774423725924893e008989503acc837c3fb07bca964f910f237c",
+                "pg19_test": "147d5fbe6fb0d8599ce51107dc27c1cac3c5a84d980ad3840d777c2729bfb134"
+              }
+            },
+            "checkpoint_file": "state.msgpack",
+            "checkpoint_bytes": 85758140,
+            "checkpoint_sha256": "c63aa174dde0e8fff78e30f9b44c8f25c08f127bcd136504177b5995eb6dc819",
+            "metrics": {
+              "finite": true
+            }
+          }
+        },
+        "456": {
+          "slot": "seed-456/safe-protected-r32",
+          "metadata": {
+            "format_version": 1,
+            "step": 16384,
+            "contract": {
+              "protocol": "exp098-dynamics-protection-v1",
+              "campaign": {
+                "number": 98,
+                "name": "dynamics-protection",
+                "arms": [
+                  {
+                    "name": "SAFE-R32",
+                    "subspace": "INOUT-LORA",
+                    "rank": 32,
+                    "objective": "ce",
+                    "protected": false
+                  },
+                  {
+                    "name": "SAFE-PROTECTED-R32",
+                    "subspace": "INOUT-LORA",
+                    "rank": 32,
+                    "objective": "ce",
+                    "protected": true
+                  }
+                ],
+                "primary": "SAFE-PROTECTED-R32",
+                "control": "SAFE-R32"
+              },
+              "model": {
+                "vocab_size": 151936,
+                "hidden_size": 2048,
+                "intermediate_size": 6144,
+                "num_layers": 28,
+                "attention_layer_indices": [
+                  6,
+                  13,
+                  20,
+                  27
+                ],
+                "rms_norm_eps": 1e-06,
+                "max_position_embeddings": 32768,
+                "tie_word_embeddings": true,
+                "param_dtype": "bfloat16",
+                "compute_dtype": "bfloat16",
+                "logits_dtype": "float32",
+                "remat_policy": "full",
+                "scan_layers": false,
+                "mamba": {
+                  "d_state": 64,
+                  "expand": 0.75,
+                  "head_dim": 64,
+                  "groups": 1,
+                  "mimo_rank": 4,
+                  "rope_fraction": 0.5,
+                  "dt_min": 0.001,
+                  "dt_max": 0.1,
+                  "dt_init_floor": 0.0001,
+                  "a_floor": 0.0001,
+                  "conv_kernel": 4
+                },
+                "mla": {
+                  "implementation": "qwen3_gqa",
+                  "num_heads": 16,
+                  "num_kv_heads": 8,
+                  "num_key_rope_heads": 1,
+                  "q_lora_rank": 0,
+                  "kv_lora_rank": 448,
+                  "qk_nope_head_dim": 0,
+                  "qk_rope_head_dim": 128,
+                  "v_head_dim": 128,
+                  "rope_theta": 1000000.0,
+                  "rope_original_head_dim": 128,
+                  "partial_rope_strategy": "high",
+                  "use_qk_norm": true,
+                  "use_kv_latent_norm": false,
+                  "qk_head_chunk_size": 4
+                }
+              },
+              "source": "Qwen/Qwen3-1.7B-Base@ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+              "source_protocol": "exp072-full-depth-sequential-confirmation-v2",
+              "replacement_order": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26
+              ],
+              "seeds": [
+                123,
+                456
+              ],
+              "horizons": [
+                4096,
+                8192,
+                16384
+              ],
+              "sequence_length": 256,
+              "data": [
+                [
+                  "train",
+                  "train",
+                  33554432,
+                  16384
+                ],
+                [
+                  "validation",
+                  "validation",
+                  81920,
+                  32
+                ],
+                [
+                  "locked_test",
+                  "test",
+                  262144,
+                  64
+                ]
+              ],
+              "student_training_tokens": 16777216,
+              "optimizer": {
+                "name": "Adam",
+                "lr": 0.0003,
+                "clip": "max-scaled FP32 global norm 1.0",
+                "base_weights": "frozen BF16",
+                "coordinates_and_moments": "FP32"
+              },
+              "objectives": {
+                "ce": "CE",
+                "weak_teacher": "CE +0.1*KL(Qwen||student,T=2)*T^2",
+                "self": "CE +0.1*KL(unchanged ONPOLICY||student,T=2)*T^2"
+              },
+              "delta_layers": "replaced layers >0 only; teacher/student see their own upstream streams",
+              "protected": "in_proj dt/raw_a/trap/angle projection columns unchanged; B/C/x/z may adapt",
+              "selection": "no selection; validation diagnostic; both locked tests only at start/final 16384",
+              "gate": "all arms complete; primary beats control >=0.1 Wiki test NLL and improves own start at BOTH seeds",
+              "comparison": "equal student tokens, NOT equal parameters/FLOPs; repeated rank8 CE controls are not independent evidence",
+              "implementation_sha256": {
+                "scripts/m3q_subspace_engine.py": "0792674fc289ba8c82dac9148cd52f7670f2fa7c0bae04c24ceeea418c56a8e1",
+                "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+                "extent/full_model_distillation.py": "711478deb14052b3721564cb2f2182de1f300897f84d6fdb3eedb78ff7f7071d"
+              },
+              "evaluate_teacher_baseline": true,
+              "expected_data_sha256": {
+                "train": "e80a8699d40cd68f219153129e61d499d62d06d3ce31a0655981b2803234767f",
+                "validation": "f4383da5e6dc14f231b826e79d0aacb8806db5a0c6ddbd531112475d7a288977",
+                "locked_test": "33306342dcbb774423725924893e008989503acc837c3fb07bca964f910f237c",
+                "pg19_test": "147d5fbe6fb0d8599ce51107dc27c1cac3c5a84d980ad3840d777c2729bfb134"
+              },
+              "diagnostic_rule": "no nonfinite repair, skipped batches or optimizer reset",
+              "secondary_gate": "primary also beats control >=0.1 PG19 NLL and own PG19 start at BOTH seeds",
+              "evaluation_freshness": "new packed ranges relative to registered project ranges; same source seeds, not new initialization replication; no universal contamination claim",
+              "additional_implementation_sha256": {
+                "scripts/m3q_safe_recovery_campaign.py": "a3bb97eed13e6cfffa8d76692f9f8727850b1f449b3b803af160cba29ad24b35",
+                "scripts/m3q_dynamics_protection_campaign.py": "3e3b38a7d26e1861fa770d5e63a86b08b348bd532f99f7ec1b3f6bc7e51769f2",
+                "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+                "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+                "extent/campaign_checkpoint.py": "882430689f586d39695752a745b8fb6285b2815d56319821afe0dbe3356c6a82",
+                "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+                "extent/hf_checkpoint_sync.py": "d5c5469d06762a90570574c7dd0bd588103fb4bac73b03e60f23f482e6206d5f"
+              },
+              "schedule": {
+                "horizons": [
+                  4096,
+                  8192,
+                  16384
+                ],
+                "train_windows": 16384,
+                "data": [
+                  [
+                    "train",
+                    "train",
+                    33554432,
+                    16384
+                  ],
+                  [
+                    "validation",
+                    "validation",
+                    81920,
+                    32
+                  ],
+                  [
+                    "locked_test",
+                    "test",
+                    262144,
+                    64
+                  ]
+                ],
+                "pg19_test_offset": 262144,
+                "pg19_test_windows": 64,
+                "max_wall_hours": 8.0,
+                "reserve_minutes": 45
+              },
+              "execution_order": {
+                "123": [
+                  "SAFE-R32",
+                  "SAFE-PROTECTED-R32"
+                ],
+                "456": [
+                  "SAFE-PROTECTED-R32",
+                  "SAFE-R32"
+                ]
+              },
+              "datasets": {
+                "wiki": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1",
+                "pg19": "deepmind/pg19@4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b/test"
+              },
+              "seed": 456,
+              "arm": {
+                "name": "SAFE-PROTECTED-R32",
+                "subspace": "INOUT-LORA",
+                "rank": 32,
+                "objective": "ce",
+                "protected": true
+              },
+              "source_sha256": {
+                "0": "3ab854bb3e68559986f822017c71160c95b6820d92d31c46231290061bec1409",
+                "1": "079a4cc18a9d7f10fa7defe4356c30da0e8d22bb5b229681e1e454bc63d356b7",
+                "2": "643332a145bc9f1ccf1a82f52fe5e4414e77e4cdfefe2ffbab5e5a3d374cf265",
+                "3": "b20d520c5a9ef2366f91e421a86d67ff025ccac26835d6a0b6222a57777841cc",
+                "4": "68db3d3744413b8f9a5b77d16b37874bda125a4435a534a47465d916187cb7a5",
+                "5": "8022286db5ccf16b4dee8c7f1ba1e2cf98a2e6be24d1a34b13818dc4e689e761",
+                "7": "f6235fa706832dae833f66870e50857ba1e71c1cc67ba50be9629b8d205649f6",
+                "8": "f4ab6b00032faaf2131e220cbea71cc4a25b71a821604a76d30245db1f848a3c",
+                "9": "adf2a18bdd762afcbdda08abf66358b9168766d916ff4bf8295286e9fdf1793c",
+                "10": "84dc48b9242af27561649ab7eab6ba4d00cd5159d8bfc6f3d9f18a065e78732a",
+                "11": "e8973824b7ec4a48ddf7896a60a110ee059f96c7d5208630c9e085ec786512db",
+                "12": "1960e2985137d47b5942c30ed4aa17028dbc7966be93a2e8ce7adfac047152c6",
+                "14": "73c58a3d3f60f7136ad27d373f978bcbacc95637bce6b6d7c1530e3b73ae4a79",
+                "15": "d5a1ae4e2640c3ab972722e0605b0f27310c7239b99e5323412355e716ccb2a0",
+                "16": "19ca665d67a8e22c06020361ec5884cbb687b49becc6df8d560c8e3ac1a90eb0",
+                "17": "2d4ffb1f686a166ccd55b7df29dfb087043308072317ac608312741e8a055567",
+                "18": "18672e9b5320b81d2394a48c6d1d2f845496099a736b6b4c3556fcee32a9c47c",
+                "19": "178a08197a1ac852232c70972b213aaa75d3d8e5b1c088d7d4196d123826d6c0",
+                "21": "d808699e8e06a25f154f0957dc49b790054a7ccb0ff2007d2379a43cbe97fb77",
+                "22": "9d31b15924615208dc63f2a98d8745a6ad6f2de5c34c4435f95fd3d34af6e02e",
+                "23": "7f831a3c275d4adc8ae7a350b72ee4c2169d101850c189f0c2bd7d67c025e199",
+                "24": "b25f168bcc2d849c61a448f72a58bf12f7c5e6ac7761989e6950daef38be324d",
+                "25": "f469aec3e135eaab39e81ee4f6cbfb8db25499f5b42f13f95fca72b5c24087ca",
+                "26": "9200739772fa542da9601c4ca3cc63e8b12b80128d604703f93c7d05a408522a"
+              },
+              "data_sha256": {
+                "train": "e80a8699d40cd68f219153129e61d499d62d06d3ce31a0655981b2803234767f",
+                "validation": "f4383da5e6dc14f231b826e79d0aacb8806db5a0c6ddbd531112475d7a288977",
+                "locked_test": "33306342dcbb774423725924893e008989503acc837c3fb07bca964f910f237c",
+                "pg19_test": "147d5fbe6fb0d8599ce51107dc27c1cac3c5a84d980ad3840d777c2729bfb134"
+              }
+            },
+            "checkpoint_file": "state.msgpack",
+            "checkpoint_bytes": 85758140,
+            "checkpoint_sha256": "940745e477d27b7884d2a9be23eca848ef435505ecee3b8be1fb5757bf2f53c3",
+            "metrics": {
+              "finite": true
+            }
+          }
+        }
+      }
+    },
+    "data": [
+      [
+        "train",
+        "train",
+        39845888,
+        2048
+      ],
+      [
+        "validation",
+        "validation",
+        114688,
+        32
+      ],
+      [
+        "locked_test",
+        "test",
+        294912,
+        24
+      ]
+    ],
+    "pg19": [
+      294912,
+      64
+    ],
+    "data_manifest": {
+      "train": {
+        "sha256": "386fa5535c5b0e00f27bdab496ffc386412335bc300c6f72bf744e6238b71dae",
+        "shape": [
+          2048,
+          256
+        ],
+        "dtype": "int32"
+      },
+      "validation": {
+        "sha256": "b7be45bacc8b3f861300860d300b68788a6d9e0665df2b03c1029a71ed3c7246",
+        "shape": [
+          32,
+          256
+        ],
+        "dtype": "int32"
+      },
+      "locked_test": {
+        "sha256": "90a8d24d2bd53a0dbba7735c3641eb2b6378b365931bfb933f123c497a2b2efc",
+        "shape": [
+          24,
+          256
+        ],
+        "dtype": "int32"
+      },
+      "pg19_test": {
+        "sha256": "fab24e87c3f936997b25cb8ecc8b00da18081818594a45d5f43b0fe61bc48a20",
+        "shape": [
+          64,
+          256
+        ],
+        "dtype": "int32"
+      }
+    },
+    "datasets": {
+      "wiki": "b08601e04326c79dfdd32d625aee71d232d685c3",
+      "pg19": "4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b"
+    },
+    "tokenizer": {
+      "repo": "Qwen/Qwen3-1.7B-Base",
+      "revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+    },
+    "horizons": [
+      512,
+      1024,
+      2048
+    ],
+    "seeds": [
+      123,
+      456
+    ],
+    "arms": [
+      "ADAPTER-CE",
+      "DECODER-CE"
+    ],
+    "optimizer": {
+      "name": "AdamW",
+      "lr": 1e-05,
+      "final_lr": 1e-06,
+      "warmup": 64,
+      "betas": [
+        0.9,
+        0.95
+      ],
+      "eps": 1e-08,
+      "matrix_decay": 0.1,
+      "stable_clip": 1,
+      "fresh_at_transition": true
+    },
+    "precision": "FP32 masters and moments; BF16 forward; frozen input/output vocabulary",
+    "selection": "fixed EXP098 final16384; no validation selection; locked start/final2048",
+    "implementation": {
+      "scripts/m3q_paper_decoder_recovery_campaign.py": "f04483ebef55da7dc0dcd357f3cad3f8546e7ddf885e910e83a042c4a9587138",
+      "extent/decoder_recovery.py": "c0a8cf6676ce29ee79bdf03f5e773b87569a4e561065e0385a51dd294054ac4c",
+      "extent/chunked_checkpoint.py": "92aa2b0f8f4a175f038ecc6fd01c59aeb74d4511a1cac4ed972811f577f798c5",
+      "extent/initialization.py": "4a4e70d791d7bcb5d8b1e0a04a77e4334d506596b4be55060c5b339a0e6d4649",
+      "extent/model.py": "15c50a3b8eed6d11556835ed960968242647fb05cbca235a19d77f9b2d65c892",
+      "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+      "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+      "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a"
+    }
+  },
+  "branches": {
+    "123": {
+      "ADAPTER-CE": {
+        "step": 512,
+        "diagnostics": [
+          {
+            "step": 256,
+            "health": {
+              "finite": true,
+              "grad_max_abs": 157.08236694335938,
+              "log10_grad_norm": 3.2252707481384277,
+              "loss": 7.325232028961182,
+              "naive_norm_finite": true,
+              "scaled_norm": 10.694409370422363,
+              "update_max_abs": 8.772476576268673e-06
+            },
+            "validation": {
+              "nll": 7.182893127202988,
+              "windows": [
+                7.724643707275391,
+                7.737639904022217,
+                7.639230251312256,
+                7.61261510848999,
+                7.52349328994751,
+                7.727549076080322,
+                7.285573482513428,
+                6.97363805770874,
+                6.929320335388184,
+                6.894040107727051,
+                6.490571975708008,
+                6.972562313079834,
+                6.515431880950928,
+                6.77841329574585,
+                6.923141956329346,
+                6.763428211212158,
+                7.516289710998535,
+                7.5134735107421875,
+                7.159273624420166,
+                7.677447319030762,
+                6.749476909637451,
+                6.511835098266602,
+                6.926959037780762,
+                6.962108135223389,
+                6.8207197189331055,
+                7.639206409454346,
+                7.735232353210449,
+                7.687448024749756,
+                7.154024124145508,
+                6.7086052894592285,
+                7.223950386047363,
+                7.375237464904785
+              ]
+            }
+          },
+          {
+            "step": 512,
+            "health": {
+              "finite": true,
+              "grad_max_abs": 257.9350280761719,
+              "log10_grad_norm": 3.395299196243286,
+              "loss": 7.285391330718994,
+              "naive_norm_finite": true,
+              "scaled_norm": 9.633377075195312,
+              "update_max_abs": 8.089842594927177e-06
+            },
+            "validation": {
+              "nll": 7.175149247050285,
+              "windows": [
+                7.730393886566162,
+                7.736710548400879,
+                7.632618427276611,
+                7.616380214691162,
+                7.520726203918457,
+                7.745212554931641,
+                7.277191638946533,
+                6.955714225769043,
+                6.916931629180908,
+                6.862939834594727,
+                6.465531349182129,
+                6.954203128814697,
+                6.492625713348389,
+                6.755849361419678,
+                6.903920650482178,
+                6.741314888000488,
+                7.518772602081299,
+                7.5182647705078125,
+                7.149282455444336,
+                7.682296276092529,
+                6.73507833480835,
+                6.4803147315979,
+                6.902830600738525,
+                6.933943748474121,
+                6.805236339569092,
+                7.65233850479126,
+                7.7485809326171875,
+                7.690525054931641,
+                7.162280559539795,
+                6.7133917808532715,
+                7.230280876159668,
+                7.373094081878662
+              ]
+            }
+          }
+        ],
+        "memory_estimate": {
+          "trainable_count": 7145472,
+          "trainable_master_bytes_per_device": 3572736,
+          "fixed_bytes_per_device": 420329728,
+          "current_and_proposed_weights_moments_gradients_updates_forward_bytes": 450697984,
+          "activation_compile_workspace_allowance_bytes": 6442450944,
+          "conservative_bytes_per_device": 6893148928,
+          "teacher_device_resident": false,
+          "source_other_seed_device_resident": false,
+          "limitation": "policy estimate; actual compiler/allocator measurements required on TPU"
+        },
+        "allocator_before_optimizer": {
+          "num_allocs": 568,
+          "bytes_in_use": 428751872,
+          "peak_bytes_in_use": 1920062464,
+          "largest_alloc_size": 77791232,
+          "bytes_limit": 16909332480,
+          "bytes_reserved": 0,
+          "peak_bytes_reserved": 66691072,
+          "bytes_reservable_limit": 16696127488,
+          "largest_free_block_bytes": 14989270016
+        },
+        "start": {
+          "validation": {
+            "nll": 7.201171085238457,
+            "windows": [
+              7.718191623687744,
+              7.731256008148193,
+              7.625572681427002,
+              7.608081817626953,
+              7.519618511199951,
+              7.70632791519165,
+              7.293820858001709,
+              6.99763822555542,
+              6.9695563316345215,
+              6.959181308746338,
+              6.58130407333374,
+              7.039313316345215,
+              6.6099934577941895,
+              6.836497783660889,
+              6.9625959396362305,
+              6.7956624031066895,
+              7.519082069396973,
+              7.517990589141846,
+              7.172726631164551,
+              7.679982662200928,
+              6.769818305969238,
+              6.55632209777832,
+              6.976010322570801,
+              6.996455669403076,
+              6.855698585510254,
+              7.637160778045654,
+              7.700033664703369,
+              7.654850482940674,
+              7.139863967895508,
+              6.731054306030273,
+              7.216310977935791,
+              7.359501361846924
+            ]
+          },
+          "locked_test": {
+            "nll": 7.542895476023356,
+            "windows": [
+              7.439877986907959,
+              7.554721832275391,
+              8.015974998474121,
+              7.878718852996826,
+              7.617751121520996,
+              7.805599212646484,
+              7.47458553314209,
+              7.578214168548584,
+              7.863093376159668,
+              7.709877014160156,
+              6.909919261932373,
+              7.4709367752075195,
+              7.244710922241211,
+              7.443416118621826,
+              7.449199199676514,
+              7.567378520965576,
+              7.625242710113525,
+              7.585786819458008,
+              7.432508945465088,
+              7.394170761108398,
+              7.341346263885498,
+              7.315917491912842,
+              7.486630916595459,
+              7.823912620544434
+            ]
+          },
+          "pg19_test": {
+            "nll": 9.894302368164062,
+            "windows": [
+              10.113200187683105,
+              9.077373504638672,
+              10.14767074584961,
+              9.635125160217285,
+              9.584073066711426,
+              9.512248992919922,
+              9.24599552154541,
+              10.285982131958008,
+              10.233821868896484,
+              10.110350608825684,
+              9.132468223571777,
+              9.915850639343262,
+              9.918353080749512,
+              9.594399452209473,
+              9.421540260314941,
+              10.293692588806152,
+              9.31013298034668,
+              9.27444076538086,
+              9.20435905456543,
+              9.566183090209961,
+              9.406064987182617,
+              10.126627922058105,
+              12.049525260925293,
+              9.985970497131348,
+              9.445526123046875,
+              9.752326011657715,
+              9.537221908569336,
+              9.671216011047363,
+              9.318975448608398,
+              10.0034818649292,
+              10.146553039550781,
+              10.393277168273926,
+              10.564465522766113,
+              10.46794605255127,
+              10.548922538757324,
+              10.502558708190918,
+              10.929335594177246,
+              9.953678131103516,
+              9.562577247619629,
+              9.577616691589355,
+              9.754181861877441,
+              9.529398918151855,
+              9.768402099609375,
+              9.940814971923828,
+              10.282061576843262,
+              9.960662841796875,
+              9.744597434997559,
+              9.485654830932617,
+              9.782333374023438,
+              9.932048797607422,
+              9.504301071166992,
+              9.446918487548828,
+              10.043614387512207,
+              9.91543197631836,
+              10.083945274353027,
+              10.103055953979492,
+              9.983816146850586,
+              10.192109107971191,
+              10.065080642700195,
+              9.745401382446289,
+              9.416873931884766,
+              10.885163307189941,
+              9.465357780456543,
+              10.68299674987793
+            ]
+          }
+        },
+        "compiler_memory": {
+          "argument_size_in_bytes": 432711680,
+          "output_size_in_bytes": 10770432,
+          "temp_size_in_bytes": 10465362944,
+          "alias_size_in_bytes": 0
+        },
+        "last_health": {
+          "finite": true,
+          "grad_max_abs": 257.9350280761719,
+          "log10_grad_norm": 3.395299196243286,
+          "loss": 7.285391330718994,
+          "naive_norm_finite": true,
+          "scaled_norm": 9.633377075195312,
+          "update_max_abs": 8.089842594927177e-06
+        },
+        "norm_only_overflow_count": 0,
+        "last_learning_rate": 8.919049832911696e-06,
+        "checkpoint_bytes": 85782792,
+        "checkpoint_generation": "step-512-f722bd089f2a40ab9b1c646dbbaf40bd",
+        "remaining_save_reserve_seconds": 28242.959733240998
+      },
+      "DECODER-CE": {
+        "step": 0,
+        "diagnostics": [],
+        "memory_estimate": {
+          "trainable_count": 1364139136,
+          "trainable_master_bytes_per_device": 682496512,
+          "fixed_bytes_per_device": 77791232,
+          "current_and_proposed_weights_moments_gradients_updates_forward_bytes": 5879011584,
+          "activation_compile_workspace_allowance_bytes": 6442450944,
+          "conservative_bytes_per_device": 12321462528,
+          "teacher_device_resident": false,
+          "source_other_seed_device_resident": false,
+          "limitation": "policy estimate; actual compiler/allocator measurements required on TPU"
+        },
+        "allocator_before_optimizer": {
+          "num_allocs": 513,
+          "bytes_in_use": 1095477248,
+          "peak_bytes_in_use": 2253376000,
+          "largest_alloc_size": 255716352,
+          "bytes_limit": 16909332480,
+          "bytes_reserved": 6224388096,
+          "peak_bytes_reserved": 6224388096,
+          "bytes_reservable_limit": 14989270016,
+          "largest_free_block_bytes": 8764881920
+        },
+        "start": {
+          "validation": {
+            "nll": 7.201278045773506,
+            "windows": [
+              7.7176032066345215,
+              7.731966972351074,
+              7.624668121337891,
+              7.6080780029296875,
+              7.5204854011535645,
+              7.704559326171875,
+              7.29551887512207,
+              6.994713306427002,
+              6.96905517578125,
+              6.958603382110596,
+              6.582211971282959,
+              7.0394697189331055,
+              6.609330654144287,
+              6.835582256317139,
+              6.961365699768066,
+              6.7964186668396,
+              7.519033908843994,
+              7.518652439117432,
+              7.173094749450684,
+              7.6806559562683105,
+              6.769687652587891,
+              6.558578968048096,
+              6.976797103881836,
+              6.994626045227051,
+              6.85513973236084,
+              7.637596607208252,
+              7.701719284057617,
+              7.656515598297119,
+              7.140285491943359,
+              6.732641220092773,
+              7.217068672180176,
+              7.35917329788208
+            ]
+          },
+          "locked_test": {
+            "nll": 7.54261330763499,
+            "windows": [
+              7.440340995788574,
+              7.5532050132751465,
+              8.01659870147705,
+              7.878290176391602,
+              7.615261554718018,
+              7.806622505187988,
+              7.474251747131348,
+              7.579899311065674,
+              7.862644195556641,
+              7.710649490356445,
+              6.907498836517334,
+              7.471200942993164,
+              7.244224548339844,
+              7.443162441253662,
+              7.448929309844971,
+              7.5650248527526855,
+              7.624090194702148,
+              7.5850677490234375,
+              7.430933475494385,
+              7.39537239074707,
+              7.341926574707031,
+              7.3176445960998535,
+              7.486891746520996,
+              7.822988033294678
+            ]
+          },
+          "pg19_test": {
+            "nll": 9.894098058342934,
+            "windows": [
+              10.11458683013916,
+              9.076204299926758,
+              10.148425102233887,
+              9.635336875915527,
+              9.583718299865723,
+              9.510504722595215,
+              9.247447967529297,
+              10.285911560058594,
+              10.233351707458496,
+              10.109333038330078,
+              9.131241798400879,
+              9.914543151855469,
+              9.915791511535645,
+              9.592886924743652,
+              9.418787956237793,
+              10.292472839355469,
+              9.309375762939453,
+              9.27662467956543,
+              9.203957557678223,
+              9.565462112426758,
+              9.404264450073242,
+              10.126886367797852,
+              12.04934310913086,
+              9.986433982849121,
+              9.446479797363281,
+              9.753070831298828,
+              9.535642623901367,
+              9.671778678894043,
+              9.319792747497559,
+              10.003421783447266,
+              10.145977973937988,
+              10.394804000854492,
+              10.564138412475586,
+              10.46728515625,
+              10.548665046691895,
+              10.502766609191895,
+              10.931350708007812,
+              9.951552391052246,
+              9.561630249023438,
+              9.577967643737793,
+              9.7548246383667,
+              9.530966758728027,
+              9.7662353515625,
+              9.938767433166504,
+              10.282937049865723,
+              9.95838451385498,
+              9.744857788085938,
+              9.488097190856934,
+              9.782395362854004,
+              9.933150291442871,
+              9.505269050598145,
+              9.445282936096191,
+              10.043718338012695,
+              9.915139198303223,
+              10.08273696899414,
+              10.100729942321777,
+              9.984289169311523,
+              10.19202709197998,
+              10.066019058227539,
+              9.74513053894043,
+              9.415618896484375,
+              10.886122703552246,
+              9.466710090637207,
+              10.683648109436035
+            ]
+          }
+        }
+      }
+    }
+  },
+  "pending_slots": [],
+  "sessions": [
+    {
+      "started_at_utc": "2026-10-06T14:17:41.077945+00:00",
+      "hours": 0.16228696663805556
+    }
+  ],
+  "status": "failed",
+  "aggregate": {
+    "complete": false,
+    "primary_gate": null,
+    "transfer_gate": null
+  },
+  "resources": {
+    "disk_free_bytes": 20601634816,
+    "devices": [
+      "TPU_0(process=0,(0,0,0,0))",
+      "TPU_1(process=0,(1,0,0,0))",
+      "TPU_2(process=0,(0,1,0,0))",
+      "TPU_3(process=0,(1,1,0,0))",
+      "TPU_4(process=0,(0,2,0,0))",
+      "TPU_5(process=0,(1,2,0,0))",
+      "TPU_6(process=0,(0,3,0,0))",
+      "TPU_7(process=0,(1,3,0,0))"
+    ],
+    "host_available_ram_bytes": 391445880832,
+    "source_host_cache_required_with_staging_bytes": 8848699904
+  },
+  "original_qwen": {
+    "locked_test": {
+      "nll": 3.132975935935974,
+      "windows": [
+        3.0343539714813232,
+        2.9139726161956787,
+        3.355320453643799,
+        3.0361247062683105,
+        2.8376340866088867,
+        2.833651542663574,
+        2.6632041931152344,
+        2.7190117835998535,
+        2.9415836334228516,
+        3.2640488147735596,
+        2.9152560234069824,
+        2.7461092472076416,
+        3.1095497608184814,
+        3.4827003479003906,
+        3.3768386840820312,
+        3.0036778450012207,
+        3.9019775390625,
+        3.579702615737915,
+        3.3780899047851562,
+        3.354556083679199,
+        3.312998056411743,
+        3.3501245975494385,
+        3.7205374240875244,
+        2.360398530960083
+      ]
+    },
+    "pg19_test": {
+      "nll": 2.9250307120382786,
+      "windows": [
+        2.8145813941955566,
+        3.1459240913391113,
+        2.9638831615448,
+        2.9317853450775146,
+        2.9459118843078613,
+        3.048917055130005,
+        2.851864814758301,
+        3.2085089683532715,
+        2.950110673904419,
+        3.0963857173919678,
+        2.852803945541382,
+        2.9618539810180664,
+        2.761162042617798,
+        2.803969144821167,
+        2.841961622238159,
+        3.0161831378936768,
+        3.0926551818847656,
+        3.0536186695098877,
+        2.6931910514831543,
+        2.8563737869262695,
+        2.965970993041992,
+        3.226807117462158,
+        3.018078565597534,
+        3.0295777320861816,
+        2.6040444374084473,
+        2.707110643386841,
+        2.7272489070892334,
+        2.7518150806427,
+        2.6195483207702637,
+        2.3541502952575684,
+        3.015184164047241,
+        2.8320746421813965,
+        3.275197982788086,
+        3.0557563304901123,
+        2.6732921600341797,
+        2.6586356163024902,
+        2.8331027030944824,
+        2.6896889209747314,
+        2.73331356048584,
+        3.1972386837005615,
+        2.9694983959198,
+        2.714792013168335,
+        2.9367899894714355,
+        3.1382665634155273,
+        3.0954463481903076,
+        2.883496046066284,
+        2.9609200954437256,
+        2.8100569248199463,
+        2.96089243888855,
+        2.826537609100342,
+        2.8506813049316406,
+        2.9062728881835938,
+        2.821136474609375,
+        3.0159010887145996,
+        3.0012404918670654,
+        3.015223264694214,
+        2.9839730262756348,
+        3.003437042236328,
+        3.060689926147461,
+        2.74130916595459,
+        2.956977128982544,
+        3.080545663833618,
+        3.39211106300354,
+        3.2162880897521973
+      ]
+    }
+  },
+  "stage": "123/DECODER-CE/512",
+  "error_type": "ValueError",
+  "error": "initial adapter/decoder NLL differs >1e-4",
+  "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/extent/scripts/m3q_paper_decoder_recovery_campaign.py\", line 430, in main\n    raise ValueError(\"initial adapter/decoder NLL differs >1e-4\")\nValueError: initial adapter/decoder NLL differs >1e-4\n",
+  "upload_measurements": {
+    "seed-123/adapter-ce": {
+      "generation": "step-512-f722bd089f2a40ab9b1c646dbbaf40bd",
+      "step": 512,
+      "upload_seconds": 22.255996891999985,
+      "payload_bytes": 85782792
+    }
+  }
+}

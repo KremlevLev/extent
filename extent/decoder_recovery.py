@@ -18,6 +18,18 @@ def split_decoder(parameters):
             {k: v for k, v in tree.items() if k in FROZEN})
 
 
+def split_mamba(parameters):
+    tree = unfreeze(parameters)
+    masters, fixed = {}, {}
+    for key, value in tree.items():
+        if key.startswith("layers_") and "mamba" in value:
+            masters[key] = {"mamba": jax.tree.map(lambda x: x.astype(jnp.float32), value["mamba"])}
+            fixed[key] = {name: x for name,x in value.items() if name != "mamba"}
+        else:
+            fixed[key] = value
+    return masters, fixed
+
+
 def decoder_parameters(masters, frozen):
     return dict(jax.tree.map(lambda x: x.astype(jnp.bfloat16), masters), **frozen)
 
@@ -42,6 +54,11 @@ def optimizer(parameters):
 def forward_parameters(arm, trainable, fixed, columns, head_dim):
     if arm == "DECODER-CE":
         return decoder_parameters(trainable, fixed)
+    if arm == "MAMBA-CE":
+        tree = unfreeze(fixed)
+        for key, value in trainable.items():
+            tree[key] = dict(tree[key], mamba=jax.tree.map(lambda x: x.astype(jnp.bfloat16), value["mamba"]))
+        return tree
     if arm == "ADAPTER-CE":
         return apply_corrections(fixed, trainable, head_dim=head_dim,
                                  protected_input_columns=columns)

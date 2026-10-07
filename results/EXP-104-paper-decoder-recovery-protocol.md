@@ -1,6 +1,9 @@
 # EXP-104: paper-inspired full-decoder CE recovery
 
 Status: RUNNER PREPARED, CPU checks and real token preflight; no TPU results.
+7 October update: observed v1 parity stop before dense training; v2 canonical
+evaluation correction with unchanged1e-4 and exact original checkpoint contract.
+See `EXP-102-and-104-update.md` and `EXP-104-105-kaggle-launch.md`. No dense outcome.
 One experiment, one Kaggle TPU v5e8 session up to8h. Launch and limitations in
 `EXP-104-kaggle-launch.md`. EXP102 full results still unavailable.
 

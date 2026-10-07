@@ -1926,3 +1926,33 @@ manifest; latest result cannot advance beyond durable state. Partial unsynced
 local progress may be lost when Kaggle deletes the runtime. Expect large uploads;
 one8h invocation may finish only a paired partial horizon. See launch document.
 No EXP104 recovery, gate, teacher-quality or14B claim.
+
+## 2026-10-07: EXP102 measured, EXP104 numerical preflight stop; two sessions
+
+`results/EXP-102-completed.json` confirms all six trajectories8192,4.338h,
+both gatesFALSE and no numerical failures/pending HF. Lower LR improves Wiki
+only0.0511/0.0329 versus3e-4, while3e-4 improves PG19 versus3e-5 by0.2135/0.0798.
+1e-4/3e-5 Wiki ordering reverses by seed; shared controls match101/103.
+
+`EXP-104-initial-parity-failure.json`: control123 finite512 and durable HF,
+dense123 step0. ValueError at initial per-window parity1e-4; no104 method outcome,
+gatesNULL. Initial reconstruction bitwise check passed; differing layouts yield
+mean NLL deltas around1e-4 and max-window~0.003. Working rounding/sharding
+explanation motivates v2 explicit canonical BF16 materialization/evaluator,
+unchanged threshold. Source starts re-evaluated, old starts/diagnostics archived.
+Original exact contract/digests verified against Git4401657; source/data/optimizer/
+schedule/control update math unchanged, moments/cursor preserved. Current runtime
+hashes logged separately. See `results/EXP-102-and-104-update.md`.
+
+Measured20.6GB free disk cannot hold two16.37GB dense states plus atomic staging;
+host available391GB motivates RAM checkpoint defaults with capacity guards.
+This does not prove dense TPU gradient/compilation feasibility; only control has
+measured compiler temp10.47GB. No real104-v2 correction outcome claimed locally.
+
+User authorized a second8h account. EXP105 registered in
+`EXP-105-mamba-capacity-protocol.md`: FULL Mamba-only vs protectedrank32 CE,
+same fixed098 source/data/optimizer/horizon/paired gates, all copied Qwen MLP,
+GQA/externalnorm/vocabulary frozen.256.725M FP32 masters, raw3.081GB state.
+Tests reused intentionally for matched scope comparison (only104 starts seen),
+not independent hold-out replication. CE stage2-inspired scope ablation, no
+HedgeMamba bridge. No105 TPU result. Both launch cells in two-account document.

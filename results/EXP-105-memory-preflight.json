@@ -1,0 +1,13 @@
+{
+  "trainable_count": 256725120,
+  "trainable_master_bytes_per_device": 128377344,
+  "fixed_bytes_per_device": 354850816,
+  "current_and_proposed_weights_moments_gradients_updates_forward_bytes": 1446058240,
+  "activation_compile_workspace_allowance_bytes": 6442450944,
+  "conservative_bytes_per_device": 7888509184,
+  "teacher_device_resident": false,
+  "source_other_seed_device_resident": false,
+  "limitation": "policy estimate; actual compiler/allocator measurements required on TPU",
+  "checkpoint_raw_bytes": 3080701448,
+  "scope": "CPU abstract shapes, eight virtual devices; no TPU training or upload proof"
+}

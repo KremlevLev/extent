@@ -7,7 +7,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 from extent import HybridForCausalLM, tiny_config
-from extent.decoder_recovery import split_decoder, decoder_parameters, optimizer, make_step, schedule
+from extent.decoder_recovery import split_decoder, split_mamba, decoder_parameters, forward_parameters, optimizer, make_step, schedule
 from extent.initialization import initialize_sharded_optimizer_state
 from extent.sharding import create_v5e_mesh, batch_sharding, replicated_sharding, named_sharding_tree
 from extent.chunked_checkpoint import ChunkedCheckpointStore
@@ -15,7 +15,7 @@ from extent.recovery_subspace import initialize_corrections, apply_corrections
 from scripts.m3q_paper_decoder_recovery_campaign import trainable_layout, aggregate
 
 
-@pytest.mark.parametrize("arm", ["ADAPTER-CE", "DECODER-CE"])
+@pytest.mark.parametrize("arm", ["ADAPTER-CE", "DECODER-CE", "MAMBA-CE"])
 def test_compiled_updates_frozen_vocabulary_and_exact_resume(arm, tmp_path):
     config = replace(tiny_config(), param_dtype="bfloat16", compute_dtype="bfloat16")
     model = HybridForCausalLM(config)
@@ -29,9 +29,9 @@ def test_compiled_updates_frozen_vocabulary_and_exact_resume(arm, tmp_path):
         if "/in_proj/" in name:
             factors["b"] = factors["b"].at[:, columns:].set(0)
     recovered = apply_corrections(base, c, protected_input_columns=columns, head_dim=config.mamba.head_dim)
-    p, f = split_decoder(recovered) if arm == "DECODER-CE" else (c, base)
-    if arm == "DECODER-CE":
-        for a,b in zip(jax.tree.leaves(recovered),jax.tree.leaves(decoder_parameters(p,f))):
+    p, f = split_decoder(recovered) if arm == "DECODER-CE" else split_mamba(recovered) if arm == "MAMBA-CE" else (c, base)
+    if arm != "ADAPTER-CE":
+        for a,b in zip(jax.tree.leaves(recovered),jax.tree.leaves(forward_parameters(arm,p,f,columns,config.mamba.head_dim))):
             np.testing.assert_array_equal(a,b)
         assert "embed_tokens" not in p and "lm_head" not in p
     layout, fixed_layout = trainable_layout(p,mesh), named_sharding_tree(f,mesh)
@@ -50,12 +50,13 @@ def test_compiled_updates_frozen_vocabulary_and_exact_resume(arm, tmp_path):
         p,state,health = step(p,state,f,tokens)
         assert bool(health["finite"])
     assert any(not np.array_equal(a,b) for a,b in zip(jax.tree.leaves(start),jax.tree.leaves(p)))
-    if arm == "DECODER-CE":
+    if arm != "ADAPTER-CE":
         assert all(x.dtype == jnp.float32 for x in jax.tree.leaves(p))
-        assert any(not np.array_equal(a,b) for a,b in zip(jax.tree.leaves(decoder_parameters(start,f)),jax.tree.leaves(decoder_parameters(p,f))))
-        for key in f:
-            for a,b in zip(jax.tree.leaves(f[key]),jax.tree.leaves(recovered[key])):
-                np.testing.assert_array_equal(a,b)
+        assert any(not np.array_equal(a,b) for a,b in zip(jax.tree.leaves(forward_parameters(arm,start,f,columns,config.mamba.head_dim)),jax.tree.leaves(forward_parameters(arm,p,f,columns,config.mamba.head_dim))))
+        from flax.traverse_util import flatten_dict
+        full = flatten_dict(recovered)
+        for path,value in flatten_dict(f).items():
+            np.testing.assert_array_equal(value,full[path])
     template = dict(parameters=p,optimizer=state)
     store = ChunkedCheckpointStore(tmp_path,"unit",chunk_bytes=4096)
     store.save("arm",{"arm":arm},template,8)
@@ -86,6 +87,43 @@ def test_decay_excludes_multidimensional_mamba_biases():
     np.testing.assert_array_equal(u["layers_0"]["mamba"]["b_bias"],0)
     np.testing.assert_array_equal(u["layers_0"]["mamba"]["dt_bias"],0)
     assert np.all(np.asarray(u["layers_0"]["mamba"]["mimo_x"])<0)
+
+
+def test_canonical_evaluation_matches_across_master_layouts():
+    from scripts.m3q_paper_decoder_recovery_campaign import evaluate
+    config=replace(tiny_config(),param_dtype="bfloat16",compute_dtype="bfloat16")
+    model=HybridForCausalLM(config)
+    mesh=create_v5e_mesh()
+    tokens=np.arange(4,dtype=np.int32)[None]
+    p=model.init(jax.random.key(17),jnp.asarray(tokens))["params"]
+    canonical=jax.device_put(p,named_sharding_tree(p,mesh))
+    masters,frozen=split_decoder(canonical)
+    masters=jax.device_put(masters,trainable_layout(masters,mesh))
+    changed=decoder_parameters(masters,frozen)
+    left=evaluate(model,canonical,tokens,batch_sharding(mesh))
+    right=evaluate(model,changed,tokens,batch_sharding(mesh))
+    assert left==right
+
+
+def test_legacy_contract_exact_and_unknown_settings_rejected():
+    from scripts.m3q_paper_decoder_recovery_campaign import contract_for,ROOT
+    from extent.config import load_config
+    config,_=load_config(ROOT/"config/hybrid_1_7b_gqa_v5e8.yaml")
+    assert contract_for(config)==json.loads((ROOT/"results/EXP-104-v1-contract.json").read_text(encoding="utf-8-sig"))
+    with pytest.raises(ValueError,match="scientific settings"):
+        contract_for(replace(config,tie_word_embeddings=not config.tie_word_embeddings))
+
+
+def test_v1_training_math_unchanged_for_104_continuation():
+    import ast, hashlib
+    from scripts.m3q_paper_decoder_recovery_campaign import ROOT
+    current=ast.parse((ROOT/"extent/decoder_recovery.py").read_text())
+    expected=json.loads((ROOT/"results/EXP-104-v1-training-fingerprints.json").read_text())
+    new={n.name:n for n in current.body if isinstance(n,ast.FunctionDef)}
+    for name in ("optimizer","schedule","make_step","split_decoder","decoder_parameters"):
+        assert hashlib.sha256(ast.dump(new[name]).encode()).hexdigest()==expected[name]
+    assert hashlib.sha256(ast.dump(new["forward_parameters"].body[0]).encode()).hexdigest()==expected["decoder_branch"]
+    assert hashlib.sha256(ast.dump(new["forward_parameters"].body[2]).encode()).hexdigest()==expected["adapter_branch"]
 
 
 def test_chunk_corruption_and_interrupted_generation(tmp_path, monkeypatch):
@@ -213,8 +251,22 @@ def test_runner_deadline_resume_keeps_optimizer_cursor(tmp_path, monkeypatch, ba
     counts=[r for r in meta["leaves"] if r["path"][-1]=="count"]
     assert all(int(np.load(tmp_path/"states/seed-123/adapter-ce"/r["chunks"][0]["file"]).item())==1 for r in counts)
     clock[0]=0
+    # Simulate the actual v1 stop: noncanonical starts must be recomputed from
+    # the original source, while preserving the optimizer at step1.
+    log_path=tmp_path/"output/extent-m3q-paper-decoder-recovery.json"
+    legacy=json.loads(log_path.read_text())
+    for rows in legacy["branches"].values():
+        for row in rows.values():
+            row.pop("canonical_start_checked_v2",None)
+            for score in row["start"].values():
+                score["nll"]+=100
+                score["windows"]=[x+100 for x in score["windows"]]
+    log_path.write_text(json.dumps(legacy))
     second=run.main(argv)
     assert second["branches"]["123"]["ADAPTER-CE"]["step"]==2
+    row=second["branches"]["123"]["ADAPTER-CE"]
+    assert row["start"]["validation"]["nll"]<100
+    assert row["start_uncanonical_v1"]["validation"]["nll"]>100
     meta=json.loads((tmp_path/"states/seed-123/adapter-ce/checkpoint.json").read_text())
     counts=[r for r in meta["leaves"] if r["path"][-1]=="count"]
     assert all(int(np.load(tmp_path/"states/seed-123/adapter-ce"/r["chunks"][0]["file"]).item())==2 for r in counts)
