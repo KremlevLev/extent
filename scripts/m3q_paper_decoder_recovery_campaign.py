@@ -31,6 +31,7 @@ from extent.sharding import create_v5e_mesh, batch_sharding, replicated_sharding
 from extent.hf_artifact_sync import artifact_config_from_env, restore_artifact, upload_artifacts_together
 from scripts import m3q_subspace_engine as engine
 from scripts.m3q_plateau_campaign import source_initializer
+from scripts.qwen_extended_horizon_campaign import _safe_notify
 
 ROOT = Path(__file__).resolve().parents[1]
 STEM = "extent-m3q-paper-decoder-recovery"
@@ -86,7 +87,7 @@ def contract_for(config, experiment=104):
         if contract != legacy:
             raise ValueError("EXP104 scientific settings differ from approved v1 continuation")
         for path, expected in legacy["implementation"].items():
-            if path not in ("scripts/m3q_paper_decoder_recovery_campaign.py", "extent/decoder_recovery.py"):
+            if path not in ("scripts/m3q_paper_decoder_recovery_campaign.py", "extent/decoder_recovery.py", "extent/chunked_checkpoint.py"):
                 actual = hashlib.sha256((ROOT/path).read_bytes().replace(b"\r\n", b"\n")).hexdigest()
                 if actual != expected:
                     raise ValueError(f"EXP104 unchanged scientific dependency differs: {path}")
@@ -100,6 +101,10 @@ def contract_for(config, experiment=104):
         contract["arms"] = ["ADAPTER-CE", "MAMBA-CE"]
         contract["precision"] = "FP32 Mamba-only masters/moments; BF16 forward; all non-Mamba source leaves frozen"
         contract["evaluation_reuse"] = "pre-registered shared EXP104 windows; prior starts visible, no final outcome used for selection; not independent replication"
+        legacy = json.loads((ROOT/"results/EXP-105-v1-contract.json").read_text(encoding="utf-8-sig"))
+        contract["implementation"] = legacy["implementation"]
+        if contract != legacy:
+            raise ValueError("EXP105 scientific settings differ from approved continuation")
     else:
         raise ValueError("unregistered experiment")
     return contract
@@ -277,6 +282,7 @@ def main(argv=None, *, experiment=104):
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--data-preflight-only", action="store_true")
     parser.add_argument("--sync-only", action="store_true")
+    parser.add_argument("--telegram", action=argparse.BooleanOptionalAction, default=True)
     arguments = sys.argv[1:] if argv is None else argv
     args = parser.parse_args(arguments)
     if not 1.5 < args.max_wall_hours <= 8:
@@ -351,6 +357,8 @@ def main(argv=None, *, experiment=104):
             if store.sync(slot, force=force, deadline=started + args.max_wall_hours * 3600):
                 result["pending_slots"].remove(slot)
                 result.setdefault("upload_measurements", {})[slot] = json.loads((store.directory(slot) / "synced.json").read_text())
+        result["checkpoint_sync_errors"] = dict(store.sync_errors)
+        result["checkpoint_upload_status"] = "pending" if result["pending_slots"] else "durable"
         write_json_atomic(path, result)
         if result["pending_slots"]:
             # Never publish progress ahead of its remotely durable optimizer.
@@ -378,9 +386,18 @@ def main(argv=None, *, experiment=104):
             next_summary_sync = time.monotonic() + 600
             result.pop("summary_sync_error", None)
 
+    def notify(event):
+        counts = ", ".join(f"{s}/{a}={r.get('step',0)}" for s,rows in result["branches"].items() for a,r in rows.items())
+        message = (f"Extent EXP-{experiment}: {event}; status={result.get('status')}; "
+                   f"gate={aggregate(result)['primary_gate']}; HF pending={len(result['pending_slots'])}; {counts}")
+        result.setdefault("notifications", []).append(dict(event=event, **_safe_notify(args.telegram, message)))
+        write_json_atomic(path, result)
+
     if args.sync_only or aggregate(result)["complete"]:
         persist(sync=True, force=True)
+        notify("sync finished" if not result["pending_slots"] else "sync incomplete: local states not durable")
         return result
+    notify("started")
     try:
         result["status"] = "preflight"
         persist(sync=True, force=True)
@@ -599,9 +616,12 @@ def main(argv=None, *, experiment=104):
         result.update(status="deadline_partial", error=str(exc))
     except Exception as exc:
         result.update(status="failed", error_type=type(exc).__name__, error=str(exc), traceback=traceback.format_exc())
+        notify("failed")
         persist(sync=True, force=True)
         raise
+    notify("training finished" if aggregate(result)["complete"] else "training stopped")
     persist(sync=True, force=True)
+    notify("finished and saved" if not result["pending_slots"] else "finished; HF states still pending")
     return result
 
 

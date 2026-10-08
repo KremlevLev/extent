@@ -1,0 +1,714 @@
+{
+  "experiment": 105,
+  "model": {
+    "vocab_size": 151936,
+    "hidden_size": 2048,
+    "intermediate_size": 6144,
+    "num_layers": 28,
+    "attention_layer_indices": [
+      6,
+      13,
+      20,
+      27
+    ],
+    "rms_norm_eps": 1E-06,
+    "max_position_embeddings": 32768,
+    "tie_word_embeddings": true,
+    "param_dtype": "bfloat16",
+    "compute_dtype": "bfloat16",
+    "logits_dtype": "float32",
+    "remat_policy": "full",
+    "scan_layers": false,
+    "mamba": {
+      "d_state": 64,
+      "expand": 0.75,
+      "head_dim": 64,
+      "groups": 1,
+      "mimo_rank": 4,
+      "rope_fraction": 0.5,
+      "dt_min": 0.001,
+      "dt_max": 0.1,
+      "dt_init_floor": 0.0001,
+      "a_floor": 0.0001,
+      "conv_kernel": 4
+    },
+    "mla": {
+      "implementation": "qwen3_gqa",
+      "num_heads": 16,
+      "num_kv_heads": 8,
+      "num_key_rope_heads": 1,
+      "q_lora_rank": 0,
+      "kv_lora_rank": 448,
+      "qk_nope_head_dim": 0,
+      "qk_rope_head_dim": 128,
+      "v_head_dim": 128,
+      "rope_theta": 1000000.0,
+      "rope_original_head_dim": 128,
+      "partial_rope_strategy": "high",
+      "use_qk_norm": true,
+      "use_kv_latent_norm": false,
+      "qk_head_chunk_size": 4
+    }
+  },
+  "source": {
+    "repo_id": "levkremlev888/extent",
+    "revision": "9c031f6e615d7afb0133f5611ace78f8cc5cc5fc",
+    "prefix": "experiments/exp098-dynamics-protection/checkpoints",
+    "branches": {
+      "123": {
+        "slot": "seed-123/safe-protected-r32",
+        "metadata": {
+          "format_version": 1,
+          "step": 16384,
+          "contract": {
+            "protocol": "exp098-dynamics-protection-v1",
+            "campaign": {
+              "number": 98,
+              "name": "dynamics-protection",
+              "arms": [
+                {
+                  "name": "SAFE-R32",
+                  "subspace": "INOUT-LORA",
+                  "rank": 32,
+                  "objective": "ce",
+                  "protected": false
+                },
+                {
+                  "name": "SAFE-PROTECTED-R32",
+                  "subspace": "INOUT-LORA",
+                  "rank": 32,
+                  "objective": "ce",
+                  "protected": true
+                }
+              ],
+              "primary": "SAFE-PROTECTED-R32",
+              "control": "SAFE-R32"
+            },
+            "model": {
+              "vocab_size": 151936,
+              "hidden_size": 2048,
+              "intermediate_size": 6144,
+              "num_layers": 28,
+              "attention_layer_indices": [
+                6,
+                13,
+                20,
+                27
+              ],
+              "rms_norm_eps": 1E-06,
+              "max_position_embeddings": 32768,
+              "tie_word_embeddings": true,
+              "param_dtype": "bfloat16",
+              "compute_dtype": "bfloat16",
+              "logits_dtype": "float32",
+              "remat_policy": "full",
+              "scan_layers": false,
+              "mamba": {
+                "d_state": 64,
+                "expand": 0.75,
+                "head_dim": 64,
+                "groups": 1,
+                "mimo_rank": 4,
+                "rope_fraction": 0.5,
+                "dt_min": 0.001,
+                "dt_max": 0.1,
+                "dt_init_floor": 0.0001,
+                "a_floor": 0.0001,
+                "conv_kernel": 4
+              },
+              "mla": {
+                "implementation": "qwen3_gqa",
+                "num_heads": 16,
+                "num_kv_heads": 8,
+                "num_key_rope_heads": 1,
+                "q_lora_rank": 0,
+                "kv_lora_rank": 448,
+                "qk_nope_head_dim": 0,
+                "qk_rope_head_dim": 128,
+                "v_head_dim": 128,
+                "rope_theta": 1000000.0,
+                "rope_original_head_dim": 128,
+                "partial_rope_strategy": "high",
+                "use_qk_norm": true,
+                "use_kv_latent_norm": false,
+                "qk_head_chunk_size": 4
+              }
+            },
+            "source": "Qwen/Qwen3-1.7B-Base@ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+            "source_protocol": "exp072-full-depth-sequential-confirmation-v2",
+            "replacement_order": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "seeds": [
+              123,
+              456
+            ],
+            "horizons": [
+              4096,
+              8192,
+              16384
+            ],
+            "sequence_length": 256,
+            "data": [
+              [
+                "train",
+                "train",
+                33554432,
+                16384
+              ],
+              [
+                "validation",
+                "validation",
+                81920,
+                32
+              ],
+              [
+                "locked_test",
+                "test",
+                262144,
+                64
+              ]
+            ],
+            "student_training_tokens": 16777216,
+            "optimizer": {
+              "name": "Adam",
+              "lr": 0.0003,
+              "clip": "max-scaled FP32 global norm 1.0",
+              "base_weights": "frozen BF16",
+              "coordinates_and_moments": "FP32"
+            },
+            "objectives": {
+              "ce": "CE",
+              "weak_teacher": "CE +0.1*KL(Qwen||student,T=2)*T^2",
+              "self": "CE +0.1*KL(unchanged ONPOLICY||student,T=2)*T^2"
+            },
+            "delta_layers": "replaced layers >0 only; teacher/student see their own upstream streams",
+            "protected": "in_proj dt/raw_a/trap/angle projection columns unchanged; B/C/x/z may adapt",
+            "selection": "no selection; validation diagnostic; both locked tests only at start/final 16384",
+            "gate": "all arms complete; primary beats control >=0.1 Wiki test NLL and improves own start at BOTH seeds",
+            "comparison": "equal student tokens, NOT equal parameters/FLOPs; repeated rank8 CE controls are not independent evidence",
+            "implementation_sha256": {
+              "scripts/m3q_subspace_engine.py": "0792674fc289ba8c82dac9148cd52f7670f2fa7c0bae04c24ceeea418c56a8e1",
+              "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+              "extent/full_model_distillation.py": "711478deb14052b3721564cb2f2182de1f300897f84d6fdb3eedb78ff7f7071d"
+            },
+            "evaluate_teacher_baseline": true,
+            "expected_data_sha256": {
+              "train": "e80a8699d40cd68f219153129e61d499d62d06d3ce31a0655981b2803234767f",
+              "validation": "f4383da5e6dc14f231b826e79d0aacb8806db5a0c6ddbd531112475d7a288977",
+              "locked_test": "33306342dcbb774423725924893e008989503acc837c3fb07bca964f910f237c",
+              "pg19_test": "147d5fbe6fb0d8599ce51107dc27c1cac3c5a84d980ad3840d777c2729bfb134"
+            },
+            "diagnostic_rule": "no nonfinite repair, skipped batches or optimizer reset",
+            "secondary_gate": "primary also beats control >=0.1 PG19 NLL and own PG19 start at BOTH seeds",
+            "evaluation_freshness": "new packed ranges relative to registered project ranges; same source seeds, not new initialization replication; no universal contamination claim",
+            "additional_implementation_sha256": {
+              "scripts/m3q_safe_recovery_campaign.py": "a3bb97eed13e6cfffa8d76692f9f8727850b1f449b3b803af160cba29ad24b35",
+              "scripts/m3q_dynamics_protection_campaign.py": "3e3b38a7d26e1861fa770d5e63a86b08b348bd532f99f7ec1b3f6bc7e51769f2",
+              "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+              "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+              "extent/campaign_checkpoint.py": "882430689f586d39695752a745b8fb6285b2815d56319821afe0dbe3356c6a82",
+              "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+              "extent/hf_checkpoint_sync.py": "d5c5469d06762a90570574c7dd0bd588103fb4bac73b03e60f23f482e6206d5f"
+            },
+            "schedule": {
+              "horizons": [
+                4096,
+                8192,
+                16384
+              ],
+              "train_windows": 16384,
+              "data": [
+                [
+                  "train",
+                  "train",
+                  33554432,
+                  16384
+                ],
+                [
+                  "validation",
+                  "validation",
+                  81920,
+                  32
+                ],
+                [
+                  "locked_test",
+                  "test",
+                  262144,
+                  64
+                ]
+              ],
+              "pg19_test_offset": 262144,
+              "pg19_test_windows": 64,
+              "max_wall_hours": 8.0,
+              "reserve_minutes": 45
+            },
+            "execution_order": {
+              "123": [
+                "SAFE-R32",
+                "SAFE-PROTECTED-R32"
+              ],
+              "456": [
+                "SAFE-PROTECTED-R32",
+                "SAFE-R32"
+              ]
+            },
+            "datasets": {
+              "wiki": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1",
+              "pg19": "deepmind/pg19@4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b/test"
+            },
+            "seed": 123,
+            "arm": {
+              "name": "SAFE-PROTECTED-R32",
+              "subspace": "INOUT-LORA",
+              "rank": 32,
+              "objective": "ce",
+              "protected": true
+            },
+            "source_sha256": {
+              "0": "83bdfdaf71bedee099428e3a7eed60754dd7a10b6c11c7dade63dc31102419af",
+              "1": "ab5d9afaa8ac9d7b7e66c7b2ac3e0af118d2068fd9fa870d334c0f9ebec0dd61",
+              "2": "f17405bac00faf20ec81396a2806f12b57ead165d7fedb3f74ccae5b43fb6395",
+              "3": "c2cbd039b5375217d949947a3096aca259e90b913a9eba04907f0d07a881489e",
+              "4": "07b21132a6396cb968f56cc7c35405382cff58955ad2f9e9cd76bd3f8fd3d32b",
+              "5": "d92829e4144c6e38828c8101fe8daa2fd41bffb28411695a9fcff1bdf0e473fd",
+              "7": "8c94deb49bdd78e9034f5b5e2b52555aa28796f9c2578e708a926b9f88cc18c3",
+              "8": "918e5f7bfc0723ea0532beef9ee9a27aeee240f3ceb29613e740980057529de7",
+              "9": "8a791ff8a4a830a4cf693ec7c005af99846dd1fc09622b987a4b9dbebc111a8d",
+              "10": "dad63b69a134304f7ece8e4e080d36234049f125ff05b82ed5b4f79d4c1fd379",
+              "11": "6557415894d0b9c7380141bb9d6292040019e2d95209ca7ba6af0cc9a706977d",
+              "12": "b8a07681b50942a71fc44cebb5bbb2ed75ce0b6ecfd8ce6e2a6c8777c636f892",
+              "14": "cfe35742bdb1e022fd9c3ccc9d2daf9ed1dec317a752034e28a7a7300ade859c",
+              "15": "fd67c3ea1aaf86744d2e4876b3d196880efb14051b524aa2ba9229730acd3eb6",
+              "16": "bdcb52caaaaf4924490ece2c50670b86048a80b044b88790c6e40ba5bbee8557",
+              "17": "c986b96d4e5a81e33212f3383109351f95c8bec48c03934fe823776ecc83ebd8",
+              "18": "ac6dc952c639fc294e16ad3cf8d533cb6628fbe6296f4df7af3efa156ba93a6d",
+              "19": "08cb0eeefd3b6cb4a40647d8913c85e81815d753d9b0d7808c393fe28c99d9bb",
+              "21": "344c57985e29391ab4bd43cd57b179ea936a99537c045bc3948c6820a99228cb",
+              "22": "1881d547d0448308cdd0bd489e9717657c2a204540b681cd84377b27b0ed6e90",
+              "23": "b8cb904e77bd9e7c6719de200259ff7dbb144f41b982fdfcc92858f065cf9ca2",
+              "24": "00a9f58fb0548bdc8547adcdf36d488b7d9ea5a3e8ec93d329d3c8607e7c5859",
+              "25": "424bcd61945776be2aa8285017e0d24d1889a7dbca4545261688d15ef867b1e4",
+              "26": "887f5399bec4229eb11436ccd06fd56384a447c8b08161d38427dd317ad68b7d"
+            },
+            "data_sha256": {
+              "train": "e80a8699d40cd68f219153129e61d499d62d06d3ce31a0655981b2803234767f",
+              "validation": "f4383da5e6dc14f231b826e79d0aacb8806db5a0c6ddbd531112475d7a288977",
+              "locked_test": "33306342dcbb774423725924893e008989503acc837c3fb07bca964f910f237c",
+              "pg19_test": "147d5fbe6fb0d8599ce51107dc27c1cac3c5a84d980ad3840d777c2729bfb134"
+            }
+          },
+          "checkpoint_file": "state.msgpack",
+          "checkpoint_bytes": 85758140,
+          "checkpoint_sha256": "c63aa174dde0e8fff78e30f9b44c8f25c08f127bcd136504177b5995eb6dc819",
+          "metrics": {
+            "finite": true
+          }
+        }
+      },
+      "456": {
+        "slot": "seed-456/safe-protected-r32",
+        "metadata": {
+          "format_version": 1,
+          "step": 16384,
+          "contract": {
+            "protocol": "exp098-dynamics-protection-v1",
+            "campaign": {
+              "number": 98,
+              "name": "dynamics-protection",
+              "arms": [
+                {
+                  "name": "SAFE-R32",
+                  "subspace": "INOUT-LORA",
+                  "rank": 32,
+                  "objective": "ce",
+                  "protected": false
+                },
+                {
+                  "name": "SAFE-PROTECTED-R32",
+                  "subspace": "INOUT-LORA",
+                  "rank": 32,
+                  "objective": "ce",
+                  "protected": true
+                }
+              ],
+              "primary": "SAFE-PROTECTED-R32",
+              "control": "SAFE-R32"
+            },
+            "model": {
+              "vocab_size": 151936,
+              "hidden_size": 2048,
+              "intermediate_size": 6144,
+              "num_layers": 28,
+              "attention_layer_indices": [
+                6,
+                13,
+                20,
+                27
+              ],
+              "rms_norm_eps": 1E-06,
+              "max_position_embeddings": 32768,
+              "tie_word_embeddings": true,
+              "param_dtype": "bfloat16",
+              "compute_dtype": "bfloat16",
+              "logits_dtype": "float32",
+              "remat_policy": "full",
+              "scan_layers": false,
+              "mamba": {
+                "d_state": 64,
+                "expand": 0.75,
+                "head_dim": 64,
+                "groups": 1,
+                "mimo_rank": 4,
+                "rope_fraction": 0.5,
+                "dt_min": 0.001,
+                "dt_max": 0.1,
+                "dt_init_floor": 0.0001,
+                "a_floor": 0.0001,
+                "conv_kernel": 4
+              },
+              "mla": {
+                "implementation": "qwen3_gqa",
+                "num_heads": 16,
+                "num_kv_heads": 8,
+                "num_key_rope_heads": 1,
+                "q_lora_rank": 0,
+                "kv_lora_rank": 448,
+                "qk_nope_head_dim": 0,
+                "qk_rope_head_dim": 128,
+                "v_head_dim": 128,
+                "rope_theta": 1000000.0,
+                "rope_original_head_dim": 128,
+                "partial_rope_strategy": "high",
+                "use_qk_norm": true,
+                "use_kv_latent_norm": false,
+                "qk_head_chunk_size": 4
+              }
+            },
+            "source": "Qwen/Qwen3-1.7B-Base@ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+            "source_protocol": "exp072-full-depth-sequential-confirmation-v2",
+            "replacement_order": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26
+            ],
+            "seeds": [
+              123,
+              456
+            ],
+            "horizons": [
+              4096,
+              8192,
+              16384
+            ],
+            "sequence_length": 256,
+            "data": [
+              [
+                "train",
+                "train",
+                33554432,
+                16384
+              ],
+              [
+                "validation",
+                "validation",
+                81920,
+                32
+              ],
+              [
+                "locked_test",
+                "test",
+                262144,
+                64
+              ]
+            ],
+            "student_training_tokens": 16777216,
+            "optimizer": {
+              "name": "Adam",
+              "lr": 0.0003,
+              "clip": "max-scaled FP32 global norm 1.0",
+              "base_weights": "frozen BF16",
+              "coordinates_and_moments": "FP32"
+            },
+            "objectives": {
+              "ce": "CE",
+              "weak_teacher": "CE +0.1*KL(Qwen||student,T=2)*T^2",
+              "self": "CE +0.1*KL(unchanged ONPOLICY||student,T=2)*T^2"
+            },
+            "delta_layers": "replaced layers >0 only; teacher/student see their own upstream streams",
+            "protected": "in_proj dt/raw_a/trap/angle projection columns unchanged; B/C/x/z may adapt",
+            "selection": "no selection; validation diagnostic; both locked tests only at start/final 16384",
+            "gate": "all arms complete; primary beats control >=0.1 Wiki test NLL and improves own start at BOTH seeds",
+            "comparison": "equal student tokens, NOT equal parameters/FLOPs; repeated rank8 CE controls are not independent evidence",
+            "implementation_sha256": {
+              "scripts/m3q_subspace_engine.py": "0792674fc289ba8c82dac9148cd52f7670f2fa7c0bae04c24ceeea418c56a8e1",
+              "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+              "extent/full_model_distillation.py": "711478deb14052b3721564cb2f2182de1f300897f84d6fdb3eedb78ff7f7071d"
+            },
+            "evaluate_teacher_baseline": true,
+            "expected_data_sha256": {
+              "train": "e80a8699d40cd68f219153129e61d499d62d06d3ce31a0655981b2803234767f",
+              "validation": "f4383da5e6dc14f231b826e79d0aacb8806db5a0c6ddbd531112475d7a288977",
+              "locked_test": "33306342dcbb774423725924893e008989503acc837c3fb07bca964f910f237c",
+              "pg19_test": "147d5fbe6fb0d8599ce51107dc27c1cac3c5a84d980ad3840d777c2729bfb134"
+            },
+            "diagnostic_rule": "no nonfinite repair, skipped batches or optimizer reset",
+            "secondary_gate": "primary also beats control >=0.1 PG19 NLL and own PG19 start at BOTH seeds",
+            "evaluation_freshness": "new packed ranges relative to registered project ranges; same source seeds, not new initialization replication; no universal contamination claim",
+            "additional_implementation_sha256": {
+              "scripts/m3q_safe_recovery_campaign.py": "a3bb97eed13e6cfffa8d76692f9f8727850b1f449b3b803af160cba29ad24b35",
+              "scripts/m3q_dynamics_protection_campaign.py": "3e3b38a7d26e1861fa770d5e63a86b08b348bd532f99f7ec1b3f6bc7e51769f2",
+              "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+              "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+              "extent/campaign_checkpoint.py": "882430689f586d39695752a745b8fb6285b2815d56319821afe0dbe3356c6a82",
+              "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+              "extent/hf_checkpoint_sync.py": "d5c5469d06762a90570574c7dd0bd588103fb4bac73b03e60f23f482e6206d5f"
+            },
+            "schedule": {
+              "horizons": [
+                4096,
+                8192,
+                16384
+              ],
+              "train_windows": 16384,
+              "data": [
+                [
+                  "train",
+                  "train",
+                  33554432,
+                  16384
+                ],
+                [
+                  "validation",
+                  "validation",
+                  81920,
+                  32
+                ],
+                [
+                  "locked_test",
+                  "test",
+                  262144,
+                  64
+                ]
+              ],
+              "pg19_test_offset": 262144,
+              "pg19_test_windows": 64,
+              "max_wall_hours": 8.0,
+              "reserve_minutes": 45
+            },
+            "execution_order": {
+              "123": [
+                "SAFE-R32",
+                "SAFE-PROTECTED-R32"
+              ],
+              "456": [
+                "SAFE-PROTECTED-R32",
+                "SAFE-R32"
+              ]
+            },
+            "datasets": {
+              "wiki": "Salesforce/wikitext@b08601e04326c79dfdd32d625aee71d232d685c3/wikitext-103-raw-v1",
+              "pg19": "deepmind/pg19@4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b/test"
+            },
+            "seed": 456,
+            "arm": {
+              "name": "SAFE-PROTECTED-R32",
+              "subspace": "INOUT-LORA",
+              "rank": 32,
+              "objective": "ce",
+              "protected": true
+            },
+            "source_sha256": {
+              "0": "3ab854bb3e68559986f822017c71160c95b6820d92d31c46231290061bec1409",
+              "1": "079a4cc18a9d7f10fa7defe4356c30da0e8d22bb5b229681e1e454bc63d356b7",
+              "2": "643332a145bc9f1ccf1a82f52fe5e4414e77e4cdfefe2ffbab5e5a3d374cf265",
+              "3": "b20d520c5a9ef2366f91e421a86d67ff025ccac26835d6a0b6222a57777841cc",
+              "4": "68db3d3744413b8f9a5b77d16b37874bda125a4435a534a47465d916187cb7a5",
+              "5": "8022286db5ccf16b4dee8c7f1ba1e2cf98a2e6be24d1a34b13818dc4e689e761",
+              "7": "f6235fa706832dae833f66870e50857ba1e71c1cc67ba50be9629b8d205649f6",
+              "8": "f4ab6b00032faaf2131e220cbea71cc4a25b71a821604a76d30245db1f848a3c",
+              "9": "adf2a18bdd762afcbdda08abf66358b9168766d916ff4bf8295286e9fdf1793c",
+              "10": "84dc48b9242af27561649ab7eab6ba4d00cd5159d8bfc6f3d9f18a065e78732a",
+              "11": "e8973824b7ec4a48ddf7896a60a110ee059f96c7d5208630c9e085ec786512db",
+              "12": "1960e2985137d47b5942c30ed4aa17028dbc7966be93a2e8ce7adfac047152c6",
+              "14": "73c58a3d3f60f7136ad27d373f978bcbacc95637bce6b6d7c1530e3b73ae4a79",
+              "15": "d5a1ae4e2640c3ab972722e0605b0f27310c7239b99e5323412355e716ccb2a0",
+              "16": "19ca665d67a8e22c06020361ec5884cbb687b49becc6df8d560c8e3ac1a90eb0",
+              "17": "2d4ffb1f686a166ccd55b7df29dfb087043308072317ac608312741e8a055567",
+              "18": "18672e9b5320b81d2394a48c6d1d2f845496099a736b6b4c3556fcee32a9c47c",
+              "19": "178a08197a1ac852232c70972b213aaa75d3d8e5b1c088d7d4196d123826d6c0",
+              "21": "d808699e8e06a25f154f0957dc49b790054a7ccb0ff2007d2379a43cbe97fb77",
+              "22": "9d31b15924615208dc63f2a98d8745a6ad6f2de5c34c4435f95fd3d34af6e02e",
+              "23": "7f831a3c275d4adc8ae7a350b72ee4c2169d101850c189f0c2bd7d67c025e199",
+              "24": "b25f168bcc2d849c61a448f72a58bf12f7c5e6ac7761989e6950daef38be324d",
+              "25": "f469aec3e135eaab39e81ee4f6cbfb8db25499f5b42f13f95fca72b5c24087ca",
+              "26": "9200739772fa542da9601c4ca3cc63e8b12b80128d604703f93c7d05a408522a"
+            },
+            "data_sha256": {
+              "train": "e80a8699d40cd68f219153129e61d499d62d06d3ce31a0655981b2803234767f",
+              "validation": "f4383da5e6dc14f231b826e79d0aacb8806db5a0c6ddbd531112475d7a288977",
+              "locked_test": "33306342dcbb774423725924893e008989503acc837c3fb07bca964f910f237c",
+              "pg19_test": "147d5fbe6fb0d8599ce51107dc27c1cac3c5a84d980ad3840d777c2729bfb134"
+            }
+          },
+          "checkpoint_file": "state.msgpack",
+          "checkpoint_bytes": 85758140,
+          "checkpoint_sha256": "940745e477d27b7884d2a9be23eca848ef435505ecee3b8be1fb5757bf2f53c3",
+          "metrics": {
+            "finite": true
+          }
+        }
+      }
+    }
+  },
+  "data": [
+    [
+      "train",
+      "train",
+      39845888,
+      2048
+    ],
+    [
+      "validation",
+      "validation",
+      114688,
+      32
+    ],
+    [
+      "locked_test",
+      "test",
+      294912,
+      24
+    ]
+  ],
+  "pg19": [
+    294912,
+    64
+  ],
+  "data_manifest": {
+    "train": {
+      "sha256": "386fa5535c5b0e00f27bdab496ffc386412335bc300c6f72bf744e6238b71dae",
+      "shape": [
+        2048,
+        256
+      ],
+      "dtype": "int32"
+    },
+    "validation": {
+      "sha256": "b7be45bacc8b3f861300860d300b68788a6d9e0665df2b03c1029a71ed3c7246",
+      "shape": [
+        32,
+        256
+      ],
+      "dtype": "int32"
+    },
+    "locked_test": {
+      "sha256": "90a8d24d2bd53a0dbba7735c3641eb2b6378b365931bfb933f123c497a2b2efc",
+      "shape": [
+        24,
+        256
+      ],
+      "dtype": "int32"
+    },
+    "pg19_test": {
+      "sha256": "fab24e87c3f936997b25cb8ecc8b00da18081818594a45d5f43b0fe61bc48a20",
+      "shape": [
+        64,
+        256
+      ],
+      "dtype": "int32"
+    }
+  },
+  "datasets": {
+    "wiki": "b08601e04326c79dfdd32d625aee71d232d685c3",
+    "pg19": "4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b"
+  },
+  "tokenizer": {
+    "repo": "Qwen/Qwen3-1.7B-Base",
+    "revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1"
+  },
+  "horizons": [
+    512,
+    1024,
+    2048
+  ],
+  "seeds": [
+    123,
+    456
+  ],
+  "arms": [
+    "ADAPTER-CE",
+    "MAMBA-CE"
+  ],
+  "optimizer": {
+    "name": "AdamW",
+    "lr": 1E-05,
+    "final_lr": 1E-06,
+    "warmup": 64,
+    "betas": [
+      0.9,
+      0.95
+    ],
+    "eps": 1E-08,
+    "matrix_decay": 0.1,
+    "stable_clip": 1,
+    "fresh_at_transition": true
+  },
+  "precision": "FP32 Mamba-only masters/moments; BF16 forward; all non-Mamba source leaves frozen",
+  "selection": "fixed EXP098 final16384; no validation selection; locked start/final2048",
+  "implementation": {
+    "scripts/m3q_paper_decoder_recovery_campaign.py": "d59a3dd3904f24ce02607192bd347f0c5e0516c42c0f16f11372d27232564fc7",
+    "extent/decoder_recovery.py": "125c450ced89578dcd2f70a3a4cd215b27f617117a158f3f2f2e7b6182f0deef",
+    "extent/chunked_checkpoint.py": "92aa2b0f8f4a175f038ecc6fd01c59aeb74d4511a1cac4ed972811f577f798c5",
+    "extent/initialization.py": "4a4e70d791d7bcb5d8b1e0a04a77e4334d506596b4be55060c5b339a0e6d4649",
+    "extent/model.py": "15c50a3b8eed6d11556835ed960968242647fb05cbca235a19d77f9b2d65c892",
+    "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+    "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+    "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a"
+  },
+  "evaluation_reuse": "pre-registered shared EXP104 windows; prior starts visible, no final outcome used for selection; not independent replication"
+}

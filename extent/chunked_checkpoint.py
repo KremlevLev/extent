@@ -33,6 +33,7 @@ class ChunkedCheckpointStore:
         self.root, self.prefix, self.hub = Path(root), prefix, hub
         self.chunk_bytes = chunk_bytes
         self.next_sync = 0.0
+        self.sync_errors = {}
 
     def directory(self, slot):
         parts = Path(slot).parts
@@ -171,10 +172,13 @@ class ChunkedCheckpointStore:
                                       self.hub, commit_message="EXP104 durable checkpoint manifest")
         except Exception as exc:
             status = getattr(getattr(exc, "response", None), "status_code", None)
+            self.sync_errors[slot] = dict(error_type=type(exc).__name__, http_status=status,
+                                          retry_after_seconds=3600 if status == 429 else 120)
             if status in (401, 403) or isinstance(exc, ValueError):
                 raise
             self.next_sync = time.monotonic() + (3600 if status == 429 else 120)
             return False
         write_json_atomic(directory / "synced.json", dict(generation=meta["generation"], step=meta["step"],
                           upload_seconds=time.monotonic() - started, payload_bytes=meta["payload_bytes"]))
+        self.sync_errors.pop(slot, None)
         return True

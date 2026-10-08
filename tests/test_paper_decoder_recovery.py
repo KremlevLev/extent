@@ -207,6 +207,8 @@ def test_runner_deadline_resume_keeps_optimizer_cursor(tmp_path, monkeypatch, ba
     monkeypatch.setattr(run.jax,"devices",lambda:[SimpleNamespace(platform="tpu",memory_stats=lambda:{"bytes_limit":32<<30})]*8)
     monkeypatch.setattr(run,"create_v5e_mesh",lambda d:mesh)
     monkeypatch.setattr(run,"artifact_config_from_env",lambda:object())
+    messages=[]
+    monkeypatch.setattr(run,"_safe_notify",lambda enabled,message:(messages.append(message) or {"enabled":enabled,"sent":True}))
     cloud=tmp_path/"cloud"
     def upload(files,*a,**k):
         for source,name in files:
@@ -239,6 +241,8 @@ def test_runner_deadline_resume_keeps_optimizer_cursor(tmp_path, monkeypatch, ba
     argv=["--output-dir",str(tmp_path/"output"),"--state-dir",str(tmp_path/"states")]
     first=run.main(argv)
     assert first["status"]=="deadline_partial"
+    assert any("training stopped" in m for m in messages)
+    assert len(first["notifications"])>=3
     if bad_proposal:
         assert first["branches"]["123"]["ADAPTER-CE"]["failed"]
         assert first["branches"]["123"]["ADAPTER-CE"]["step"]==0
