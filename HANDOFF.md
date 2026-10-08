@@ -1,5 +1,22 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**8 октября2026, следующий шаг:** пользователь подтвердил уничтожение облачных
+runtime104/105: незагруженные финальные состояния потеряны, метрики сохранены.
+Разрешены EXP106/107 на двух аккаунтах: одинаковое длинное full-decoder CE,
+глобальный clip1 против layer-group relative clip0.01*max(weightnorm,0.001).
+Оба начинаются из pinned098, НЕ из потерянных104/105; дваseed/аккаунт,
+32768 шагов/seed, warmup512 и новое длинное расписание. Единственное различие
+между аккаунтами — клиппинг. Общий gate по свежему PG19 требует обаJSON;
+индивидуальный gateNULL ожидаем. Wiki test reused, exploratory. См.
+`results/EXP-106-107-layer-clipping-protocol.md`, готовые ячейки в
+`results/EXP-106-107-kaggle-launch.md`; новые runner/core не меняют104/105.
+TARGET6–6.5h loading/compile/training+1.5h save, endpoint может требовать resume.
+Добавлены per-layer gradient/clipping/post-Adam update diagnostics, бинарный HF
+roundtrip перед model allocation и initial full checkpoint до обучения с
+remote manifest/sample verification. Новые успехи sync проверяют manifest/sample,
+финальный cooldown/retry уважает429. Это НЕ полный remote reload16GB каждого
+checkpoint и не TPU evidence. Подготовка/CPU проверки отдельно от результатов.
+
 **8 октября2026:** EXP104/105 действительно completed, все4 ветви2048/конечные,
 оба gatesFALSE. Runner-hours1.071/0.970; остановились по фиксированному endpoint,
 а не8h wall cap. Пользователь недоволен коротким использованием сессий после

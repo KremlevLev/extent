@@ -1,0 +1,34 @@
+{
+  "train": {
+    "sha256": "4e2bdc8cdd9ad69d21a5651133266d5df0c5733d82521f48e01c9bbff86ecc7b",
+    "shape": [
+      32768,
+      256
+    ],
+    "dtype": "int32"
+  },
+  "validation": {
+    "sha256": "b7be45bacc8b3f861300860d300b68788a6d9e0665df2b03c1029a71ed3c7246",
+    "shape": [
+      32,
+      256
+    ],
+    "dtype": "int32"
+  },
+  "locked_test": {
+    "sha256": "90a8d24d2bd53a0dbba7735c3641eb2b6378b365931bfb933f123c497a2b2efc",
+    "shape": [
+      24,
+      256
+    ],
+    "dtype": "int32"
+  },
+  "pg19_test": {
+    "sha256": "2c7b219677b4d411fb2b6faf1b1aadec38b6bea7f2ded599e5698b00b3a21c11",
+    "shape": [
+      128,
+      256
+    ],
+    "dtype": "int32"
+  }
+}

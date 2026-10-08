@@ -1956,3 +1956,51 @@ GQA/externalnorm/vocabulary frozen.256.725M FP32 masters, raw3.081GB state.
 Tests reused intentionally for matched scope comparison (only104 starts seen),
 not independent hold-out replication. CE stage2-inspired scope ablation, no
 HedgeMamba bridge. No105 TPU result. Both launch cells in two-account document.
+
+## 2026-10-08: EXP104/105 completed, EXP106/107 registered
+
+MEASURED from supplied raw JSONs: EXP104/105 both completed all four finite2048
+trajectories in1.071/0.970 runner-hours, primary/transfer gatesFALSE. These were
+fixed short endpoints, not eight hours of training. Own-start Wiki gains for
+seeds123/456: full decoder-0.003384/+0.021388; Mamba-only-0.005419/+0.024602.
+Large relative seed456 gains~0.19 mainly reflect adapter-control regression.
+Full-decoder validation123 goes7.20128→7.17422 and4567.24913→7.17692; this is
+diagnostic, not a locked-test gate.105 seed456 step512 includes one validation
+window NLL22.51214. Fixed inputs imply real model-behavior spikes, not random
+evaluation sampling; stochastic optimization noise/dominant-layer causality
+have NOT been established. Raw: EXP-104-completed.json/EXP-105-completed.json;
+analysis: EXP-104-105-completed-update.md.
+
+All final slots were pending HF. User confirmed cloud runtimes disappeared:
+those final local states are unavailable. Scientific logs remain valid, but
+continuation from final2048 is impossible. New campaigns start pinned098.
+
+HYPOTHESIS/REGISTERED: EXP106 global norm1 versus EXP107 layer-group relative
+gradient clipping0.01*max(weightnorm,0.001), both full internal decoder CE.
+One method/two seeds per account; same pinned098, data, AdamW and LR. New horizon
+32768/seed with512 warmup and cosine to1e-6, batch1/context256.8.389M input
+tokens/trajectory;33.554M across both accounts. TARGET6–6.5h loading/compile/train
+plus1.5h save/invocation, paired4096 blocks and compatible multi-session resume.
+No claim that one invocation completes the whole horizon. Full details/source
+pins/data hashes/gates: EXP-106-107-layer-clipping-protocol.md.
+
+Per-layer raw/clipped-gradient and post-Adam update diagnostics distinguish
+gradient suppression from actual parameter motion. This is group-level relative
+clipping, not original NFNet unitwise AGC; no layer sweep/EMA/random fallback.
+New128-window PG19 range is primary; reused24-window Wiki test exploratory guard.
+Primary final32768 gate requires>=0.1 PG19 control and own-start gains in BOTH
+seeds, Wiki regression<=0.1. Individual gateNULL until both accounts are compared;
+matched partial points remain exploratory, no best-checkpoint selection.
+
+Engineering preparation: real pinned tokenizer/data capacity and hashes verified
+locally, without loading Qwen weights. New independent core/runner preserve
+legacy104/105 contracts. Small complete remote binary roundtrip before model
+allocation; initial large checkpoint uploaded before training, fresh remote
+manifest and representative-largest-chunk SHA checked. Same verification for
+later successful saves; it does not reconstruct the entire remote16GB state.
+Two-GiB upload batches reduce shared HF commit pressure; bounded transient retries,
+429 cooldown, explicit pending/durable cursor and terminal Telegram receipt.
+Metrics may be ahead of durable optimizer cursors, explicitly marked; resume
+reconciles against binary manifests. Immutable generations add substantial HF
+storage; no existing files deleted. All engineering evidence remains CPU/mocked
+cloud/virtual-device only. No EXP106/107 TPU outcomes or live Telegram evidence.

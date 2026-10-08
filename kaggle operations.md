@@ -377,3 +377,15 @@ and stem `extent-m3q-mamba-capacity-recovery`, fresh moments, no104 checkpoint r
 Two seeds,512/1024/2048 horizons,8h cap including1.5h reserve. Expect3.08GB raw
 Mamba state versus16.37GB dense. Shared tests/controls are matched comparisons,
 not independent replication. CPU/virtual8 checks only; send both summary and JSON.
+
+## 8 October: EXP106/107 long clipping comparison
+
+Current cells: `results/EXP-106-107-kaggle-launch.md`. Both accounts train the full
+decoder from pinned098, two seeds32768 steps each:106 global1,107 layer-group
+adaptive clipping. Same long512-warmup schedule/data. Eight hours include1.5h
+save reserve; balanced4096 blocks, exact HF optimizer resume for deadline-partial.
+Legacy104/105 final cloud states were lost, so do not attempt final2048 resume.
+Small binary HF roundtrip and initial full checkpoint manifest/sample readback
+before training; final retries respect429. Per-layer gradient AND actual update
+metrics distinguish suppression from parameter motion. Individual gateNULL is
+expected until BOTH account logs are compared. No106/107 TPU outcome yet.
