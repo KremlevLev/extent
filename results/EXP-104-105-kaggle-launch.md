@@ -12,6 +12,20 @@
 и успешное сохранение в HF сообщаются отдельно. Тип/HTTP-код новых sync ошибок
 логируется; причину старых pending по имеющимсяJSON восстановить нельзя.
 
+В уже живом runtime после обновления файлов репозитория (БЕЗ создания новой
+сессии/очистки `/dev/shm`) перезагрузи только модули. Это не перезапускает JAX:
+
+```python
+import importlib
+import extent.chunked_checkpoint as checkpoints
+import scripts.m3q_paper_decoder_recovery_campaign as campaign
+
+importlib.reload(checkpoints)
+importlib.reload(campaign)
+result = campaign.main(["--sync-only"], experiment=104)  # 105 на втором аккаунте
+print(result["pending_slots"], result.get("checkpoint_sync_errors"))
+```
+
 Обнови main в существующих подготовительных ячейках; перезапусти процесс ноутбука,
 если старые модули уже были импортированы. Используй прежние установки и secrets
 `HF_TOKEN`, `EXTENT_HF_CHECKPOINT_REPO`. Оба аккаунта должны читать фиксированные
