@@ -1,5 +1,21 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**Git author correction,9 октября2026:** пользователь требует GitHub attribution
+именно KremlevLev. Правильные author И committer: `KremlevLev
+<kremlevlev888@gmail.com>` — как у привязанных GitHub коммитов627c9d9/8b2eef3.
+Имя без правильного email недостаточно. Repo-local user.name/user.email и
+user.useConfigOnly закреплены; перед commit проверять оба git var IDENT.
+Недавние коммиты с lkremlev@phoenixit.ru не привязаны к профилю. Опубликованная
+история не переписана; для её исправления требуется отдельное решение пользователя.
+
+**Короткие continuation-сессии106/107:** --max-wall-hours теперь принимает <1.5h,
+--save-reserve-minutes задаёт резерв >=10min и меньше wall budget. Default reserve
+min(90min,25% wall). Точные измеренные v1 контракты сохранены; новый операционный
+таймер НЕ сбрасывает параметры/Adam/data/LR. AST/math и dependency SHA guards.
+Примеры оставшейся квоты1h/2h:0.9h+15min reserve /1.9h+20min reserve;
+setup время нужно дополнительно вычесть. Большие HF restore/compile/save входят
+в budget, поэтому1h может не хватить для завершения. Те же notebook imports.
+
 **8 октября2026, следующий шаг:** пользователь подтвердил уничтожение облачных
 runtime104/105: незагруженные финальные состояния потеряны, метрики сохранены.
 Разрешены EXP106/107 на двух аккаунтах: одинаковое длинное full-decoder CE,

@@ -47,6 +47,24 @@ def test_long_schedule_does_not_decay_at_old_endpoint():
     assert float(schedule(TOTAL_STEPS))==pytest.approx(1e-6)
 
 
+def test_short_session_budgets_and_exact_measured_contracts():
+    from scripts.m3q_layer_clip_campaign import session_budget,contract_for,ROOT
+    from extent.config import load_config
+    assert session_budget(8)==(23400.,90.)
+    assert session_budget(1)==(2700.,15.)
+    assert session_budget(2)==(5400.,30.)
+    assert session_budget(.9,15)==(2340.,15.)
+    assert session_budget(1.9,20)==(5640.,20.)
+    for hours,reserve in ((0,None),(1,60),(2,5),(float("nan"),15)):
+        with pytest.raises(ValueError):session_budget(hours,reserve)
+    config,_=load_config(ROOT/"config/hybrid_1_7b_gqa_v5e8.yaml")
+    for exp in (106,107):
+        expected=json.loads((ROOT/f"results/EXP-{exp}-v1-contract.json").read_text())
+        assert contract_for(config,exp)==expected
+    with pytest.raises(ValueError,match="scientific settings"):
+        contract_for(replace(config,tie_word_embeddings=not config.tie_word_embeddings),106)
+
+
 @pytest.mark.parametrize("adaptive",[False,True])
 def test_compiled_sharded_step_and_binary_next_step_resume(tmp_path,adaptive):
     config=replace(tiny_config(),param_dtype="bfloat16",compute_dtype="bfloat16")

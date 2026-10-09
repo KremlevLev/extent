@@ -85,7 +85,38 @@ def contract_for(config, experiment=106):
         evaluation_reuse="Wiki validation/test reused: exploratory; new PG19 test is primary confirmation",
         selection="fixed EXP098 final16384; no best endpoint; registered final32768",
         implementation={name:hashlib.sha256((ROOT/name).read_bytes().replace(b"\r\n",b"\n")).hexdigest() for name in files})
-    return json.loads(json.dumps(contract))
+    contract = json.loads(json.dumps(contract))
+    legacy = json.loads((ROOT/f"results/EXP-{experiment}-v1-contract.json").read_text(encoding="utf-8-sig"))
+    contract["implementation"] = legacy["implementation"]
+    if contract != legacy:
+        raise ValueError("scientific settings differ from approved EXP106/107 continuation")
+    syntax = ast.parse(Path(__file__).read_text())
+    # Python3.12 adds empty type_params to FunctionDef; it is not training math.
+    for node in ast.walk(syntax):
+        if isinstance(node,ast.FunctionDef) and hasattr(node,"type_params") and not node.type_params:
+            del node.type_params
+    functions = {n.name:n for n in syntax.body if isinstance(n,ast.FunctionDef)}
+    nodes = {name:functions[name] for name in ("load_tokens","token_manifest","aggregate","compare_campaigns")}
+    nodes["training_body"] = next(n for n in functions["main"].body if isinstance(n,ast.Try))
+    fingerprints = json.loads((ROOT/"results/EXP-106-107-v1-training-fingerprints.json").read_text())
+    if any(hashlib.sha256(ast.dump(node).encode()).hexdigest()!=fingerprints[name] for name,node in nodes.items()):
+        raise ValueError("EXP106/107 training/evaluation math changed; new contract required")
+    for name, expected in legacy["implementation"].items():
+        if name == "scripts/m3q_layer_clip_campaign.py":
+            continue  # Explicit operational wall/save budget compatibility only.
+        actual = hashlib.sha256((ROOT/name).read_bytes().replace(b"\r\n",b"\n")).hexdigest()
+        if actual != expected:
+            raise ValueError(f"unchanged scientific dependency differs: {name}")
+    return contract
+
+
+def session_budget(max_wall_hours, save_reserve_minutes=None):
+    if not np.isfinite(max_wall_hours) or not 0 < max_wall_hours <= 8:
+        raise ValueError("wall budget must be >0 and <=8h")
+    reserve = min(90.,max_wall_hours*60/4) if save_reserve_minutes is None else save_reserve_minutes
+    if not np.isfinite(reserve) or not 10 <= reserve < max_wall_hours*60:
+        raise ValueError("save reserve must be >=10min and less than the wall budget")
+    return max_wall_hours*3600-reserve*60, reserve
 
 
 def aggregate(result):
@@ -160,14 +191,14 @@ def main(argv=None, *, experiment=106):
     parser.add_argument("--qwen-cache-dir", default="/kaggle/working/qwen3-exp104-weights")
     parser.add_argument("--dataset-cache-dir", default="/kaggle/working/extent-dataset-cache")
     parser.add_argument("--max-wall-hours", type=float, default=8)
+    parser.add_argument("--save-reserve-minutes", type=float, default=None)
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--data-preflight-only", action="store_true")
     parser.add_argument("--sync-only", action="store_true")
     parser.add_argument("--telegram", action=argparse.BooleanOptionalAction, default=True)
     arguments = sys.argv[1:] if argv is None else argv
     args = parser.parse_args(arguments)
-    if not 1.5 < args.max_wall_hours <= 8:
-        raise ValueError("wall budget must be >1.5h and <=8h")
+    training_seconds, save_reserve_minutes = session_budget(args.max_wall_hours,args.save_reserve_minutes)
     config, _ = load_config(ROOT / "config/hybrid_1_7b_gqa_v5e8.yaml")
     if args.data_preflight_only:
         data = token_manifest(load_tokens(args.dataset_cache_dir))
@@ -179,7 +210,7 @@ def main(argv=None, *, experiment=106):
         print(json.dumps(plan, indent=2))
         return plan
     started = time.monotonic()
-    deadline = started + args.max_wall_hours * 3600 - 5400
+    deadline = started + training_seconds
     output = Path(args.output_dir)
     output.mkdir(parents=True, exist_ok=True)
     path = output / f"{stem}.json"
@@ -205,7 +236,8 @@ def main(argv=None, *, experiment=106):
     store = ChunkedCheckpointStore(checkpoint_root, f"{prefix}/checkpoints", hub)
     result["runtime_revision"] = dict(evaluation="canonical-BF16-materialization-and-layout-v2",
         implementation={p:digest(ROOT/p) for p in contract.get("implementation", {})}, checkpoint_root=str(checkpoint_root))
-    session = dict(started_at_utc=datetime.now(timezone.utc).isoformat())
+    session = dict(started_at_utc=datetime.now(timezone.utc).isoformat(),
+        max_wall_hours=args.max_wall_hours,save_reserve_minutes=save_reserve_minutes)
     result["sessions"].append(session)
     next_summary_sync = 0.0
 

@@ -1,5 +1,34 @@
 # Два аккаунта: EXP106 / EXP107, до8h на каждый
 
+## Продолжение с короткой оставшейся квотой (9 октября)
+
+Обнови main ДО imports в новом cloud runtime. Контракты, исходный LR/Adam и
+порядок данных прежние; состояния106/107 восстановятся автоматически из HF.
+
+При оставшемся1h (пример для106), оставляем6min на внешний запас:
+
+```python
+from scripts.m3q_layer_clip_campaign import main
+result = main(["--max-wall-hours", "0.9", "--save-reserve-minutes", "15"])
+```
+
+При оставшихся2h (пример для107), оставляем6min на внешний запас:
+
+```python
+from scripts.m3q_adaptive_layer_clip_campaign import main
+result = main(["--max-wall-hours", "1.9", "--save-reserve-minutes", "20"])
+```
+
+Если квота аккаунтов наоборот, поменяй только аргументы времени между методами.
+Первый лимит — ВЕСЬ вызов (загрузка/компиляция/обучение/сохранение), второй —
+включённый в него резерв на отправку. Это39min /94min до training deadline,
+а не обещание39/94min чистого обучения. Если setup уже занял время, уменьши первый
+лимит дополнительно. Можно указать1/2 часа ровно, но запас тогда исчезнет.
+Default reserve min(90min,25% wall); явно заданный резерв должен быть>=10min
+и меньше полного лимита. Short session не гарантирует final32768.
+
+Ниже исходные восьмичасовые ячейки, тот же resume-механизм.
+
 Обнови main в прежней подготовительной ячейке ДО imports. Существующие установка
 и secrets подходят: HF_TOKEN, EXTENT_HF_CHECKPOINT_REPO, TELEGRAM_BOT_TOKEN,
 TELEGRAM_CHAT_ID. Запуск через import в kernel, без !python/subprocess с JAX.
