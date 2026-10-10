@@ -1,5 +1,18 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**10 октября2026 — EXP108/109/110 PREPARED:** три аккаунта, по9h.
+Получен полный106: обе ветви32768, durable; gain Wiki0.014/0.065,
+PG190.012/0.087. Значимого выхода из плато нет. Имеющийся присланный107
+partial27799/24576; на matched24576 эффект AGC смешанный, <0.011.
+Логи: results/EXP-106-completed.json и EXP-107-session-1.json.
+Новые кампании из pinned098:108 batch1/global,109 accumulation4/global,
+110 accumulation4/layer-group. Одинаковые данные/seed/token-clock LR,
+65536 окон/seed; число Adam updates различается. Новые train/PG19 срезы.
+Протокол и ячейки: results/EXP-108-110-batch-recovery-protocol.md,
+results/EXP-108-110-kaggle-launch.md. Default8.8h включает90min save reserve,
+12min внешний setup запас. Endpoint может требовать resume; deadline_partial
+штатен. Старые106/107 контракты не изменены; новых TPU результатов нет.
+
 **Git author correction,9 октября2026:** пользователь требует GitHub attribution
 именно KremlevLev. Правильные author И committer: `KremlevLev
 <kremlevlev888@gmail.com>` — как у привязанных GitHub коммитов627c9d9/8b2eef3.

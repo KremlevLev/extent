@@ -2004,3 +2004,28 @@ Metrics may be ahead of durable optimizer cursors, explicitly marked; resume
 reconciles against binary manifests. Immutable generations add substantial HF
 storage; no existing files deleted. All engineering evidence remains CPU/mocked
 cloud/virtual-device only. No EXP106/107 TPU outcomes or live Telegram evidence.
+
+### 10 October 2026: EXP106 measured; EXP108–110 prepared
+
+MEASURED: received EXP106 completed, both seeds32768, checkpoints durable.
+Own-start gains Wiki123/456=0.01447095/0.06496123 and
+PG19=0.01235636/0.08736971. Long full-decoder recovery with global clipping
+has not escaped the plateau at the >=0.1 threshold on both seeds.
+Total runner time9.214h spans three sessions. Available EXP107 is partial,
+27799/24576. At matched24576, PG19 candidate107 minuscontrol106 is
++0.0106961 for123 and -0.0040165 for456: no confirmed AGC advantage.
+Raw files: results/EXP-106-completed.json and EXP-107-session-1.json.
+
+PREPARED: EXP108 batch1/global,109 accumulation4/global,110 accumulation4/
+layer-group clipping. Same pinned098final16384 starts, seeds, data and
+input-window LR clock;65536 windows/seed. Four unclipped gradients evaluated
+at the same weights are averaged before clipping and a single AdamW update.
+Adam update count and cumulative per-update weight decay differ with batch:
+this tests an effective-batch regime, not gradient noise in isolation.
+New PG19 slice is primary; reused Wiki evaluation is exploratory.
+Paired final gate requires >=0.1 PG19 gain over control and own start on each
+seed, Wiki own-start regression<=0.1. CPU/virtual8 and pinned data preflight
+are engineering evidence only, without full-model TPU or live cloud execution.
+Protocol/launch: results/EXP-108-110-batch-recovery-protocol.md and
+results/EXP-108-110-kaggle-launch.md. Session cap includes checkpoint upload;
+registered final may require resume. No new experimental results claimed.
