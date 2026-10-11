@@ -1,0 +1,248 @@
+{
+  "repo": "levkremlev888/extent",
+  "scope": "current main logical file sizes vs API usedStorage; no physical billing/dedup claim",
+  "total_bytes": 1871553035110,
+  "files": 97993,
+  "prefixes": [
+    {
+      "prefix": "experiments/exp106-layer-clip-recovery",
+      "bytes": 311029122610,
+      "files": 24504
+    },
+    {
+      "prefix": "experiments/exp107-layer-clip-recovery",
+      "bytes": 294659160181,
+      "files": 23212
+    },
+    {
+      "prefix": "experiments/exp109-batch-recovery",
+      "bytes": 196440379001,
+      "files": 15475
+    },
+    {
+      "prefix": "experiments/exp110-batch-recovery",
+      "bytes": 196440350518,
+      "files": 15475
+    },
+    {
+      "prefix": "experiments/exp108-batch-recovery",
+      "bytes": 163700487901,
+      "files": 12897
+    },
+    {
+      "prefix": "experiments/exp079-depth-segment-recovery",
+      "bytes": 80415213222,
+      "files": 18
+    },
+    {
+      "prefix": "experiments/exp082-trust-region-replication",
+      "bytes": 65739321464,
+      "files": 274
+    },
+    {
+      "prefix": "experiments/exp084-robust-consensus",
+      "bytes": 57563049660,
+      "files": 240
+    },
+    {
+      "prefix": "experiments/exp083-dual-domain-trust",
+      "bytes": 57540022929,
+      "files": 240
+    },
+    {
+      "prefix": "experiments/exp078-trust-ratio-recovery",
+      "bytes": 40207626550,
+      "files": 10
+    },
+    {
+      "prefix": "experiments/exp077-adamw-recovery",
+      "bytes": 40207625661,
+      "files": 10
+    },
+    {
+      "prefix": "experiments/exp085-paired-lookahead",
+      "bytes": 32954340737,
+      "files": 138
+    },
+    {
+      "prefix": "experiments/exp087-joint-pair",
+      "bytes": 32953150899,
+      "files": 138
+    },
+    {
+      "prefix": "experiments/exp069-allocation",
+      "bytes": 27960659368,
+      "files": 118
+    },
+    {
+      "prefix": "experiments/exp073-sequential-joint-recovery",
+      "bytes": 26805130525,
+      "files": 10
+    },
+    {
+      "prefix": "experiments/exp076-objective-bridge",
+      "bytes": 26805130374,
+      "files": 10
+    },
+    {
+      "prefix": "experiments/exp075-protected-joint-recovery",
+      "bytes": 26805128757,
+      "files": 10
+    },
+    {
+      "prefix": "experiments/exp074-stable-joint-recovery",
+      "bytes": 26805127474,
+      "files": 10
+    },
+    {
+      "prefix": "experiments/exp091-onpolicy-backbone-anchor",
+      "bytes": 26805072868,
+      "files": 10
+    },
+    {
+      "prefix": "experiments/exp090-random-dt-freeze",
+      "bytes": 26805056125,
+      "files": 10
+    },
+    {
+      "prefix": "experiments/exp088-downstream",
+      "bytes": 24714929984,
+      "files": 105
+    },
+    {
+      "prefix": "experiments/exp086-pair-threshold",
+      "bytes": 24714735772,
+      "files": 104
+    },
+    {
+      "prefix": "experiments/exp089-long-recoverability",
+      "bytes": 20103818515,
+      "files": 8
+    },
+    {
+      "prefix": "experiments/exp104-paper-decoder-recovery",
+      "bytes": 17231682188,
+      "files": 1647
+    },
+    {
+      "prefix": "experiments/exp081-trust-region-sweep",
+      "bytes": 8215779152,
+      "files": 34
+    },
+    {
+      "prefix": "experiments/exp105-mamba-capacity-recovery",
+      "bytes": 6410348536,
+      "files": 2430
+    },
+    {
+      "prefix": "experiments/exp072-full-depth-sequential-confirmation-v2",
+      "bytes": 3081373337,
+      "files": 290
+    },
+    {
+      "prefix": "experiments/exp080-second-sweep",
+      "bytes": 1861752420,
+      "files": 176
+    },
+    {
+      "prefix": "experiments/exp071-sequential-recovery",
+      "bytes": 1540662575,
+      "files": 146
+    },
+    {
+      "prefix": "experiments/exp097-numerical-stability",
+      "bytes": 858225861,
+      "files": 34
+    },
+    {
+      "prefix": "experiments/exp099-protected-capacity",
+      "bytes": 772075276,
+      "files": 16
+    },
+    {
+      "prefix": "experiments/exp096-subspace-capacity",
+      "bytes": 729005882,
+      "files": 18
+    },
+    {
+      "prefix": "experiments/exp098-dynamics-protection",
+      "bytes": 514793437,
+      "files": 14
+    },
+    {
+      "prefix": "experiments/exp101-late-distillation",
+      "bytes": 514784680,
+      "files": 14
+    },
+    {
+      "prefix": "experiments/exp102-plateau-learning-rate",
+      "bytes": 514784448,
+      "files": 14
+    },
+    {
+      "prefix": "experiments/exp100-weak-anchor",
+      "bytes": 514779330,
+      "files": 14
+    },
+    {
+      "prefix": "experiments/exp103-late-dynamics-release",
+      "bytes": 343192880,
+      "files": 10
+    },
+    {
+      "prefix": "experiments/exp095-subspace-objectives",
+      "bytes": 171657157,
+      "files": 18
+    },
+    {
+      "prefix": "experiments/exp094-subspace",
+      "bytes": 97275652,
+      "files": 18
+    },
+    {
+      "prefix": "experiments/exp070-input-shift",
+      "bytes": 3425536,
+      "files": 6
+    },
+    {
+      "prefix": "experiments/exp067-compatibility-atlas",
+      "bytes": 1660321,
+      "files": 30
+    },
+    {
+      "prefix": "experiments/exp068-long-horizon-compatibility-confirmation",
+      "bytes": 1036054,
+      "files": 30
+    },
+    {
+      "prefix": "experiments/exp092-global-onpolicy-path",
+      "bytes": 60754,
+      "files": 2
+    },
+    {
+      "prefix": "experiments/exp093-foldable-mixer-gains",
+      "bytes": 29446,
+      "files": 2
+    },
+    {
+      "prefix": "experiments/exp072-full-depth-sequential-confirmation",
+      "bytes": 6007,
+      "files": 2
+    },
+    {
+      "prefix": ".gitattributes",
+      "bytes": 2995,
+      "files": 1
+    },
+    {
+      "prefix": "_meta",
+      "bytes": 91,
+      "files": 1
+    }
+  ],
+  "observed_date": "2026-10-11",
+  "revision": "ed6cbcebd5a14b74b66f8172e868f18dec0da07a",
+  "private": false,
+  "api_used_storage_bytes": 4086105460340,
+  "account_remaining_quota": "UNKNOWN - no authenticated account access"
+}

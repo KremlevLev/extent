@@ -2,8 +2,8 @@
 
 DESIGN, 11 октября2026. Пользователь разрешил расписать1–3 эксперимента.
 Решение: три независимых аккаунта, по одной сессии до9h. Протокол подготовлен;
-новые runners, source/data SHA preflight и TPU feasibility ещё НЕ готовы.
-Этот документ не является инструкцией запуска. Старые111–113 результатов нет.
+Новые runners и локальные preflight подготовлены; TPU feasibility/throughput ещё
+НЕ измерены. Ячейки: results/EXP-111-113-launch.md. Результатов111–113 ещё нет.
 
 ## Что проверяем
 
@@ -66,8 +66,13 @@ Eligible только если оба seed finite. Если все pilots failed
 «данный ordinary optimizer range неработоспособен», а не доказательство
 скорости нашего метода. Ошибки HBM/compile/storage не являются training loss.
 
-Сохранять выбранные1024-step states каждого seed, продолжать с их Adam и
-cursor1024; не перезапускать их бесплатно и не сбрасывать моменты.
+Amendment ДО TPU, HF storage budget: завершённые pilots сохраняют metrics,
+а MAIN воспроизводит выбранные1024 updates из pinned start с новым Adam0.
+Это детерминированный ПЛАТНЫЙ replay, а не продолжение без optimizer state:
+MAIN повторяет то же расписание/данные и проверяет validation parity<=1e-4
+на1024. При расхождении сравнение останавливается. Незавершённый pilot или
+MAIN продолжается только с собственным checkpoint Adam/cursor. Нельзя сбросить
+моменты частичной MAIN. Все повторные updates входят в фактическую стоимость.
 Каждый pilot использует глобальные step-dependent настройки того же расписания.
 Все успешные и failed trial updates, compile/eval/upload время и repeated
 training tokens входят в стоимость LR search. Только selected trajectory
@@ -79,13 +84,19 @@ training tokens входят в стоимость LR search. Только selec
 
 32768 уникальных окон/seed=8,388,608 input tokens на выбранной траектории;
 16,777,216 на аккаунт без discarded pilots. Все аккаунты получают одни окна.
-112/113 дополнительно до1,048,576 input tokens discarded pilots/аккаунт
-(2 проигравших LR x1024 x256 x2seed). Указывать input tokens и255 CE targets/window.
-Начала данных ниже — CANDIDATE, требуется реальный capacity/SHA preflight:
+112/113 дополнительно1,572,864 input tokens pilots/аккаунт при всех finite
+(3 LR x1024 x256 x2seed), включая выбранный pilot, повторяемый MAIN.
+Failed attempts и повторения после потери runtime также учитываются.
+Указывать input tokens и255 CE targets/window. Реальный capacity/SHA preflight
+пройден: results/EXP-111-113-data-preflight.json, без загрузки model weights.
 
 - Wiki103 train offset65,536,000 /32768 windows: после EXP108–110 train.
 - Wiki103 validation offset122,880 /64: LR selection.
-- Новый Wiki103 locked test offset301,056 /64; не выбирать checkpoint по нему.
+- Новый Wiki103 locked holdout: validation offset147,456 /64; не выбирать LR
+  или checkpoint по нему. Он не пересекается с selection offset122,880 /64.
+  Amendment ДО TPU: test offset301,056 /64 не поместился в test capacity301,829
+  токенов. Диапазон изменён после capacity guard, до обучения/просмотра NLL.
+  Название locked_test в JSON означает роль holdout, не имя dataset split.
 - Новый PG19 test offset393,216 /128; test manifest/revision как прежние runs.
 - Исторический reproduction panel Wiki103 test offset32,768 /64:
   тот же диапазон, на котором EXP097 дал NLL12.968/12.277→7.267/7.310.
@@ -97,7 +108,10 @@ PG19 manifest4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b.
 Если capacity fail: остановить preflight и зарегистрировать другой диапазон
 ДО обучения. Не брать modulo/повторы и не менять test после просмотра результатов.
 Подготовка исходного ONPOLICY: metadata/SHA pins EXP069→EXP072 как current engine;
-не подставлять latest или EXP098 final. Заморозить конкретный HF revision до run.
+не подставлять latest или EXP098 final. Source pin9c031f6e615d7afb0133f5611ace78f8cc5cc5fc;
+96 небольших manifests (48 EXP069 +48 EXP072) проверены read-only, contracts/SHA
+совпали. Binary SHA дополнительно проверяется runtime restore. Source model/Mamba
+hashes записываются при старте для111/112 parity и random provenance113.
 
 ## Скорость: считать честно
 
@@ -135,6 +149,10 @@ student tokens. FLOPs не оценивать просто суммой teacher/
 CE gradients и stable norms. return_hidden_states уже есть в модели.
 Панель состоит из первых8 validation windows; выбор фиксируется до обучения.
 Диагностические backward passes не обновляют Adam/weights и считаются отдельно.
+Canonical NLL для thresholds/rollback использует тот же evaluate, что обучение.
+Captured-hidden и gradient executables могут иначе округляться в BF16; их NLL
+отдельно помечены. Current/start hidden captures используют один forward, чтобы
+сравнение вкладов со своим стартом не подменялось сменой precision/gradient graph.
 
 Старт,1024,4096,8192,16384,24576,32768:
 
@@ -144,12 +162,18 @@ CE gradients и stable norms. return_hidden_states уже есть в модел
 - На одинаковом Qwen входе блока и на реальном hybrid входе: ошибка Mamba
   относительно Qwen mixer; это различает local approximation и input shift.
   Qwen и hybrid streams не считать совпадающими после предыдущих замен.
-- CE gradient по каждому in_proj component: gate/value/B/C/dt/decay/trap/angle;
+- Diagnostic CE derivative по FP32 effective weights при BF16 forward,
+  каждому in_proj component: gate/value/B/C/dt/decay/trap/angle;
   отдельно out_proj, norm, MLP и retained attention. FP32 max-scaled norm,
-  norm/sqrt(parameter_count), zero fraction, finite count, clip retained fraction.
-- Фактический post-Adam update RMS/max/relative norm по тем же группам,
-  FP32 parameter displacement от старта и доля реально изменившихся effective
-  BF16 kernel entries. Для111 смотреть A/B coordinates И effective kernels.
+  norm/sqrt(parameter_count), zero fraction, finite flag. Это чувствительность
+  effective weights, включая frozen группы, а не trainable gradient111.
+  Actual optimizer coordinate/layer gradients и clip retained fraction —
+  отдельно в training health; frozen effective derivative может быть ненулевой.
+- Фактический accepted post-Adam update RMS/max/log-relative norm по trainable
+  tensors, каждые1024; отдельно BF16 effective component delta и changed fraction.
+  Это предыдущий train update, не update на diagnostic validation panel.
+  Effective displacement от старта на probe milestones; для111 A/B updates
+  И effective kernels. Для112 FP32 master delta отделён от BF16 kernel delta.
   Нулевые защищённые/замороженные группы отмечать expected-frozen.
 - Качество по одному и тому же окну: CE по позициям0–63/64–127/128–191/192–254
   предсказаний (первый target token исключён); per-window NLL и верхний хвост.
@@ -183,6 +207,18 @@ Default8.8h ВЕСЬ вызов,90min внутри на save/upload,12min вне
 continuation. Каждые4096 окон/seed и при deadline сохранять parameters/Adam/
 LR-search phase/selected LR/data cursor/evaluation cursors/source hashes.
 Checkpoint111 небольшой,112/113 full ~16.37GB; immutable history расходует HF.
+Amendment ДО TPU: промежуточные состояния сохраняются ЛОКАЛЬНО каждые4096 и
+при deadline; remote upload только в конце вызова, максимум одна generation
+каждого активного slot. Metrics периодически уходят на HF. При внезапном
+уничтожении VM до финального sync локальные шаги теряются; JSON откатывается
+до durable state, потраченные updates остаются в cost. Не обещать durability
+невыгруженных состояний. Завершённые pilots metrics-only; старые HF не удалять.
+--max-new-hf-gb=2 для111 /35 для112/113 — decimal GB payload cap НА ВЫЗОВ,
+не account quota и не суммарный лимит кампании. ~33GB/account за две MAIN
+ветви, ~66GB суммарно112/113 за один вызов; continuation добавляет generations.
+Перед первым state upload проверяется размер ВСЕХ pending payloads. Cap не
+включает небольшие JSON/roundtrip files, не гарантирует HF принимает загрузку.
+При quota/network failure: pending и уведомление; автоматической очистки нет.
 Source hashes, initial model parity, data SHA, memory allocation и compiler
 memory checks до обучения. Новые prefixes exp111/112/113-recovery-efficiency;
 отдельные notifications start/failure/deadline/saved/pending.

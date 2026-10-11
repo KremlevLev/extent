@@ -12,9 +12,21 @@ CE из того же072;113 ordinary CE со случайными Mamba и со
 весами. Во всех одинаковые диагностические замеры по слоям/позициям/BF16 updates.
 112/113 получают LR pilots, затраты поиска учитываются. Скорость marginal recovery
 и total pipeline (включая069/072) строго отдельно. Полный протокол:
-results/EXP-111-113-recovery-efficiency-protocol.md. Пока DESIGN:
-новых runner/launch cells/data+source preflight ещё нет; старый108 runner
-НЕ подходит. Ничего нового на TPU не запущено.
+results/EXP-111-113-recovery-efficiency-protocol.md. Теперь PREPARED locally:
+новые entry points m3q_efficiency_campaign / m3q_efficiency_112_campaign /
+m3q_efficiency_113_campaign; ячейки results/EXP-111-113-launch.md. Реальные token
+capacity/SHA и96 source manifests проверены без model weight download. Test
+offset301056 не поместился: ДО TPU зарегистрирован отдельный locked validation
+offset147456/64. Source pinned9c031f6e615d7afb0133f5611ace78f8cc5cc5fc.
+HF read-only audit: current tree1.87155TB, API usedStorage4.08611TB; account quota
+не доступна без auth, эти значения не утверждение physical billed storage.
+Промежуточные states локально, одна remote generation/active slot в конце вызова;
+caps2GB для111,35GB для112/113 НА ВЫЗОВ. Завершённые LR pilots metrics-only,
+выбранный replay оплачивается и проверяется validation parity. При внезапном
+уничтожении VM до sync локальные шаги теряются; metrics откатываются к durable
+cursor, затраты сохраняются. Старые HF файлы/история не удалялись.
+Старый108 runner НЕ подходит. Ничего нового на TPU не запущено; full-model TPU
+memory/throughput ещё не измерены.
 
 **10 октября2026 — EXP108/109/110 PREPARED:** три аккаунта, по9h.
 Получен полный106: обе ветви32768, durable; gain Wiki0.014/0.065,

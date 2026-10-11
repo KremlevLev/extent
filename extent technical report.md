@@ -2054,5 +2054,24 @@ effective BF16 weight changes, position-dependent NLL, matched-input errors
 and diagnostic-only rollback of selected blocks to their own starts.
 Large gradients alone do not establish the cause of the plateau.
 Protocol: results/EXP-111-113-recovery-efficiency-protocol.md.
-This is DESIGN only: new executable runners and immutable source/data preflight
-remain unimplemented. No prepared launch cell or TPU result is asserted.
+PREPARED locally on2026-10-11: independent111/112/113 runners, deterministic
+two-seed validation LR selection, charged pilot replay with <=1e-4 parity guard,
+interval-censored threshold costs, effective-weight CE probes, real accepted
+coordinate/component updates, BF16 changes, matched-input block errors and
+read-only rollback. No new TPU outcome or full-model TPU feasibility is asserted.
+Real tokenizer capacity/SHA preflight passed. Candidate Wiki test301056 failed
+capacity301829; BEFORE TRAINING the locked holdout was amended to validation
+147456/64, disjoint from LR selection122880/64. Historical test32768/64 stays reused.
+Read-only96 small069/072 manifests match pinned revision
+9c031f6e615d7afb0133f5611ace78f8cc5cc5fc; binary SHA is checked at runtime restore.
+HF current-tree logical bytes1,871,553,035,110 across97993 files; API usedStorage
+4,086,105,460,340, remaining account quota unverified without authentication.
+These different scopes are not an assertion about physical billed/deduplicated bytes.
+Storage amendment: local4096/deadline states, one remote generation/active slot
+at invocation end,35GB/account payload cap for full decoder and2GB for111.
+Completed pilots retain metrics, selected1024 steps replay charged; all three
+full pilots add1,572,864 input tokens/account. No old remote artifacts deleted.
+Abrupt VM destruction before final sync can lose local progress; resume rolls
+metrics back to durable cursor while retaining attempt cost. Launch cells:
+results/EXP-111-113-launch.md. Total pipeline speed remains UNKNOWN until069/072
+preparation cost is reconstructed.

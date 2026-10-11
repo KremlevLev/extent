@@ -1,0 +1,489 @@
+{
+  "repo_id": "levkremlev888/extent",
+  "revision": "9c031f6e615d7afb0133f5611ace78f8cc5cc5fc",
+  "passed": true,
+  "source_payload_bytes": 2053833984,
+  "scope": "96 metadata files and 96 referenced binary paths exist; payload SHA checked during TPU restore; no weights downloaded",
+  "endpoints": [
+    {
+      "seed": 123,
+      "layer": 0,
+      "depth": 1,
+      "sha256": "83bdfdaf71bedee099428e3a7eed60754dd7a10b6c11c7dade63dc31102419af",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-0/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-0/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 1,
+      "depth": 2,
+      "sha256": "ab5d9afaa8ac9d7b7e66c7b2ac3e0af118d2068fd9fa870d334c0f9ebec0dd61",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-1/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-1/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 2,
+      "depth": 3,
+      "sha256": "f17405bac00faf20ec81396a2806f12b57ead165d7fedb3f74ccae5b43fb6395",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-2/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-2/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 3,
+      "depth": 4,
+      "sha256": "c2cbd039b5375217d949947a3096aca259e90b913a9eba04907f0d07a881489e",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-3/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-3/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 4,
+      "depth": 5,
+      "sha256": "07b21132a6396cb968f56cc7c35405382cff58955ad2f9e9cd76bd3f8fd3d32b",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-4/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-4/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 5,
+      "depth": 6,
+      "sha256": "d92829e4144c6e38828c8101fe8daa2fd41bffb28411695a9fcff1bdf0e473fd",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-5/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-5/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 7,
+      "depth": 7,
+      "sha256": "8c94deb49bdd78e9034f5b5e2b52555aa28796f9c2578e708a926b9f88cc18c3",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-7/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-7/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 8,
+      "depth": 8,
+      "sha256": "918e5f7bfc0723ea0532beef9ee9a27aeee240f3ceb29613e740980057529de7",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-8/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-8/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 9,
+      "depth": 9,
+      "sha256": "8a791ff8a4a830a4cf693ec7c005af99846dd1fc09622b987a4b9dbebc111a8d",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-9/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-9/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 10,
+      "depth": 10,
+      "sha256": "dad63b69a134304f7ece8e4e080d36234049f125ff05b82ed5b4f79d4c1fd379",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-10/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-10/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 11,
+      "depth": 11,
+      "sha256": "6557415894d0b9c7380141bb9d6292040019e2d95209ca7ba6af0cc9a706977d",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-11/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-11/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 12,
+      "depth": 12,
+      "sha256": "b8a07681b50942a71fc44cebb5bbb2ed75ce0b6ecfd8ce6e2a6c8777c636f892",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-12/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-12/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 14,
+      "depth": 13,
+      "sha256": "cfe35742bdb1e022fd9c3ccc9d2daf9ed1dec317a752034e28a7a7300ade859c",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-14/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-14/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 15,
+      "depth": 14,
+      "sha256": "fd67c3ea1aaf86744d2e4876b3d196880efb14051b524aa2ba9229730acd3eb6",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-15/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-15/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 16,
+      "depth": 15,
+      "sha256": "bdcb52caaaaf4924490ece2c50670b86048a80b044b88790c6e40ba5bbee8557",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-16/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-16/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 17,
+      "depth": 16,
+      "sha256": "c986b96d4e5a81e33212f3383109351f95c8bec48c03934fe823776ecc83ebd8",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-17/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-17/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 18,
+      "depth": 17,
+      "sha256": "ac6dc952c639fc294e16ad3cf8d533cb6628fbe6296f4df7af3efa156ba93a6d",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-18/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-18/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 19,
+      "depth": 18,
+      "sha256": "08cb0eeefd3b6cb4a40647d8913c85e81815d753d9b0d7808c393fe28c99d9bb",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-19/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-19/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 21,
+      "depth": 19,
+      "sha256": "344c57985e29391ab4bd43cd57b179ea936a99537c045bc3948c6820a99228cb",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-21/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-21/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 22,
+      "depth": 20,
+      "sha256": "1881d547d0448308cdd0bd489e9717657c2a204540b681cd84377b27b0ed6e90",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-22/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-22/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 23,
+      "depth": 21,
+      "sha256": "b8cb904e77bd9e7c6719de200259ff7dbb144f41b982fdfcc92858f065cf9ca2",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-23/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-23/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 24,
+      "depth": 22,
+      "sha256": "00a9f58fb0548bdc8547adcdf36d488b7d9ea5a3e8ec93d329d3c8607e7c5859",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-24/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-24/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 25,
+      "depth": 23,
+      "sha256": "424bcd61945776be2aa8285017e0d24d1889a7dbca4545261688d15ef867b1e4",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-25/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-25/state.msgpack"
+      ]
+    },
+    {
+      "seed": 123,
+      "layer": 26,
+      "depth": 24,
+      "sha256": "887f5399bec4229eb11436ccd06fd56384a447c8b08161d38427dd317ad68b7d",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-123/layer-26/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-123/ONPOLICY/layer-26/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 0,
+      "depth": 1,
+      "sha256": "3ab854bb3e68559986f822017c71160c95b6820d92d31c46231290061bec1409",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-0/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-0/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 1,
+      "depth": 2,
+      "sha256": "079a4cc18a9d7f10fa7defe4356c30da0e8d22bb5b229681e1e454bc63d356b7",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-1/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-1/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 2,
+      "depth": 3,
+      "sha256": "643332a145bc9f1ccf1a82f52fe5e4414e77e4cdfefe2ffbab5e5a3d374cf265",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-2/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-2/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 3,
+      "depth": 4,
+      "sha256": "b20d520c5a9ef2366f91e421a86d67ff025ccac26835d6a0b6222a57777841cc",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-3/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-3/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 4,
+      "depth": 5,
+      "sha256": "68db3d3744413b8f9a5b77d16b37874bda125a4435a534a47465d916187cb7a5",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-4/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-4/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 5,
+      "depth": 6,
+      "sha256": "8022286db5ccf16b4dee8c7f1ba1e2cf98a2e6be24d1a34b13818dc4e689e761",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-5/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-5/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 7,
+      "depth": 7,
+      "sha256": "f6235fa706832dae833f66870e50857ba1e71c1cc67ba50be9629b8d205649f6",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-7/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-7/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 8,
+      "depth": 8,
+      "sha256": "f4ab6b00032faaf2131e220cbea71cc4a25b71a821604a76d30245db1f848a3c",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-8/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-8/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 9,
+      "depth": 9,
+      "sha256": "adf2a18bdd762afcbdda08abf66358b9168766d916ff4bf8295286e9fdf1793c",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-9/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-9/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 10,
+      "depth": 10,
+      "sha256": "84dc48b9242af27561649ab7eab6ba4d00cd5159d8bfc6f3d9f18a065e78732a",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-10/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-10/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 11,
+      "depth": 11,
+      "sha256": "e8973824b7ec4a48ddf7896a60a110ee059f96c7d5208630c9e085ec786512db",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-11/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-11/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 12,
+      "depth": 12,
+      "sha256": "1960e2985137d47b5942c30ed4aa17028dbc7966be93a2e8ce7adfac047152c6",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-12/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-12/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 14,
+      "depth": 13,
+      "sha256": "73c58a3d3f60f7136ad27d373f978bcbacc95637bce6b6d7c1530e3b73ae4a79",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-14/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-14/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 15,
+      "depth": 14,
+      "sha256": "d5a1ae4e2640c3ab972722e0605b0f27310c7239b99e5323412355e716ccb2a0",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-15/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-15/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 16,
+      "depth": 15,
+      "sha256": "19ca665d67a8e22c06020361ec5884cbb687b49becc6df8d560c8e3ac1a90eb0",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-16/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-16/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 17,
+      "depth": 16,
+      "sha256": "2d4ffb1f686a166ccd55b7df29dfb087043308072317ac608312741e8a055567",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-17/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-17/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 18,
+      "depth": 17,
+      "sha256": "18672e9b5320b81d2394a48c6d1d2f845496099a736b6b4c3556fcee32a9c47c",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-18/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-18/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 19,
+      "depth": 18,
+      "sha256": "178a08197a1ac852232c70972b213aaa75d3d8e5b1c088d7d4196d123826d6c0",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-19/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-19/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 21,
+      "depth": 19,
+      "sha256": "d808699e8e06a25f154f0957dc49b790054a7ccb0ff2007d2379a43cbe97fb77",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-21/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-21/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 22,
+      "depth": 20,
+      "sha256": "9d31b15924615208dc63f2a98d8745a6ad6f2de5c34c4435f95fd3d34af6e02e",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-22/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-22/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 23,
+      "depth": 21,
+      "sha256": "7f831a3c275d4adc8ae7a350b72ee4c2169d101850c189f0c2bd7d67c025e199",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-23/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-23/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 24,
+      "depth": 22,
+      "sha256": "b25f168bcc2d849c61a448f72a58bf12f7c5e6ac7761989e6950daef38be324d",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-24/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-24/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 25,
+      "depth": 23,
+      "sha256": "f469aec3e135eaab39e81ee4f6cbfb8db25499f5b42f13f95fca72b5c24087ca",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-25/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-25/state.msgpack"
+      ]
+    },
+    {
+      "seed": 456,
+      "layer": 26,
+      "depth": 24,
+      "sha256": "9200739772fa542da9601c4ca3cc63e8b12b80128d604703f93c7d05a408522a",
+      "payloads": [
+        "experiments/exp069-allocation/checkpoints/prep/seed-456/layer-26/state.msgpack",
+        "experiments/exp072-full-depth-sequential-confirmation-v2/checkpoints/seed-456/ONPOLICY/layer-26/state.msgpack"
+      ]
+    }
+  ]
+}
