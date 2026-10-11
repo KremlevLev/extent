@@ -2029,3 +2029,30 @@ are engineering evidence only, without full-model TPU or live cloud execution.
 Protocol/launch: results/EXP-108-110-batch-recovery-protocol.md and
 results/EXP-108-110-kaggle-launch.md. Session cap includes checkpoint upload;
 registered final may require resume. No new experimental results claimed.
+
+### 11 October2026: received108–110 partial; efficiency experiments DESIGN
+
+All three first-session results are deadline_partial, checkpoints durable,
+pending slots empty. Shared24576-window endpoint exists for both seeds in all
+arms; source/data/optimizer contract compatibility checked by compare_campaigns.
+Batch4 does not show a consistent quality advantage over batch1. Layer-group
+clipping mitigates seed456 degradation in batch4 but does not consistently
+beat batch1. At seed456/32768, Wiki/PG19:108=7.530178/9.417803,
+109=7.780467/9.517125,110=7.539729/9.426252. Seed123108 does not reach32768,
+so this single-seed endpoint must not be presented as the two-seed final gate.
+Original JSONs: results/EXP-108/109/110-session-1.json; comparisons:
+results/EXP-108-110-partial-comparisons.json. No final conclusion on65536.
+
+User-authorized DESIGN111–113 compares protectedrank32 recovery from original
+ONPOLICY, ordinary full-decoder CE from the same ONPOLICY, and ordinary CE
+from native random Mamba subtrees with other Qwen weights preserved.
+Ordinary controls include prespecified validation-selected LR pilots charged
+to compute/tokens; marginal recovery and total preparation+recovery cost are
+separate. Historical12→7 reproduction panel is reused, with fresh locked tests
+for confirmation. Diagnose per-layer/component CE gradients and actual updates,
+effective BF16 weight changes, position-dependent NLL, matched-input errors
+and diagnostic-only rollback of selected blocks to their own starts.
+Large gradients alone do not establish the cause of the plateau.
+Protocol: results/EXP-111-113-recovery-efficiency-protocol.md.
+This is DESIGN only: new executable runners and immutable source/data preflight
+remain unimplemented. No prepared launch cell or TPU result is asserted.

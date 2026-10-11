@@ -1,5 +1,21 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**11 октября2026 — результаты108–110 и DESIGN111–113:** получены все3 JSON,
+все deadline_partial/durable, pending[]. Общий paired endpoint24576/seed.
+Batch4 не дал устойчивого преимущества batch1; AGC исправляет часть ухудшений
+109 у456, но110 не превосходит108 устойчиво. Оригиналы архивированы
+results/EXP-108/109/110-session-1.json; contract-checked comparisons в
+results/EXP-108-110-partial-comparisons.json. Final gatesNULL: кампании не закончены.
+Пользователь просит1–3 эксперимента с диагностикой и честный контроль скорости12→7.
+Выбраны3 аккаунта:111 protectedrank32 из исходного072;112 ordinary full-decoder
+CE из того же072;113 ordinary CE со случайными Mamba и сохранёнными Qwen остальными
+весами. Во всех одинаковые диагностические замеры по слоям/позициям/BF16 updates.
+112/113 получают LR pilots, затраты поиска учитываются. Скорость marginal recovery
+и total pipeline (включая069/072) строго отдельно. Полный протокол:
+results/EXP-111-113-recovery-efficiency-protocol.md. Пока DESIGN:
+новых runner/launch cells/data+source preflight ещё нет; старый108 runner
+НЕ подходит. Ничего нового на TPU не запущено.
+
 **10 октября2026 — EXP108/109/110 PREPARED:** три аккаунта, по9h.
 Получен полный106: обе ветви32768, durable; gain Wiki0.014/0.065,
 PG190.012/0.087. Значимого выхода из плато нет. Имеющийся присланный107
