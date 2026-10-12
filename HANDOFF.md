@@ -1,5 +1,21 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**12 октября2026 — EXP111 completed /113 partial, DESIGN114:** полученные полные
+пользовательские JSON111/113 проверены офлайн.111 MAIN32768/32768 durable,
+fresh Wiki7.345073/7.309848, PG199.934455/9.978602; substantial Qwen gap.
+113 MAIN26662/24576 durable, штатный training deadline; LR1e-4, сильные spikes.
+На24576 MAIN обеихseeds111 лучше113, но pilots/подготовка различаются:
+total pipeline/изолированная initializer superiority не подтверждены.
+Пользователь сообщил, что112 уже запущен: не предлагать повтор112 из-за
+отсутствия результата.113 дозавершить старой ячейкой;110 сейчас не продлевать.
+Пользователь разрешил подробное обследование плато EXP114 на одном аккаунте.
+Протокол results/EXP-114-plateau-forensics-protocol.md: frozen111 final32768,
+все-layer rollback/teacher-mixer/boundary rescues, held-out verification,
+MIMO dynamics/context, Adam shadow proposals и output-only readout alignment.
+СТАТУС DESIGN, runner ещё НЕ создан; новые data capacity/SHA и HF revision
+patient manifests НЕ закреплены. Не выдавать план за готовый TPU запуск.
+Старые111–113 contracts сохраняются. Новые большие HF copies не нужны.
+
 **11 октября2026 — результаты108–110 и DESIGN111–113:** получены все3 JSON,
 все deadline_partial/durable, pending[]. Общий paired endpoint24576/seed.
 Batch4 не дал устойчивого преимущества batch1; AGC исправляет часть ухудшений

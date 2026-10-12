@@ -2075,3 +2075,40 @@ Abrupt VM destruction before final sync can lose local progress; resume rolls
 metrics back to durable cursor while retaining attempt cost. Launch cells:
 results/EXP-111-113-launch.md. Total pipeline speed remains UNKNOWN until069/072
 preparation cost is reconstructed.
+
+### 12 October2026: EXP111 completed, EXP113 partial; EXP114 diagnostic design
+
+MEASURED from received user JSONs (SHA256 recorded in the EXP114 protocol):
+111 completed both MAIN32768, durable, pending[]. Final fresh Wiki NLL
+7.345073/7.309848, PG19 9.934455/9.978602; same-panel original Qwen
+3.135366/3.085908 respectively. The protected recovery recipe retains a large
+quality gap. Historical reproduction final7.293885/7.273463; threshold7.0
+not reached. First two-consecutive7.5 pairs5120/6144 and6144/7168 do not imply
+absence of later regressions.
+
+113 durable MAIN26662/24576, deadline_partial due registered training deadline,
+not a numerical failure. LR1e-4 selected by the registered two-seed pilots;
+selected pilot replay parity0. At matched24576 MAIN windows, fresh Wiki111
+7.312815/7.290920 versus113 18.896223/8.502063. Seed123113 subsequently
+recovers to7.741043 at26624;18.896223 is not its final quality. Selected-path
+token equality excludes113 LR search and unknown111 preparation costs.
+No total-pipeline or isolated-initializer superiority conclusion follows.
+
+Existing rollback diagnostics motivate targeted examination rather than another
+LR/batch sweep:113 seed456/8192 rollback layer8 delta NLL-17.150178, neighbor9
++1.227560.111 rollback layer26 at8192/16384 worsens both seeds substantially;
+large teacher-relative error is not equivalent to a harmful block. These probes
+used8 selection windows and require held-out verification. User reports112
+already running; do not duplicate it. Complete113 via its existing resume path.
+
+DESIGN114 (not implemented/preflighted): one9h TPUv5e8 account, frozen111
+final32768 both seeds. Full layer intervention sweep, teacher-boundary and
+teacher-mixer rescues, input/local-function decomposition, recurrence traces,
+shadow Adam-vs-gradient proposals, output-only rank32 readout alignment, paired
+discovery/verification/locked evaluation. Diagnostic readout FIT budget4096
+windows/seed,2.097M input tokens total; core patients never updated. Outcomes
+may be negative or conditional; no requirement to invent a successful treatment.
+Data capacity/SHA and immutable patient manifests must be pinned before runner
+execution. Existing111–113 contracts remain unchanged. No new TPU outcome,
+memory/throughput or114 launch readiness asserted.
+Protocol: results/EXP-114-plateau-forensics-protocol.md.
