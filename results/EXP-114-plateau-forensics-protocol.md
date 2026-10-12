@@ -1,9 +1,41 @@
 # EXP-114: обследование плато восстановленного Mamba-3/Qwen
 
-DESIGN, 12 октября 2026. Пользователь разрешил один подробный диагностический
-эксперимент. Один аккаунт, TPU v5e8, сессия до 9 часов. Это протокол, не готовая
-ячейка запуска: новый runner, проверка диапазонов данных и immutable source pin
-ещё должны быть подготовлены. TPU-результатов EXP-114 нет.
+PREPARED locally, 12 октября 2026. Пользователь разрешил один подробный
+диагностический эксперимент. Один аккаунт, TPU v5e8, сессия до9 часов.
+Runner и запуск: `scripts/m3q_plateau_forensics_114_campaign.py`,
+`results/EXP-114-kaggle-launch.md`. TPU-результатов EXP-114 нет.
+
+### Предварительные уточнения после локальной реализации, ДО TPU
+
+- Patient revision `f839c2a898c3e9eff9907ea3cf1e022fe16f3e09`, оба32768
+  manifests и580 binary paths проверены без скачивания model weights.
+  `EXP-114-source-pin.json` содержит exact contracts/chunk SHA/reference NLL.
+- Все исходно предложенные offsets поместились; `EXP-114-data-preflight.json`
+  содержит реальные token SHA и article provenance. Точных повторов окон нет.
+  Между B и C Wiki есть одна общая статья: token-disjoint НЕ означает
+  article-independent. PG19 также contiguous book slice; выводы описательные.
+- CPU tiny BF16 control-flow меняет округление: выключенный rollback/boundary
+  имеет delta NLL около0.000132 относительно обычного executable. Поэтому
+  intervention effects измеряются относительно mask0 В ТОМ ЖЕ executable.
+  Canonical identity background отдельно сохраняется по каждому окну;
+  зарегистрированный предел его maxabs0.01 NLL, иначе модуль invalid/stop.
+  PRIMARY practical signal0.1 остаётся прежним, минимум10x данного предела.
+  FP32 functional scope проверки строгие; original32768 checkpoint replay
+  остаётся<=1e-4. Это pre-TPU amendment, не изменение gate по TPU результату.
+- State reset сравнивается с теми же выбранными слоями и period0 (normal carry)
+  в том же executable: даже выбор эквивалентной recurrence ветви в BF16 меняет
+  округление. Этот control background относительно canonical также публикуется
+  и ограничен0.01; period0 имеет delta0 по определению, не считается улучшением.
+- Readout улучшение считается относительно identity readout того же пути,
+  его canonical background также ограничен0.01 и публикуется отдельно.
+- Dynamics time series сохраняются32-token bins с mean/min/max, включая
+  extrema, а не полные per-token states. Token losses и spikes не сглаживаются.
+  Это ограничивает report size и HF payload; bin resolution указывается в JSON.
+- FIT features вычисляются последовательно on demand, без полного feature
+  cache. Это дополнительные frozen forward passes, их время учитывается.
+- Итоговые CSV и графики можно строить офлайн из полного JSON: runner сохраняет
+  сырые token losses, intervention tables и агрегированные layer/dynamics probes.
+  Выполнение всех модулей за одну9h сессию НЕ подтверждено локально.
 
 ## 1. Вопрос и основания
 
@@ -67,8 +99,8 @@ EXP-113 и112 сейчас НЕ добавляются как обязатель
 
 ## 3. Данные: обнаружение, проверка и закрытая оценка
 
-Все нижние диапазоны — предложение ДО token-capacity/SHA preflight.
-Не запускать модель, пока полный data manifest не опубликован в Git.
+Все нижние диапазоны прошли token-capacity/SHA preflight без запуска модели.
+Полный data manifest публикуется в Git вместе с runner.
 Tokenizer, Wiki/PG19 revisions те же, что111–113.
 
 | Роль | Источник | Token offset | Окна x256 | Использование |
@@ -270,8 +302,9 @@ SHA и storage accounting; teacher labels/logits для обучения не и
 
 Для всех механизмов:
 
-- current->copy-current identity, alpha0, readout identity; paired per-window
-  NLL error<=1e-4, измерить floor на каждом новом executable/layout;
+- current->copy-current identity и alpha0 в одном executable: error<=1e-4;
+  BF16 background относительно canonical пути отдельно, max per-window<=0.01,
+  иначе invalid/stop. См. pre-TPU amendment в начале;
 - hooked forward с tracing OFF/ON должен воспроизводить canonical unhooked
   output до вмешательства. Собирать не более одного layer trace одновременно;
 - expected-null rollback для frozen blocks, начальная readout correction0;
@@ -328,9 +361,9 @@ TARGET, не измеренная гарантия: до1h load/parity,2h sweep+
 
 Порядок обязательных модулей: source/data/parity -> I -> II A/B -> V FIT/A/B
 -> IV -> III -> VI -> фиксирование choices -> C всех готовых модулей.
-При deadline сохранить task cursor и statuses. C разрешён по полному готовому
-модулю после фиксации его выбора; следующие модули не используют уже увиденный C
-для изменения своих правил. Не сравнивать incomplete module с completed как FAIL.
+При deadline сохранить task cursor и statuses. Реализация начинает C после всех
+предшествующих модулей и durable фиксации choices; partial продолжается с cursor.
+Не сравнивать incomplete module с completed как FAIL.
 До выполнения кандидата оценить стоимость целиком на полном prespecified panel.
 Не обрезать дорогое вмешательство по «плохому» loss и не продолжать только winner.
 
@@ -371,6 +404,11 @@ raw-coordinate/effective-BF16 update; readout learning curve и quality gap.
    throughput и пригодность hooks локальные tiny tests НЕ подтверждают.
 
 Новый runner независимый: `scripts/m3q_plateau_forensics_114_campaign.py`.
-Это запланированное имя, файл пока не создан. Старые111–113 contracts/runner
-не изменять:112 уже работает,113 продолжает свой registered endpoint.
+Старые111–113 contracts/runner не изменены:112 уже работает,
+113 продолжает свой registered endpoint.
 Запуск только import main в notebook kernel, без второго JAX subprocess.
+
+Локальная проверка реализации:18 tests passed на8 virtual CPU devices, включая
+legacy efficiency tests и весь tiny диагностический цикл с cloud resume.
+CSV и12 файлов экспорта графиков проверены на synthetic tiny JSON (не результаты
+исследования); --plan-only проверяет source/data/code contract без модели.

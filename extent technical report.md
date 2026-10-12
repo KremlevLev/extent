@@ -2101,14 +2101,27 @@ large teacher-relative error is not equivalent to a harmful block. These probes
 used8 selection windows and require held-out verification. User reports112
 already running; do not duplicate it. Complete113 via its existing resume path.
 
-DESIGN114 (not implemented/preflighted): one9h TPUv5e8 account, frozen111
+PREPARED locally114: one9h TPUv5e8 account, frozen111
 final32768 both seeds. Full layer intervention sweep, teacher-boundary and
 teacher-mixer rescues, input/local-function decomposition, recurrence traces,
 shadow Adam-vs-gradient proposals, output-only rank32 readout alignment, paired
 discovery/verification/locked evaluation. Diagnostic readout FIT budget4096
 windows/seed,2.097M input tokens total; core patients never updated. Outcomes
 may be negative or conditional; no requirement to invent a successful treatment.
-Data capacity/SHA and immutable patient manifests must be pinned before runner
-execution. Existing111–113 contracts remain unchanged. No new TPU outcome,
-memory/throughput or114 launch readiness asserted.
+Data capacity/SHA and immutable patient manifests are pinned: revision
+f839c2a898c3e9eff9907ea3cf1e022fe16f3e09, both32768 manifests and580 chunk paths
+checked without model weight downloads; binary SHA checked on runtime restore.
+B/C Wiki are token-disjoint but share one article; no article-independent claim.
+18 engineering tests passed on8 virtual CPU devices, including tiny full-cycle
+diagnostics, exact readout next-update cloud restore, frozen-patient invariants,
+functional recurrence/hooks, selection and storage failure behavior. Offline
+CSV/figure export smoke and plan-only contract check passed. Existing111–113
+contracts remain unchanged. No actual1.7B TPU HBM/throughput or114 outcome.
+Pre-TPU BF16 amendment: effects relative to same-executable identity; reset uses
+same selected layers with period0. Canonical background reported, maxabs NLL0.01
+guard; practical signal0.1 unchanged. Original canonical endpoint replay1e-4.
+Readout snapshots retain stable sharding layouts across updates/restores; C starts
+only after durable choices. Runner8.8h includes60min save reserve; partial resume
+uses the same cell; upload cap1GB/invocation, no full source checkpoint copies.
+Launch: results/EXP-114-kaggle-launch.md.
 Protocol: results/EXP-114-plateau-forensics-protocol.md.

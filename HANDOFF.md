@@ -12,8 +12,22 @@ total pipeline/изолированная initializer superiority не подт�
 Протокол results/EXP-114-plateau-forensics-protocol.md: frozen111 final32768,
 все-layer rollback/teacher-mixer/boundary rescues, held-out verification,
 MIMO dynamics/context, Adam shadow proposals и output-only readout alignment.
-СТАТУС DESIGN, runner ещё НЕ создан; новые data capacity/SHA и HF revision
-patient manifests НЕ закреплены. Не выдавать план за готовый TPU запуск.
+СТАТУС PREPARED locally: runner `scripts/m3q_plateau_forensics_114_campaign.py`,
+ячейка `results/EXP-114-kaggle-launch.md`. Patient revision закреплена:
+f839c2a898c3e9eff9907ea3cf1e022fe16f3e09; оба32768 manifests и580 chunk paths
+проверены read-only, binary SHA проверяется при restore. Реальные data capacity,
+SHA/provenance в EXP-114-data-preflight.json; B/C Wiki token-disjoint, но имеют
+одну общую статью, article independence не утверждается.
+18 инженерных тестов passed на8 virtual CPU devices: functional hooks, recurrence,
+неизменность пациента, exact next update после cloud restore, A-only selection,
+incomplete aggregation,429/cap/pending и tiny полный цикл. CSV/plots export smoke
+и --plan-only passed. Это НЕ1.7B TPU HBM/throughput или научные результаты.
+BF16 hook background зарегистрирован до TPU: same-executable control, предел
+0.01 NLL; reset сравнивается с теми же selected layers при normal carry period0.
+Original32768 canonical replay требует1e-4. Practical signal0.1 не изменён.
+Readout accepted params/Adam приводятся к стабильным sharding layouts; snapshots
+256-step, endpoints1024/4096; C только после durable choices. Cap1GB на вызов,
+8.8h включает60min save reserve; deadline_partial продолжается той же ячейкой.
 Старые111–113 contracts сохраняются. Новые большие HF copies не нужны.
 
 **11 октября2026 — результаты108–110 и DESIGN111–113:** получены все3 JSON,
