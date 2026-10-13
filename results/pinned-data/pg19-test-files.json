@@ -1,0 +1,10 @@
+{
+  "repo_id": "deepmind/pg19",
+  "repo_type": "dataset",
+  "revision": "4d28bd77e66947ad3835cf78ed7aaeb4dd87ad8b",
+  "filename": "data/test_files.txt",
+  "sha256": "c84c08139695f3312df83239a1a41e7b9cde1baf7c08bfcf230ae09eaaf18d8c",
+  "bytes": 1475,
+  "file_count": 100,
+  "scope": "Exact cached split manifest used by EXP111-113 and EXP114 preflight; no book contents bundled."
+}

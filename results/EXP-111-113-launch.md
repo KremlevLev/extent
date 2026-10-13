@@ -80,5 +80,14 @@ result = run_exp112(["--sync-only", "--max-wall-hours", "0.9",
 Для111/113 заменить функцию и cap. Sync-only не восстановит невыгруженные файлы
 из уже уничтоженной VM. Время sync-only также расходует доступную сессию.
 
+13 October2026: entry112 now seeds the exact pinned PG19 test-files manifest
+from `results/pinned-data/` into the HF snapshot cache before the legacy runner.
+This removes the metadata request that returned429 `maximum queue size reached`
+in the short continuation. Bundle/cache SHA checked, original loader and token
+SHA guards unchanged.4 transport regression tests passed; offline original
+PG19 packing matches the registered128x256 int32 SHA. No new TPU update tested.
+Update checkout before importing entry112; use a fresh kernel if already imported.
+Other datasets, book assets, tokenizer and model checkpoints still need network.
+
 Протокол: [EXP-111-113-recovery-efficiency-protocol.md](EXP-111-113-recovery-efficiency-protocol.md).
 Read-only storage audit: [EXP-111-113-hf-storage-readonly.json](EXP-111-113-hf-storage-readonly.json).

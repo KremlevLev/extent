@@ -1,5 +1,17 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**13 октября2026 — короткий112: network preflight failure, без новых updates.**
+Пользовательский Kaggle лог: HF429 `maximum queue size reached` на pinned PG19
+`data/test_files.txt`; fail в load_tokens до model restore/training. SIGTERM
+в teardown не первичная причина. Сохранённые MAIN12288/8642 этим run не заменены.
+Transport-only fix: entry112 заполняет HF cache точной bundled копией100-file
+manifest (1475bytes), SHA c84c08139695f3312df83239a1a41e7b9cde1baf7c08bfcf230ae09eaaf18d8c.
+Legacy scientific files/contract hashes не изменены; mismatched cache/bundle
+отвергается.4 regression tests passed, original PG19 loader offline воспроизводит
+registered tokens SHA8c0fda1eafbd9c8b064391bce5c42a429103fbba929a0d369edbf0f06d95f1e2.
+Это устраняет запрос только для этого manifest, не всех сетевых assets/checkpoints.
+По последним полученным JSON113 completed32768/32768 durable,112 partial12288/8642.
+
 **12 октября2026 — EXP111 completed /113 partial, DESIGN114:** полученные полные
 пользовательские JSON111/113 проверены офлайн.111 MAIN32768/32768 durable,
 fresh Wiki7.345073/7.309848, PG199.934455/9.978602; substantial Qwen gap.
