@@ -1,0 +1,21 @@
+{
+  "source_files": {
+    "072": {
+      "file": "HF artifact identified by 072_hf_path and 072_hf_revision",
+      "sha256": "7ebe6a13ed888d5145cd1210e6dfc73d66b3760e7f8f238f009a4aa439b80b81"
+    },
+    "097": {
+      "file": "results/EXP-097-numerical-stability.json",
+      "sha256": "ea63119ea8b5b556e9292a14441aa63d2c763cc850db1f5ff4d3e59c16f6f72d"
+    }
+  },
+  "072_hf_path": "experiments/exp072-full-depth-sequential-confirmation-v2/latest.json",
+  "072_hf_revision": "ed6cbcebd5a14b74b66f8172e868f18dec0da07a",
+  "method": "All plotted values directly extracted; no smoothing, imputation, pooling of seeds, or inferred timing.",
+  "tokens": "256 input tokens/window; 255 prediction targets/window; excludes warm-start training.",
+  "figures": [
+    "sequential_depth",
+    "recovery_validation"
+  ],
+  "point_count": 116
+}

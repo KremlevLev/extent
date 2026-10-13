@@ -1,0 +1,61 @@
+{
+  "draft_date": "2026-10-13",
+  "files": [
+    {
+      "path": "results/EXP-061-production-aligned-scaling-campaign-summary.md",
+      "sha256": "a7b90f88bb87c91f0456e2c53641e07fcd3597e204e502a14f0dabda4dbd77ff",
+      "type": "experiment_summary"
+    },
+    {
+      "path": "results/EXP-064-qwen17-full-model-m3q-summary.md",
+      "sha256": "4df98d7aaebeddbee025c55bde435c2abb109ceaa94bddf105a09913417f532c",
+      "type": "experiment_summary"
+    },
+    {
+      "path": "results/EXP-070-completed-summary.md",
+      "sha256": "a71fecdf16be804a1905bed4fd660784c927752e6474ddea389f90c0e60b63ef",
+      "type": "experiment_summary"
+    },
+    {
+      "path": "results/EXP-072-completed-summary.md",
+      "sha256": "ea7341a0971c7f299270116c38679dba378d76dbd5c4274d01dce4e44e960bfe",
+      "type": "experiment_summary"
+    },
+    {
+      "path": "results/EXP-089-session-3-conclusive-summary.md",
+      "sha256": "f6ffa5ede7704df5e05161847f55ece96d49df607fa52083b3c6659174eed1c0",
+      "type": "experiment_summary"
+    },
+    {
+      "path": "results/EXP-097-completed-summary.md",
+      "sha256": "18027f3d19bcdf9f28437cc22e1e5eee0043ea39ba32d5e5b0e3fef0bc432607",
+      "type": "experiment_summary"
+    },
+    {
+      "path": "results/EXP-098-100-completed-summary.md",
+      "sha256": "bfc8a9adef8084ee26e589ba85f4f9f90f7d9794acd5bf5040444a3def9e41dc",
+      "type": "experiment_summary"
+    },
+    {
+      "path": "results/EXP-102-and-104-update.md",
+      "sha256": "2b38f1e4189a796bd87f78e2f3944ddb5d5a21ffa447808da1316dc61dec29f4",
+      "type": "experiment_summary"
+    },
+    {
+      "path": "results/EXP-104-105-completed-update.md",
+      "sha256": "bf32f928efc2da9d49f47568297fc931c9bfb594f1b5cc266a25bcbf493ae205",
+      "type": "experiment_summary"
+    },
+    {
+      "path": "extent technical report.md",
+      "sha256": "0c017e733c83caccc264a4b60f666cab81743950cf13f807713beb1d557b2efb",
+      "type": "ledger_or_protocol"
+    },
+    {
+      "path": "results/EXP-111-113-recovery-efficiency-protocol.md",
+      "sha256": "a8efbf317382137c1f20eeefaeaeaad2c30cb86a148f768c8ea851fdad088511",
+      "type": "ledger_or_protocol"
+    }
+  ],
+  "note": "Historical source hashes refer to the original draft snapshots, not necessarily current ledger versions. Historical numbers need raw-artifact audit before submission. Figure provenance recorded separately."
+}

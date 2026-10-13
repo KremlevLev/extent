@@ -1,5 +1,10 @@
 # Extent: JAX Mamba-3/MLA hybrid prototype
 
+Working preprint: [Mamba-3 in the Qwen](paper/draft.md), updated 13 October 2026.
+This is an unfinished research draft, not submitted or peer reviewed. Figures and
+provenance are available in [paper/](paper/README.md); EXP-112 remains partial
+and EXP-114 has no reported TPU outcome.
+
 Research status (September 2026): the 1.7B full-model experiments have not
 yet established a reliable Qwen-to-Mamba-3 recovery method. In EXP-089, the
 exact QKVO lift lost to random initialization after 25.17M training tokens
