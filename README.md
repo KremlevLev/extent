@@ -1,5 +1,9 @@
 # Extent: JAX Mamba-3/MLA hybrid prototype
 
+Kaggle T4 x2: [notebook](notebooks/extent-t4.ipynb) and
+[EXP116–119 launch cells](results/EXP-116-119-t4-launch.md).
+GPU runners are prepared; physical T4 performance and results remain unverified.
+
 Working preprint: [Mamba-3 in the Qwen](paper/draft.md), updated 13 October 2026.
 This is an unfinished research draft, not submitted or peer reviewed. Figures and
 provenance are available in [paper/](paper/README.md); EXP-112 remains partial

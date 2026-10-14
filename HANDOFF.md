@@ -1,5 +1,25 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**15 октября2026 — EXP116–119 T4 PREPARED, GPU outcomes pending.**
+Отдельный `notebooks/extent-t4.ipynb`, CUDA12 pinned JAX0.11/flax0.12.8/optax0.2.8.
+User deploy-key clone cell сохранён, setup T4x2/Internet/secrets, subprocess
+engineering preflight. `scripts/m3q_t4_campaign.py`: независимые GPU workers,
+host BF16 patient, one layer on GPU, source111 seed123 MAIN32768 pinned114,
+parameter-only restore без Adam111; исходный base SHA и все chunks checked.
+Все64 A source replay <=0.03 per-window против TPU; before probes обязательный
+gate. Tiny streamed/monolithic <=0.01 token NLL (BF16 fusion boundaries, не
+bitwise parity). 116 all-layer error/dynamics profile;117 same-target context
+128–1024/reset32–128 с traced-carry control;118 precision compute interventions;
+119 fixed layers0/12/26 teacher-mixer local fitting на hybrid-prefix inputs,
+ADD32/64/128/256(new extra correction)/FREE256/ALL-MAMBA,1024updates/128windows,
+после каждого candidate full-model NLL A/B/C. Reused validation и FIT overlap115
+явно маркированы; НЕ independent test/seed confirmation. 11.5h from runner,
+45min reserve; cap2GB total/invocation, fit local128 snapshots, remote branch-end/
+deadline, pending/durable cursors отдельно. Telegram started/end/failure.
+Протокол и4 ячейки: results/EXP-116-119-t4-launch.md. CPU engineering tests
+проверяют forward, SHA restore, zero-effect/init protection, finite update и
+exact next-step restore; actual1.7B GPU memory/throughput/runtime untested.
+
 **14 октября2026 — EXP115 PREPARED: user-authorized aggressive single-seed search.**
 Новый аккаунт9h. Пользователь явно просит сначала искать на одном seed, затем
 подтвердить лучший метод другими seeds. Seed123 из pinned111 MAIN32768;
