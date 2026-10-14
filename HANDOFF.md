@@ -1,5 +1,22 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**14 октября2026 — EXP115 PREPARED: user-authorized aggressive single-seed search.**
+Новый аккаунт9h. Пользователь явно просит сначала искать на одном seed, затем
+подтвердить лучший метод другими seeds. Seed123 из pinned111 MAIN32768;
+7 arms: R32/G64/G128/G256/ADD256(frozen old32)/FAST256(newLR1e-3)/LADDER256.
+Старые coordinates/Adam/count32768 сохранены; новые cohorts с собственными
+moment/count и128-step warmup, zero-effect start, joint stable clip1. Все4096,
+top2 по mean validation3072/4096 + R32 продолжаются до16384. Это exploratory
+screening, возможен late bloomer; не выдавать одинseed за confirmation.
+Новые данные train74973184/16384, selection reused122880/64; lockedWiki
+test262144/64, PG19524288/128 после durable choices. Real token SHA/capacity и
+8 virtual8 CPU tests + cursor-reconciliation regression passed; actual1.7B TPU
+memory/throughput/results pending.
+Runner m3q_rank_growth_115_campaign, ячейка EXP-115-kaggle-launch.md.
+8.8h включает60min reserve, upload cap6GB на вызов; local512 snapshots,
+remote active states в конце. Kill доsync теряет local steps, paid replay
+selection-reference parity checked. Старые111–114 contracts/runners не изменены.
+
 **14 октября2026 — EXP114 first session failed in dynamics, earlier modules saved.**
 Получен полный JSON:8338 tasks,1.72734h, completed profile/sweep/FIT/temperature/
 readout/optimizer; оба readout4096/endpoints durable, pending[]. Original111 replay
