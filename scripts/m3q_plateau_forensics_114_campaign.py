@@ -52,7 +52,7 @@ def contract_for(config):
     files=('scripts/m3q_plateau_forensics_114_campaign.py','extent/plateau_forensics.py',
         'extent/plateau_data.py','extent/chunked_checkpoint.py','extent/recovery_durability.py',
         'extent/hf_artifact_sync.py','extent/efficiency_sources.py','extent/efficiency_diagnostics.py',
-        'scripts/m3q_plateau_114_report.py')
+        'scripts/m3q_plateau_114_report.py','extent/plateau_trace_repair.py')
     return dict(experiment=114,source_sha=file_sha(ROOT/'results/EXP-114-source-pin.json'),
         data_sha=file_sha(ROOT/'results/EXP-114-data-preflight.json'),
         source_revision=pin['revision'],source_contract=pin['source_contract'],
@@ -79,7 +79,9 @@ class Session:
         if not self.path.exists():restore_artifact(self.path,f'{PREFIX}/latest.json',hub)
         self.result=json.loads(self.path.read_text()) if self.path.exists() else dict(contract=contract,
             tasks={},modules={},choices={},readout={},sessions=[],pending_slots=[],cost={})
-        if self.result['contract']!=contract:raise ValueError('EXP114 resume contract mismatch')
+        if self.result['contract']!=contract:
+            from extent.plateau_trace_repair import migrate_trace_failure
+            migrate_trace_failure(self.result,contract,getattr(args,'repair_trace',False))
         runtime={n:version(n) for n in ('jax','jaxlib','flax','optax')}
         runtime.update(matmul_precision=jax.config.jax_default_matmul_precision,prng_impl=jax.config.jax_default_prng_impl)
         if self.result.get('runtime',runtime)!=runtime:raise ValueError('EXP114 optimizer/math runtime changed')
@@ -115,7 +117,7 @@ class Session:
             times=self.result['cost'].setdefault('module_wall_seconds',{})
             times[name]=times.get(name,0)+time.monotonic()-started
     def checkpoint(self,slot,payload,step):
-        self.store.save(slot,dict(self.contract,slot=slot),payload,step)
+        self.store.save(slot,dict(self.result.get('readout_checkpoint_contract',self.contract),slot=slot),payload,step)
         if slot not in self.result['pending_slots']:self.result['pending_slots'].append(slot)
     def sync_states(self):
         for slot in list(self.result['pending_slots']):
@@ -325,7 +327,7 @@ class Patient:
             jax.tree.map(lambda x:jax.ShapeDtypeStruct(x.shape,x.dtype),c),pl,self.mesh)
         payload=dict(parameters=c,optimizer=template_state.opt_state)
         layouts=dict(parameters=pl,optimizer=template_state.layout)
-        saved=s.store.restore(slot,dict(s.contract,slot=slot),payload,layouts)
+        saved=s.store.restore(slot,dict(s.result.get('readout_checkpoint_contract',s.contract),slot=slot),payload,layouts)
         row=s.result['readout'].setdefault(seed,dict(step=0,attempted_updates=0,curve={}))
         if saved:
             payload,meta=saved;c,state=payload['parameters'],payload['optimizer'];step=meta['step']
@@ -375,7 +377,7 @@ class Patient:
         tx=readout_optimizer();initial=initialize_sharded_optimizer_state(tx,c,
             jax.tree.map(lambda x:jax.ShapeDtypeStruct(x.shape,x.dtype),c),pl,self.mesh)
         slot=f'{self.seed}/READOUT-{step}'
-        restored=self.s.store.restore(slot,dict(self.s.contract,slot=slot),dict(parameters=c,optimizer=initial.opt_state),
+        restored=self.s.store.restore(slot,dict(self.s.result.get('readout_checkpoint_contract',self.s.contract),slot=slot),dict(parameters=c,optimizer=initial.opt_state),
             dict(parameters=pl,optimizer=initial.layout))
         if restored is None or restored[1]['step']!=step:raise FileNotFoundError('selected readout endpoint unavailable')
         return restored[0]['parameters']
@@ -628,6 +630,7 @@ def main(argv=None):
     p.add_argument('--save-reserve-minutes',type=float,default=60)
     p.add_argument('--max-new-hf-gb',type=float,default=1)
     p.add_argument('--plan-only',action='store_true')
+    p.add_argument('--repair-trace',action='store_true',help='Explicit audited migration of the original pre-dynamics trace failure; retain completed A/B and readout states')
     p.add_argument('--sync-only',action='store_true')
     p.add_argument('--telegram',action=argparse.BooleanOptionalAction,default=True)
     args=p.parse_args(sys.argv[1:] if argv is None else argv)

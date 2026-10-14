@@ -1,5 +1,19 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**14 октября2026 — EXP114 first session failed in dynamics, earlier modules saved.**
+Получен полный JSON:8338 tasks,1.72734h, completed profile/sweep/FIT/temperature/
+readout/optimizer; оба readout4096/endpoints durable, pending[]. Original111 replay
+exact per-window. Trace parity2.0 в первой dynamics task; никаких accepted traces
+или locked C. Итоговый patient hash check не достигнут. Анализ/исходный SHA:
+results/EXP-114-session-1-analysis.json и EXP-114-session-1-summary.md.
+Selected mixer/rollback B effects<0.007 NLL, readout B ухудшается0.034/0.090.
+Boundary26 bypasses весь upstream prefix; НЕ диагноз виновного26 слоя.
+Trace operation order repaired без ослабления1e-4;19 virtual8 CPU tests passed,
+actual repaired TPU parity pending. Для сохранения completed probes и exact
+readout states — обновлённый main и явный --repair-trace, узкие source/code/data/
+status/absence-of-C guards, migration history. Wall budget уточнить по остаточной
+квоте, не брать прежние6.1h автоматически. Следом dynamics/precision/locked.
+
 **13 октября2026 — короткий112: network preflight failure, без новых updates.**
 Пользовательский Kaggle лог: HF429 `maximum queue size reached` на pinned PG19
 `data/test_files.txt`; fail в load_tokens до model restore/training. SIGTERM

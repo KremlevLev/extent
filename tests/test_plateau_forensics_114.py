@@ -74,6 +74,16 @@ def test_recurrence_trace_parity_and_explicit_all_state_reset(dtype):
     assert np.asarray(report['time']['state']['rms']).shape==(8,)
     assert bool(jnp.all(jnp.isfinite(report['time']['rank_participation'])))
 
+def test_trace_parity_with_large_outputs_and_full_256_token_context():
+    cfg,_,_,_,p,_,_=fixture('float32')
+    mp=p['layers_0']['mamba']
+    mp=dict(mp,out_proj={'kernel':mp['out_proj']['kernel']*1000})
+    x=jax.random.normal(jax.random.key(1149),(1,256,cfg.hidden_size))*8
+    module=Mamba3MIMO(cfg.hidden_size,cfg.mamba,jnp.float32,jnp.float32)
+    expected=jax.jit(lambda p,x:module.apply({'params':p},x))(mp,x)
+    output,_=jax.jit(lambda p,x:mamba_trace(x,p,cfg))(mp,x)
+    np.testing.assert_allclose(output,expected,atol=1e-4,rtol=0)
+
 def test_readout_zero_identity_checkpoint_exact_next_update_and_frozen_patient(tmp_path):
     cfg,_,model,_,p,_,t=fixture()
     from extent.efficiency_sources import tree_digest

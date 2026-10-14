@@ -54,3 +54,18 @@ Discovery A намеренно reused. B/C Wiki token-disjoint, но одна с
 
 Перед запуском исходные pins/data SHA прошли CPU/read-only HF preflight.
 Tiny CPU/virtual8 проверки — инженерные, не реальный1.7B TPU smoke.
+
+## После первой ошибки traced scan (14 October2026)
+
+Обновить main и начать чистый kernel. В аргументы той же ячейки добавить
+`"--repair-trace"`. Указать фактически оставшийся wall budget; он включает
+restore/parity/compile и60min save reserve, поэтому должен превышать этот резерв.
+Не использовать старый6.1h лимит без проверки остатка квоты.
+
+Это узкое зарегистрированное продолжение: completed profile/sweep/FIT/
+temperature/readout/optimizer сохраняются, fit заново не обучается. Старые
+readout checkpoint contracts проверяются точно. Динамика пересчитывается с
+исправленным порядком FP32 операций, порог1e-4 не ослаблен. Старое отклонение2.0
+и revision history сохраняются; altered data/source/code не принимаются.
+CPU19 virtual8 tests passed; исправленная1.7B TPU parity ещё не проверена.
+Результаты и ограничения первой сессии: `EXP-114-session-1-summary.md`.

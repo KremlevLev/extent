@@ -153,7 +153,10 @@ def traced_scan(values,p,rotary_pairs,reset_period=0):
         read=jnp.einsum('bhpn,brhn->brhp',ssm,cr)
         skip=p['D'][None,None,:,None].astype(jnp.float32)*now
         g=jax.nn.silu(z[:,None].astype(jnp.float32)*mz[None])
-        rs=read*g*mo[None];ks=skip*g*mo[None];ranks=rs+ks
+        # Preserve the official FP32 operation order before the BF16 cast.
+        # Distributing gate/output factors over read and skip changes rounding.
+        rs=read*g*mo[None];ks=skip*g*mo[None]
+        ranks=(read+skip)*g*mo[None]
         y=jnp.sum(ranks,1)
         # Normalize BEFORE covariance/energy to avoid unscaled squares overflow.
         maximum=jnp.maximum(jnp.max(jnp.abs(ranks)),1e-30)
