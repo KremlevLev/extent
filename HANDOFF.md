@@ -1,5 +1,14 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**15 октября2026 — T4 setup fix, no experiment updates in failed run.**
+User cloud log: nvidia-smi exit12 in setup before pip/runner. Notebook previously
+cleared LD_LIBRARY_PATH before querying NVML; this can hide Kaggle driver libs.
+User confirms T4 allocation and requests no preliminary hardware checks.
+Removed nvidia-smi query/driver-version/vendor/count checks, preserved library
+paths in notebook and both worker subprocesses. Mathematical source/parity
+controls remain. Reimport updated notebook; git pull alone does not rewrite
+old setup cell. EXP116–119 launch cells unchanged, GPU outcome still pending.
+
 **15 октября2026 — EXP116–119 T4 PREPARED, GPU outcomes pending.**
 Отдельный `notebooks/extent-t4.ipynb`, CUDA12 pinned JAX0.11/flax0.12.8/optax0.2.8.
 User deploy-key clone cell сохранён, setup T4x2/Internet/secrets, subprocess

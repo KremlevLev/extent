@@ -46,9 +46,6 @@ def main():
     actual={name:version(name) for name in required}
     if actual!=required:raise ValueError(f'GPU dependency versions differ: {actual}')
     devices=jax.devices('gpu')
-    if len(devices)!=2:raise ValueError('Select GPU T4 x2 in Kaggle Settings')
-    if any('T4' not in d.device_kind for d in devices):
-        raise ValueError('This launch is registered for two T4 GPUs')
     report=dict(versions=actual,devices=[d.device_kind for d in devices],
         parity=[check_streaming(d) for d in devices])
     print(json.dumps(report,indent=2))

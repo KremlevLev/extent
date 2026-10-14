@@ -401,7 +401,7 @@ def main(argv=None):
             env=os.environ.copy();env['CUDA_VISIBLE_DEVICES']=str(index)
             env['XLA_PYTHON_CLIENT_PREALLOCATE']='false';env['JAX_PLATFORMS']='cuda,cpu'
             env['PYTHONPATH']=str(ROOT)+os.pathsep+env.get('PYTHONPATH','')
-            env.pop('LD_LIBRARY_PATH',None)
+            # Inherit Kaggle's driver paths; clearing them can hide NVML/libcuda.
             cmd=[sys.executable,'-u','-m','scripts.m3q_t4_campaign','--experiment',str(args.experiment),
                 '--worker',str(index),'--workers',str(args.workers),'--deadline',str(deadline),
                 '--max-wall-hours',str(args.max_wall_hours),'--save-reserve-minutes',str(args.save_reserve_minutes),

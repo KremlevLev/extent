@@ -49,18 +49,7 @@ from pathlib import Path
 os.environ["XLA_PYTHON_CLIENT_PREALLOCATE"] = "false"
 os.environ["JAX_PLATFORMS"] = "cuda,cpu"
 os.environ["EXTENT_HF_REPO_TYPE"] = "dataset"
-os.environ.pop("LD_LIBRARY_PATH", None)
-
-gpu_info = subprocess.check_output(
-    ["nvidia-smi", "--query-gpu=name,driver_version,memory.total", "--format=csv,noheader"],
-    text=True,
-)
-print(gpu_info)
-gpu_rows = [r.strip() for r in gpu_info.splitlines() if r.strip()]
-if len(gpu_rows) != 2 or any("T4" not in r for r in gpu_rows):
-    raise RuntimeError("В Kaggle Settings выбери GPU T4 x2")
-if any(int(r.split(",")[1].strip().split(".")[0]) < 525 for r in gpu_rows):
-    raise RuntimeError("Драйвер слишком старый для CUDA12 JAX: нужен >=525")
+# Preserve Kaggle's driver library paths in this process and its children.
 
 repo_dir = Path("/kaggle/working/extent")
 subprocess.run([sys.executable, "-m", "pip", "install", "-q", "-r", "requirements-t4.txt"],
