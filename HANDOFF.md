@@ -1,5 +1,23 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**15 октября2026 — EXP124 PREPARED; EXP115 results archived.**
+EXP124 (`scripts/m3q_context_recovery_124_campaign.py`): one TPU v5e8,8.8h
+including60min reserve. Paired SHORT4x256 vs LONG1x1024, identical inputs and
+1020 CE targets/update (LONG boundary losses255/511/767 omitted). Source111
+seed123 MAIN32768; protectedrank32 +24 learned Mamba output gains, fresh Adam
+both arms, stableclip1, LR3e-4/.01 and256warmup. Horizon32768/arm; alternate256
+blocks, same4096-block permutation. Last common pair evaluated on identical
+last127 targets at contexts128/256/512/1024, source/Qwen controls, layer scale
+and absorbed-addition profiles. Exposed115 panels, not independent tests.
+Snapshots local128, HF4096-pair/90min/exit,2GB upload cap; same cell resumes.
+One aggregate `extent-m3q-context-124.json`; launch/protocol in
+`results/EXP-124-kaggle-launch.md`. Actual1.7B TPU run pending.
+EXP115 completed7.10h, source raw/summary/analysis archived under
+`results/EXP-115-session-1*`. At16384 updates R32 Wiki7.28643/PG199.48182;
+G256 7.28229/9.39644, delta-.00414/-.08538. ADD256 worse+.11258/+.12478.
+Other arms only4096, do not infer long-run failure. No plateau breakthrough;
+large activation scale remains a hypothesis, not established unique cause.
+
 **15 октября2026 — EXP120–123 PREPARED: long T4 scale/CE/KL campaigns.**
 User просит4 существенно более длинных сессии. НЕ считать причину плато
 установленной: activation scale — hypothesis; protectedrank32/stableclip

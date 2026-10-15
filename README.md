@@ -913,3 +913,5 @@ result = run_exp097([])
 
 Its small summary includes separate numerical-health flags. Details:
 [EXP-097 protocol](results/EXP-097-numerical-stability-protocol.md).
+
+EXP-124 TPU paired short/long-context recovery (prepared): [protocol and Kaggle cell](results/EXP-124-kaggle-launch.md). EXP-115 completed results: [analysis](results/EXP-115-session-1-analysis.json).

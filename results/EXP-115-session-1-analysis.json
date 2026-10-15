@@ -1,0 +1,76 @@
+{
+  "status": "completed",
+  "raw_sha256": "517aaadabddafe8d1f67b9ecf504683e4324f52a87c872d9b39138d1ee858091",
+  "selected": [
+    "G256",
+    "ADD256"
+  ],
+  "pending": [],
+  "cost": {
+    "attempted_updates": 65536,
+    "input_tokens": 16777216,
+    "ce_targets": 16711680
+  },
+  "hours": 7.099795935432222,
+  "arms": {
+    "R32": {
+      "step": 16384,
+      "validation": 7.281686522066593,
+      "final": {
+        "locked_wiki": 7.286432296037674,
+        "locked_pg19": 9.48181652277708
+      }
+    },
+    "G64": {
+      "step": 4096,
+      "validation": 7.345430143177509,
+      "final": {}
+    },
+    "G128": {
+      "step": 4096,
+      "validation": 7.321811988949776,
+      "final": {}
+    },
+    "G256": {
+      "step": 16384,
+      "validation": 7.259110562503338,
+      "final": {
+        "locked_wiki": 7.28229146450758,
+        "locked_pg19": 9.39644019305706
+      }
+    },
+    "ADD256": {
+      "step": 16384,
+      "validation": 7.353384144604206,
+      "final": {
+        "locked_wiki": 7.399016968905926,
+        "locked_pg19": 9.606593295931816
+      }
+    },
+    "FAST256": {
+      "step": 4096,
+      "validation": 7.305337660014629,
+      "final": {}
+    },
+    "LADDER256": {
+      "step": 4096,
+      "validation": 7.43906607478857,
+      "final": {}
+    }
+  },
+  "deltas_vs_R32": {
+    "G64": {},
+    "G128": {},
+    "G256": {
+      "locked_wiki": -0.004140831530094147,
+      "locked_pg19": -0.0853763297200203
+    },
+    "ADD256": {
+      "locked_wiki": 0.1125846728682518,
+      "locked_pg19": 0.12477677315473557
+    },
+    "FAST256": {},
+    "LADDER256": {}
+  },
+  "interpretation": "Single-seed exploratory rank screening. G256 modest PG19 gain, very small Wiki gain. No plateau breakthrough. Pilot-only arms not long-term failures; activation-scale causality unproven."
+}
