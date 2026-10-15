@@ -1,0 +1,530 @@
+[
+  {
+    "experiment": 125,
+    "name": "dynamic-mamba-bound",
+    "seed": 123,
+    "worker": 0,
+    "workers": 2,
+    "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+    "source": "EXP111 MAIN32768",
+    "source_replay_tolerance": 0.03,
+    "hook_background_tolerance": 0.01,
+    "inspection_relative_output_tolerance": 0.02,
+    "steps": 32768,
+    "ramp_steps": 2048,
+    "eval_steps": [
+      0,
+      128,
+      512,
+      1024,
+      2048,
+      4096,
+      8192,
+      16384,
+      24576,
+      32768
+    ],
+    "train_panels": {
+      "A": [
+        "validation",
+        122880,
+        64
+      ],
+      "B": [
+        "validation",
+        180224,
+        32
+      ],
+      "C": [
+        "validation",
+        196608,
+        64
+      ],
+      "FIT": [
+        "train",
+        74973184,
+        16384
+      ]
+    },
+    "arm": {
+      "name": "R32-CONTROL",
+      "lora": true,
+      "scales": false,
+      "alpha": 0.0,
+      "penalty": 0.0,
+      "relative": null,
+      "absolute": null,
+      "mlp": false,
+      "mlp_rank": 32,
+      "mlp_lr": 0.0001
+    },
+    "limiter": "per-token hidden-axis stable log-RMS; relative Mamba cap rho*max(RMS(input),1e-3); absolute cap after mixer addition AND MLP addition, all28 layers; geometric coefficient ramp2048",
+    "gradient": "full chain rule through BOTH input/output RMS and caps; no detached or straight-through gate",
+    "optimizer": "fresh Adam .9/.999 eps1e-8; joint stable clip1; Mamba-R32 LR3e-4 / optional MLP down-proj rank32 LR1e-4; warmup256; no learned gains",
+    "checkpoint": "local128; remote2048 or120min and deadline; current+Adam+best parameters;4GB total/invocation default",
+    "selection": "source A64/B32/C64; A16 monitor before full ramp, A64 selects best ONLY at >=2048 fixed endpoints; B/C never select; source+last+best context/profile",
+    "interpretation": "single seed exploratory; A/B/C exposed; no superiority/plateau cause established; compare equal steps AND intervention strength; cross-session CPU/GPU rounding recorded",
+    "code": {
+      "scripts/m3q_t4_dynamic_campaign.py": "18ea3eec5f76d6d7c3f9f302a3969986783000a5827e69002dcd521142e78892",
+      "extent/dynamic_recovery.py": "75a00b4173a94297903e5fd1482eb122fd9b79be2ea12f5d33f4aa196a3df0da",
+      "scripts/m3q_t4_scale_campaign.py": "98e116b1f53e9e48a4aca087ac34b9c76d6dd08f9d127c275b365a22666a1bbd",
+      "extent/t4_scale_recovery.py": "cff63c1d71909a72cee4ed66dce14b6bb5e22272acf8a8be54c87a80ac852e47",
+      "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+      "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+      "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+      "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+      "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+      "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+      "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+      "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+      "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+      "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+      "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+      "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+      "extent/efficiency_sources.py": "7bc7081d834f9c8dd17e47a33b24d2264f005c08dd783bc6f0b8a3004c8c44db",
+      "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+      "extent/pinned_pg19_manifest.py": "a94c40b4e0796248d1c172538c3774a90b8c24b77c3af027bfdc1d317dc39e5d",
+      "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+    }
+  },
+  {
+    "experiment": 125,
+    "name": "dynamic-mamba-bound",
+    "seed": 123,
+    "worker": 1,
+    "workers": 2,
+    "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+    "source": "EXP111 MAIN32768",
+    "source_replay_tolerance": 0.03,
+    "hook_background_tolerance": 0.01,
+    "inspection_relative_output_tolerance": 0.02,
+    "steps": 32768,
+    "ramp_steps": 2048,
+    "eval_steps": [
+      0,
+      128,
+      512,
+      1024,
+      2048,
+      4096,
+      8192,
+      16384,
+      24576,
+      32768
+    ],
+    "train_panels": {
+      "A": [
+        "validation",
+        122880,
+        64
+      ],
+      "B": [
+        "validation",
+        180224,
+        32
+      ],
+      "C": [
+        "validation",
+        196608,
+        64
+      ],
+      "FIT": [
+        "train",
+        74973184,
+        16384
+      ]
+    },
+    "arm": {
+      "name": "R32-REL05",
+      "lora": true,
+      "scales": false,
+      "alpha": 0.0,
+      "penalty": 0.0,
+      "relative": 0.5,
+      "absolute": null,
+      "mlp": false,
+      "mlp_rank": 32,
+      "mlp_lr": 0.0001
+    },
+    "limiter": "per-token hidden-axis stable log-RMS; relative Mamba cap rho*max(RMS(input),1e-3); absolute cap after mixer addition AND MLP addition, all28 layers; geometric coefficient ramp2048",
+    "gradient": "full chain rule through BOTH input/output RMS and caps; no detached or straight-through gate",
+    "optimizer": "fresh Adam .9/.999 eps1e-8; joint stable clip1; Mamba-R32 LR3e-4 / optional MLP down-proj rank32 LR1e-4; warmup256; no learned gains",
+    "checkpoint": "local128; remote2048 or120min and deadline; current+Adam+best parameters;4GB total/invocation default",
+    "selection": "source A64/B32/C64; A16 monitor before full ramp, A64 selects best ONLY at >=2048 fixed endpoints; B/C never select; source+last+best context/profile",
+    "interpretation": "single seed exploratory; A/B/C exposed; no superiority/plateau cause established; compare equal steps AND intervention strength; cross-session CPU/GPU rounding recorded",
+    "code": {
+      "scripts/m3q_t4_dynamic_campaign.py": "18ea3eec5f76d6d7c3f9f302a3969986783000a5827e69002dcd521142e78892",
+      "extent/dynamic_recovery.py": "75a00b4173a94297903e5fd1482eb122fd9b79be2ea12f5d33f4aa196a3df0da",
+      "scripts/m3q_t4_scale_campaign.py": "98e116b1f53e9e48a4aca087ac34b9c76d6dd08f9d127c275b365a22666a1bbd",
+      "extent/t4_scale_recovery.py": "cff63c1d71909a72cee4ed66dce14b6bb5e22272acf8a8be54c87a80ac852e47",
+      "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+      "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+      "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+      "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+      "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+      "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+      "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+      "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+      "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+      "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+      "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+      "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+      "extent/efficiency_sources.py": "7bc7081d834f9c8dd17e47a33b24d2264f005c08dd783bc6f0b8a3004c8c44db",
+      "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+      "extent/pinned_pg19_manifest.py": "a94c40b4e0796248d1c172538c3774a90b8c24b77c3af027bfdc1d317dc39e5d",
+      "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+    }
+  },
+  {
+    "experiment": 126,
+    "name": "absolute-residual-bound",
+    "seed": 123,
+    "worker": 0,
+    "workers": 2,
+    "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+    "source": "EXP111 MAIN32768",
+    "source_replay_tolerance": 0.03,
+    "hook_background_tolerance": 0.01,
+    "inspection_relative_output_tolerance": 0.02,
+    "steps": 32768,
+    "ramp_steps": 2048,
+    "eval_steps": [
+      0,
+      128,
+      512,
+      1024,
+      2048,
+      4096,
+      8192,
+      16384,
+      24576,
+      32768
+    ],
+    "train_panels": {
+      "A": [
+        "validation",
+        122880,
+        64
+      ],
+      "B": [
+        "validation",
+        180224,
+        32
+      ],
+      "C": [
+        "validation",
+        196608,
+        64
+      ],
+      "FIT": [
+        "train",
+        74973184,
+        16384
+      ]
+    },
+    "arm": {
+      "name": "R32-REL05-ABS10",
+      "lora": true,
+      "scales": false,
+      "alpha": 0.0,
+      "penalty": 0.0,
+      "relative": 0.5,
+      "absolute": 10.0,
+      "mlp": false,
+      "mlp_rank": 32,
+      "mlp_lr": 0.0001
+    },
+    "limiter": "per-token hidden-axis stable log-RMS; relative Mamba cap rho*max(RMS(input),1e-3); absolute cap after mixer addition AND MLP addition, all28 layers; geometric coefficient ramp2048",
+    "gradient": "full chain rule through BOTH input/output RMS and caps; no detached or straight-through gate",
+    "optimizer": "fresh Adam .9/.999 eps1e-8; joint stable clip1; Mamba-R32 LR3e-4 / optional MLP down-proj rank32 LR1e-4; warmup256; no learned gains",
+    "checkpoint": "local128; remote2048 or120min and deadline; current+Adam+best parameters;4GB total/invocation default",
+    "selection": "source A64/B32/C64; A16 monitor before full ramp, A64 selects best ONLY at >=2048 fixed endpoints; B/C never select; source+last+best context/profile",
+    "interpretation": "single seed exploratory; A/B/C exposed; no superiority/plateau cause established; compare equal steps AND intervention strength; cross-session CPU/GPU rounding recorded",
+    "code": {
+      "scripts/m3q_t4_dynamic_campaign.py": "18ea3eec5f76d6d7c3f9f302a3969986783000a5827e69002dcd521142e78892",
+      "extent/dynamic_recovery.py": "75a00b4173a94297903e5fd1482eb122fd9b79be2ea12f5d33f4aa196a3df0da",
+      "scripts/m3q_t4_scale_campaign.py": "98e116b1f53e9e48a4aca087ac34b9c76d6dd08f9d127c275b365a22666a1bbd",
+      "extent/t4_scale_recovery.py": "cff63c1d71909a72cee4ed66dce14b6bb5e22272acf8a8be54c87a80ac852e47",
+      "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+      "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+      "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+      "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+      "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+      "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+      "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+      "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+      "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+      "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+      "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+      "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+      "extent/efficiency_sources.py": "7bc7081d834f9c8dd17e47a33b24d2264f005c08dd783bc6f0b8a3004c8c44db",
+      "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+      "extent/pinned_pg19_manifest.py": "a94c40b4e0796248d1c172538c3774a90b8c24b77c3af027bfdc1d317dc39e5d",
+      "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+    }
+  },
+  {
+    "experiment": 126,
+    "name": "absolute-residual-bound",
+    "seed": 123,
+    "worker": 1,
+    "workers": 2,
+    "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+    "source": "EXP111 MAIN32768",
+    "source_replay_tolerance": 0.03,
+    "hook_background_tolerance": 0.01,
+    "inspection_relative_output_tolerance": 0.02,
+    "steps": 32768,
+    "ramp_steps": 2048,
+    "eval_steps": [
+      0,
+      128,
+      512,
+      1024,
+      2048,
+      4096,
+      8192,
+      16384,
+      24576,
+      32768
+    ],
+    "train_panels": {
+      "A": [
+        "validation",
+        122880,
+        64
+      ],
+      "B": [
+        "validation",
+        180224,
+        32
+      ],
+      "C": [
+        "validation",
+        196608,
+        64
+      ],
+      "FIT": [
+        "train",
+        74973184,
+        16384
+      ]
+    },
+    "arm": {
+      "name": "R32-REL05-ABS100",
+      "lora": true,
+      "scales": false,
+      "alpha": 0.0,
+      "penalty": 0.0,
+      "relative": 0.5,
+      "absolute": 100.0,
+      "mlp": false,
+      "mlp_rank": 32,
+      "mlp_lr": 0.0001
+    },
+    "limiter": "per-token hidden-axis stable log-RMS; relative Mamba cap rho*max(RMS(input),1e-3); absolute cap after mixer addition AND MLP addition, all28 layers; geometric coefficient ramp2048",
+    "gradient": "full chain rule through BOTH input/output RMS and caps; no detached or straight-through gate",
+    "optimizer": "fresh Adam .9/.999 eps1e-8; joint stable clip1; Mamba-R32 LR3e-4 / optional MLP down-proj rank32 LR1e-4; warmup256; no learned gains",
+    "checkpoint": "local128; remote2048 or120min and deadline; current+Adam+best parameters;4GB total/invocation default",
+    "selection": "source A64/B32/C64; A16 monitor before full ramp, A64 selects best ONLY at >=2048 fixed endpoints; B/C never select; source+last+best context/profile",
+    "interpretation": "single seed exploratory; A/B/C exposed; no superiority/plateau cause established; compare equal steps AND intervention strength; cross-session CPU/GPU rounding recorded",
+    "code": {
+      "scripts/m3q_t4_dynamic_campaign.py": "18ea3eec5f76d6d7c3f9f302a3969986783000a5827e69002dcd521142e78892",
+      "extent/dynamic_recovery.py": "75a00b4173a94297903e5fd1482eb122fd9b79be2ea12f5d33f4aa196a3df0da",
+      "scripts/m3q_t4_scale_campaign.py": "98e116b1f53e9e48a4aca087ac34b9c76d6dd08f9d127c275b365a22666a1bbd",
+      "extent/t4_scale_recovery.py": "cff63c1d71909a72cee4ed66dce14b6bb5e22272acf8a8be54c87a80ac852e47",
+      "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+      "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+      "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+      "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+      "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+      "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+      "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+      "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+      "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+      "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+      "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+      "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+      "extent/efficiency_sources.py": "7bc7081d834f9c8dd17e47a33b24d2264f005c08dd783bc6f0b8a3004c8c44db",
+      "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+      "extent/pinned_pg19_manifest.py": "a94c40b4e0796248d1c172538c3774a90b8c24b77c3af027bfdc1d317dc39e5d",
+      "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+    }
+  },
+  {
+    "experiment": 127,
+    "name": "bounded-mlp-adaptation",
+    "seed": 123,
+    "worker": 0,
+    "workers": 2,
+    "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+    "source": "EXP111 MAIN32768",
+    "source_replay_tolerance": 0.03,
+    "hook_background_tolerance": 0.01,
+    "inspection_relative_output_tolerance": 0.02,
+    "steps": 32768,
+    "ramp_steps": 2048,
+    "eval_steps": [
+      0,
+      128,
+      512,
+      1024,
+      2048,
+      4096,
+      8192,
+      16384,
+      24576,
+      32768
+    ],
+    "train_panels": {
+      "A": [
+        "validation",
+        122880,
+        64
+      ],
+      "B": [
+        "validation",
+        180224,
+        32
+      ],
+      "C": [
+        "validation",
+        196608,
+        64
+      ],
+      "FIT": [
+        "train",
+        74973184,
+        16384
+      ]
+    },
+    "arm": {
+      "name": "R32-REL05-MLP32",
+      "lora": true,
+      "scales": false,
+      "alpha": 0.0,
+      "penalty": 0.0,
+      "relative": 0.5,
+      "absolute": null,
+      "mlp": true,
+      "mlp_rank": 32,
+      "mlp_lr": 0.0001
+    },
+    "limiter": "per-token hidden-axis stable log-RMS; relative Mamba cap rho*max(RMS(input),1e-3); absolute cap after mixer addition AND MLP addition, all28 layers; geometric coefficient ramp2048",
+    "gradient": "full chain rule through BOTH input/output RMS and caps; no detached or straight-through gate",
+    "optimizer": "fresh Adam .9/.999 eps1e-8; joint stable clip1; Mamba-R32 LR3e-4 / optional MLP down-proj rank32 LR1e-4; warmup256; no learned gains",
+    "checkpoint": "local128; remote2048 or120min and deadline; current+Adam+best parameters;4GB total/invocation default",
+    "selection": "source A64/B32/C64; A16 monitor before full ramp, A64 selects best ONLY at >=2048 fixed endpoints; B/C never select; source+last+best context/profile",
+    "interpretation": "single seed exploratory; A/B/C exposed; no superiority/plateau cause established; compare equal steps AND intervention strength; cross-session CPU/GPU rounding recorded",
+    "code": {
+      "scripts/m3q_t4_dynamic_campaign.py": "18ea3eec5f76d6d7c3f9f302a3969986783000a5827e69002dcd521142e78892",
+      "extent/dynamic_recovery.py": "75a00b4173a94297903e5fd1482eb122fd9b79be2ea12f5d33f4aa196a3df0da",
+      "scripts/m3q_t4_scale_campaign.py": "98e116b1f53e9e48a4aca087ac34b9c76d6dd08f9d127c275b365a22666a1bbd",
+      "extent/t4_scale_recovery.py": "cff63c1d71909a72cee4ed66dce14b6bb5e22272acf8a8be54c87a80ac852e47",
+      "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+      "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+      "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+      "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+      "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+      "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+      "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+      "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+      "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+      "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+      "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+      "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+      "extent/efficiency_sources.py": "7bc7081d834f9c8dd17e47a33b24d2264f005c08dd783bc6f0b8a3004c8c44db",
+      "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+      "extent/pinned_pg19_manifest.py": "a94c40b4e0796248d1c172538c3774a90b8c24b77c3af027bfdc1d317dc39e5d",
+      "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+    }
+  },
+  {
+    "experiment": 127,
+    "name": "bounded-mlp-adaptation",
+    "seed": 123,
+    "worker": 1,
+    "workers": 2,
+    "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+    "source": "EXP111 MAIN32768",
+    "source_replay_tolerance": 0.03,
+    "hook_background_tolerance": 0.01,
+    "inspection_relative_output_tolerance": 0.02,
+    "steps": 32768,
+    "ramp_steps": 2048,
+    "eval_steps": [
+      0,
+      128,
+      512,
+      1024,
+      2048,
+      4096,
+      8192,
+      16384,
+      24576,
+      32768
+    ],
+    "train_panels": {
+      "A": [
+        "validation",
+        122880,
+        64
+      ],
+      "B": [
+        "validation",
+        180224,
+        32
+      ],
+      "C": [
+        "validation",
+        196608,
+        64
+      ],
+      "FIT": [
+        "train",
+        74973184,
+        16384
+      ]
+    },
+    "arm": {
+      "name": "R32-REL05-ABS10-MLP32",
+      "lora": true,
+      "scales": false,
+      "alpha": 0.0,
+      "penalty": 0.0,
+      "relative": 0.5,
+      "absolute": 10.0,
+      "mlp": true,
+      "mlp_rank": 32,
+      "mlp_lr": 0.0001
+    },
+    "limiter": "per-token hidden-axis stable log-RMS; relative Mamba cap rho*max(RMS(input),1e-3); absolute cap after mixer addition AND MLP addition, all28 layers; geometric coefficient ramp2048",
+    "gradient": "full chain rule through BOTH input/output RMS and caps; no detached or straight-through gate",
+    "optimizer": "fresh Adam .9/.999 eps1e-8; joint stable clip1; Mamba-R32 LR3e-4 / optional MLP down-proj rank32 LR1e-4; warmup256; no learned gains",
+    "checkpoint": "local128; remote2048 or120min and deadline; current+Adam+best parameters;4GB total/invocation default",
+    "selection": "source A64/B32/C64; A16 monitor before full ramp, A64 selects best ONLY at >=2048 fixed endpoints; B/C never select; source+last+best context/profile",
+    "interpretation": "single seed exploratory; A/B/C exposed; no superiority/plateau cause established; compare equal steps AND intervention strength; cross-session CPU/GPU rounding recorded",
+    "code": {
+      "scripts/m3q_t4_dynamic_campaign.py": "18ea3eec5f76d6d7c3f9f302a3969986783000a5827e69002dcd521142e78892",
+      "extent/dynamic_recovery.py": "75a00b4173a94297903e5fd1482eb122fd9b79be2ea12f5d33f4aa196a3df0da",
+      "scripts/m3q_t4_scale_campaign.py": "98e116b1f53e9e48a4aca087ac34b9c76d6dd08f9d127c275b365a22666a1bbd",
+      "extent/t4_scale_recovery.py": "cff63c1d71909a72cee4ed66dce14b6bb5e22272acf8a8be54c87a80ac852e47",
+      "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+      "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+      "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+      "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+      "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+      "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+      "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+      "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+      "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+      "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+      "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+      "extent/recovery_subspace.py": "375a4ceae4cb194ecbf1e36eabd8f66e73770274fd9eb7f369afe9da935ae423",
+      "extent/efficiency_sources.py": "7bc7081d834f9c8dd17e47a33b24d2264f005c08dd783bc6f0b8a3004c8c44db",
+      "extent/calibration_data.py": "f1b203ceb21dc43f645ae9ae90ac4a157fbc4cf03dafab36ba3665bbae10be5a",
+      "extent/pinned_pg19_manifest.py": "a94c40b4e0796248d1c172538c3774a90b8c24b77c3af027bfdc1d317dc39e5d",
+      "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+    }
+  }
+]

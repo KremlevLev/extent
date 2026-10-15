@@ -915,3 +915,5 @@ Its small summary includes separate numerical-health flags. Details:
 [EXP-097 protocol](results/EXP-097-numerical-stability-protocol.md).
 
 EXP-124 TPU paired short/long-context recovery (prepared): [protocol and Kaggle cell](results/EXP-124-kaggle-launch.md). EXP-115 completed results: [analysis](results/EXP-115-session-1-analysis.json).
+
+EXP-125–127: [three T4 dynamic-bound sessions and launch cells](results/EXP-125-127-t4-launch.md) (prepared). EXP-120–123 [received results and matched comparisons](results/EXP-120-123-session-1-analysis.json).

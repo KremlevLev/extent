@@ -1,5 +1,41 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**16 октября2026 — EXP125–127 PREPARED, three T4x2 sessions;124 user launching.**
+New independent `extent/dynamic_recovery.py`, `scripts/m3q_t4_dynamic_campaign.py`.
+125: R32 control vs per-token relative Mamba output RMS cap rho.5.
+126: same cap + absolute residual RMS10 vs100 after BOTH additions in ALL28
+layers.127: relative cap with MLP-down-proj LoRA32, vs same+absolute10;
+compare to125/GPU1 and126/GPU0 respectively. All same111 seed123 MAIN32768,
+freshAdam, MambaR32 LR3e-4, MLP1e-4, jointstableclip1, LRwarmup256.
+True gradients through input/output RMS; causal current-token channels only,
+stable logRMS numerical floor~1e-12, input reference floor.001. Geometric
+identity→full ramp2048; best eligible ONLY after full ramp, selected byA64.
+Before-ramp A16 monitor only. Source A64/B32/C64/context/profile explicitly
+recorded; full-bound initial FIT8 diagnosis; bounds/inspect engineering gate.
+32768 horizon/arm,11.5h includes60min reserve. Local128, HF2048/120min/exit,
+4GB total upload cap/session. Resume current+Adam+best, strength fromcursor,
+future metric rollback; best params evaluation-only.30min progress notices.
+Same old T4 notebook LAST cell; protocols/cells results/EXP-125-127-t4-launch.md.
+Physical1.7B GPU feasibility/quality pending.124 result not yet received.
+
+**16 октября2026 — EXP120–123 results received and archived.**
+Raw JSON results/EXP-120/121/122/123-session-1.json; derived matched4096 and
+source controls in EXP-120-123-session-1-analysis.json.120 completed461/461,
+8.6826h; best layer16*.03 A64 7.26410→7.26094, no plateau breakthrough.
+121 deadline_partial durable8098/8020, gains only; no material improvement.
+122 durable7775/7871, R32 vsR32+gains: same4096 B32 7.28712/7.28742.
+Same1024 best A64 7.20104/7.20226; C64 7.03723/7.03083; last C64
+7.01876/7.02754 at unequal steps.123 durable5697/5681, KL.1/.5;
+matched4096 B32 7.29271/7.44105 versus122 CE+gains7.28742. KL.5 beststep0:
+source C64 7.19110 gives a neighboring-run baseline for122 C improvement~.16;
+not independent confirmation or exact same-executable source control for122.
+All source/hook gates pass, no pending fit states, finals completed despite
+training deadline_partial. Do not call untested full65k horizon a failure.
+Profiles on one A window show near-total absorbed late MLP additions;
+free gains/KL can increase residual scale. No unique causal diagnosis.
+Do not automatically continue121–123/107–109.112 remains partial12288/13850,
+111/113 completed32768;110 latest Download completed65536/65536.
+
 **15 октября2026 — EXP124 PREPARED; EXP115 results archived.**
 EXP124 (`scripts/m3q_context_recovery_124_campaign.py`): one TPU v5e8,8.8h
 including60min reserve. Paired SHORT4x256 vs LONG1x1024, identical inputs and
