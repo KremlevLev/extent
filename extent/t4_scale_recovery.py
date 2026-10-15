@@ -183,7 +183,8 @@ class Engine:
             values.append(float(np.mean(losses if tail is None else losses[-tail:])))
             penalties.append(penalty)
             if profile:maxima.append(float(jnp.max(jnp.abs(h.astype(jnp.float32)))))
-        if not np.all(np.isfinite(values)):raise FloatingPointError('nonfinite evaluation')
+        if not np.all(np.isfinite(values)) or not np.all(np.isfinite(penalties)):
+            raise FloatingPointError('nonfinite evaluation')
         return dict(nll=float(np.mean(values)),windows=values,
             activation_penalty=float(np.mean(penalties)),final_hidden_max=maxima)
 
@@ -202,7 +203,8 @@ class Engine:
             diagnostic,_,metrics=self.profile_kernels[key](parameters,current,h)
             error=jnp.max(jnp.abs(ordinary.astype(jnp.float32)-diagnostic.astype(jnp.float32)))/jnp.maximum(jnp.max(jnp.abs(ordinary)),1e-30)
             metrics=plain(jax.block_until_ready(metrics));error=float(error)
-            rows.append(dict(layer=layer,relative_output_discrepancy=error,accepted=math.isfinite(error) and error<=.02,**metrics))
+            rows.append(dict(layer=layer,relative_output_discrepancy=error if math.isfinite(error) else str(error),
+                accepted=math.isfinite(error) and error<=.02,**metrics))
             h=ordinary
         return dict(layers=rows,relative_output_tolerance=.02,
             interpretation='Inspect-executable BF16 discrepancies checked per layer; profile uses one explicit A window')

@@ -137,16 +137,20 @@ def run_probes(s,p,tokens):
             q={j:dict(v) for j,v in identity.items()}
             for j in job['layers']:q[str(j)]['gain']=jnp.array(job['gain'],jnp.float32)
             def run(q=q,job=job):
-                value=e.evaluate(q,tokens['A'],profile=True)
+                try:value=e.evaluate(q,tokens['A'],profile=True)
+                except FloatingPointError as exc:
+                    return dict(**job,finite=False,failed=str(exc))
                 return dict(**job,validation=value,delta_nll=value['nll']-s.result['tasks']['hook-background']['value']['nll'])
             s.task('probe/'+job['key'],run)
     except TimeoutError:complete=False
     s.finalize_budget()
     # A deadline-truncated search is explicitly labelled; interim selections
     # are exploratory, not a claim about unmeasured grid points.
-    values=[t['value'] for k,t in s.result['tasks'].items() if k.startswith('probe/')]
+    attempted=[t['value'] for k,t in s.result['tasks'].items() if k.startswith('probe/')]
+    values=[v for v in attempted if 'validation' in v]
     selected=sorted(values,key=lambda v:(v['validation']['nll'],v['key']))[:3]
-    s.result['probe_coverage']=dict(completed=len(values),planned=sum(i%s.args.workers==s.args.worker for i in range(len(jobs))),complete=complete)
+    s.result['probe_coverage']=dict(completed=len(attempted),finite=len(values),invalid=len(attempted)-len(values),
+        planned=sum(i%s.args.workers==s.args.worker for i in range(len(jobs))),complete=complete)
     s.result['selected_probes']=[r['key'] for r in selected];s.persist(force=True)
     for row in selected:
         q={j:dict(v) for j,v in identity.items()}

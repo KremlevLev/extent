@@ -145,3 +145,32 @@ def test_clean_deadline_saves_training_cursor_and_resumes_without_repeating(tmp_
     assert run_training(s,p,tokens)=='deadline_partial'
     assert s.result['fits']['MAIN']['step']==s.result['fits']['MAIN']['durable_step']==4
     assert s.result['cost']['attempted_updates']==4
+
+
+def test_invalid_scale_condition_is_recorded_and_search_continues(monkeypatch):
+    from types import SimpleNamespace
+    from scripts.m3q_t4_scale_campaign import run_probes
+    class FakeEngine:
+        def __init__(self,*a,**kw):pass
+        def evaluate(self,q,windows,**kw):
+            if float(q['0']['gain'])==0:raise FloatingPointError('invalid condition')
+            return dict(nll=6.8,windows=[6.8],activation_penalty=0,final_hidden_max=[1.])
+        def inspect(self,*a,**kw):return dict(layers=[])
+    monkeypatch.setattr('extent.t4_scale_recovery.Engine',FakeEngine)
+    monkeypatch.setattr('scripts.m3q_t4_scale_campaign.background',lambda *a:None)
+    monkeypatch.setattr('scripts.m3q_t4_scale_campaign.context_report',lambda *a:{})
+    class FakeSession:
+        args=SimpleNamespace(worker=0,workers=2)
+        def __init__(self):
+            jobs=[dict(key='bad',gain=0.,layers=[0]),dict(key='other-worker',gain=.1,layers=[0]),
+                  dict(key='good',gain=.5,layers=[0])]
+            self.result=dict(contract=dict(probes=jobs),tasks={'hook-background':{'value':{'nll':7.}}})
+        def finalize_budget(self):pass
+        def persist(self,**kw):pass
+        def task(self,key,call):
+            v=call();self.result['tasks'][key]=dict(value=v);return v
+    s=FakeSession();p=SimpleNamespace(cfg=SimpleNamespace(num_layers=3,mamba_layer_indices=(0,2)))
+    tokens={k:np.zeros((64,8),np.int32) for k in ('A','B','C')}
+    assert run_probes(s,p,tokens)=='completed'
+    assert s.result['probe_coverage']['invalid']==1
+    assert s.result['selected_probes']==['good']

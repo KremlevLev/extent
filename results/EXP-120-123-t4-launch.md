@@ -75,6 +75,8 @@ all, spikes[0,1,3,11,16,25,26], early<8, middle8..19, late>=20.
 
 Каждый condition A64, paired delta относительно hook control. Каждый worker
 выбирает своих top3 по A64, проверяет B32/C64, профиль слоёв и context128..1024.
+Nonfinite condition сохраняется как invalid и не останавливает весь grid;
+он не участвует в выборе top3. Memory/transport/source failures не скрываются.
 Если sweep прерван work deadline, reserve используется для top3 среди **уже
 измеренных**, coverage/partial явно сохранены; не заявлять optimality по всему
 grid. Следующая сессия продолжает недостающие условия и обновляет selection.
