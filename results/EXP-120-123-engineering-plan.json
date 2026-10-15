@@ -1,0 +1,8544 @@
+{
+  "120": [
+    {
+      "experiment": 120,
+      "name": "scale-interventions",
+      "seed": 123,
+      "worker": 0,
+      "workers": 2,
+      "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+      "source": "EXP111 MAIN32768",
+      "source_replay_tolerance": 0.03,
+      "hook_background_tolerance": 0.01,
+      "inspection_relative_output_tolerance": 0.02,
+      "practical_nll_delta": 0.1,
+      "steps": 65536,
+      "eval_steps": [
+        0,
+        128,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        49152,
+        65536
+      ],
+      "train_panels": {
+        "A": [
+          "validation",
+          122880,
+          64
+        ],
+        "B": [
+          "validation",
+          180224,
+          32
+        ],
+        "C": [
+          "validation",
+          196608,
+          64
+        ],
+        "FIT": [
+          "train",
+          74973184,
+          16384
+        ]
+      },
+      "arm": null,
+      "probes": [
+        {
+          "key": "all/gain-0.75",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "spikes/gain-0.75",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "early/gain-0.75",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "middle/gain-0.75",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "late/gain-0.75",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-0/gain-0.75",
+          "layers": [
+            0
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-1/gain-0.75",
+          "layers": [
+            1
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-3/gain-0.75",
+          "layers": [
+            3
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-11/gain-0.75",
+          "layers": [
+            11
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-16/gain-0.75",
+          "layers": [
+            16
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-25/gain-0.75",
+          "layers": [
+            25
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-26/gain-0.75",
+          "layers": [
+            26
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-2/gain-0.75",
+          "layers": [
+            2
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-4/gain-0.75",
+          "layers": [
+            4
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-5/gain-0.75",
+          "layers": [
+            5
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-7/gain-0.75",
+          "layers": [
+            7
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-8/gain-0.75",
+          "layers": [
+            8
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-9/gain-0.75",
+          "layers": [
+            9
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-10/gain-0.75",
+          "layers": [
+            10
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-12/gain-0.75",
+          "layers": [
+            12
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-14/gain-0.75",
+          "layers": [
+            14
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-15/gain-0.75",
+          "layers": [
+            15
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-17/gain-0.75",
+          "layers": [
+            17
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-18/gain-0.75",
+          "layers": [
+            18
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-19/gain-0.75",
+          "layers": [
+            19
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-21/gain-0.75",
+          "layers": [
+            21
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-22/gain-0.75",
+          "layers": [
+            22
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-23/gain-0.75",
+          "layers": [
+            23
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-24/gain-0.75",
+          "layers": [
+            24
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "all/gain-0.5",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "spikes/gain-0.5",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "early/gain-0.5",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "middle/gain-0.5",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "late/gain-0.5",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-0/gain-0.5",
+          "layers": [
+            0
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-1/gain-0.5",
+          "layers": [
+            1
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-3/gain-0.5",
+          "layers": [
+            3
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-11/gain-0.5",
+          "layers": [
+            11
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-16/gain-0.5",
+          "layers": [
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-25/gain-0.5",
+          "layers": [
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-26/gain-0.5",
+          "layers": [
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-2/gain-0.5",
+          "layers": [
+            2
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-4/gain-0.5",
+          "layers": [
+            4
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-5/gain-0.5",
+          "layers": [
+            5
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-7/gain-0.5",
+          "layers": [
+            7
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-8/gain-0.5",
+          "layers": [
+            8
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-9/gain-0.5",
+          "layers": [
+            9
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-10/gain-0.5",
+          "layers": [
+            10
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-12/gain-0.5",
+          "layers": [
+            12
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-14/gain-0.5",
+          "layers": [
+            14
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-15/gain-0.5",
+          "layers": [
+            15
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-17/gain-0.5",
+          "layers": [
+            17
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-18/gain-0.5",
+          "layers": [
+            18
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-19/gain-0.5",
+          "layers": [
+            19
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-21/gain-0.5",
+          "layers": [
+            21
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-22/gain-0.5",
+          "layers": [
+            22
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-23/gain-0.5",
+          "layers": [
+            23
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-24/gain-0.5",
+          "layers": [
+            24
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "all/gain-0.25",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "spikes/gain-0.25",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "early/gain-0.25",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "middle/gain-0.25",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "late/gain-0.25",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-0/gain-0.25",
+          "layers": [
+            0
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-1/gain-0.25",
+          "layers": [
+            1
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-3/gain-0.25",
+          "layers": [
+            3
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-11/gain-0.25",
+          "layers": [
+            11
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-16/gain-0.25",
+          "layers": [
+            16
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-25/gain-0.25",
+          "layers": [
+            25
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-26/gain-0.25",
+          "layers": [
+            26
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-2/gain-0.25",
+          "layers": [
+            2
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-4/gain-0.25",
+          "layers": [
+            4
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-5/gain-0.25",
+          "layers": [
+            5
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-7/gain-0.25",
+          "layers": [
+            7
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-8/gain-0.25",
+          "layers": [
+            8
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-9/gain-0.25",
+          "layers": [
+            9
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-10/gain-0.25",
+          "layers": [
+            10
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-12/gain-0.25",
+          "layers": [
+            12
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-14/gain-0.25",
+          "layers": [
+            14
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-15/gain-0.25",
+          "layers": [
+            15
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-17/gain-0.25",
+          "layers": [
+            17
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-18/gain-0.25",
+          "layers": [
+            18
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-19/gain-0.25",
+          "layers": [
+            19
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-21/gain-0.25",
+          "layers": [
+            21
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-22/gain-0.25",
+          "layers": [
+            22
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-23/gain-0.25",
+          "layers": [
+            23
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-24/gain-0.25",
+          "layers": [
+            24
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "all/gain-0.1",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "spikes/gain-0.1",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "early/gain-0.1",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "middle/gain-0.1",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "late/gain-0.1",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-0/gain-0.1",
+          "layers": [
+            0
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-1/gain-0.1",
+          "layers": [
+            1
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-3/gain-0.1",
+          "layers": [
+            3
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-11/gain-0.1",
+          "layers": [
+            11
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-16/gain-0.1",
+          "layers": [
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-25/gain-0.1",
+          "layers": [
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-26/gain-0.1",
+          "layers": [
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-2/gain-0.1",
+          "layers": [
+            2
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-4/gain-0.1",
+          "layers": [
+            4
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-5/gain-0.1",
+          "layers": [
+            5
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-7/gain-0.1",
+          "layers": [
+            7
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-8/gain-0.1",
+          "layers": [
+            8
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-9/gain-0.1",
+          "layers": [
+            9
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-10/gain-0.1",
+          "layers": [
+            10
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-12/gain-0.1",
+          "layers": [
+            12
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-14/gain-0.1",
+          "layers": [
+            14
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-15/gain-0.1",
+          "layers": [
+            15
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-17/gain-0.1",
+          "layers": [
+            17
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-18/gain-0.1",
+          "layers": [
+            18
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-19/gain-0.1",
+          "layers": [
+            19
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-21/gain-0.1",
+          "layers": [
+            21
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-22/gain-0.1",
+          "layers": [
+            22
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-23/gain-0.1",
+          "layers": [
+            23
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-24/gain-0.1",
+          "layers": [
+            24
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "all/gain-0.03",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "spikes/gain-0.03",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "early/gain-0.03",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "middle/gain-0.03",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "late/gain-0.03",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-0/gain-0.03",
+          "layers": [
+            0
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-1/gain-0.03",
+          "layers": [
+            1
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-3/gain-0.03",
+          "layers": [
+            3
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-11/gain-0.03",
+          "layers": [
+            11
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-16/gain-0.03",
+          "layers": [
+            16
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-25/gain-0.03",
+          "layers": [
+            25
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-26/gain-0.03",
+          "layers": [
+            26
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-2/gain-0.03",
+          "layers": [
+            2
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-4/gain-0.03",
+          "layers": [
+            4
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-5/gain-0.03",
+          "layers": [
+            5
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-7/gain-0.03",
+          "layers": [
+            7
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-8/gain-0.03",
+          "layers": [
+            8
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-9/gain-0.03",
+          "layers": [
+            9
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-10/gain-0.03",
+          "layers": [
+            10
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-12/gain-0.03",
+          "layers": [
+            12
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-14/gain-0.03",
+          "layers": [
+            14
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-15/gain-0.03",
+          "layers": [
+            15
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-17/gain-0.03",
+          "layers": [
+            17
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-18/gain-0.03",
+          "layers": [
+            18
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-19/gain-0.03",
+          "layers": [
+            19
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-21/gain-0.03",
+          "layers": [
+            21
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-22/gain-0.03",
+          "layers": [
+            22
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-23/gain-0.03",
+          "layers": [
+            23
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-24/gain-0.03",
+          "layers": [
+            24
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "all/gain-0.01",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "spikes/gain-0.01",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "early/gain-0.01",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "middle/gain-0.01",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "late/gain-0.01",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-0/gain-0.01",
+          "layers": [
+            0
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-1/gain-0.01",
+          "layers": [
+            1
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-3/gain-0.01",
+          "layers": [
+            3
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-11/gain-0.01",
+          "layers": [
+            11
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-16/gain-0.01",
+          "layers": [
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-25/gain-0.01",
+          "layers": [
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-26/gain-0.01",
+          "layers": [
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-2/gain-0.01",
+          "layers": [
+            2
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-4/gain-0.01",
+          "layers": [
+            4
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-5/gain-0.01",
+          "layers": [
+            5
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-7/gain-0.01",
+          "layers": [
+            7
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-8/gain-0.01",
+          "layers": [
+            8
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-9/gain-0.01",
+          "layers": [
+            9
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-10/gain-0.01",
+          "layers": [
+            10
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-12/gain-0.01",
+          "layers": [
+            12
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-14/gain-0.01",
+          "layers": [
+            14
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-15/gain-0.01",
+          "layers": [
+            15
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-17/gain-0.01",
+          "layers": [
+            17
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-18/gain-0.01",
+          "layers": [
+            18
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-19/gain-0.01",
+          "layers": [
+            19
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-21/gain-0.01",
+          "layers": [
+            21
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-22/gain-0.01",
+          "layers": [
+            22
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-23/gain-0.01",
+          "layers": [
+            23
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-24/gain-0.01",
+          "layers": [
+            24
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "all/gain-0.003",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "spikes/gain-0.003",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "early/gain-0.003",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "middle/gain-0.003",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "late/gain-0.003",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-0/gain-0.003",
+          "layers": [
+            0
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-1/gain-0.003",
+          "layers": [
+            1
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-3/gain-0.003",
+          "layers": [
+            3
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-11/gain-0.003",
+          "layers": [
+            11
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-16/gain-0.003",
+          "layers": [
+            16
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-25/gain-0.003",
+          "layers": [
+            25
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-26/gain-0.003",
+          "layers": [
+            26
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-2/gain-0.003",
+          "layers": [
+            2
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-4/gain-0.003",
+          "layers": [
+            4
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-5/gain-0.003",
+          "layers": [
+            5
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-7/gain-0.003",
+          "layers": [
+            7
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-8/gain-0.003",
+          "layers": [
+            8
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-9/gain-0.003",
+          "layers": [
+            9
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-10/gain-0.003",
+          "layers": [
+            10
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-12/gain-0.003",
+          "layers": [
+            12
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-14/gain-0.003",
+          "layers": [
+            14
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-15/gain-0.003",
+          "layers": [
+            15
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-17/gain-0.003",
+          "layers": [
+            17
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-18/gain-0.003",
+          "layers": [
+            18
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-19/gain-0.003",
+          "layers": [
+            19
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-21/gain-0.003",
+          "layers": [
+            21
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-22/gain-0.003",
+          "layers": [
+            22
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-23/gain-0.003",
+          "layers": [
+            23
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-24/gain-0.003",
+          "layers": [
+            24
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "all/gain-0.001",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "spikes/gain-0.001",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "early/gain-0.001",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "middle/gain-0.001",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "late/gain-0.001",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-0/gain-0.001",
+          "layers": [
+            0
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-1/gain-0.001",
+          "layers": [
+            1
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-3/gain-0.001",
+          "layers": [
+            3
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-11/gain-0.001",
+          "layers": [
+            11
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-16/gain-0.001",
+          "layers": [
+            16
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-25/gain-0.001",
+          "layers": [
+            25
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-26/gain-0.001",
+          "layers": [
+            26
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-2/gain-0.001",
+          "layers": [
+            2
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-4/gain-0.001",
+          "layers": [
+            4
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-5/gain-0.001",
+          "layers": [
+            5
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-7/gain-0.001",
+          "layers": [
+            7
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-8/gain-0.001",
+          "layers": [
+            8
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-9/gain-0.001",
+          "layers": [
+            9
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-10/gain-0.001",
+          "layers": [
+            10
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-12/gain-0.001",
+          "layers": [
+            12
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-14/gain-0.001",
+          "layers": [
+            14
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-15/gain-0.001",
+          "layers": [
+            15
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-17/gain-0.001",
+          "layers": [
+            17
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-18/gain-0.001",
+          "layers": [
+            18
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-19/gain-0.001",
+          "layers": [
+            19
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-21/gain-0.001",
+          "layers": [
+            21
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-22/gain-0.001",
+          "layers": [
+            22
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-23/gain-0.001",
+          "layers": [
+            23
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-24/gain-0.001",
+          "layers": [
+            24
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "all/gain-0.0001",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "spikes/gain-0.0001",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "early/gain-0.0001",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "middle/gain-0.0001",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "late/gain-0.0001",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-0/gain-0.0001",
+          "layers": [
+            0
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-1/gain-0.0001",
+          "layers": [
+            1
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-3/gain-0.0001",
+          "layers": [
+            3
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-11/gain-0.0001",
+          "layers": [
+            11
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-16/gain-0.0001",
+          "layers": [
+            16
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-25/gain-0.0001",
+          "layers": [
+            25
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-26/gain-0.0001",
+          "layers": [
+            26
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-2/gain-0.0001",
+          "layers": [
+            2
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-4/gain-0.0001",
+          "layers": [
+            4
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-5/gain-0.0001",
+          "layers": [
+            5
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-7/gain-0.0001",
+          "layers": [
+            7
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-8/gain-0.0001",
+          "layers": [
+            8
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-9/gain-0.0001",
+          "layers": [
+            9
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-10/gain-0.0001",
+          "layers": [
+            10
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-12/gain-0.0001",
+          "layers": [
+            12
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-14/gain-0.0001",
+          "layers": [
+            14
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-15/gain-0.0001",
+          "layers": [
+            15
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-17/gain-0.0001",
+          "layers": [
+            17
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-18/gain-0.0001",
+          "layers": [
+            18
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-19/gain-0.0001",
+          "layers": [
+            19
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-21/gain-0.0001",
+          "layers": [
+            21
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-22/gain-0.0001",
+          "layers": [
+            22
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-23/gain-0.0001",
+          "layers": [
+            23
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-24/gain-0.0001",
+          "layers": [
+            24
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "all/gain-1e-05",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "spikes/gain-1e-05",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "early/gain-1e-05",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "middle/gain-1e-05",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "late/gain-1e-05",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-0/gain-1e-05",
+          "layers": [
+            0
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-1/gain-1e-05",
+          "layers": [
+            1
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-3/gain-1e-05",
+          "layers": [
+            3
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-11/gain-1e-05",
+          "layers": [
+            11
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-16/gain-1e-05",
+          "layers": [
+            16
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-25/gain-1e-05",
+          "layers": [
+            25
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-26/gain-1e-05",
+          "layers": [
+            26
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-2/gain-1e-05",
+          "layers": [
+            2
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-4/gain-1e-05",
+          "layers": [
+            4
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-5/gain-1e-05",
+          "layers": [
+            5
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-7/gain-1e-05",
+          "layers": [
+            7
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-8/gain-1e-05",
+          "layers": [
+            8
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-9/gain-1e-05",
+          "layers": [
+            9
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-10/gain-1e-05",
+          "layers": [
+            10
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-12/gain-1e-05",
+          "layers": [
+            12
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-14/gain-1e-05",
+          "layers": [
+            14
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-15/gain-1e-05",
+          "layers": [
+            15
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-17/gain-1e-05",
+          "layers": [
+            17
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-18/gain-1e-05",
+          "layers": [
+            18
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-19/gain-1e-05",
+          "layers": [
+            19
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-21/gain-1e-05",
+          "layers": [
+            21
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-22/gain-1e-05",
+          "layers": [
+            22
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-23/gain-1e-05",
+          "layers": [
+            23
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-24/gain-1e-05",
+          "layers": [
+            24
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "all/gain-1e-06",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "spikes/gain-1e-06",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "early/gain-1e-06",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "middle/gain-1e-06",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "late/gain-1e-06",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-0/gain-1e-06",
+          "layers": [
+            0
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-1/gain-1e-06",
+          "layers": [
+            1
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-3/gain-1e-06",
+          "layers": [
+            3
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-11/gain-1e-06",
+          "layers": [
+            11
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-16/gain-1e-06",
+          "layers": [
+            16
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-25/gain-1e-06",
+          "layers": [
+            25
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-26/gain-1e-06",
+          "layers": [
+            26
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-2/gain-1e-06",
+          "layers": [
+            2
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-4/gain-1e-06",
+          "layers": [
+            4
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-5/gain-1e-06",
+          "layers": [
+            5
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-7/gain-1e-06",
+          "layers": [
+            7
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-8/gain-1e-06",
+          "layers": [
+            8
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-9/gain-1e-06",
+          "layers": [
+            9
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-10/gain-1e-06",
+          "layers": [
+            10
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-12/gain-1e-06",
+          "layers": [
+            12
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-14/gain-1e-06",
+          "layers": [
+            14
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-15/gain-1e-06",
+          "layers": [
+            15
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-17/gain-1e-06",
+          "layers": [
+            17
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-18/gain-1e-06",
+          "layers": [
+            18
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-19/gain-1e-06",
+          "layers": [
+            19
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-21/gain-1e-06",
+          "layers": [
+            21
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-22/gain-1e-06",
+          "layers": [
+            22
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-23/gain-1e-06",
+          "layers": [
+            23
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-24/gain-1e-06",
+          "layers": [
+            24
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "all/gain-1e-08",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "spikes/gain-1e-08",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "early/gain-1e-08",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "middle/gain-1e-08",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "late/gain-1e-08",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-0/gain-1e-08",
+          "layers": [
+            0
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-1/gain-1e-08",
+          "layers": [
+            1
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-3/gain-1e-08",
+          "layers": [
+            3
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-11/gain-1e-08",
+          "layers": [
+            11
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-16/gain-1e-08",
+          "layers": [
+            16
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-25/gain-1e-08",
+          "layers": [
+            25
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-26/gain-1e-08",
+          "layers": [
+            26
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-2/gain-1e-08",
+          "layers": [
+            2
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-4/gain-1e-08",
+          "layers": [
+            4
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-5/gain-1e-08",
+          "layers": [
+            5
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-7/gain-1e-08",
+          "layers": [
+            7
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-8/gain-1e-08",
+          "layers": [
+            8
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-9/gain-1e-08",
+          "layers": [
+            9
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-10/gain-1e-08",
+          "layers": [
+            10
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-12/gain-1e-08",
+          "layers": [
+            12
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-14/gain-1e-08",
+          "layers": [
+            14
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-15/gain-1e-08",
+          "layers": [
+            15
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-17/gain-1e-08",
+          "layers": [
+            17
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-18/gain-1e-08",
+          "layers": [
+            18
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-19/gain-1e-08",
+          "layers": [
+            19
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-21/gain-1e-08",
+          "layers": [
+            21
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-22/gain-1e-08",
+          "layers": [
+            22
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-23/gain-1e-08",
+          "layers": [
+            23
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-24/gain-1e-08",
+          "layers": [
+            24
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "all/gain-0",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "spikes/gain-0",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "early/gain-0",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "middle/gain-0",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "late/gain-0",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-0/gain-0",
+          "layers": [
+            0
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-1/gain-0",
+          "layers": [
+            1
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-3/gain-0",
+          "layers": [
+            3
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-11/gain-0",
+          "layers": [
+            11
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-16/gain-0",
+          "layers": [
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-25/gain-0",
+          "layers": [
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-26/gain-0",
+          "layers": [
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-2/gain-0",
+          "layers": [
+            2
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-4/gain-0",
+          "layers": [
+            4
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-5/gain-0",
+          "layers": [
+            5
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-7/gain-0",
+          "layers": [
+            7
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-8/gain-0",
+          "layers": [
+            8
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-9/gain-0",
+          "layers": [
+            9
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-10/gain-0",
+          "layers": [
+            10
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-12/gain-0",
+          "layers": [
+            12
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-14/gain-0",
+          "layers": [
+            14
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-15/gain-0",
+          "layers": [
+            15
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-17/gain-0",
+          "layers": [
+            17
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-18/gain-0",
+          "layers": [
+            18
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-19/gain-0",
+          "layers": [
+            19
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-21/gain-0",
+          "layers": [
+            21
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-22/gain-0",
+          "layers": [
+            22
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-23/gain-0",
+          "layers": [
+            23
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-24/gain-0",
+          "layers": [
+            24
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-1/gain-0.5",
+          "layers": [
+            0,
+            1
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-1/gain-0.1",
+          "layers": [
+            0,
+            1
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-1/gain-0.01",
+          "layers": [
+            0,
+            1
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-1/gain-0",
+          "layers": [
+            0,
+            1
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-3/gain-0.5",
+          "layers": [
+            0,
+            3
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-3/gain-0.1",
+          "layers": [
+            0,
+            3
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-3/gain-0.01",
+          "layers": [
+            0,
+            3
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-3/gain-0",
+          "layers": [
+            0,
+            3
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-11/gain-0.5",
+          "layers": [
+            0,
+            11
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-11/gain-0.1",
+          "layers": [
+            0,
+            11
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-11/gain-0.01",
+          "layers": [
+            0,
+            11
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-11/gain-0",
+          "layers": [
+            0,
+            11
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-16/gain-0.5",
+          "layers": [
+            0,
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-16/gain-0.1",
+          "layers": [
+            0,
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-16/gain-0.01",
+          "layers": [
+            0,
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-16/gain-0",
+          "layers": [
+            0,
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-25/gain-0.5",
+          "layers": [
+            0,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-25/gain-0.1",
+          "layers": [
+            0,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-25/gain-0.01",
+          "layers": [
+            0,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-25/gain-0",
+          "layers": [
+            0,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-26/gain-0.5",
+          "layers": [
+            0,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-26/gain-0.1",
+          "layers": [
+            0,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-26/gain-0.01",
+          "layers": [
+            0,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-26/gain-0",
+          "layers": [
+            0,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-3/gain-0.5",
+          "layers": [
+            1,
+            3
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-3/gain-0.1",
+          "layers": [
+            1,
+            3
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-3/gain-0.01",
+          "layers": [
+            1,
+            3
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-3/gain-0",
+          "layers": [
+            1,
+            3
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-11/gain-0.5",
+          "layers": [
+            1,
+            11
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-11/gain-0.1",
+          "layers": [
+            1,
+            11
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-11/gain-0.01",
+          "layers": [
+            1,
+            11
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-11/gain-0",
+          "layers": [
+            1,
+            11
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-16/gain-0.5",
+          "layers": [
+            1,
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-16/gain-0.1",
+          "layers": [
+            1,
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-16/gain-0.01",
+          "layers": [
+            1,
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-16/gain-0",
+          "layers": [
+            1,
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-25/gain-0.5",
+          "layers": [
+            1,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-25/gain-0.1",
+          "layers": [
+            1,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-25/gain-0.01",
+          "layers": [
+            1,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-25/gain-0",
+          "layers": [
+            1,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-26/gain-0.5",
+          "layers": [
+            1,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-26/gain-0.1",
+          "layers": [
+            1,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-26/gain-0.01",
+          "layers": [
+            1,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-26/gain-0",
+          "layers": [
+            1,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-3-11/gain-0.5",
+          "layers": [
+            3,
+            11
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-3-11/gain-0.1",
+          "layers": [
+            3,
+            11
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-3-11/gain-0.01",
+          "layers": [
+            3,
+            11
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-3-11/gain-0",
+          "layers": [
+            3,
+            11
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-3-16/gain-0.5",
+          "layers": [
+            3,
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-3-16/gain-0.1",
+          "layers": [
+            3,
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-3-16/gain-0.01",
+          "layers": [
+            3,
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-3-16/gain-0",
+          "layers": [
+            3,
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-3-25/gain-0.5",
+          "layers": [
+            3,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-3-25/gain-0.1",
+          "layers": [
+            3,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-3-25/gain-0.01",
+          "layers": [
+            3,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-3-25/gain-0",
+          "layers": [
+            3,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-3-26/gain-0.5",
+          "layers": [
+            3,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-3-26/gain-0.1",
+          "layers": [
+            3,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-3-26/gain-0.01",
+          "layers": [
+            3,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-3-26/gain-0",
+          "layers": [
+            3,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-11-16/gain-0.5",
+          "layers": [
+            11,
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-11-16/gain-0.1",
+          "layers": [
+            11,
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-11-16/gain-0.01",
+          "layers": [
+            11,
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-11-16/gain-0",
+          "layers": [
+            11,
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-11-25/gain-0.5",
+          "layers": [
+            11,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-11-25/gain-0.1",
+          "layers": [
+            11,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-11-25/gain-0.01",
+          "layers": [
+            11,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-11-25/gain-0",
+          "layers": [
+            11,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-11-26/gain-0.5",
+          "layers": [
+            11,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-11-26/gain-0.1",
+          "layers": [
+            11,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-11-26/gain-0.01",
+          "layers": [
+            11,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-11-26/gain-0",
+          "layers": [
+            11,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-16-25/gain-0.5",
+          "layers": [
+            16,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-16-25/gain-0.1",
+          "layers": [
+            16,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-16-25/gain-0.01",
+          "layers": [
+            16,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-16-25/gain-0",
+          "layers": [
+            16,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-16-26/gain-0.5",
+          "layers": [
+            16,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-16-26/gain-0.1",
+          "layers": [
+            16,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-16-26/gain-0.01",
+          "layers": [
+            16,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-16-26/gain-0",
+          "layers": [
+            16,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-25-26/gain-0.5",
+          "layers": [
+            25,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-25-26/gain-0.1",
+          "layers": [
+            25,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-25-26/gain-0.01",
+          "layers": [
+            25,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-25-26/gain-0",
+          "layers": [
+            25,
+            26
+          ],
+          "gain": 0.0
+        }
+      ],
+      "optimizer": "fresh Adam b1=.9/b2=.999 eps1e-8, joint stable clip1; LR gain .01 / old-rank32 3e-4;256 warmup",
+      "checkpoint": "local128; remote4096 or90min, phase end and deadline; current+Adam+best parameters; no full-weight copies",
+      "selection": "training best A16 among fixed endpoints; terminal A64/B32/C64/context; probe top3 by A64 then B32/C64/context",
+      "limitations": "A/B/C reused; no independent test, causal mechanism and rank+protection superiority not assumed",
+      "code": {
+        "scripts/m3q_t4_scale_campaign.py": "2ebd269c55ff90f15a60b50445d4831faf3ba3a9dd644b05f4737d97e4ed3831",
+        "extent/t4_scale_recovery.py": "a6eab501383151dee10a0698b25af3dad0712408cb27d86577c289750ac2be8c",
+        "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+        "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+        "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+        "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+        "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+        "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+        "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+        "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+        "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+        "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+        "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+        "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+      }
+    },
+    {
+      "experiment": 120,
+      "name": "scale-interventions",
+      "seed": 123,
+      "worker": 1,
+      "workers": 2,
+      "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+      "source": "EXP111 MAIN32768",
+      "source_replay_tolerance": 0.03,
+      "hook_background_tolerance": 0.01,
+      "inspection_relative_output_tolerance": 0.02,
+      "practical_nll_delta": 0.1,
+      "steps": 65536,
+      "eval_steps": [
+        0,
+        128,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        49152,
+        65536
+      ],
+      "train_panels": {
+        "A": [
+          "validation",
+          122880,
+          64
+        ],
+        "B": [
+          "validation",
+          180224,
+          32
+        ],
+        "C": [
+          "validation",
+          196608,
+          64
+        ],
+        "FIT": [
+          "train",
+          74973184,
+          16384
+        ]
+      },
+      "arm": null,
+      "probes": [
+        {
+          "key": "all/gain-0.75",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "spikes/gain-0.75",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "early/gain-0.75",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "middle/gain-0.75",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "late/gain-0.75",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-0/gain-0.75",
+          "layers": [
+            0
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-1/gain-0.75",
+          "layers": [
+            1
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-3/gain-0.75",
+          "layers": [
+            3
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-11/gain-0.75",
+          "layers": [
+            11
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-16/gain-0.75",
+          "layers": [
+            16
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-25/gain-0.75",
+          "layers": [
+            25
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-26/gain-0.75",
+          "layers": [
+            26
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-2/gain-0.75",
+          "layers": [
+            2
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-4/gain-0.75",
+          "layers": [
+            4
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-5/gain-0.75",
+          "layers": [
+            5
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-7/gain-0.75",
+          "layers": [
+            7
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-8/gain-0.75",
+          "layers": [
+            8
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-9/gain-0.75",
+          "layers": [
+            9
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-10/gain-0.75",
+          "layers": [
+            10
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-12/gain-0.75",
+          "layers": [
+            12
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-14/gain-0.75",
+          "layers": [
+            14
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-15/gain-0.75",
+          "layers": [
+            15
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-17/gain-0.75",
+          "layers": [
+            17
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-18/gain-0.75",
+          "layers": [
+            18
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-19/gain-0.75",
+          "layers": [
+            19
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-21/gain-0.75",
+          "layers": [
+            21
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-22/gain-0.75",
+          "layers": [
+            22
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-23/gain-0.75",
+          "layers": [
+            23
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "layer-24/gain-0.75",
+          "layers": [
+            24
+          ],
+          "gain": 0.75
+        },
+        {
+          "key": "all/gain-0.5",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "spikes/gain-0.5",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "early/gain-0.5",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "middle/gain-0.5",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "late/gain-0.5",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-0/gain-0.5",
+          "layers": [
+            0
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-1/gain-0.5",
+          "layers": [
+            1
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-3/gain-0.5",
+          "layers": [
+            3
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-11/gain-0.5",
+          "layers": [
+            11
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-16/gain-0.5",
+          "layers": [
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-25/gain-0.5",
+          "layers": [
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-26/gain-0.5",
+          "layers": [
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-2/gain-0.5",
+          "layers": [
+            2
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-4/gain-0.5",
+          "layers": [
+            4
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-5/gain-0.5",
+          "layers": [
+            5
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-7/gain-0.5",
+          "layers": [
+            7
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-8/gain-0.5",
+          "layers": [
+            8
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-9/gain-0.5",
+          "layers": [
+            9
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-10/gain-0.5",
+          "layers": [
+            10
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-12/gain-0.5",
+          "layers": [
+            12
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-14/gain-0.5",
+          "layers": [
+            14
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-15/gain-0.5",
+          "layers": [
+            15
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-17/gain-0.5",
+          "layers": [
+            17
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-18/gain-0.5",
+          "layers": [
+            18
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-19/gain-0.5",
+          "layers": [
+            19
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-21/gain-0.5",
+          "layers": [
+            21
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-22/gain-0.5",
+          "layers": [
+            22
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-23/gain-0.5",
+          "layers": [
+            23
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "layer-24/gain-0.5",
+          "layers": [
+            24
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "all/gain-0.25",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "spikes/gain-0.25",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "early/gain-0.25",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "middle/gain-0.25",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "late/gain-0.25",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-0/gain-0.25",
+          "layers": [
+            0
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-1/gain-0.25",
+          "layers": [
+            1
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-3/gain-0.25",
+          "layers": [
+            3
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-11/gain-0.25",
+          "layers": [
+            11
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-16/gain-0.25",
+          "layers": [
+            16
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-25/gain-0.25",
+          "layers": [
+            25
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-26/gain-0.25",
+          "layers": [
+            26
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-2/gain-0.25",
+          "layers": [
+            2
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-4/gain-0.25",
+          "layers": [
+            4
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-5/gain-0.25",
+          "layers": [
+            5
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-7/gain-0.25",
+          "layers": [
+            7
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-8/gain-0.25",
+          "layers": [
+            8
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-9/gain-0.25",
+          "layers": [
+            9
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-10/gain-0.25",
+          "layers": [
+            10
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-12/gain-0.25",
+          "layers": [
+            12
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-14/gain-0.25",
+          "layers": [
+            14
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-15/gain-0.25",
+          "layers": [
+            15
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-17/gain-0.25",
+          "layers": [
+            17
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-18/gain-0.25",
+          "layers": [
+            18
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-19/gain-0.25",
+          "layers": [
+            19
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-21/gain-0.25",
+          "layers": [
+            21
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-22/gain-0.25",
+          "layers": [
+            22
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-23/gain-0.25",
+          "layers": [
+            23
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "layer-24/gain-0.25",
+          "layers": [
+            24
+          ],
+          "gain": 0.25
+        },
+        {
+          "key": "all/gain-0.1",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "spikes/gain-0.1",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "early/gain-0.1",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "middle/gain-0.1",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "late/gain-0.1",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-0/gain-0.1",
+          "layers": [
+            0
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-1/gain-0.1",
+          "layers": [
+            1
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-3/gain-0.1",
+          "layers": [
+            3
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-11/gain-0.1",
+          "layers": [
+            11
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-16/gain-0.1",
+          "layers": [
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-25/gain-0.1",
+          "layers": [
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-26/gain-0.1",
+          "layers": [
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-2/gain-0.1",
+          "layers": [
+            2
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-4/gain-0.1",
+          "layers": [
+            4
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-5/gain-0.1",
+          "layers": [
+            5
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-7/gain-0.1",
+          "layers": [
+            7
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-8/gain-0.1",
+          "layers": [
+            8
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-9/gain-0.1",
+          "layers": [
+            9
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-10/gain-0.1",
+          "layers": [
+            10
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-12/gain-0.1",
+          "layers": [
+            12
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-14/gain-0.1",
+          "layers": [
+            14
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-15/gain-0.1",
+          "layers": [
+            15
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-17/gain-0.1",
+          "layers": [
+            17
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-18/gain-0.1",
+          "layers": [
+            18
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-19/gain-0.1",
+          "layers": [
+            19
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-21/gain-0.1",
+          "layers": [
+            21
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-22/gain-0.1",
+          "layers": [
+            22
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-23/gain-0.1",
+          "layers": [
+            23
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "layer-24/gain-0.1",
+          "layers": [
+            24
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "all/gain-0.03",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "spikes/gain-0.03",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "early/gain-0.03",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "middle/gain-0.03",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "late/gain-0.03",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-0/gain-0.03",
+          "layers": [
+            0
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-1/gain-0.03",
+          "layers": [
+            1
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-3/gain-0.03",
+          "layers": [
+            3
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-11/gain-0.03",
+          "layers": [
+            11
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-16/gain-0.03",
+          "layers": [
+            16
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-25/gain-0.03",
+          "layers": [
+            25
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-26/gain-0.03",
+          "layers": [
+            26
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-2/gain-0.03",
+          "layers": [
+            2
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-4/gain-0.03",
+          "layers": [
+            4
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-5/gain-0.03",
+          "layers": [
+            5
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-7/gain-0.03",
+          "layers": [
+            7
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-8/gain-0.03",
+          "layers": [
+            8
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-9/gain-0.03",
+          "layers": [
+            9
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-10/gain-0.03",
+          "layers": [
+            10
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-12/gain-0.03",
+          "layers": [
+            12
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-14/gain-0.03",
+          "layers": [
+            14
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-15/gain-0.03",
+          "layers": [
+            15
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-17/gain-0.03",
+          "layers": [
+            17
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-18/gain-0.03",
+          "layers": [
+            18
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-19/gain-0.03",
+          "layers": [
+            19
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-21/gain-0.03",
+          "layers": [
+            21
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-22/gain-0.03",
+          "layers": [
+            22
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-23/gain-0.03",
+          "layers": [
+            23
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "layer-24/gain-0.03",
+          "layers": [
+            24
+          ],
+          "gain": 0.03
+        },
+        {
+          "key": "all/gain-0.01",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "spikes/gain-0.01",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "early/gain-0.01",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "middle/gain-0.01",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "late/gain-0.01",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-0/gain-0.01",
+          "layers": [
+            0
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-1/gain-0.01",
+          "layers": [
+            1
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-3/gain-0.01",
+          "layers": [
+            3
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-11/gain-0.01",
+          "layers": [
+            11
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-16/gain-0.01",
+          "layers": [
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-25/gain-0.01",
+          "layers": [
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-26/gain-0.01",
+          "layers": [
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-2/gain-0.01",
+          "layers": [
+            2
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-4/gain-0.01",
+          "layers": [
+            4
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-5/gain-0.01",
+          "layers": [
+            5
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-7/gain-0.01",
+          "layers": [
+            7
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-8/gain-0.01",
+          "layers": [
+            8
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-9/gain-0.01",
+          "layers": [
+            9
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-10/gain-0.01",
+          "layers": [
+            10
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-12/gain-0.01",
+          "layers": [
+            12
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-14/gain-0.01",
+          "layers": [
+            14
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-15/gain-0.01",
+          "layers": [
+            15
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-17/gain-0.01",
+          "layers": [
+            17
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-18/gain-0.01",
+          "layers": [
+            18
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-19/gain-0.01",
+          "layers": [
+            19
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-21/gain-0.01",
+          "layers": [
+            21
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-22/gain-0.01",
+          "layers": [
+            22
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-23/gain-0.01",
+          "layers": [
+            23
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "layer-24/gain-0.01",
+          "layers": [
+            24
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "all/gain-0.003",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "spikes/gain-0.003",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "early/gain-0.003",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "middle/gain-0.003",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "late/gain-0.003",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-0/gain-0.003",
+          "layers": [
+            0
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-1/gain-0.003",
+          "layers": [
+            1
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-3/gain-0.003",
+          "layers": [
+            3
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-11/gain-0.003",
+          "layers": [
+            11
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-16/gain-0.003",
+          "layers": [
+            16
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-25/gain-0.003",
+          "layers": [
+            25
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-26/gain-0.003",
+          "layers": [
+            26
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-2/gain-0.003",
+          "layers": [
+            2
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-4/gain-0.003",
+          "layers": [
+            4
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-5/gain-0.003",
+          "layers": [
+            5
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-7/gain-0.003",
+          "layers": [
+            7
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-8/gain-0.003",
+          "layers": [
+            8
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-9/gain-0.003",
+          "layers": [
+            9
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-10/gain-0.003",
+          "layers": [
+            10
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-12/gain-0.003",
+          "layers": [
+            12
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-14/gain-0.003",
+          "layers": [
+            14
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-15/gain-0.003",
+          "layers": [
+            15
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-17/gain-0.003",
+          "layers": [
+            17
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-18/gain-0.003",
+          "layers": [
+            18
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-19/gain-0.003",
+          "layers": [
+            19
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-21/gain-0.003",
+          "layers": [
+            21
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-22/gain-0.003",
+          "layers": [
+            22
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-23/gain-0.003",
+          "layers": [
+            23
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "layer-24/gain-0.003",
+          "layers": [
+            24
+          ],
+          "gain": 0.003
+        },
+        {
+          "key": "all/gain-0.001",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "spikes/gain-0.001",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "early/gain-0.001",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "middle/gain-0.001",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "late/gain-0.001",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-0/gain-0.001",
+          "layers": [
+            0
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-1/gain-0.001",
+          "layers": [
+            1
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-3/gain-0.001",
+          "layers": [
+            3
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-11/gain-0.001",
+          "layers": [
+            11
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-16/gain-0.001",
+          "layers": [
+            16
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-25/gain-0.001",
+          "layers": [
+            25
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-26/gain-0.001",
+          "layers": [
+            26
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-2/gain-0.001",
+          "layers": [
+            2
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-4/gain-0.001",
+          "layers": [
+            4
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-5/gain-0.001",
+          "layers": [
+            5
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-7/gain-0.001",
+          "layers": [
+            7
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-8/gain-0.001",
+          "layers": [
+            8
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-9/gain-0.001",
+          "layers": [
+            9
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-10/gain-0.001",
+          "layers": [
+            10
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-12/gain-0.001",
+          "layers": [
+            12
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-14/gain-0.001",
+          "layers": [
+            14
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-15/gain-0.001",
+          "layers": [
+            15
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-17/gain-0.001",
+          "layers": [
+            17
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-18/gain-0.001",
+          "layers": [
+            18
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-19/gain-0.001",
+          "layers": [
+            19
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-21/gain-0.001",
+          "layers": [
+            21
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-22/gain-0.001",
+          "layers": [
+            22
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-23/gain-0.001",
+          "layers": [
+            23
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "layer-24/gain-0.001",
+          "layers": [
+            24
+          ],
+          "gain": 0.001
+        },
+        {
+          "key": "all/gain-0.0001",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "spikes/gain-0.0001",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "early/gain-0.0001",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "middle/gain-0.0001",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "late/gain-0.0001",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-0/gain-0.0001",
+          "layers": [
+            0
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-1/gain-0.0001",
+          "layers": [
+            1
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-3/gain-0.0001",
+          "layers": [
+            3
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-11/gain-0.0001",
+          "layers": [
+            11
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-16/gain-0.0001",
+          "layers": [
+            16
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-25/gain-0.0001",
+          "layers": [
+            25
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-26/gain-0.0001",
+          "layers": [
+            26
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-2/gain-0.0001",
+          "layers": [
+            2
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-4/gain-0.0001",
+          "layers": [
+            4
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-5/gain-0.0001",
+          "layers": [
+            5
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-7/gain-0.0001",
+          "layers": [
+            7
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-8/gain-0.0001",
+          "layers": [
+            8
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-9/gain-0.0001",
+          "layers": [
+            9
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-10/gain-0.0001",
+          "layers": [
+            10
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-12/gain-0.0001",
+          "layers": [
+            12
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-14/gain-0.0001",
+          "layers": [
+            14
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-15/gain-0.0001",
+          "layers": [
+            15
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-17/gain-0.0001",
+          "layers": [
+            17
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-18/gain-0.0001",
+          "layers": [
+            18
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-19/gain-0.0001",
+          "layers": [
+            19
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-21/gain-0.0001",
+          "layers": [
+            21
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-22/gain-0.0001",
+          "layers": [
+            22
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-23/gain-0.0001",
+          "layers": [
+            23
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "layer-24/gain-0.0001",
+          "layers": [
+            24
+          ],
+          "gain": 0.0001
+        },
+        {
+          "key": "all/gain-1e-05",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "spikes/gain-1e-05",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "early/gain-1e-05",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "middle/gain-1e-05",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "late/gain-1e-05",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-0/gain-1e-05",
+          "layers": [
+            0
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-1/gain-1e-05",
+          "layers": [
+            1
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-3/gain-1e-05",
+          "layers": [
+            3
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-11/gain-1e-05",
+          "layers": [
+            11
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-16/gain-1e-05",
+          "layers": [
+            16
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-25/gain-1e-05",
+          "layers": [
+            25
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-26/gain-1e-05",
+          "layers": [
+            26
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-2/gain-1e-05",
+          "layers": [
+            2
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-4/gain-1e-05",
+          "layers": [
+            4
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-5/gain-1e-05",
+          "layers": [
+            5
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-7/gain-1e-05",
+          "layers": [
+            7
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-8/gain-1e-05",
+          "layers": [
+            8
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-9/gain-1e-05",
+          "layers": [
+            9
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-10/gain-1e-05",
+          "layers": [
+            10
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-12/gain-1e-05",
+          "layers": [
+            12
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-14/gain-1e-05",
+          "layers": [
+            14
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-15/gain-1e-05",
+          "layers": [
+            15
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-17/gain-1e-05",
+          "layers": [
+            17
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-18/gain-1e-05",
+          "layers": [
+            18
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-19/gain-1e-05",
+          "layers": [
+            19
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-21/gain-1e-05",
+          "layers": [
+            21
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-22/gain-1e-05",
+          "layers": [
+            22
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-23/gain-1e-05",
+          "layers": [
+            23
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "layer-24/gain-1e-05",
+          "layers": [
+            24
+          ],
+          "gain": 1e-05
+        },
+        {
+          "key": "all/gain-1e-06",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "spikes/gain-1e-06",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "early/gain-1e-06",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "middle/gain-1e-06",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "late/gain-1e-06",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-0/gain-1e-06",
+          "layers": [
+            0
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-1/gain-1e-06",
+          "layers": [
+            1
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-3/gain-1e-06",
+          "layers": [
+            3
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-11/gain-1e-06",
+          "layers": [
+            11
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-16/gain-1e-06",
+          "layers": [
+            16
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-25/gain-1e-06",
+          "layers": [
+            25
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-26/gain-1e-06",
+          "layers": [
+            26
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-2/gain-1e-06",
+          "layers": [
+            2
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-4/gain-1e-06",
+          "layers": [
+            4
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-5/gain-1e-06",
+          "layers": [
+            5
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-7/gain-1e-06",
+          "layers": [
+            7
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-8/gain-1e-06",
+          "layers": [
+            8
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-9/gain-1e-06",
+          "layers": [
+            9
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-10/gain-1e-06",
+          "layers": [
+            10
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-12/gain-1e-06",
+          "layers": [
+            12
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-14/gain-1e-06",
+          "layers": [
+            14
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-15/gain-1e-06",
+          "layers": [
+            15
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-17/gain-1e-06",
+          "layers": [
+            17
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-18/gain-1e-06",
+          "layers": [
+            18
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-19/gain-1e-06",
+          "layers": [
+            19
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-21/gain-1e-06",
+          "layers": [
+            21
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-22/gain-1e-06",
+          "layers": [
+            22
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-23/gain-1e-06",
+          "layers": [
+            23
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "layer-24/gain-1e-06",
+          "layers": [
+            24
+          ],
+          "gain": 1e-06
+        },
+        {
+          "key": "all/gain-1e-08",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "spikes/gain-1e-08",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "early/gain-1e-08",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "middle/gain-1e-08",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "late/gain-1e-08",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-0/gain-1e-08",
+          "layers": [
+            0
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-1/gain-1e-08",
+          "layers": [
+            1
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-3/gain-1e-08",
+          "layers": [
+            3
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-11/gain-1e-08",
+          "layers": [
+            11
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-16/gain-1e-08",
+          "layers": [
+            16
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-25/gain-1e-08",
+          "layers": [
+            25
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-26/gain-1e-08",
+          "layers": [
+            26
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-2/gain-1e-08",
+          "layers": [
+            2
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-4/gain-1e-08",
+          "layers": [
+            4
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-5/gain-1e-08",
+          "layers": [
+            5
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-7/gain-1e-08",
+          "layers": [
+            7
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-8/gain-1e-08",
+          "layers": [
+            8
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-9/gain-1e-08",
+          "layers": [
+            9
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-10/gain-1e-08",
+          "layers": [
+            10
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-12/gain-1e-08",
+          "layers": [
+            12
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-14/gain-1e-08",
+          "layers": [
+            14
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-15/gain-1e-08",
+          "layers": [
+            15
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-17/gain-1e-08",
+          "layers": [
+            17
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-18/gain-1e-08",
+          "layers": [
+            18
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-19/gain-1e-08",
+          "layers": [
+            19
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-21/gain-1e-08",
+          "layers": [
+            21
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-22/gain-1e-08",
+          "layers": [
+            22
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-23/gain-1e-08",
+          "layers": [
+            23
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "layer-24/gain-1e-08",
+          "layers": [
+            24
+          ],
+          "gain": 1e-08
+        },
+        {
+          "key": "all/gain-0",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "spikes/gain-0",
+          "layers": [
+            0,
+            1,
+            3,
+            11,
+            16,
+            25,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "early/gain-0",
+          "layers": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            7
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "middle/gain-0",
+          "layers": [
+            8,
+            9,
+            10,
+            11,
+            12,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "late/gain-0",
+          "layers": [
+            21,
+            22,
+            23,
+            24,
+            25,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-0/gain-0",
+          "layers": [
+            0
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-1/gain-0",
+          "layers": [
+            1
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-3/gain-0",
+          "layers": [
+            3
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-11/gain-0",
+          "layers": [
+            11
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-16/gain-0",
+          "layers": [
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-25/gain-0",
+          "layers": [
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-26/gain-0",
+          "layers": [
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-2/gain-0",
+          "layers": [
+            2
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-4/gain-0",
+          "layers": [
+            4
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-5/gain-0",
+          "layers": [
+            5
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-7/gain-0",
+          "layers": [
+            7
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-8/gain-0",
+          "layers": [
+            8
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-9/gain-0",
+          "layers": [
+            9
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-10/gain-0",
+          "layers": [
+            10
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-12/gain-0",
+          "layers": [
+            12
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-14/gain-0",
+          "layers": [
+            14
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-15/gain-0",
+          "layers": [
+            15
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-17/gain-0",
+          "layers": [
+            17
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-18/gain-0",
+          "layers": [
+            18
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-19/gain-0",
+          "layers": [
+            19
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-21/gain-0",
+          "layers": [
+            21
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-22/gain-0",
+          "layers": [
+            22
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-23/gain-0",
+          "layers": [
+            23
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "layer-24/gain-0",
+          "layers": [
+            24
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-1/gain-0.5",
+          "layers": [
+            0,
+            1
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-1/gain-0.1",
+          "layers": [
+            0,
+            1
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-1/gain-0.01",
+          "layers": [
+            0,
+            1
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-1/gain-0",
+          "layers": [
+            0,
+            1
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-3/gain-0.5",
+          "layers": [
+            0,
+            3
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-3/gain-0.1",
+          "layers": [
+            0,
+            3
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-3/gain-0.01",
+          "layers": [
+            0,
+            3
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-3/gain-0",
+          "layers": [
+            0,
+            3
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-11/gain-0.5",
+          "layers": [
+            0,
+            11
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-11/gain-0.1",
+          "layers": [
+            0,
+            11
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-11/gain-0.01",
+          "layers": [
+            0,
+            11
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-11/gain-0",
+          "layers": [
+            0,
+            11
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-16/gain-0.5",
+          "layers": [
+            0,
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-16/gain-0.1",
+          "layers": [
+            0,
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-16/gain-0.01",
+          "layers": [
+            0,
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-16/gain-0",
+          "layers": [
+            0,
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-25/gain-0.5",
+          "layers": [
+            0,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-25/gain-0.1",
+          "layers": [
+            0,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-25/gain-0.01",
+          "layers": [
+            0,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-25/gain-0",
+          "layers": [
+            0,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-0-26/gain-0.5",
+          "layers": [
+            0,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-0-26/gain-0.1",
+          "layers": [
+            0,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-0-26/gain-0.01",
+          "layers": [
+            0,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-0-26/gain-0",
+          "layers": [
+            0,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-3/gain-0.5",
+          "layers": [
+            1,
+            3
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-3/gain-0.1",
+          "layers": [
+            1,
+            3
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-3/gain-0.01",
+          "layers": [
+            1,
+            3
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-3/gain-0",
+          "layers": [
+            1,
+            3
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-11/gain-0.5",
+          "layers": [
+            1,
+            11
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-11/gain-0.1",
+          "layers": [
+            1,
+            11
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-11/gain-0.01",
+          "layers": [
+            1,
+            11
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-11/gain-0",
+          "layers": [
+            1,
+            11
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-16/gain-0.5",
+          "layers": [
+            1,
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-16/gain-0.1",
+          "layers": [
+            1,
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-16/gain-0.01",
+          "layers": [
+            1,
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-16/gain-0",
+          "layers": [
+            1,
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-25/gain-0.5",
+          "layers": [
+            1,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-25/gain-0.1",
+          "layers": [
+            1,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-25/gain-0.01",
+          "layers": [
+            1,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-25/gain-0",
+          "layers": [
+            1,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-1-26/gain-0.5",
+          "layers": [
+            1,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-1-26/gain-0.1",
+          "layers": [
+            1,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-1-26/gain-0.01",
+          "layers": [
+            1,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-1-26/gain-0",
+          "layers": [
+            1,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-3-11/gain-0.5",
+          "layers": [
+            3,
+            11
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-3-11/gain-0.1",
+          "layers": [
+            3,
+            11
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-3-11/gain-0.01",
+          "layers": [
+            3,
+            11
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-3-11/gain-0",
+          "layers": [
+            3,
+            11
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-3-16/gain-0.5",
+          "layers": [
+            3,
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-3-16/gain-0.1",
+          "layers": [
+            3,
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-3-16/gain-0.01",
+          "layers": [
+            3,
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-3-16/gain-0",
+          "layers": [
+            3,
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-3-25/gain-0.5",
+          "layers": [
+            3,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-3-25/gain-0.1",
+          "layers": [
+            3,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-3-25/gain-0.01",
+          "layers": [
+            3,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-3-25/gain-0",
+          "layers": [
+            3,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-3-26/gain-0.5",
+          "layers": [
+            3,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-3-26/gain-0.1",
+          "layers": [
+            3,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-3-26/gain-0.01",
+          "layers": [
+            3,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-3-26/gain-0",
+          "layers": [
+            3,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-11-16/gain-0.5",
+          "layers": [
+            11,
+            16
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-11-16/gain-0.1",
+          "layers": [
+            11,
+            16
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-11-16/gain-0.01",
+          "layers": [
+            11,
+            16
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-11-16/gain-0",
+          "layers": [
+            11,
+            16
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-11-25/gain-0.5",
+          "layers": [
+            11,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-11-25/gain-0.1",
+          "layers": [
+            11,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-11-25/gain-0.01",
+          "layers": [
+            11,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-11-25/gain-0",
+          "layers": [
+            11,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-11-26/gain-0.5",
+          "layers": [
+            11,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-11-26/gain-0.1",
+          "layers": [
+            11,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-11-26/gain-0.01",
+          "layers": [
+            11,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-11-26/gain-0",
+          "layers": [
+            11,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-16-25/gain-0.5",
+          "layers": [
+            16,
+            25
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-16-25/gain-0.1",
+          "layers": [
+            16,
+            25
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-16-25/gain-0.01",
+          "layers": [
+            16,
+            25
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-16-25/gain-0",
+          "layers": [
+            16,
+            25
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-16-26/gain-0.5",
+          "layers": [
+            16,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-16-26/gain-0.1",
+          "layers": [
+            16,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-16-26/gain-0.01",
+          "layers": [
+            16,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-16-26/gain-0",
+          "layers": [
+            16,
+            26
+          ],
+          "gain": 0.0
+        },
+        {
+          "key": "pair-25-26/gain-0.5",
+          "layers": [
+            25,
+            26
+          ],
+          "gain": 0.5
+        },
+        {
+          "key": "pair-25-26/gain-0.1",
+          "layers": [
+            25,
+            26
+          ],
+          "gain": 0.1
+        },
+        {
+          "key": "pair-25-26/gain-0.01",
+          "layers": [
+            25,
+            26
+          ],
+          "gain": 0.01
+        },
+        {
+          "key": "pair-25-26/gain-0",
+          "layers": [
+            25,
+            26
+          ],
+          "gain": 0.0
+        }
+      ],
+      "optimizer": "fresh Adam b1=.9/b2=.999 eps1e-8, joint stable clip1; LR gain .01 / old-rank32 3e-4;256 warmup",
+      "checkpoint": "local128; remote4096 or90min, phase end and deadline; current+Adam+best parameters; no full-weight copies",
+      "selection": "training best A16 among fixed endpoints; terminal A64/B32/C64/context; probe top3 by A64 then B32/C64/context",
+      "limitations": "A/B/C reused; no independent test, causal mechanism and rank+protection superiority not assumed",
+      "code": {
+        "scripts/m3q_t4_scale_campaign.py": "2ebd269c55ff90f15a60b50445d4831faf3ba3a9dd644b05f4737d97e4ed3831",
+        "extent/t4_scale_recovery.py": "a6eab501383151dee10a0698b25af3dad0712408cb27d86577c289750ac2be8c",
+        "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+        "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+        "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+        "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+        "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+        "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+        "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+        "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+        "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+        "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+        "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+        "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+      }
+    }
+  ],
+  "121": [
+    {
+      "experiment": 121,
+      "name": "learn-scales",
+      "seed": 123,
+      "worker": 0,
+      "workers": 2,
+      "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+      "source": "EXP111 MAIN32768",
+      "source_replay_tolerance": 0.03,
+      "hook_background_tolerance": 0.01,
+      "inspection_relative_output_tolerance": 0.02,
+      "practical_nll_delta": 0.1,
+      "steps": 65536,
+      "eval_steps": [
+        0,
+        128,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        49152,
+        65536
+      ],
+      "train_panels": {
+        "A": [
+          "validation",
+          122880,
+          64
+        ],
+        "B": [
+          "validation",
+          180224,
+          32
+        ],
+        "C": [
+          "validation",
+          196608,
+          64
+        ],
+        "FIT": [
+          "train",
+          74973184,
+          16384
+        ]
+      },
+      "arm": {
+        "name": "SCALE-CE",
+        "scales": true,
+        "lora": false,
+        "penalty": 0.0,
+        "alpha": 0.0,
+        "scale_lr": 0.01
+      },
+      "probes": null,
+      "optimizer": "fresh Adam b1=.9/b2=.999 eps1e-8, joint stable clip1; LR gain .01 / old-rank32 3e-4;256 warmup",
+      "checkpoint": "local128; remote4096 or90min, phase end and deadline; current+Adam+best parameters; no full-weight copies",
+      "selection": "training best A16 among fixed endpoints; terminal A64/B32/C64/context; probe top3 by A64 then B32/C64/context",
+      "limitations": "A/B/C reused; no independent test, causal mechanism and rank+protection superiority not assumed",
+      "code": {
+        "scripts/m3q_t4_scale_campaign.py": "2ebd269c55ff90f15a60b50445d4831faf3ba3a9dd644b05f4737d97e4ed3831",
+        "extent/t4_scale_recovery.py": "a6eab501383151dee10a0698b25af3dad0712408cb27d86577c289750ac2be8c",
+        "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+        "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+        "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+        "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+        "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+        "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+        "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+        "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+        "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+        "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+        "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+        "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+      }
+    },
+    {
+      "experiment": 121,
+      "name": "learn-scales",
+      "seed": 123,
+      "worker": 1,
+      "workers": 2,
+      "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+      "source": "EXP111 MAIN32768",
+      "source_replay_tolerance": 0.03,
+      "hook_background_tolerance": 0.01,
+      "inspection_relative_output_tolerance": 0.02,
+      "practical_nll_delta": 0.1,
+      "steps": 65536,
+      "eval_steps": [
+        0,
+        128,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        49152,
+        65536
+      ],
+      "train_panels": {
+        "A": [
+          "validation",
+          122880,
+          64
+        ],
+        "B": [
+          "validation",
+          180224,
+          32
+        ],
+        "C": [
+          "validation",
+          196608,
+          64
+        ],
+        "FIT": [
+          "train",
+          74973184,
+          16384
+        ]
+      },
+      "arm": {
+        "name": "SCALE-CE-PENALTY",
+        "scales": true,
+        "lora": false,
+        "penalty": 0.01,
+        "alpha": 0.0,
+        "scale_lr": 0.01
+      },
+      "probes": null,
+      "optimizer": "fresh Adam b1=.9/b2=.999 eps1e-8, joint stable clip1; LR gain .01 / old-rank32 3e-4;256 warmup",
+      "checkpoint": "local128; remote4096 or90min, phase end and deadline; current+Adam+best parameters; no full-weight copies",
+      "selection": "training best A16 among fixed endpoints; terminal A64/B32/C64/context; probe top3 by A64 then B32/C64/context",
+      "limitations": "A/B/C reused; no independent test, causal mechanism and rank+protection superiority not assumed",
+      "code": {
+        "scripts/m3q_t4_scale_campaign.py": "2ebd269c55ff90f15a60b50445d4831faf3ba3a9dd644b05f4737d97e4ed3831",
+        "extent/t4_scale_recovery.py": "a6eab501383151dee10a0698b25af3dad0712408cb27d86577c289750ac2be8c",
+        "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+        "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+        "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+        "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+        "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+        "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+        "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+        "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+        "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+        "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+        "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+        "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+      }
+    }
+  ],
+  "122": [
+    {
+      "experiment": 122,
+      "name": "rank32-scale-control",
+      "seed": 123,
+      "worker": 0,
+      "workers": 2,
+      "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+      "source": "EXP111 MAIN32768",
+      "source_replay_tolerance": 0.03,
+      "hook_background_tolerance": 0.01,
+      "inspection_relative_output_tolerance": 0.02,
+      "practical_nll_delta": 0.1,
+      "steps": 65536,
+      "eval_steps": [
+        0,
+        128,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        49152,
+        65536
+      ],
+      "train_panels": {
+        "A": [
+          "validation",
+          122880,
+          64
+        ],
+        "B": [
+          "validation",
+          180224,
+          32
+        ],
+        "C": [
+          "validation",
+          196608,
+          64
+        ],
+        "FIT": [
+          "train",
+          74973184,
+          16384
+        ]
+      },
+      "arm": {
+        "name": "R32-CE",
+        "scales": false,
+        "lora": true,
+        "penalty": 0.0,
+        "alpha": 0.0,
+        "scale_lr": 0.01
+      },
+      "probes": null,
+      "optimizer": "fresh Adam b1=.9/b2=.999 eps1e-8, joint stable clip1; LR gain .01 / old-rank32 3e-4;256 warmup",
+      "checkpoint": "local128; remote4096 or90min, phase end and deadline; current+Adam+best parameters; no full-weight copies",
+      "selection": "training best A16 among fixed endpoints; terminal A64/B32/C64/context; probe top3 by A64 then B32/C64/context",
+      "limitations": "A/B/C reused; no independent test, causal mechanism and rank+protection superiority not assumed",
+      "code": {
+        "scripts/m3q_t4_scale_campaign.py": "2ebd269c55ff90f15a60b50445d4831faf3ba3a9dd644b05f4737d97e4ed3831",
+        "extent/t4_scale_recovery.py": "a6eab501383151dee10a0698b25af3dad0712408cb27d86577c289750ac2be8c",
+        "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+        "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+        "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+        "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+        "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+        "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+        "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+        "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+        "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+        "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+        "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+        "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+      }
+    },
+    {
+      "experiment": 122,
+      "name": "rank32-scale-control",
+      "seed": 123,
+      "worker": 1,
+      "workers": 2,
+      "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+      "source": "EXP111 MAIN32768",
+      "source_replay_tolerance": 0.03,
+      "hook_background_tolerance": 0.01,
+      "inspection_relative_output_tolerance": 0.02,
+      "practical_nll_delta": 0.1,
+      "steps": 65536,
+      "eval_steps": [
+        0,
+        128,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        49152,
+        65536
+      ],
+      "train_panels": {
+        "A": [
+          "validation",
+          122880,
+          64
+        ],
+        "B": [
+          "validation",
+          180224,
+          32
+        ],
+        "C": [
+          "validation",
+          196608,
+          64
+        ],
+        "FIT": [
+          "train",
+          74973184,
+          16384
+        ]
+      },
+      "arm": {
+        "name": "R32-SCALE-CE",
+        "scales": true,
+        "lora": true,
+        "penalty": 0.0,
+        "alpha": 0.0,
+        "scale_lr": 0.01
+      },
+      "probes": null,
+      "optimizer": "fresh Adam b1=.9/b2=.999 eps1e-8, joint stable clip1; LR gain .01 / old-rank32 3e-4;256 warmup",
+      "checkpoint": "local128; remote4096 or90min, phase end and deadline; current+Adam+best parameters; no full-weight copies",
+      "selection": "training best A16 among fixed endpoints; terminal A64/B32/C64/context; probe top3 by A64 then B32/C64/context",
+      "limitations": "A/B/C reused; no independent test, causal mechanism and rank+protection superiority not assumed",
+      "code": {
+        "scripts/m3q_t4_scale_campaign.py": "2ebd269c55ff90f15a60b50445d4831faf3ba3a9dd644b05f4737d97e4ed3831",
+        "extent/t4_scale_recovery.py": "a6eab501383151dee10a0698b25af3dad0712408cb27d86577c289750ac2be8c",
+        "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+        "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+        "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+        "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+        "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+        "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+        "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+        "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+        "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+        "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+        "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+        "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+      }
+    }
+  ],
+  "123": [
+    {
+      "experiment": 123,
+      "name": "scale-logit-distillation",
+      "seed": 123,
+      "worker": 0,
+      "workers": 2,
+      "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+      "source": "EXP111 MAIN32768",
+      "source_replay_tolerance": 0.03,
+      "hook_background_tolerance": 0.01,
+      "inspection_relative_output_tolerance": 0.02,
+      "practical_nll_delta": 0.1,
+      "steps": 65536,
+      "eval_steps": [
+        0,
+        128,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        49152,
+        65536
+      ],
+      "train_panels": {
+        "A": [
+          "validation",
+          122880,
+          64
+        ],
+        "B": [
+          "validation",
+          180224,
+          32
+        ],
+        "C": [
+          "validation",
+          196608,
+          64
+        ],
+        "FIT": [
+          "train",
+          74973184,
+          16384
+        ]
+      },
+      "arm": {
+        "name": "R32-SCALE-KL10",
+        "scales": true,
+        "lora": true,
+        "penalty": 0.0,
+        "alpha": 0.1,
+        "scale_lr": 0.01
+      },
+      "probes": null,
+      "optimizer": "fresh Adam b1=.9/b2=.999 eps1e-8, joint stable clip1; LR gain .01 / old-rank32 3e-4;256 warmup",
+      "checkpoint": "local128; remote4096 or90min, phase end and deadline; current+Adam+best parameters; no full-weight copies",
+      "selection": "training best A16 among fixed endpoints; terminal A64/B32/C64/context; probe top3 by A64 then B32/C64/context",
+      "limitations": "A/B/C reused; no independent test, causal mechanism and rank+protection superiority not assumed",
+      "code": {
+        "scripts/m3q_t4_scale_campaign.py": "2ebd269c55ff90f15a60b50445d4831faf3ba3a9dd644b05f4737d97e4ed3831",
+        "extent/t4_scale_recovery.py": "a6eab501383151dee10a0698b25af3dad0712408cb27d86577c289750ac2be8c",
+        "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+        "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+        "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+        "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+        "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+        "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+        "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+        "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+        "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+        "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+        "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+        "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+      }
+    },
+    {
+      "experiment": 123,
+      "name": "scale-logit-distillation",
+      "seed": 123,
+      "worker": 1,
+      "workers": 2,
+      "source_pin_sha": "e6a9eb1015fcac46b2a7c8218e6229a611da034b5fac37cca68a0833658d7ffd",
+      "source": "EXP111 MAIN32768",
+      "source_replay_tolerance": 0.03,
+      "hook_background_tolerance": 0.01,
+      "inspection_relative_output_tolerance": 0.02,
+      "practical_nll_delta": 0.1,
+      "steps": 65536,
+      "eval_steps": [
+        0,
+        128,
+        512,
+        1024,
+        2048,
+        4096,
+        8192,
+        16384,
+        32768,
+        49152,
+        65536
+      ],
+      "train_panels": {
+        "A": [
+          "validation",
+          122880,
+          64
+        ],
+        "B": [
+          "validation",
+          180224,
+          32
+        ],
+        "C": [
+          "validation",
+          196608,
+          64
+        ],
+        "FIT": [
+          "train",
+          74973184,
+          16384
+        ]
+      },
+      "arm": {
+        "name": "R32-SCALE-KL50",
+        "scales": true,
+        "lora": true,
+        "penalty": 0.0,
+        "alpha": 0.5,
+        "scale_lr": 0.01
+      },
+      "probes": null,
+      "optimizer": "fresh Adam b1=.9/b2=.999 eps1e-8, joint stable clip1; LR gain .01 / old-rank32 3e-4;256 warmup",
+      "checkpoint": "local128; remote4096 or90min, phase end and deadline; current+Adam+best parameters; no full-weight copies",
+      "selection": "training best A16 among fixed endpoints; terminal A64/B32/C64/context; probe top3 by A64 then B32/C64/context",
+      "limitations": "A/B/C reused; no independent test, causal mechanism and rank+protection superiority not assumed",
+      "code": {
+        "scripts/m3q_t4_scale_campaign.py": "2ebd269c55ff90f15a60b50445d4831faf3ba3a9dd644b05f4737d97e4ed3831",
+        "extent/t4_scale_recovery.py": "a6eab501383151dee10a0698b25af3dad0712408cb27d86577c289750ac2be8c",
+        "extent/t4_scale_data.py": "b7a45d595aebb761194d08db48043a7a93548c8b901b296332f1948066985c7e",
+        "scripts/m3q_t4_campaign.py": "48cb523b911e740fdde6e7fdef62f17a2933ccc0f4f620f5779a112623069ace",
+        "extent/t4_patient.py": "61a6672503d77a0990deaade3a1954e6e38e2ec9c2546280755ce3388d56073e",
+        "extent/plateau_forensics.py": "22e479851f9666cadcc0eb34457b40e00a52f68147b371b8bc0f33d3fc045226",
+        "extent/layers/mamba3.py": "383eda22b0962a04983d3f5df7d57b59bcc890fff1f92bb634522e8799c5fcc6",
+        "extent/layers/common.py": "e53551da27e0093ac7077f88719801eef25e2b4bf597b1aba365f9a496a1f4ae",
+        "extent/qwen3_teacher.py": "a00a022500a266a83a4273e286c57a7219f1908d7c4271b081b274e6fe3772b1",
+        "extent/stable_gradient_clip.py": "cf69f74b5d89a9139ab7042816571925f110c2dcaa599f7948af907a3a2c32a0",
+        "extent/recovery_durability.py": "45bc5111abc52dba39d30641dc51ee889cfd95be1372a080e90b063cc85e1798",
+        "extent/chunked_checkpoint.py": "e72b6cd0edb8fc8057554540234c3c7683f1cb7c7929c3bf6858c18f16a2d6b5",
+        "extent/hf_artifact_sync.py": "b85b8d14e92f708a97135be7cf114fff053a41719d0a5e29319f86d2024125f8",
+        "requirements-t4.txt": "6ae693a10b8978fa4abe36553421f50659206c60af088dc24349f9bb4cc8ab95"
+      }
+    }
+  ]
+}

@@ -1,5 +1,47 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**15 октября2026 — EXP120–123 PREPARED: long T4 scale/CE/KL campaigns.**
+User просит4 существенно более длинных сессии. НЕ считать причину плато
+установленной: activation scale — hypothesis; protectedrank32/stableclip
+помогает recovery, но не доказан optimal rank или activation-normalization method.
+Source111 seed123 MAIN32768/данные114–115 сохранены. Новый независимый runner
+`scripts/m3q_t4_scale_campaign.py`, `extent/t4_scale_recovery.py`, notebook
+`notebooks/extent-t4-long.ipynb`. Старые116–119 code/contracts не менялись.
+120:461 gain conditions ×A64, top3/worker B32/C64/context, coverage/partial.
+121:24 learned output gains CE vs CE+.01 log-RMS excess penalty.
+122:trained rank32 CE control vs rank32+gains; freshAdam у обоих.
+123:rank32+gains end-to-end exact-vocab T2 KL mixtures .1/.5, compare122 CE.
+121–123 planned65536 updates/GPU, не local fits; actual full decoder chain rule
+через streamed VJP, host inputs/checkpointing, head32 tiles. 256warmup, LR gains.01/
+rank32 3e-4, jointstableclip1. A16 selection, B32 monitor fixed endpoints;
+last/best A64/B32/C64/context127/profile in45min reserve. No independent test.
+11.5h includes load/save;65k horizon may require multiple sessions. Same cell
+resumes local/remote state. Snapshots128 local, remote4096 or90min +deadline.
+Cap2GB/invocation total; storage_partial explicit; step/durable_step distinct.
+Current+Adam+best payload, exact cursor rollback, future endpoint invalidation,
+state-SHA keyed final evaluations. Completed-horizon but incomplete validation
+gets finalization_partial and resumes. SourceNLL<=.03, hookbackground<=.01;
+inspection relative output discrepancy<=.02 separately labelled, old116 trace
+acceptance never relaxed. CPU engineering tests cover all6 recipe gradients
+versus full autodiff, CE/KL/penalty, optimizer restore, nonfinite and clean
+deadline/resume. **Actual1.7B GPU training HBM/throughput/outcome pending.**
+Launch/protocol `results/EXP-120-123-t4-launch.md`, frozen engineering contracts
+`results/EXP-120-123-engineering-plan.json`.
+
+**15 октября2026 — EXP116–119 RESULTS received and archived.**
+Raw JSON `results/EXP-116/117/118/119-session-1.json`, source SHA/status manifest
+`EXP-116-119-session-1-analysis.json`. All completed/no HF pending.116 .4105h,
+117 .2866h,118 .2826h,119 .7300h. GPU sourceNLL7.2641 matches TPU7.26461.
+116 all28 layer profiles; residual RMS jumps~941 after0,6.7e5 after3,6e8 after16,
+1.53e11 after26; allfinite.24/24 detailed trace parity rejected: no accepted
+state dynamics.117 same tail127: hybrid7.24384→7.24391 when128→1024 context,
+Qwen3.43932→2.51573, reset effects<.001, carrycontrols exact.118 FP32 effects
+<.0005, FP16 nonfinite; storedweights/readoutBF16, inference-only.119 all18 fits
+1024 durable. Layer0 tiny NLL effects;12 local MSE~8.8e-5 on one trainwindow
+but no fullNLLgain;26 evenFREE256 local MSE.00147 yet fullNLL~16.1 vs7.2.
+This motivates causal scale intervention/end-to-end objective, not proof of
+activation explosion as unique cause, nor rejection of end-to-end rank growth.
+
 **15 октября2026 — T4 setup fix, no experiment updates in failed run.**
 User cloud log: nvidia-smi exit12 in setup before pip/runner. Notebook previously
 cleared LD_LIBRARY_PATH before querying NVML; this can hide Kaggle driver libs.

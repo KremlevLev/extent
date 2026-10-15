@@ -1,8 +1,15 @@
 # Extent: JAX Mamba-3/MLA hybrid prototype
 
+Long T4 recovery: [EXP120–123 notebook](notebooks/extent-t4-long.ipynb) and
+[four launch cells/protocol](results/EXP-120-123-t4-launch.md). The new full-model
+backward has CPU engineering checks; physical GPU training remains unverified.
+EXP116–119 reports are archived under `results/EXP-116-session-1.json` through
+`results/EXP-119-session-1.json`; large activations motivate a hypothesis, not a
+confirmed causal explanation of the plateau.
+
 Kaggle T4 x2: [notebook](notebooks/extent-t4.ipynb) and
 [EXP116–119 launch cells](results/EXP-116-119-t4-launch.md).
-GPU runners are prepared; physical T4 performance and results remain unverified.
+EXP116–119 completed on physical T4; raw reports are archived in `results/`.
 
 Working preprint: [Mamba-3 in the Qwen](paper/draft.md), updated 13 October 2026.
 This is an unfinished research draft, not submitted or peer reviewed. Figures and

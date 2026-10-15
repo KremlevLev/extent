@@ -1,0 +1,99 @@
+{
+  "116": {
+    "sha256": "686cc5e499ebf444159d91bd2b411c29c1e512edd67ff94cb735d86a3254e0ea",
+    "status": "completed",
+    "wall_hours": 0.41051966044637894,
+    "source_replay": [
+      {
+        "max_abs_per_window": 0.004271030426025391,
+        "tolerance": 0.03,
+        "passed": true,
+        "gpu_nll": 7.264098644256592,
+        "tpu_nll": 7.264612071216106,
+        "folded_sha": "9178a93dd7e8ca76c844e1bb495379a891792acd335ec6f95d74a35b8ea37464"
+      },
+      {
+        "max_abs_per_window": 0.004271030426025391,
+        "tolerance": 0.03,
+        "passed": true,
+        "gpu_nll": 7.264098644256592,
+        "tpu_nll": 7.264612071216106,
+        "folded_sha": "9178a93dd7e8ca76c844e1bb495379a891792acd335ec6f95d74a35b8ea37464"
+      }
+    ],
+    "tasks": 28
+  },
+  "117": {
+    "sha256": "51e2e61cf8f8392e3407f22a54de7f43d146d16e186cadfa83276b6d6e7e1f13",
+    "status": "completed",
+    "wall_hours": 0.2865833718246884,
+    "source_replay": [
+      {
+        "max_abs_per_window": 0.004271030426025391,
+        "tolerance": 0.03,
+        "passed": true,
+        "gpu_nll": 7.264098644256592,
+        "tpu_nll": 7.264612071216106,
+        "folded_sha": "9178a93dd7e8ca76c844e1bb495379a891792acd335ec6f95d74a35b8ea37464"
+      },
+      {
+        "max_abs_per_window": 0.003811359405517578,
+        "tolerance": 0.03,
+        "passed": true,
+        "gpu_nll": 7.263988971710205,
+        "tpu_nll": 7.264612071216106,
+        "folded_sha": "9178a93dd7e8ca76c844e1bb495379a891792acd335ec6f95d74a35b8ea37464"
+      }
+    ],
+    "tasks": 4
+  },
+  "118": {
+    "sha256": "cc3396ab2223b15043963523ca77aa1ac5fbc2a7fa8c95b524430550789e34d3",
+    "status": "completed",
+    "wall_hours": 0.28262013329399954,
+    "source_replay": [
+      {
+        "max_abs_per_window": 0.004271030426025391,
+        "tolerance": 0.03,
+        "passed": true,
+        "gpu_nll": 7.264071941375732,
+        "tpu_nll": 7.264612071216106,
+        "folded_sha": "9178a93dd7e8ca76c844e1bb495379a891792acd335ec6f95d74a35b8ea37464"
+      },
+      {
+        "max_abs_per_window": 0.004271030426025391,
+        "tolerance": 0.03,
+        "passed": true,
+        "gpu_nll": 7.264098644256592,
+        "tpu_nll": 7.264612071216106,
+        "folded_sha": "9178a93dd7e8ca76c844e1bb495379a891792acd335ec6f95d74a35b8ea37464"
+      }
+    ],
+    "tasks": 5
+  },
+  "119": {
+    "sha256": "0110c309abf40a2a5ab3722e0b46e695d81c9f6f6efe3b361169bd93a3ea6847",
+    "status": "completed",
+    "wall_hours": 0.72996020535628,
+    "source_replay": [
+      {
+        "max_abs_per_window": 0.004271030426025391,
+        "tolerance": 0.03,
+        "passed": true,
+        "gpu_nll": 7.264098644256592,
+        "tpu_nll": 7.264612071216106,
+        "folded_sha": "9178a93dd7e8ca76c844e1bb495379a891792acd335ec6f95d74a35b8ea37464"
+      },
+      {
+        "max_abs_per_window": 0.004271030426025391,
+        "tolerance": 0.03,
+        "passed": true,
+        "gpu_nll": 7.264098644256592,
+        "tpu_nll": 7.264612071216106,
+        "folded_sha": "9178a93dd7e8ca76c844e1bb495379a891792acd335ec6f95d74a35b8ea37464"
+      }
+    ],
+    "tasks": 18
+  },
+  "interpretation": "Large residual scales, negligible context/reset/precision benefit, local teacher fitting not full NLL recovery. Plateau causation not established."
+}
