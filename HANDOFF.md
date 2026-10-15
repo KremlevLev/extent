@@ -1,5 +1,22 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**16 октября2026 — EXP128 PREPARED: fourth T4x2 session, per-component limits.**
+Separate `extent/channel_bound_recovery.py` and
+`scripts/m3q_t4_channel_bound_128_campaign.py`;125–127 modules/contracts UNCHANGED
+and compared against frozen engineering plan. GPU0 hard clipping each component,
+GPU1 smooth tanh; dynamic Mamba component bound.5*max(token RMS(input),.001),
+absolute residual component bound10 after both additions/all28 layers. Both
+have protectedR32 + MLP-down-proj LoRA32, same initialization/source as127/GPU1.
+Geometric ramp2048, true gradients, post-ramp A64 best, same endpoints/data,
+source A/B/C controls and profiles, local128/HF2048-or120min,4GB total cap,
+11.5h includes60min reserve, horizon32768. Distinct question: whole-vector RMS
+scaling shrinks small components due to large neighbors; component caps preserve
+uncapped hard components. Tanh also changes small components gently. Component
+caps are STRICTER than RMS caps at the same numerical threshold; not a clean
+geometry-only ablation with equal removed signal. Profile activation fractions
+count COMPONENTS, not tokens; peak bound explicitly checked within2% rounding.
+Physical1.7B GPU outcome pending. Protocol/cell results/EXP-128-t4-launch.md.
+
 **16 октября2026 — EXP125–127 PREPARED, three T4x2 sessions;124 user launching.**
 New independent `extent/dynamic_recovery.py`, `scripts/m3q_t4_dynamic_campaign.py`.
 125: R32 control vs per-token relative Mamba output RMS cap rho.5.
