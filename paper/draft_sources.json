@@ -1,5 +1,5 @@
 {
-  "draft_date": "2026-10-13",
+  "draft_date": "2026-10-17",
   "files": [
     {
       "path": "results/EXP-061-production-aligned-scaling-campaign-summary.md",
@@ -55,7 +55,83 @@
       "path": "results/EXP-111-113-recovery-efficiency-protocol.md",
       "sha256": "a8efbf317382137c1f20eeefaeaeaad2c30cb86a148f768c8ea851fdad088511",
       "type": "ledger_or_protocol"
+    },
+    {
+      "path": "results/EXP-125-session-1.json",
+      "sha256": "213f8ee6b8069bc98910c8892f226221b756366d1808e2b46f306faa6d69e967",
+      "type": "raw_result"
+    },
+    {
+      "path": "results/EXP-126-session-1.json",
+      "sha256": "45acf7da88fc0f0c0d916e02da57cc9c1b5a0a48e7b90937027642c1b6e8feef",
+      "type": "raw_result"
+    },
+    {
+      "path": "results/EXP-127-session-1.json",
+      "sha256": "1c95fbaac582c1673465e8f96f6a08b63ee38df817644b383e03ae0d3ea7c3d1",
+      "type": "raw_result"
+    },
+    {
+      "path": "results/EXP-128-session-1.json",
+      "sha256": "d6b751437850c33c1305d62b8c0f4930690cfd08b154855943bbda1eae57cbd1",
+      "type": "raw_result"
+    },
+    {
+      "path": "results/EXP-129-session-1.json",
+      "sha256": "32fd9e844a4b253c456e886f16a9d92d73cb3528600524fffd4b4cf157abd4e7",
+      "type": "raw_result"
+    },
+    {
+      "path": "results/EXP-130-session-1.json",
+      "sha256": "25b3b8c9ff475898ba957e8945dd8878c41c238a05e7c0ab3074c65e5c236fdc",
+      "type": "raw_result"
+    },
+    {
+      "path": "results/EXP-131-session-1.json",
+      "sha256": "41fcd6252753802687fe0f748a3a9291c9ddbd3bd201a02cef0100500f9098f9",
+      "type": "raw_result"
+    },
+    {
+      "path": "results/EXP-132-session-1.json",
+      "sha256": "1a774f5e1d112d6ed7c1dd4329a9465dbad81789586fe2dd4c8ea8d8eaaeb27e",
+      "type": "raw_result"
+    },
+    {
+      "path": "results/EXP-125-128-session-1-analysis.json",
+      "sha256": "38b18c3fe4b171b55b5877349fdfe06eaca127393eaa18ddbf6f2ec9d78cd891",
+      "type": "current_audit_or_recipe"
+    },
+    {
+      "path": "results/EXP-129-132-session-1-analysis.json",
+      "sha256": "2ab12e97df16f31790c18c1098ac5977550e13f255248541b9d29c01a806c6f4",
+      "type": "current_audit_or_recipe"
+    },
+    {
+      "path": "results/EXP-130-134-protocol.md",
+      "sha256": "631dcdb504ab024508d9240360c4c8d7d66e2872403901b843d68f8c406bc97f",
+      "type": "current_audit_or_recipe"
+    },
+    {
+      "path": "scripts/m3q_allocation_campaign.py",
+      "sha256": "bd14cbe19abb8a67245f9ee4fa1e172c80d25ef6243711deb517da0ee8094687",
+      "type": "current_audit_or_recipe"
+    },
+    {
+      "path": "scripts/m3q_full_depth_sequential_confirmation.py",
+      "sha256": "1bdeeb3186739778f363ea460c57fe279f46e9e60860ef1f860e4eda7aa3720f",
+      "type": "current_audit_or_recipe"
+    },
+    {
+      "path": "scripts/m3q_sequential_recovery_campaign.py",
+      "sha256": "9bbc679f48c09b60e162e90fc0cd11cd4cf398e0ff8a77d324a405c1177a0840",
+      "type": "current_audit_or_recipe"
     }
   ],
-  "note": "Historical source hashes refer to the original draft snapshots, not necessarily current ledger versions. Historical numbers need raw-artifact audit before submission. Figure provenance recorded separately."
+  "note": "Historical source hashes refer to the original draft snapshots, not necessarily current ledger versions. Historical numbers need raw-artifact audit before submission. Figure provenance recorded separately.",
+  "recent_figures": {
+    "script": "paper/make_recent_figures.py",
+    "points": "paper/figures/recent_points.csv",
+    "provenance": "paper/figures/recent_provenance.json",
+    "scope": "Single seed; reused panels; partial horizons; Figures4-7; no training performed by rebuild."
+  }
 }

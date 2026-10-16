@@ -1,0 +1,291 @@
+{
+  "date": "2026-10-17",
+  "scope": "Single seed123; reused validation panels; partial horizons; no independent confirmation",
+  "sources": [
+    {
+      "experiment": 129,
+      "path": "results/EXP-129-session-1.json",
+      "sha256": "32fd9e844a4b253c456e886f16a9d92d73cb3528600524fffd4b4cf157abd4e7",
+      "status": "deadline_partial",
+      "wall_hours": 8.735882109536066
+    },
+    {
+      "experiment": 130,
+      "path": "results/EXP-130-session-1.json",
+      "sha256": "25b3b8c9ff475898ba957e8945dd8878c41c238a05e7c0ab3074c65e5c236fdc",
+      "status": "deadline_partial",
+      "wall_hours": 6.104998819430669
+    },
+    {
+      "experiment": 131,
+      "path": "results/EXP-131-session-1.json",
+      "sha256": "41fcd6252753802687fe0f748a3a9291c9ddbd3bd201a02cef0100500f9098f9",
+      "status": "deadline_partial",
+      "wall_hours": 6.099158078233401
+    },
+    {
+      "experiment": 132,
+      "path": "results/EXP-132-session-1.json",
+      "sha256": "1a774f5e1d112d6ed7c1dd4329a9465dbad81789586fe2dd4c8ea8d8eaaeb27e",
+      "status": "deadline_partial",
+      "wall_hours": 6.100832638872994
+    }
+  ],
+  "runs": [
+    {
+      "experiment": 129,
+      "worker": 0,
+      "arm": "R32-CONTROL",
+      "step": 6076,
+      "best_step": 4096,
+      "cost": {
+        "attempted_updates": 6077,
+        "training_input_tokens": 1555712,
+        "teacher_input_tokens": 0,
+        "rejected_updates": 0,
+        "attempted_tasks": 32,
+        "task_seconds": 1557.1800862139826,
+        "training_seconds": 28105.14224598296,
+        "accepted_updates": 6076,
+        "accepted_training_input_tokens": 1555456,
+        "accepted_ce_targets": 1549380
+      },
+      "final_profile_discrepancies": [],
+      "last_nll": {
+        "A": 7.244490720331669,
+        "B": 7.2796808779239655,
+        "C": 7.032504215836525
+      }
+    },
+    {
+      "experiment": 129,
+      "worker": 1,
+      "arm": "R32-PREGATE-RMS",
+      "step": 5402,
+      "best_step": 4096,
+      "cost": {
+        "attempted_updates": 5403,
+        "training_input_tokens": 1383168,
+        "teacher_input_tokens": 0,
+        "rejected_updates": 0,
+        "attempted_tasks": 32,
+        "task_seconds": 1583.2140228300232,
+        "training_seconds": 27999.333211135854,
+        "accepted_updates": 5402,
+        "accepted_training_input_tokens": 1382912,
+        "accepted_ce_targets": 1377510
+      },
+      "final_profile_discrepancies": [],
+      "last_nll": {
+        "A": 7.191822163760662,
+        "B": 7.264108553528786,
+        "C": 6.976666234433651
+      }
+    },
+    {
+      "experiment": 130,
+      "worker": 0,
+      "arm": "NORM-TANH",
+      "step": 3495,
+      "best_step": 3072,
+      "cost": {
+        "attempted_updates": 3496,
+        "training_input_tokens": 894976,
+        "teacher_input_tokens": 0,
+        "rejected_updates": 0,
+        "attempted_tasks": 32,
+        "task_seconds": 1613.012696175003,
+        "training_seconds": 18064.726667501087,
+        "accepted_updates": 3495,
+        "accepted_training_input_tokens": 894720,
+        "accepted_ce_targets": 891225
+      },
+      "final_profile_discrepancies": [],
+      "last_nll": {
+        "A": 7.173590809106827,
+        "B": 7.240047127008438,
+        "C": 6.969192758202553
+      }
+    },
+    {
+      "experiment": 130,
+      "worker": 1,
+      "arm": "NORM-TANH-RESET",
+      "step": 3434,
+      "best_step": 3072,
+      "cost": {
+        "attempted_updates": 3435,
+        "training_input_tokens": 879360,
+        "teacher_input_tokens": 0,
+        "rejected_updates": 0,
+        "attempted_tasks": 32,
+        "task_seconds": 1636.2590204040062,
+        "training_seconds": 18025.810368427028,
+        "accepted_updates": 3434,
+        "accepted_training_input_tokens": 879104,
+        "accepted_ce_targets": 875670
+      },
+      "final_profile_discrepancies": [],
+      "last_nll": {
+        "A": 6.746897801756859,
+        "B": 6.77330769598484,
+        "C": 6.480251789093018
+      }
+    },
+    {
+      "experiment": 131,
+      "worker": 0,
+      "arm": "NORM-TANH-UNLOCK",
+      "step": 3512,
+      "best_step": 3072,
+      "cost": {
+        "attempted_updates": 3513,
+        "training_input_tokens": 899328,
+        "teacher_input_tokens": 0,
+        "rejected_updates": 0,
+        "attempted_tasks": 32,
+        "task_seconds": 1620.6299497480068,
+        "training_seconds": 18255.04131710709,
+        "accepted_updates": 3512,
+        "accepted_training_input_tokens": 899072,
+        "accepted_ce_targets": 895560
+      },
+      "final_profile_discrepancies": [
+        {
+          "endpoint": "last",
+          "layer": 9,
+          "discrepancy": 0.04878048598766327
+        },
+        {
+          "endpoint": "best",
+          "layer": 9,
+          "discrepancy": 0.02857143059372902
+        }
+      ],
+      "last_nll": {
+        "A": 7.219130218029022,
+        "B": 7.282416388392448,
+        "C": 7.029388315975666
+      }
+    },
+    {
+      "experiment": 131,
+      "worker": 1,
+      "arm": "NORM-TANH-UNLOCK-MLP",
+      "step": 3426,
+      "best_step": 3072,
+      "cost": {
+        "attempted_updates": 3427,
+        "training_input_tokens": 877312,
+        "teacher_input_tokens": 0,
+        "rejected_updates": 0,
+        "attempted_tasks": 32,
+        "task_seconds": 1626.1564483200018,
+        "training_seconds": 18204.468186205053,
+        "accepted_updates": 3426,
+        "accepted_training_input_tokens": 877056,
+        "accepted_ce_targets": 873630
+      },
+      "final_profile_discrepancies": [
+        {
+          "endpoint": "best",
+          "layer": 7,
+          "discrepancy": 0.04006410390138626
+        }
+      ],
+      "last_nll": {
+        "A": 7.275844946503639,
+        "B": 7.314131185412407,
+        "C": 6.96476935595274
+      }
+    },
+    {
+      "experiment": 132,
+      "worker": 0,
+      "arm": "NORM-TANH-UNLOCK-MLP-CE",
+      "step": 3364,
+      "best_step": 3072,
+      "cost": {
+        "attempted_updates": 3364,
+        "training_input_tokens": 861184,
+        "teacher_input_tokens": 0,
+        "rejected_updates": 0,
+        "attempted_tasks": 32,
+        "task_seconds": 1617.8663179640062,
+        "training_seconds": 18133.678511641872,
+        "accepted_updates": 3364,
+        "accepted_training_input_tokens": 861184,
+        "accepted_ce_targets": 857820
+      },
+      "final_profile_discrepancies": [],
+      "last_nll": {
+        "A": 7.20847225934267,
+        "B": 7.246553733944893,
+        "C": 7.021753363311291
+      }
+    },
+    {
+      "experiment": 132,
+      "worker": 1,
+      "arm": "NORM-TANH-UNLOCK-MLP-KL1",
+      "step": 2688,
+      "best_step": 2560,
+      "cost": {
+        "attempted_updates": 2689,
+        "training_input_tokens": 688384,
+        "teacher_input_tokens": 688384,
+        "rejected_updates": 0,
+        "attempted_tasks": 32,
+        "task_seconds": 1634.694175359,
+        "training_seconds": 18499.20025524291,
+        "accepted_updates": 2688,
+        "accepted_training_input_tokens": 688128,
+        "accepted_ce_targets": 685440
+      },
+      "final_profile_discrepancies": [],
+      "last_nll": {
+        "A": 7.319805726408958,
+        "B": 7.354780808091164,
+        "C": 7.087950482964516
+      }
+    }
+  ],
+  "profile_points": [
+    {
+      "experiment": 129,
+      "worker": 0,
+      "step": 4096,
+      "layer": 26,
+      "output_rms": 13006126710784.0,
+      "absorbed_fraction": 0.9999351501464844,
+      "panel_A_nll": 7.210941031575203
+    },
+    {
+      "experiment": 129,
+      "worker": 1,
+      "step": 4096,
+      "layer": 26,
+      "output_rms": 3056993.25,
+      "absorbed_fraction": 0.9728622436523438,
+      "panel_A_nll": 7.242170035839081
+    },
+    {
+      "experiment": 130,
+      "worker": 0,
+      "step": 3072,
+      "layer": 26,
+      "output_rms": 948674.6875,
+      "absorbed_fraction": 0.9392337799072266,
+      "panel_A_nll": 7.208787702023983
+    },
+    {
+      "experiment": 130,
+      "worker": 1,
+      "step": 3072,
+      "layer": 26,
+      "output_rms": 451176.1875,
+      "absorbed_fraction": 0.9119606018066406,
+      "panel_A_nll": 6.895652338862419
+    }
+  ]
+}
