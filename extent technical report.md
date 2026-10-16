@@ -2125,3 +2125,28 @@ only after durable choices. Runner8.8h includes60min save reserve; partial resum
 uses the same cell; upload cap1GB/invocation, no full source checkpoint copies.
 Launch: results/EXP-114-kaggle-launch.md.
 Protocol: results/EXP-114-plateau-forensics-protocol.md.
+
+
+## 2026-10-16 — competitor-informed normalization audit; EXP-129 PREPARED
+
+SOURCE-INSPECTED (not independently reproduced): arianraje Qwen3-4B Mamba3
+source b946069890837bbe9b5dd75e2d118a7e98d2d193, Apache-2.0 metadata, has
+headwise RMSNorm separately per MIMO rank after state-readout+D skip, before
+gating and rank reduction. Our historical core lacks that readout normalization;
+B/C RMSNorm is a different operation. Formula/source SHA and detailed protocol:
+[EXP-129-pregate-protocol.md](results/EXP-129-pregate-protocol.md).
+
+HYPOTHESIS: this difference may contribute to scale growth and poor recovery.
+It is not a demonstrated cause of the plateau. Competitor model dimensions,
+attention fraction, initialization and training also differ. The inspected
+reference uses tanh on angle projections; this remains a separate audit item.
+
+PREPARED: independent JAX core and T4x2 runner, paired R32 control versus R32
+with pre-gate normalization and learned shared H,P weights; identity ramp2048
+for compatibility with the already-trained plateau checkpoint. Same source111
+seed123 MAIN32768, freshAdam, data/order and horizon32768. Reused A/B/C and
+context panels, post-ramp A64 selection, layer residual/readout/gate scale and
+absorption diagnostics. No change to124–128 or production/reference default.
+No physical1.7B GPU outcome yet. This continuing-recovery intervention does not
+reproduce the competitor initialization plus full-model long-context KD recipe,
+and does not establish architectural or token-efficiency superiority.

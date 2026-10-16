@@ -1,5 +1,27 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**16 October2026 — EXP129 PREPARED: competitor-informed pre-gate RMSNorm.**
+User authorized adapting/testing the inspected competitor methods. Read-only
+arianraje HF source pinned b946069890837bbe9b5dd75e2d118a7e98d2d193,
+Apache-2.0 metadata; SHA/source attribution in results/EXP-129-pregate-protocol.md.
+Separate extent/pregate_recovery.py and scripts/m3q_t4_pregate_129_campaign.py;
+legacy124–128 core/runners/contracts untouched. One T4x2: R32 control versus
+R32 plus shared H,P learned RMSNorm weights, applied separately per rank/head
+AFTER state readout+D skip, BEFORE SiLU gate and rank reduction. Eps1e-5,
+geometric identity ramp2048; standard upstream normalization, not new invention.
+Source111 seed123 MAIN32768; same data/order/freshAdam, R32 LR3e-4/norm1e-4,
+stableclip1/warmup256; no MLP adaptation, output gains or residual caps.
+Horizon32768,11.5h including60min reserve, local128/HF2048-or120min/exit,
+4GB TOTAL upload cap/invocation. Source A/B/C/context and full-strength FIT8
+shock/profile; A16 before ramp, A64 selects only full-strength endpoints;
+last/best A/B/C/context and residual/readout/gate/absorption profiles.
+Treatment adds36,864 norm coordinates; not parameter-count-matched ablation.
+This is continuation from a model trained WITHOUT the norm, not a reproduction
+of competitor conversion/full-model long-context KD; a failure cannot reject
+that full recipe. Other differences (tanh angle, dynamics init, rank factors,
+dimensions/training) recorded for separate audits, no causal conclusion.
+Physical1.7B GPU outcome pending. Existing T4 notebook last cell only.
+
 **16 октября2026 — EXP128 PREPARED: fourth T4x2 session, per-component limits.**
 Separate `extent/channel_bound_recovery.py` and
 `scripts/m3q_t4_channel_bound_128_campaign.py`;125–127 modules/contracts UNCHANGED
