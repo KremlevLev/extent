@@ -1,6 +1,6 @@
 # Extent working preprint
 
-[Read the draft](draft.md). Updated 17 October 2026; **not submitted or peer reviewed**.
+[Read the draft](draft.md) · [Русская версия](draft.ru.md). Updated 17 October 2026; **not submitted or peer reviewed**.
 
 The draft describes the evidence chain: local transfer versus full composition,
 hybrid-prefix input shift, numerical norm overflow, and protected recovery with
