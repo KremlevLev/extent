@@ -1,2 +1,8 @@
 # This pinned dataset manifest is checked by its original byte SHA256.
 results/pinned-data/pg19-test-files.txt -text
+
+# Preserve uploaded experiment bytes used by the paper provenance hashes.
+results/EXP-129-session-1.json -text
+results/EXP-130-session-1.json -text
+results/EXP-131-session-1.json -text
+results/EXP-132-session-1.json -text
