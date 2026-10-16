@@ -2181,3 +2181,39 @@ HYPOTHESIS/next design: isolate the cause of losing126's transient improvement
 via controlled continuation from selected4096, LR/optimizer controls and optional
 MLP adaptation.129 internal pre-gate norm remains a distinct T4 test. User
 remaining budget4hTPU/10hT4; no new TPU experiment launched or runner prepared.
+
+
+## 2026-10-16 — EXP130–134 competitor-informed suite PREPARED
+
+User allocates three7h T4 sessions and4h/9h TPU;129 separate10h T4. Protocol
+and five complete launch cells in results/EXP-130-134-protocol.md and
+EXP-130/131/132/133/134-launch.md. New independent cores/runners preserve all
+125–129 contracts and124 source. NO new accelerator scientific outcome yet.
+
+SOURCE-INSPECTED arianraje b946069890837bbe9b5dd75e2d118a7e98d2d193: internal
+per-rank/head pre-gate norm,tanh angle,zero dynamics/loguniform dt/simplex,
+forwardKL,mixer/rest LR2e-4/2e-5,Adam(.9,.95),warmup.03/minlr.1. T1 and cosine
+curve are explicit adaptation choices where trainer source does not expose them.
+Not a reproduction of4B geometry,clean inherited QKV mapping,own-rank readout,
+100M+894M preparation,long4k/32k context or full-model training.
+
+130 T4 tests norm+tanh versus additional dynamics/simplex reset on learned
+weights;131 unlocks dynamics-projection R32 and adds MLP32;132 compares paired
+CE versus pure exact forwardKL T1. Same111 source/order/freshAdam/ramp2048.
+133 TPU continues selected1264096, fixed RMS100, three LR/MLP branches with
+fresh Adam all. Source pin and real binary validation:96 best leaves/7,145,472
+finite coordinates,each chunkSHA checked; no optimizer-at-best claim. Physical
+TPU NLL replay across A/B/C required before updates.
+134 TPU broadens to ALL dense Mamba parameters plus MLP-downLoRA32, CE versus
+KL; context1024,Adam.95,LR2e-4/2e-5,492warmup/cosine floor.1.264,102,016 trainable
+coordinates,4.23GB payload/arm,24GB new upload cap per invocation. Frozen GQA,
+embedding,base MLP remain outside training. No full-decoder-replication claim.
+
+HYPOTHESES: internal normalization/angle treatment, adaptable dynamics,broader
+capacity and/or teacher objective may improve the failed plateau recovery.
+133 separately asks whether126 transient gain survives controlled continuation.
+Single seed/reused panels; last-common endpoint A64 primary,B/C secondary,
+remaining context utility and numerical profiles reported. Source preparation
+and teacher passes excluded from marginal tokens but never efficiency claims.
+Local mathematical/sharding/serialization validation is not physical1.7B GPU/TPU
+HBM,throughput,source parity or scientific efficacy evidence.

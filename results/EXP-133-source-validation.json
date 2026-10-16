@@ -1,0 +1,10 @@
+{
+  "source_revision": "68b6879f73207f23b440f3dfc68df153a09a4a0b",
+  "best_step": 4096,
+  "leaf_count": 96,
+  "coordinates": 7145472,
+  "parameter_tree_sha256": "63f995c88be4cf0b05d4293cfff826a6ec2513d3457b1d03105fa458ad8e307d",
+  "recorded_best_tree_sha256": "63f995c88be4cf0b05d4293cfff826a6ec2513d3457b1d03105fa458ad8e307d",
+  "all_chunk_sha_verified": true,
+  "scope": "real saved binary only; physical1.7B TPU replay pending"
+}

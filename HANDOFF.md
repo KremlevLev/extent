@@ -1,5 +1,47 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**16 October2026 — EXP130–134 PREPARED, five user-allocated sessions.**
+User explicitly requests3 T4x2 sessions7h each, TPU4h and9h, strongly based on
+arianraje recipe;129 already assigned10h T4. No new cloud training launched.
+Separate extent/competitor_recovery.py + competitor_tpu.py; GPU runner
+scripts/m3q_t4_competitor_campaign.py and in-kernel sharded TPU runner
+scripts/m3q_peer_tpu_campaign.py. Full protocol results/EXP-130-134-protocol.md,
+five standalone cells results/EXP-130-launch.md through EXP-134-launch.md;
+frozen new plans EXP-130-134-engineering-plan.json. All10 old125–129 worker
+contracts unchanged (plus124 source untouched). One seed123, reused panels.
+130: norm+tanh control versus same+zero dynamics/loguniform dt/simplex reset.
+131: norm+tanh+unprotected dynamics in_projR32 versus same+MLP-downLoRA32.
+132: paired CE versus pure exact full-vocab forwardKL T1, same131/GPU1 capacity.
+All start111 MAIN32768, freshAdam .9/.999, R32 LR3e-4/norm+MLP1e-4,
+2048 identity ramp, no residual caps; GPU horizon32768. Clock6.6h INCLUDES45min
+reserve,24min setup margin; cap4GB TOTAL per session, split between2 workers.
+133: TPU from126 selected4096 (C6.69832), fixed relative.5/residualRMS100;
+3 arms R32 LR3e-4 /3e-5 /3e-5+MLP32 LR1e-5, freshAdam/warmup256 ALL arms.
+Pinned HF revision68b6879f73207f23b440f3dfc68df153a09a4a0b and manifest in
+EXP-133-source-pin.json. Locally downloaded/checksummed96 best leaves,7,145,472
+finite coordinates. Best weights only, not Adam at4096. Replay EACH A/B/C
+window <=.03 on TPU before updates. Training permutation continues4096.
+Clock3.6h incl45min reserve,4GB cap. Original111 reconstruction still verified.
+134: TPU all Mamba params dense (264,102,016 total trainable inclnorm+MLP32),
+paired CE versus full-vocab KL T1, norm+tanh ramp2048, start111. Context1024
+(same pool packed4096 blocks),1023 targets/update. LR2e-4 Mamba/2e-5 norm+MLP,
+Adam .9/.95,492warmup, cosine floor.1 at16384. GQA/embedding/MLP base frozen,
+MLP-downLoRA32 ALL28 layers. NOT full-decoder replication. Clock8.5h incl60min
+reserve,24GB cap. Dense payload4.23GB/arm,8.45GB/paired save,~17GB two uploads.
+TPU horizon16384, alternate128 blocks, best/current/Adam save before diagnostics.
+Nested multi_transform Adam mu/nu sharded like parameters; empty coordinate
+nodes preserved (legacy helper would replicate nested moments). Local128,
+remote120min133/240min134+exit. GPU remote2048-or120min. No frozen model copies.
+More frequent post-ramp A64/B32/C64/profile endpoints2048/2560/3072/3584/4096/
+4608/5120/6144 etc; A-only selection, last/best contexts128..1024. Source0 eligible
+best for133. Missing interrupted endpoint retried at restored cursor. No extra
+seeds in screening. Source inspection: pre-gate norm,tanh,dynamics zero/dt,
+simplex,KL and mixer/rest LRs/betas. T1/cosine curve explicitly OUR choices where
+trainer source absent. Historical architecture/QKV mapping and long preparation
+not reproduced; reset130 is on learned weights, not fresh faithful inheritance.
+Local engineering checks and physical limitations: EXP-130-134-local-validation.md.
+
+
 **16 October2026 — EXP125–128 FIRST RESULTS archived;129 user launching T4.**
 Raw results/EXP-125/126/127/128-session-1.json, SHA/derived comparison in
 EXP-125-128-session-1-analysis.json; readable EXP-125-128-session-1-summary.md.
