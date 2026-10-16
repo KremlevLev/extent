@@ -2150,3 +2150,34 @@ absorption diagnostics. No change to124–128 or production/reference default.
 No physical1.7B GPU outcome yet. This continuing-recovery intervention does not
 reproduce the competitor initialization plus full-model long-context KD recipe,
 and does not establish architectural or token-efficiency superiority.
+
+
+## 2026-10-16 — EXP125–128 first T4 results: scale intervention helps transiently
+
+MEASURED from four user JSON files, archived with exact SHA256 and matched4096
+comparison in results/EXP-125-128-session-1-analysis.json; interpretation and
+limitations in [first-session summary](results/EXP-125-128-session-1-summary.md).
+All8 worker states durable, deadline_partial, no numerical/sync failure, finals
+completed; full32768 horizons not achieved. Same source111seed123 MAIN32768
+and actual token hashes; reused panels, one seed, no independent confirmation.
+
+At4096,126 RMS100 after both residual additions plus relative Mamba output cap
+beats125 R32 control on A/B/C:7.01017/6.99240/6.69832 versus7.24171/7.28757/
+6.98929. The checkpoint is selected by A64, not by C. Improvement is transient:
+last7523 A7.83556. Strict RMS10 last7549 A10.75665. Training remains finite, so
+quality degradation is not a numerical exception diagnosis.127 adds MLP32 to
+RMS10:4096 A7.24426/B7.29453/C7.00528, last7212 A7.20828/B7.29087/C7.02267.
+It helps adaptation versus the same limiter without MLP, but does not exceed
+control materially. RMS100 plus MLP is not tested.
+
+128 hard/soft component caps with MLP32 badly hurt measured quality:4096
+A15.74805/9.74828, last7435/7362 A13.39529/7.94774. Bounds/parity accepted;
+large fractions of components changed. These caps are stronger than whole-token
+RMS caps at identical numeric threshold, not a geometry-only matched ablation.
+Reduced BF16 addition absorption does not suffice for restored language quality.
+126 best4096 still shows almost flat context128→1024 same-tail NLL6.77097→6.77043.
+
+HYPOTHESIS/next design: isolate the cause of losing126's transient improvement
+via controlled continuation from selected4096, LR/optimizer controls and optional
+MLP adaptation.129 internal pre-gate norm remains a distinct T4 test. User
+remaining budget4hTPU/10hT4; no new TPU experiment launched or runner prepared.

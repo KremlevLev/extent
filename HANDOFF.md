@@ -1,5 +1,28 @@
 # Extent / Mamba-3 in the Qwen: передача проекта в новый чат
 
+**16 October2026 — EXP125–128 FIRST RESULTS archived;129 user launching T4.**
+Raw results/EXP-125/126/127/128-session-1.json, SHA/derived comparison in
+EXP-125-128-session-1-analysis.json; readable EXP-125-128-session-1-summary.md.
+All8 workers deadline_partial, exit0, durable current steps, no pending fits or
+report-sync errors, finalization completed; source/hook checks pass, same token
+hashes/source pin. Common4096: R32 control A/B/C7.24171/7.28757/6.98929;
+126 relative.5+residualRMS100 gives7.01017/6.99240/6.69832 (selected by A64),
+but last7523 worsens7.83556/7.78816/7.59831.126 RMS10 last7549 A10.75665.
+127 RMS10+MLP32 helps versus126 RMS10 at4096;7.24426/7.29453/7.00528,
+last7212 remains7.20828/7.29087/7.02267, roughly control quality. MLP32 without
+absolute residual cap remains worse (last7282 A8.96413). RMS100+MLP UNTESTED.
+128 component hard/tanh both damage quality:4096 A15.74805/9.74828,
+last7435/7362 A13.39529/7.94774; finite/bound/profile gates pass. Component caps
+are stricter and change direction; do not reject all clipping or infer unique
+cause. Removed absorbed additions alone does not suffice.126 best128→1024
+context same-tail127 NLL6.77097→6.77043: no recovered context gain on probe.
+"Best" selects ONLY fixed post-ramp endpoints; final arbitrary last is separate,
+so128 last can outperform stored best. Do not mistake that for checkpoint fault.
+User has4h TPU and10h T4;129 launching T4 with max-wall9.5h INCLUDING60min
+reserve,30min setup allowance. TPU design priority: retain126 selected4096 gain,
+diagnose continuation degradation via controlled LR/optimizer/MLP comparison.
+No new TPU runner or actual TPU run yet; verify binary source/parity first.
+
 **16 October2026 — EXP129 PREPARED: competitor-informed pre-gate RMSNorm.**
 User authorized adapting/testing the inspected competitor methods. Read-only
 arianraje HF source pinned b946069890837bbe9b5dd75e2d118a7e98d2d193,
