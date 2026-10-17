@@ -1,3 +1,24 @@
+# 17 October2026 — EXP142 PREPARED; one additional TPU9h session
+
+User authorizes full-decoder CE from pinned EXP130 CURRENT3434 as a comparison to
+EXP139 dense-Mamba. New isolated extent/full_decoder_reset.py and
+scripts/m3q_full_decoder_142_campaign.py; existing135-141 contracts verified unchanged.
+Launch results/EXP-142-launch.md; full protocol results/EXP-142-protocol.md;
+frozen plan results/EXP-142-engineering-plan.json. No accelerator run launched here.
+Single seed123; source130 folded, fresh Adam/cursor0, normalization+tanh retained.
+ALL1,675,340,928 params trainable including one tied embedding/readout; no LoRA.
+Shared139 rates: Mamba3e-4 incl internal norm scales, pregate1e-4. Newly unlocked
+MLP/GQA/embedding3e-5; other original norm scales1e-5. Same batch1/context256,
+data permutation, stableclip1, Adam.9/.999,256warm flat. Not a112 resume.
+8.5h includes60min reserve, ceiling131072, no step/time guarantee. Local512,
+remote4h+exit,80GB upload cap. Abstract full q/Adam/best payload26.805GB;
+two remote generations about53.61GB plus small metadata, no frozen-base uploads.
+Six parameter-group gradient/master/BF16-change diagnostics; source A/B/C replay.03,
+first-proposal finite gate, ordinary NLL/profiles/context probes, exact checkpoint
+resume. Eight tiny CPU tests passed51.55s, four runner/rate checks repeated7.50s
+on final code; virtual8 devices, BF16 actual gradients, payload restore/next-step
+identity with restored layouts. Physical1.7B TPU HBM/speed/results still pending.
+
 # 17 October2026 — EXP135–141 PREPARED; EXP133 failed before training
 
 User allocates4 T4x2 sessions12h and3 TPUv5e8 sessions9h. User explicitly requests
