@@ -1,3 +1,33 @@
+# 18 October2026 — EXP136 improves to NLL~6; EXP135 rejected gradient replay
+
+User supplies full136 aggregate; read135 report directly at HF snapshot
+ e5a25058a543ff5e5811a8e676b924a60a32d029. Archived exact bytes and SHA receipts:
+results/EXP-135-136-streamed-v2-analysis.json. No training code changed this turn.
+135 DID run (~22min notebook /~21min worker). Statusarm_failed,0 new accepted
+updates, remains3434. First proposal all stages finite, CE7.085037 vslegacy7.086225,
+error.001187<.03. Gradient replay relativeL2.530583>.15, cosine.999603>.98;
+source replay passed. Reject-before-update worked. Root of gradient magnitude
+mismatch UNKNOWN; direction close does not establish correct optimizer updates.
+Do NOT loosen gate or claim135 continued. Parent treats arm_failed as exit0, so
+Kaggle can finish without traceback even when no model progress was accepted.
+
+136 bothworkers exit0/deadline_partial after10.6026h, fully saved, pending[],
+no report/storage errors. RESET-ALL12586steps=3,222,016accepted input positions,
+last A/B/C6.000789/6.004432/5.617432; A-selected registered best12288:
+6.040121/6.020951/5.619627. RESET-PROJECTIONS12051steps=3,085,056inputpositions,
+last6.112766/6.179138/5.728322; selectedbest10240:6.197205/6.189168/5.861837.
+Compare matched10240: ALL6.156050/6.159662/5.784677 vs PROJ6.197205/6.189168/5.861837.
+Both improve substantially beyond source~7.264/7.376/7.191; the all-reset advantage
+at matched10240 is modest. One exposed-panel seed, no generic superiority claim.
+2.819/2.929sec/update recent medians. Neither completed131072 horizon nor
+established convergence; same streamed-v2 cell can resume each exact worker state.
+All final136 layer profile checks pass. Same-tail context256->1024 gain only
+~.00027 ALL /~.00550 PROJ at8windows: lower short-context NLL does not show useful
+long-context recovery. No new results from137/138 supplied/retrieved this turn.
+Next for135: diagnose same-input single/dual-device gradient scales by layer,
+including whether norm mismatch comes from partitioning or BF16 execution;
+no cause established yet and no rerun can be advertised as fixed.
+
 # 17 October2026 — T4 first-step memory guard failures; streamed-v2 PREPARED
 
 User reports all new T4 jobs failed. Read-only HF snapshot

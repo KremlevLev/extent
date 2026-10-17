@@ -1,0 +1,113 @@
+{
+  "date": "2026-10-18",
+  "files": [
+    {
+      "file": "results/EXP-136-streamed-v2-session-1.json",
+      "bytes": 4268434,
+      "sha256": "f9fbad5239347e8d377935f21c0ad20f8885245a7d3a976bb47a62722d8b97bb"
+    },
+    {
+      "file": "results/EXP-135-streamed-v2-rejected-session-1.json",
+      "bytes": 1243146,
+      "sha256": "3410183816c03a93343007da19a30720561240c0dc6dac7a660ef1bd5c8cf734"
+    }
+  ],
+  "source135_hf_revision": "e5a25058a543ff5e5811a8e676b924a60a32d029",
+  "exp135": {
+    "status": "arm_failed",
+    "step": 3434,
+    "accepted_updates": 0,
+    "failed": {
+      "step": 3434,
+      "reason": "legacy/full gradient replay differs; proposal rejected"
+    },
+    "gradient_replay": {
+      "step": 3434,
+      "passed": false,
+      "relative_l2": 0.530582629390423,
+      "cosine": 0.9996026782573624,
+      "relative_l2_tolerance": 0.15,
+      "minimum_cosine": 0.98,
+      "reference_ce": 7.086224675178528,
+      "compiled_ce": 7.0850372314453125,
+      "ce_error": 0.001187443733215332,
+      "ce_tolerance": 0.03,
+      "scope": "one actual batch; bounded numerical agreement, not bitwise or long-trajectory equivalence",
+      "seconds": 18.735877638000147
+    }
+  },
+  "exp136": [
+    {
+      "worker": 0,
+      "arm": "RESET-ALL",
+      "status": "deadline_partial",
+      "step": 12586,
+      "durable_step": 12586,
+      "accepted_input_tokens": 3222016,
+      "source": {
+        "A": 7.264064021408558,
+        "B": 7.375623241066933,
+        "C": 7.190919354557991
+      },
+      "matched_10240": {
+        "A": 6.156050242483616,
+        "B": 6.159661665558815,
+        "C": 5.784676738083363
+      },
+      "last": {
+        "A": 6.000788755714893,
+        "B": 6.004431590437889,
+        "C": 5.617432102560997
+      },
+      "best_step": 12288,
+      "best": {
+        "A": 6.040120907127857,
+        "B": 6.02095103263855,
+        "C": 5.619626939296722
+      },
+      "last_context": {
+        "128": 5.804146230220795,
+        "256": 5.7786261439323425,
+        "512": 5.777809202671051,
+        "1024": 5.7783573269844055
+      },
+      "pending_slots": []
+    },
+    {
+      "worker": 1,
+      "arm": "RESET-PROJECTIONS",
+      "status": "deadline_partial",
+      "step": 12051,
+      "durable_step": 12051,
+      "accepted_input_tokens": 3085056,
+      "source": {
+        "A": 7.2640169113874435,
+        "B": 7.375562995672226,
+        "C": 7.190967492759228
+      },
+      "matched_10240": {
+        "A": 6.197204664349556,
+        "B": 6.189168244600296,
+        "C": 5.861837223172188
+      },
+      "last": {
+        "A": 6.112765893340111,
+        "B": 6.17913781106472,
+        "C": 5.7283222153782845
+      },
+      "best_step": 10240,
+      "best": {
+        "A": 6.197204664349556,
+        "B": 6.189168244600296,
+        "C": 5.861837223172188
+      },
+      "last_context": {
+        "128": 5.943577945232391,
+        "256": 5.93477988243103,
+        "512": 5.930492162704468,
+        "1024": 5.9292789697647095
+      },
+      "pending_slots": []
+    }
+  ]
+}
