@@ -1,0 +1,27 @@
+{
+  "revision": "e227cc0c0860798a143e340c53ce8450430791b0",
+  "files": [
+    {
+      "file": "results/EXP-135-startup-worker0.json",
+      "status": "failed",
+      "revision": "e227cc0c0860798a143e340c53ce8450430791b0",
+      "sha256": "c7cecedbcdaebfd2d409c129fa9881b14ab42d4690deaa2053699a19936b7af9"
+    },
+    {
+      "file": "results/EXP-136-startup-worker0.json",
+      "status": "failed",
+      "revision": "e227cc0c0860798a143e340c53ce8450430791b0",
+      "sha256": "0d110dbc4493a6640374ff585e779a84e423e6baa31739d5af895dc856f80978"
+    },
+    {
+      "file": "results/EXP-136-startup-worker1.json",
+      "status": "failed",
+      "revision": "e227cc0c0860798a143e340c53ce8450430791b0",
+      "sha256": "7b8ad6e43f5b4a007beee7599779049c6729176371b20490738cbe4dd6a61f6e"
+    }
+  ],
+  "unknown": [
+    "EXP137 and138: snapshot has preflight reports only; no confirmed root exception"
+  ],
+  "diagnosis": "135 and both136 workers: GuardedJit memory guard at first attempted update, before any accepted new update; no numeric HBM estimates saved by old guard"
+}

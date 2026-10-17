@@ -1,3 +1,34 @@
+# 17 October2026 — T4 first-step memory guard failures; streamed-v2 PREPARED
+
+User reports all new T4 jobs failed. Read-only HF snapshot
+ e227cc0c0860798a143e340c53ce8450430791b0 confirms135/worker0 and136/workers0,1
+failed inside GuardedJit at the FIRST gradient executable: MemoryError
+'EXP114 executable exceeds reported HBM'. Legacy helper name, not EXP114 launch.
+0 accepted new updates;135 remains3434,136 remain0. Original135 source replay
+passed all A/B/C: NLL6.74723/6.77329/6.48021; max window error.003858<.03.
+This is an execution/memory failure, not a model-quality result. Old guard did not
+persist memory-size numbers; exact byte-level culprit/allocator OOM not established.
+137/138 available snapshot only has preflight reports; exact root errors unconfirmed.
+Raw3 failures and receipt results/EXP-135-138-startup-failure-audit.json archived.
+
+New isolated extent/reset_streamed_gpu.py + scripts/m3q_reset_t4_streamed_campaign.py.
+GPU135-138 now use layer-by-layer VJP with HOST boundary activations, same full
+chain-rule CE/KL/batch256/reset/optimizer. Resident base remains sharded;135 BOTH GPUs
+model-shard per-layer executables;136-138 independent single-GPU workers as before.
+No giant full28-layer backward executable; per-layer HBM guard kept with byte details.
+135 source current3434+exactAdam and legacy gradient replay before accepting update
+remain required. Source, data, recipe, selection, eval and checkpoint cadence unchanged.
+New separate experiments/expID-reset-streamed-v2 namespace, no overwrite/reinterpretation
+of failed v1 states. Restart fallen jobs with results/EXP-135-138-streamed-v2-launch.md;
+individual135-138 launch files updated. Old135-142 code/contracts verified unchanged,
+so running TPU139-142 need no changes. New parent prints failed child exception/log tail
+and embeds it in ONE aggregate extent-m3q-reset-streamed-v2-ID.json.
+13 local tests passed85.70s incl7 recipe full-gradient parity cases,2-device135 execution,
+BF16 legacy-gradient replay, restored source Adam/cursor, rejection-before-update,
+actual parent traceback surfacing and numeric memory-guard rejection. No physical
+T4 streamed-v2 full model HBM/throughput verified yet. First restart135 and inspect
+8 accepted-step throughput before spending all4 sessions again. No new cloud job launched.
+
 # 17 October2026 — EXP142 PREPARED; one additional TPU9h session
 
 User authorizes full-decoder CE from pinned EXP130 CURRENT3434 as a comparison to

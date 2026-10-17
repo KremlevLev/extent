@@ -8,3 +8,5 @@ results/EXP-131-session-1.json -text
 results/EXP-132-session-1.json -text
 
 results/EXP-133-failed-session-1.json -text
+
+results/EXP-*-startup-worker*.json -text
