@@ -67,19 +67,23 @@ class DownloadPolicy:
             if cooldown is not None:
                 state['cooldown'] = max(state.get('cooldown', 0), cooldown)
             ready = max(now, state.get('cooldown', 0), state.get('next', 0))
-            if reserve and ready <= now:
+            granted = reserve and ready <= now
+            if granted:
                 state['next'] = now + self.interval
             temporary = self.path.with_suffix('.tmp')
             temporary.write_text(json.dumps(state))
             temporary.replace(self.path)
-            return ready
+            return (ready, granted) if reserve else ready
 
     def pause(self, until):
-        while self.clock() < until:
-            remaining = self.deadline - self.clock()
+        while True:
+            now = self.clock()
+            if now >= until:
+                break
+            remaining = self.deadline - now
             if remaining <= 0:
                 raise TimeoutError('HF download wait reached session work deadline')
-            self.sleep(min(30., until - self.clock(), remaining))
+            self.sleep(min(30., until - now, remaining))
         if self.clock() >= self.deadline:
             raise TimeoutError('HF download wait reached session work deadline')
 
@@ -88,8 +92,8 @@ class DownloadPolicy:
         while True:
             if self.clock() >= self.deadline:
                 raise TimeoutError('HF download reached session work deadline')
-            ready = self.update(reserve=True)
-            if ready > self.clock():
+            ready, granted = self.update(reserve=True)
+            if not granted:
                 self.pause(ready)
                 continue  # Recheck: another worker may have extended cooldown.
             try:

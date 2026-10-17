@@ -85,6 +85,22 @@ def test_two_independent_workers_share_cooldown_and_request_pacing(tmp_path):
     assert observed == [1100, 1102]
 
 
+def test_preempted_worker_must_reserve_slot_after_waiting(tmp_path):
+    clock = Clock(); a = policy(tmp_path, clock); b = policy(tmp_path, clock)
+    a.call(lambda: None)  # Slot at1000; next slot at1002.
+    original = b.update
+    def preempted(**kwargs):
+        result = original(**kwargs)
+        if kwargs.get('reserve'):
+            clock.now = max(clock.now, result[0])
+        return result
+    b.update = preempted
+    observed = []
+    b.call(lambda: observed.append(clock()))
+    a.call(lambda: observed.append(clock()))
+    assert observed == [1002, 1004]
+
+
 def test_transient_503_and_network_timeout_are_retried(tmp_path):
     clock = Clock(); p = policy(tmp_path, clock)
     class ReadTimeout(Exception): pass
