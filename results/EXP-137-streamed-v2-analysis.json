@@ -1,0 +1,79 @@
+{
+  "date": "2026-10-18",
+  "source": "results/EXP-137-streamed-v2-session-1.json",
+  "sha256": "640624720b3b414ec9207102e79e169e94b7bf843bf9a4ee8ff8d492f2f3c74b",
+  "bytes": 4258820,
+  "wall_hours": 10.605201388266352,
+  "branches": [
+    {
+      "arm": "RESET-DT",
+      "status": "deadline_partial",
+      "step": 12328,
+      "durable_step": 12328,
+      "accepted_input_tokens": 3155968,
+      "best_step": 4608,
+      "best": {
+        "A": 7.20394117385149,
+        "B": 7.263065546751022,
+        "C": 6.971150740981102
+      },
+      "last": {
+        "A": 7.250803776085377,
+        "B": 7.275950074195862,
+        "C": 6.996569365262985
+      },
+      "matched": {
+        "8192": {
+          "A": 7.257651440799236,
+          "B": 7.295115306973457,
+          "C": 6.985678695142269
+        },
+        "10240": {
+          "A": 7.242575228214264,
+          "B": 7.2938441932201385,
+          "C": 7.0535295233130455
+        }
+      },
+      "last_profile_rejected": [
+        {
+          "layer": 26,
+          "relative_output_discrepancy": 0.03164556995034218
+        }
+      ],
+      "pending_slots": []
+    },
+    {
+      "arm": "RESET-MIMO-X",
+      "status": "deadline_partial",
+      "step": 12002,
+      "durable_step": 12002,
+      "accepted_input_tokens": 3072512,
+      "best_step": 8192,
+      "best": {
+        "A": 6.827096119523048,
+        "B": 6.795480981469154,
+        "C": 6.454612269997597
+      },
+      "last": {
+        "A": 6.9979963675141335,
+        "B": 7.010703504085541,
+        "C": 6.726888790726662
+      },
+      "matched": {
+        "8192": {
+          "A": 6.827096119523048,
+          "B": 6.795480981469154,
+          "C": 6.454612269997597
+        },
+        "10240": {
+          "A": 7.074269317090511,
+          "B": 7.1217300593853,
+          "C": 7.0206568613648415
+        }
+      },
+      "last_profile_rejected": [],
+      "pending_slots": []
+    }
+  ],
+  "interpretation": "single-seed component screen; compare same full-panel steps8192/10240 with136; projection reset strongest measured standalone intervention; does not prove original projection weights universally broken or identify additional full-reset component interactions"
+}

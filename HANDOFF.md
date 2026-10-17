@@ -1,3 +1,28 @@
+# 18 October2026 — EXP137 dt-only weak; MIMO-X-only transient gain
+
+User supplies full137 aggregate. Exact bytes archived results/EXP-137-streamed-v2-session-1.json,
+SHA/extract results/EXP-137-streamed-v2-analysis.json. Bothworkers exit0,
+deadline_partial after10.6052h, durable12328/12002, pending[], no upload/error.
+RESET-DT accepted3,155,968input positions, bestA-selected4608 A/B/C
+7.203941/7.263066/6.971151; last12328 7.250804/7.275950/6.996569.
+RESET-MIMO-X accepted3,072,512positions, best8192 6.827096/6.795481/6.454612;
+last12002 6.997996/7.010704/6.726889, worse than its selected best.
+At matched10240 with136: ALL6.156050/6.159662/5.784677;
+PROJECTIONS6.197205/6.189168/5.861837; DT7.242575/7.293844/7.053530;
+MIMO-X7.074269/7.121730/7.020657. Same ordering at8192. In this one seed,
+projection reset is the strongest tested standalone intervention; DT alone leaves
+A~7.2; MIMO-X alone helps transiently but is weaker and nonmonotonic. Fullreset's
+modest additional advantage over projection-only does not isolate dt vsMIMO-X
+interaction; do not claim a universal faulty parameter or plateau cause.
+Only RESET-DT final-last layer26 profile fails engineering control(.0316456>.02);
+ordinary NLL remains usable, that profile cannot establish activation mechanism.
+All selected-best profiles pass; MIMO-X final profiles pass. Same-tail final
+context256->1024 benefit DT~.00059, MIMO-X~.01413 over8windows; no broad long-context
+recovery claim. Pre2048 A16 monitors must not be compared to A64 as identical panels.
+Neither arm completed its131072 horizon; DT continuation lower priority than136
+full/projection reset.137 is resumable under its unchanged streamed-v2 contract.
+No138 result supplied this turn;135 replay root remains unknown, no code fixes claimed.
+
 # 18 October2026 — EXP136 improves to NLL~6; EXP135 rejected gradient replay
 
 User supplies full136 aggregate; read135 report directly at HF snapshot
