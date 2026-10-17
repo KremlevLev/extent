@@ -1,3 +1,35 @@
+# 18 October2026 — EXP138 CE improves source130; pure KL loses matched test
+
+User supplies full138 aggregate. Exact JSON archived results/EXP-138-streamed-v2-session-1.json;
+SHA/extract results/EXP-138-streamed-v2-analysis.json. Bothworkers exit0,
+deadline_partial after10.6042h, durable11965/10962, pending[], no report/storage errors.
+Source A/B/C~6.7469/6.7732/6.4801 reproduces130 within.001584 perwindow.
+CE accepted3,063,040new input positions; last11965 A/B/C
+6.000900/5.992123/5.566396. Pure full-forwardKL(T1) accepted2,806,272input positions,
+plus2,806,528charged teacher input positions (including interrupted attempt);
+last10962 6.176463/6.225345/5.768133. Selected best BOTH10240, CE
+6.022173/6.011521/5.618820 vsKL6.201834/6.218545/5.794675.
+CE also wins allpanels4096 and8192, no crossover among registered nonzero points.
+Recent seconds/update CE2.86776 vsKL3.15091 (~9.87% slower). No universal rejection
+of distillation: only pureKL1 at this recipe/budget; CE+KL mixtures not measured here.
+
+Preparation nuance confirmed in actual prepare(): start130-folded folds current3434
+corrections into BF16 base, sets old=None, initializes NEW zero-effect rank32 LoRA
+coordinates, copies learned pregate weights; fresh Adam/data cursor0. Thus138 proves
+further recovery from the130 effective function, NOT exact135 continuation with old
+LoRA factors/Adam. New correction parameterization changes as well as optimizer;
+do not attribute gains solely to Adam reset. Do not compare138 step counts against136
+as equal TOTAL pipeline cost: source130's3434 training updates and earlier prep remain
+inherited cost. No demonstrated efficiency advantage for multi-stage LoRA folding.
+
+Both trajectories improve substantially over source; CE late A10240~6.022 tolast11965
+~6.001, no convergence established. All final/best layer profile checks pass.
+Final same-tail8window context256->1024: CE5.71474->5.72833 (worse),
+KL5.99365->5.97562 (small gain, still worse thanCE). Short-window NLL gain does not
+establish useful long-context recovery. Both exact streamed-v2 states resumable;
+CE higher priority than pureKL within138.135 gradient replay cause remains unknown.
+No training code changed this turn.
+
 # 18 October2026 — EXP137 dt-only weak; MIMO-X-only transient gain
 
 User supplies full137 aggregate. Exact bytes archived results/EXP-137-streamed-v2-session-1.json,

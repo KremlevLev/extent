@@ -1,0 +1,126 @@
+{
+  "date": "2026-10-18",
+  "source": "results/EXP-138-streamed-v2-session-1.json",
+  "sha256": "9e5006c360053b8f53e26e8cdb62cbc8c208d63c7953b6db8cd670f5feaa2093",
+  "bytes": 4262186,
+  "wall_hours": 10.604173355897268,
+  "branches": [
+    {
+      "arm": "RESET130-CE",
+      "status": "deadline_partial",
+      "step": 11965,
+      "durable_step": 11965,
+      "accepted_input_tokens": 3063040,
+      "charged_teacher_input_tokens": 0,
+      "source": {
+        "A": 6.746868446469307,
+        "B": 6.773192569613457,
+        "C": 6.480126202106476
+      },
+      "matched": {
+        "4096": {
+          "A": 6.308932766318321,
+          "B": 6.26659283041954,
+          "C": 5.919659145176411
+        },
+        "8192": {
+          "A": 6.0840784683823586,
+          "B": 6.088829219341278,
+          "C": 5.665538936853409
+        },
+        "10240": {
+          "A": 6.022173285484314,
+          "B": 6.011520758271217,
+          "C": 5.618820443749428
+        }
+      },
+      "last": {
+        "A": 6.000900335609913,
+        "B": 5.992122694849968,
+        "C": 5.5663963705301285
+      },
+      "best_step": 10240,
+      "best": {
+        "A": 6.022173285484314,
+        "B": 6.011520758271217,
+        "C": 5.618820443749428
+      },
+      "last_context": {
+        "128": 5.747035413980484,
+        "256": 5.714741885662079,
+        "512": 5.724557936191559,
+        "1024": 5.728328734636307
+      },
+      "seconds_per_update": 2.8677613664949604,
+      "source_replay": {
+        "passed": true,
+        "per_panel_max_error": {
+          "A": 0.0012674331665039062,
+          "B": 0.00115966796875,
+          "C": 0.0015835762023925781
+        },
+        "tolerance": 0.03
+      },
+      "last_profile_rejected": []
+    },
+    {
+      "arm": "RESET130-KL1",
+      "status": "deadline_partial",
+      "step": 10962,
+      "durable_step": 10962,
+      "accepted_input_tokens": 2806272,
+      "charged_teacher_input_tokens": 2806528,
+      "source": {
+        "A": 6.746888652443886,
+        "B": 6.773193314671516,
+        "C": 6.4801143035292625
+      },
+      "matched": {
+        "4096": {
+          "A": 6.508578658103943,
+          "B": 6.472855672240257,
+          "C": 6.080334983766079
+        },
+        "8192": {
+          "A": 6.243950381875038,
+          "B": 6.287829115986824,
+          "C": 5.808589272201061
+        },
+        "10240": {
+          "A": 6.201833546161652,
+          "B": 6.21854542195797,
+          "C": 5.79467536509037
+        }
+      },
+      "last": {
+        "A": 6.176463410258293,
+        "B": 6.225345000624657,
+        "C": 5.768133349716663
+      },
+      "best_step": 10240,
+      "best": {
+        "A": 6.201833546161652,
+        "B": 6.21854542195797,
+        "C": 5.79467536509037
+      },
+      "last_context": {
+        "128": 6.104323625564575,
+        "256": 5.993646502494812,
+        "512": 5.980827450752258,
+        "1024": 5.975623905658722
+      },
+      "seconds_per_update": 3.1509143814982963,
+      "source_replay": {
+        "passed": true,
+        "per_panel_max_error": {
+          "A": 0.0013942718505859375,
+          "B": 0.0012006759643554688,
+          "C": 0.0014653205871582031
+        },
+        "tolerance": 0.03
+      },
+      "last_profile_rejected": []
+    }
+  ],
+  "interpretation": "same-start fresh rank32 correction/Adam after folding source130 current3434; CE beats pure forwardKL(T1) at matched steps in this seed; not exact135 continuation, not a test of CE+KL mixtures; do not omit inherited130 preparation in efficiency comparisons"
+}
