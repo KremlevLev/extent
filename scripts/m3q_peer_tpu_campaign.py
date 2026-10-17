@@ -1,5 +1,5 @@
 """EXP133/134: competitor-informed sharded TPU campaigns in the notebook kernel."""
-import argparse,gc,json,sys,time,traceback
+import argparse,gc,hashlib,json,re,sys,time,traceback
 from pathlib import Path
 from types import SimpleNamespace
 from dataclasses import asdict,replace
@@ -51,15 +51,16 @@ def contract_for(config,experiment):
 
 def summarize(r):
     return dict(status=r.get('status'),progress={a:dict(step=v.get('step'),durable_step=v.get('durable_step'),
-        best_step=v.get('best_step'),failed=v.get('failed'),final=v.get('final')) for a,v in r.get('branches',{}).items()},
+        best_step=v.get('best_step'),throughput=v.get('throughput'),first_update_health=v.get('first_update_health'),failed=v.get('failed'),failed_health=v.get('failed_health'),first_update_diagnostic=v.get('first_update_diagnostic'),final=v.get('final')) for a,v in r.get('branches',{}).items()},
         cost=r.get('cost'),pending=r.get('pending_slots'),error=r.get('error'),report_sync_error=r.get('report_sync_error'))
 
 
 class Session:
     def __init__(self,args,contract,hub):
         self.args,self.contract,self.hub=args,contract,hub;self.begun=time.monotonic()
-        self.prefix=f'experiments/exp{args.experiment}-peer-tpu'
-        self.stem=f'extent-m3q-peer-{args.experiment}'
+        suffix='-'+args.run_tag if args.run_tag else ''
+        self.prefix=f'experiments/exp{args.experiment}-peer-tpu'+suffix
+        self.stem=f'extent-m3q-peer-{args.experiment}'+suffix
         self.checkpoint_signatures={}
         work,_=session_budget(args.max_wall_hours,args.save_reserve_minutes)
         self.deadline=self.begun+work;self.wall=self.begun+args.max_wall_hours*3600
@@ -88,6 +89,7 @@ class Session:
             f'Extent peer TPU: {event}; status={self.result.get("status")}; steps={progress}; HF pending={len(self.result["pending_slots"])}')))
         print(f'peer TPU {event}',flush=True);self.persist(local_only=True)
     def checkpoint(self,arm,payload,step):
+        if getattr(getattr(self,'args',None),'diagnostic_only',False):return
         pointer=self.store.directory(arm)/'checkpoint.json'
         signature=(int(step),int(payload['best_step']))
         if self.checkpoint_signatures.get(arm)==signature:return
@@ -258,6 +260,27 @@ def record_endpoint(s,row,payload,diag,q,tokens,cursor,spec):
     row['evaluations'].append(point);s.persist()
 
 
+def diagnose_first_updates(s, rows, payloads, kernels, base, teacher_params, tokens, mesh, specs):
+    """Replay a single proposal from each source without accepting ANY update."""
+    for name, row in rows.items():
+        if 'first_update_diagnostic' in row:continue
+        s.check();payload=payloads[name];cursor=row['step'];spec=specs[name]
+        t=training_batch(tokens['FIT'],cursor,s.args.experiment,spec['train_offset'])
+        begun=time.monotonic();cost=s.result['cost']
+        cost['attempted_updates']+=1;cost['input_tokens']+=t.size;cost['ce_targets']+=t.shape[0]*(t.shape[1]-1)
+        if spec['alpha']:cost['teacher_input_tokens']+=t.size
+        proposal,after,health=kernels[name](payload['parameters'],payload['optimizer'],base,teacher_params,
+            jax.device_put(t,batch_sharding(mesh)),jnp.asarray(cursor,jnp.float32))
+        health=plain(health)
+        row['first_update_diagnostic']=dict(step=cursor,proposal_accepted=False,seconds=time.monotonic()-begun,
+            training_batch_sha256=hashlib.sha256(t.tobytes()).hexdigest(),
+            failed_stages=[k for k,v in health['stages'].items() if not v['finite']],health=health)
+        del proposal,after
+        # Persist diagnostics before notification or another arm compilation.
+        s.persist(force=True,checkpoints=False);s.emit(name+' first-update diagnostic saved')
+    s.result['status']='diagnostic_failed' if any(not r['first_update_diagnostic']['health']['finite'] for r in rows.values()) else 'diagnostic_passed'
+
+
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--experiment',type=int,choices=(133,134),required=True)
@@ -270,17 +293,23 @@ def main(argv=None):
     p.add_argument('--dataset-cache-dir',default='/kaggle/working/extent-dataset-cache')
     p.add_argument('--qwen-cache-dir',default='/kaggle/working/qwen3-exp104-weights')
     p.add_argument('--plan-only',action='store_true');p.add_argument('--sync-only',action='store_true')
+    p.add_argument('--diagnostic-only',action='store_true',help='Compute and inspect one proposal per arm; never apply it')
+    p.add_argument('--run-tag',default=None,help='Separate report/checkpoint namespace; 133 defaults to numerics-v2')
     p.add_argument('--telegram',action=argparse.BooleanOptionalAction,default=True)
     args=p.parse_args(argv)
+    if args.diagnostic_only and args.experiment!=133:raise ValueError('first-update diagnostic is for EXP133')
+    if args.run_tag is None:args.run_tag='first-step-v2' if args.diagnostic_only else 'numerics-v2' if args.experiment==133 else ''
+    if args.run_tag and not re.fullmatch(r'[a-z0-9][a-z0-9-]{0,47}',args.run_tag):raise ValueError('invalid run tag')
     session_budget(args.max_wall_hours,args.save_reserve_minutes)
     if args.save_reserve_minutes<30:raise ValueError('at least30min reserve required')
     if not np.isfinite(args.max_new_hf_gb) or args.max_new_hf_gb<=0:raise ValueError('positive finite upload cap required')
     config,_=load_config(ROOT/'config/hybrid_1_7b_gqa_v5e8.yaml');contract=contract_for(config,args.experiment)
+    contract['execution']=dict(diagnostic_only=args.diagnostic_only,run_tag=args.run_tag,health_schema='stages-v2')
     if args.plan_only:print(json.dumps(contract,indent=2));return contract
     hub=artifact_config_from_env()
     if hub is None:raise ValueError('HF secrets required')
     s=Session(args,contract,hub);payloads={};layouts={};diags={};kernels={};base=None;teacher_params=None
-    if args.sync_only or s.result.get('status')=='completed':s.persist(force=True);return s.result
+    if args.sync_only or s.result.get('status') in ('completed','diagnostic_passed','diagnostic_failed'):s.persist(force=True);return s.result
     s.result['status']='preflight';s.emit('started')
     try:
         if not s.persist(force=True):raise RuntimeError('HF report write preflight failed')
@@ -324,7 +353,7 @@ def main(argv=None):
             if row.get('durable_step',0)>cursor:raise ValueError('durable cursor ahead of restored state')
             payloads[name]=payload;best_step=int(payload['best_step']);reconcile(row,cursor,best_step)
             diag=Diagnostics(config,base,columns,spec,mesh,s.check);diags[name]=diag
-            kernels[name]=GuardedJit(make_step(config,tc,columns,spec,tx))
+            kernels[name]=GuardedJit(make_step(config,tc,columns,spec,tx,detailed=args.diagnostic_only))
             row['coordinates']=sum(x.size for x in jax.tree.leaves(payload['parameters']))
             row['payload_bytes']=sum(x.size*x.dtype.itemsize for x in jax.tree.leaves(payload))
             # Initial controls never use restored/current coordinates.
@@ -349,7 +378,9 @@ def main(argv=None):
         specs={v['name']:v for v in contract['arms']}
         remote_interval=7200 if args.experiment==133 else 14400
         try:
-            while any(row['step']<HORIZON and not row.get('failed') for row in rows.values()):
+            if args.diagnostic_only:
+                diagnose_first_updates(s,rows,payloads,kernels,base,teacher_params,tokens,mesh,specs)
+            while not args.diagnostic_only and any(row['step']<HORIZON and not row.get('failed') for row in rows.values()):
                 eligible=[name for name,row in rows.items() if row['step']<HORIZON and not row.get('failed')]
                 name=min(eligible,key=lambda n:rows[n]['step']);row=rows[name];spec=specs[name];diag=diags[name]
                 payload=payloads[name];q,state=payload['parameters'],payload['optimizer'];cursor=row['step']
@@ -362,7 +393,9 @@ def main(argv=None):
                         if spec['alpha']:cost['teacher_input_tokens']+=t.size
                         proposal,after,health=kernels[name](q,state,base,teacher_params,jax.device_put(t,batch_sharding(mesh)),jnp.asarray(cursor,jnp.float32))
                         row['training_seconds']=row.get('training_seconds',0)+time.monotonic()-begun
-                        if not bool(health['finite']):raise FloatingPointError('nonfinite proposal rejected')
+                        if not bool(health['finite']):
+                            row['failed_health']=plain(health);s.persist(local_only=True)
+                            raise FloatingPointError('nonfinite proposal rejected; see failed_health.stages')
                         q=jax.device_put(proposal,layouts[name]['parameters']);state=jax.device_put(after,layouts[name]['optimizer'])
                         cursor+=1;row['step']=cursor;row.pop('final',None)
                         cost['accepted_updates']=cost.get('accepted_updates',0)+1
@@ -376,11 +409,12 @@ def main(argv=None):
                     s.persist(force=True);last_sync=time.monotonic()
                     if s.result.get('storage_error'):raise TimeoutError('upload cap reached')
                 if time.monotonic()-last_notice>=1800:s.emit('progress');last_notice=time.monotonic()
-            s.result['status']='arm_failed' if any(r.get('failed') for r in rows.values()) else 'completed'
+            if not args.diagnostic_only:s.result['status']='arm_failed' if any(r.get('failed') for r in rows.values()) else 'completed'
         except TimeoutError:s.result['status']='deadline_partial';s.emit('training deadline')
         # Save FIRST, before spending the remaining reserve on diagnostics.
         s.persist(force=True);s.deadline=s.wall-300
-        try:final_evaluations(s,rows,payloads,diags,tokens)
+        try:
+            if not args.diagnostic_only:final_evaluations(s,rows,payloads,diags,tokens)
         except TimeoutError:s.result['status']='finalization_partial'
         common=min(r['step'] for r in rows.values())
         endpoint_sets=[{v['step'] for v in r['evaluations'] if v.get('selection_eligible')} for r in rows.values()]

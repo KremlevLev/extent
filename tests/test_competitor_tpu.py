@@ -103,3 +103,44 @@ def test_long_training_pool_permutation_and_boundary_targets():
         indices.append(int(t[0,0])//1024)
     assert len(set(indices))==4096
     np.testing.assert_array_equal(training_batch(pool,0,133,4096),pool[training_index(4096)][None])
+
+
+@pytest.mark.parametrize('bad_stage',['objective','parameters_before','optimizer_before','gradients','updates','parameters_after','optimizer_after'])
+def test_proposal_health_identifies_exact_nonfinite_stage(bad_stage):
+    from extent.competitor_tpu import proposal_health
+    names=['objective','parameters_before','optimizer_before','gradients','updates','parameters_after','optimizer_after']
+    values=[{'loss':jnp.asarray(1.)}]+[{'layer':{'kernel':jnp.asarray([1.,2.])}} for _ in range(6)]
+    index=names.index(bad_stage)
+    if index==0:values[0]['loss']=jnp.asarray(jnp.nan)
+    else:values[index]['layer']['kernel']=jnp.asarray([jnp.inf,jnp.nan])
+    def run():return proposal_health(values[0]['loss'],{},*values[1:],detailed=True)
+    h=jax.jit(run)()
+    assert not bool(h['finite'])
+    assert [name for name,v in h['stages'].items() if not bool(v['finite'])]==[bad_stage]
+    leaves=h['stages'][bad_stage]['leaves']
+    assert sum(int(v['nan_count']) for v in leaves.values())==1
+    if index:assert sum(int(v['inf_count']) for v in leaves.values())==1
+
+
+def test_first_update_diagnostic_never_accepts_proposal_and_persists_each_arm():
+    from scripts.m3q_peer_tpu_campaign import diagnose_first_updates,Session
+    from extent.competitor_tpu import training_batch
+    from extent.sharding import create_v5e_mesh
+    import hashlib
+    row=dict(step=0);q={'weight':np.array([1.],np.float32)};state={'count':np.array(0)}
+    payload=dict(parameters=q,optimizer=state)
+    pool=np.arange(4194304,dtype=np.int32).reshape(16384,256)
+    calls=[]
+    s=SimpleNamespace(args=SimpleNamespace(experiment=133),check=lambda:None,
+        result=dict(cost=dict(attempted_updates=0,input_tokens=0,ce_targets=0,teacher_input_tokens=0)),
+        persist=lambda **kw:calls.append(('persist',kw)),emit=lambda v:calls.append(('emit',v)))
+    def kernel(*args):return {'weight':np.array([np.nan])},{'count':np.array(1)},dict(finite=False,loss=1.,stages={'gradients':{'finite':False}})
+    diagnose_first_updates(s,{'A':row},{'A':payload},{'A':kernel},{},{},{'FIT':pool},create_v5e_mesh(),{'A':dict(train_offset=4096,alpha=0)})
+    assert row['step']==0 and payload['parameters'] is q and payload['optimizer'] is state
+    assert row['first_update_diagnostic']['failed_stages']==['gradients']
+    assert row['first_update_diagnostic']['training_batch_sha256']==hashlib.sha256(training_batch(pool,0,133,4096).tobytes()).hexdigest()
+    assert s.result['status']=='diagnostic_failed' and calls[0][0]=='persist'
+    assert 'accepted_updates' not in s.result['cost']
+    # A diagnostic session never writes full source/checkpoint copies.
+    session=Session.__new__(Session);session.args=SimpleNamespace(diagnostic_only=True)
+    session.checkpoint('A',payload,0)

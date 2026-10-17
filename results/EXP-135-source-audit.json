@@ -1,0 +1,19 @@
+{
+  "revision": "b85a8fbfb2832ad7cc4f7442defaafb454417e6a",
+  "step": 3434,
+  "chunks": 487,
+  "verified_bytes": 114979740,
+  "all_sha256_passed": true,
+  "scope": "Current, Adam, best and scalar bytes verified; no model training or physical-device replay",
+  "real_optimizer_template_restored": true,
+  "parameter_sha256_matches": true,
+  "adam_and_schedule_counters": [
+    3434,
+    3434,
+    3434,
+    3434,
+    3434,
+    3434
+  ],
+  "best_step": 3072
+}

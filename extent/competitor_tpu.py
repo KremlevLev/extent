@@ -9,12 +9,12 @@ from extent.recovery_subspace import coordinates_finite
 from extent.stable_gradient_clip import scaled_norm_parts
 
 
-def hidden(cfg,base,q,tokens,columns,spec,step,*,remat=True):
+def hidden(cfg,base,q,tokens,columns,spec,step,*,remat=True,block_fn=block_forward):
     cfg=replace(cfg,remat_policy='none')
     h=base['embed_tokens']['embedding'][tokens].astype(getattr(jnp,cfg.compute_dtype))
     phase=jnp.asarray(1.,jnp.float32) if spec['ramp_steps']==0 else jnp.clip(step/spec['ramp_steps'],0.,1.)
     for i in range(cfg.num_layers):
-        def fn(p,r,h,i=i):return block_forward(cfg,i,p,r,h,columns,spec,phase)[0]
+        def fn(p,r,h,i=i):return block_fn(cfg,i,p,r,h,columns,spec,phase)[0]
         h=(jax.checkpoint(fn,prevent_cse=False) if remat else fn)(base[f'layers_{i}'],q[str(i)],h)
     return h
 
@@ -29,8 +29,8 @@ def teacher_hidden(cfg,tc,tp,tokens):
     return jax.lax.stop_gradient(h)
 
 
-def objective(cfg,base,q,tokens,columns,spec,step,teacher_h=None,tile=32):
-    h=hidden(cfg,base,q,tokens,columns,spec,step)
+def objective(cfg,base,q,tokens,columns,spec,step,teacher_h=None,tile=32,*,block_fn=block_forward):
+    h=hidden(cfg,base,q,tokens,columns,spec,step,block_fn=block_fn)
     count=tokens.shape[0]*(tokens.shape[1]-1);pad=(-count)%tile
     def pack(v):return jnp.pad(v.reshape(count,-1),((0,pad),(0,0))).reshape(-1,tile,v.shape[-1])
     features=pack(h[:,:-1]);labels=jnp.pad(tokens[:,1:].reshape(count),(0,pad)).reshape(-1,tile)
@@ -48,20 +48,46 @@ def objective(cfg,base,q,tokens,columns,spec,step,teacher_h=None,tile=32):
     return loss,dict(ce=ce,kl=kl)
 
 
-def make_step(cfg,tc,columns,spec,tx):
+def tree_health(tree, *, detailed=False):
+    """Small on-device diagnostics; no full gradient/state arrays leave the device."""
+    entries = {}
+    for path, value in jax.tree.leaves_with_path(tree):
+        finite = jnp.isfinite(value)
+        entries[jax.tree_util.keystr(path)] = dict(
+            finite=jnp.all(finite),
+            nan_count=jnp.sum(jnp.isnan(value), dtype=jnp.int32),
+            inf_count=jnp.sum(jnp.isinf(value), dtype=jnp.int32),
+            max_finite_abs=jnp.max(jnp.where(finite, jnp.abs(value.astype(jnp.float32)), 0.)),
+        )
+    result = dict(finite=jnp.all(jnp.stack([v['finite'] for v in entries.values()])) if entries else jnp.asarray(True))
+    if detailed:
+        result['leaves'] = entries
+    return result
+
+
+def proposal_health(loss, parts, q, state, gradients, updates, proposed, after, *, detailed=False):
+    stages = dict(objective=dict(loss=loss, **parts), parameters_before=q,
+        optimizer_before=state, gradients=gradients, updates=updates,
+        parameters_after=proposed, optimizer_after=after)
+    health = {name: tree_health(value, detailed=detailed) for name, value in stages.items()}
+    return dict(finite=jnp.all(jnp.stack([v['finite'] for v in health.values()])), stages=health)
+
+
+def make_step(cfg,tc,columns,spec,tx,*,detailed=False,block_fn=block_forward):
     def step(q,state,base,tp,tokens,cursor):
         th=teacher_hidden(cfg,tc,tp,tokens) if spec['alpha'] else None
-        (loss,parts),g=jax.value_and_grad(lambda r:objective(cfg,base,r,tokens,columns,spec,cursor,th),has_aux=True)(q)
+        (loss,parts),g=jax.value_and_grad(lambda r:objective(cfg,base,r,tokens,columns,spec,cursor,th,block_fn=block_fn),has_aux=True)(q)
         changes,after=tx.update(g,state,q);proposed=optax.apply_updates(q,changes)
         maximum,_,lognorm=scaled_norm_parts(g)
-        return proposed,after,dict(loss=loss,**parts,finite=coordinates_finite((loss,g,proposed,after)),
+        health=proposal_health(loss,parts,q,state,g,changes,proposed,after,detailed=detailed)
+        return proposed,after,dict(loss=loss,**parts,**health,
             grad_max_abs=maximum,log10_grad_norm=lognorm)
     return step
 
 
-def token_nll(cfg,base,q,tokens,columns,spec,step):
+def token_nll(cfg,base,q,tokens,columns,spec,step,*,block_fn=block_forward):
     from extent.context_recovery import tiled_nll
-    return tiled_nll(cfg,base,hidden(cfg,base,q,tokens,columns,spec,step),tokens)
+    return tiled_nll(cfg,base,hidden(cfg,base,q,tokens,columns,spec,step,block_fn=block_fn),tokens)
 
 
 def reconcile(row,cursor,best_step):
