@@ -6,12 +6,15 @@ New scripts/m3q_reset_followup_campaign.py + extent/reset_followup.py; protocol
 results/EXP-135-141-protocol.md; all7 standalone cells results/EXP-135-141-launches.md.
 135 model-shards one trajectory across BOTH GPUs in one fresh process, resident
 weights/full remat/tiled vocabulary; batch1 remains256, no data-parallel batch change.
-Source130 CURRENT3434 inclAdam/schedule/data, targetABSOLUTE32768 (29,334 new updates).
+Source130 CURRENT3434 inclAdam/schedule/data, first goalABSOLUTE32768 (29,334 new updates), then continues within wall budget to ceiling131072.
 Pin results/EXP-135-source-pin.json at HF b85a8fbfb2832ad7cc4f7442defaafb454417e6a;
 all487 chunks114,979,740B checked; real optimizer template restored; current hash matches,
 best3072; all6 Adam/schedule counters3434. Receipt EXP-135-source-audit.json.
 Physical replay EACH A/B/C window<=.03 is required before training. Throughput/ETA after8
 accepted new steps; NO promise32k fits one12h session; checkpoint/resume supported.
+Before accepting first135 proposal each invocation, compare legacy streamed130 actual-batch
+gradient vsfullcompiled: CEerr<=.03,relativeL2<=.15,cos>=.98; failed probe rejects proposal.
+No bitwise/long-trajectory equivalence claim. Probe tokens/time charged separately.
 136 fullreset vsprojection-only;137 dt_bias-only vsmimo_x-only, same111 start/ramp2048.
 138 CE vsfullforwardKL1 fromFOLDED130 current3434; freshAdam BOTH, noMLP expansion.
 139 R32 vsallMamba dense fromsameFOLDED130, freshAdam BOTH; MLP/GQA/embedding frozen.
@@ -22,7 +25,7 @@ instead of repeatedly overwritten by surgery. This is a common new normalized se
 not an exact historical097 replay or the competitor4B mapping. BF16 storage both starts.
 TPU runs IN NOTEBOOK kernel; GPU135 one2GPUchild,136–138 two1GPUchildren. GPU11.5h/TPU8.5h
 INCLUDES60min reserve plus30min notebook setup margin. Local128R32/512dense; remote120min
-+exit, also4096steps forR32-onlysessions. GPU4GB TOTAL/session; TPU13924GB/1404GB/14140GB.
++exit, also4096steps for135. GPU1356GB,136–1384GB TOTAL/session; TPU13924GB/1404GB/14140GB.
 Frozen base reconstructed, never newly uploaded. All3 paired comparisons keepbatch1ctx256
 Adam.9/.999,LR3e-4Mamba/1e-4norm,warm256;135 preserves original schedule3434.
 Source/registeredA/B/C/last/best,profiles,matched-tailcontext128..1024; A-only best.

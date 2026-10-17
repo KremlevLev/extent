@@ -73,15 +73,16 @@ def proposal_health(loss, parts, q, state, gradients, updates, proposed, after, 
     return dict(finite=jnp.all(jnp.stack([v['finite'] for v in health.values()])), stages=health)
 
 
-def make_step(cfg,tc,columns,spec,tx,*,detailed=False,block_fn=block_forward):
+def make_step(cfg,tc,columns,spec,tx,*,detailed=False,block_fn=block_forward,return_gradients=False):
     def step(q,state,base,tp,tokens,cursor):
         th=teacher_hidden(cfg,tc,tp,tokens) if spec['alpha'] else None
         (loss,parts),g=jax.value_and_grad(lambda r:objective(cfg,base,r,tokens,columns,spec,cursor,th,block_fn=block_fn),has_aux=True)(q)
         changes,after=tx.update(g,state,q);proposed=optax.apply_updates(q,changes)
         maximum,_,lognorm=scaled_norm_parts(g)
         health=proposal_health(loss,parts,q,state,g,changes,proposed,after,detailed=detailed)
-        return proposed,after,dict(loss=loss,**parts,**health,
-            grad_max_abs=maximum,log10_grad_norm=lognorm)
+        result=(proposed,after,dict(loss=loss,**parts,**health,
+            grad_max_abs=maximum,log10_grad_norm=lognorm))
+        return result+(g,) if return_gradients else result
     return step
 
 

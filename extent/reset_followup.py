@@ -156,3 +156,39 @@ class Inspector:
             rows.append(dict(layer=i,relative_output_discrepancy=error if np.isfinite(error) else str(error),accepted=bool(np.isfinite(error) and error<=.02),**plain(metrics)))
             h=ordinary
         return dict(layers=rows,tolerance=.02,interpretation='one diagnostic window; failed profile checks exclude corresponding mechanistic claims, ordinary NLL remains quality metric')
+
+
+def compare_gradients(reference,actual):
+    """Robust host comparison of a single gradient pair; never modifies either."""
+    a,ta=jax.tree.flatten(reference);b,tb=jax.tree.flatten(actual)
+    if ta!=tb:raise ValueError('gradient tree differs')
+    x=[np.asarray(jax.device_get(v),np.float64) for v in a]
+    y=[np.asarray(jax.device_get(v),np.float64) for v in b]
+    if any(u.shape!=v.shape for u,v in zip(x,y)):raise ValueError('gradient shape differs')
+    if not all(np.all(np.isfinite(v)) for v in x+y):return dict(passed=False,reason='nonfinite gradient in comparison')
+    scale=max([float(np.max(np.abs(v))) for v in x+y]+[1e-300])
+    xx=sum(float(np.sum((v/scale)**2)) for v in x);yy=sum(float(np.sum((v/scale)**2)) for v in y)
+    diff=sum(float(np.sum(((v-u)/scale)**2)) for u,v in zip(x,y))
+    dot=sum(float(np.sum((v/scale)*(u/scale))) for u,v in zip(x,y))
+    relative=(diff/max(xx,1e-300))**.5
+    cosine=dot/(xx*yy)**.5 if xx>0 and yy>0 else 1. if xx==yy else 0.
+    return dict(passed=bool(relative<=.15 and cosine>=.98),relative_l2=relative,cosine=cosine,relative_l2_tolerance=.15,minimum_cosine=.98)
+
+
+class ReferenceProbe:
+    """Compare actual EXP135 gradient to legacy streamed130 before acceptance."""
+    def __init__(self,patient,device):
+        import copy
+        from extent.competitor_recovery import Engine
+        p=copy.copy(patient);p.device=device;p.functions={}
+        self.device=device
+        with jax.default_device(device):self.engine=Engine(p,old_arm(130,1))
+    def compare(self,q,tokens,step,loss,gradient):
+        with jax.default_device(self.device):
+            self.engine.set_step(step)
+            report,reference=self.engine.loss_and_grad(jax.device_put(q,self.device),tokens)
+        result=compare_gradients(reference,gradient)
+        result.update(reference_ce=report['ce'],compiled_ce=float(loss),ce_error=abs(report['ce']-float(loss)),ce_tolerance=.03)
+        result['passed']=result['passed'] and result['ce_error']<=.03
+        result['scope']='one actual batch; bounded numerical agreement, not bitwise or long-trajectory equivalence'
+        return result

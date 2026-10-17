@@ -11,10 +11,10 @@ from extent.reset_followup import recipes
 ROOT=Path(__file__).resolve().parents[1]
 GPU_EXPERIMENTS=(135,136,137,138)
 TPU_EXPERIMENTS=(139,140,141)
-EVAL_STEPS=(0,128,512,1024,2048,2560,3072,3434,3584,4096,4608,5120,6144,8192,10240,12288,16384,20480,24576,28672,32768)
+EVAL_STEPS=(0,128,512,1024,2048,2560,3072,3434,3584,4096,4608,5120,6144,8192,10240,12288,16384,20480,24576,28672,32768,40960,49152,65536,81920,98304,114688,131072)
 
 
-def contract_for(experiment,worker=None):
+def contract_for(experiment,worker=None,max_steps=131072):
     from dataclasses import asdict
     from extent.config import load_config
     model,_=load_config(ROOT/'config/hybrid_1_7b_gqa_v5e8.yaml')
@@ -26,9 +26,10 @@ def contract_for(experiment,worker=None):
         'scripts/m3q_peer_tpu_campaign.py','extent/mamba3_transplant.py','extent/sharding.py',
         'extent/recovery_durability.py','extent/chunked_checkpoint.py','extent/t4_scale_data.py','config/hybrid_1_7b_gqa_v5e8.yaml')
     value=dict(protocol='exp135-141-reset-v1',experiment=experiment,worker=worker,seed=123,model=asdict(model),
-        recipes=specs,horizon=32768,eval_steps=list(EVAL_STEPS),sequence_length=256,batch_size=1,
+        recipes=specs,horizon=max_steps,first_goal_step=32768,eval_steps=sorted({v for v in EVAL_STEPS if v<=max_steps}|{max_steps}),sequence_length=256,batch_size=1,
         gradient='one unchanged training window/update; full-chain gradient, no data-parallel batch increase',
-        checkpoint='local128(R32)/512(dense); remote120min+exit, also4096 updates in R32-only sessions; current,Adam,best; frozen base reconstructed, never uploaded',
+        numerical_gate='135 first batch each invocation: legacy/full CE error<=.03, gradient relativeL2<=.15 and cosine>=.98, before accepting update; not bitwise equivalence',
+        checkpoint='local128(R32)/512(dense); remote120min+exit, also4096 updates in135; current,Adam,best; frozen base reconstructed, never uploaded',
         optimizer='stableclip1; Adam .9/.999 eps1e-8; Mamba3e-4,norm1e-4; warmup256; fixed LR thereafter; no MLP in new comparisons',
         continuation='135 restores current3434,Adam,schedule and data cursor; 138/139 fold current3434 but RESET Adam in ALL paired arms',
         preparation='140/141 compare clean balanced QKVO lift vs EXP072 ONPOLICY, both BEFORE EXP111 corrections; zero-effect R32 init or dense Mamba; same fully-active norm+tanh+combined reset initialization; no ramp, dense dynamics not overwritten during training',
@@ -78,7 +79,7 @@ def run(args):
     import jax
     import jax.numpy as jnp
     from extent.config import load_config
-    from extent.reset_followup import source130,clean_transplant,prepare,block_forward,Inspector
+    from extent.reset_followup import source130,clean_transplant,prepare,block_forward,Inspector,ReferenceProbe
     from extent.competitor_recovery import optimizer
     from extent.competitor_tpu import make_step,token_nll,training_batch,reconcile
     from extent.plateau_forensics import GuardedJit,plain,state_digest
@@ -89,7 +90,7 @@ def run(args):
     from scripts.m3q_peer_tpu_campaign import coordinate_layout,sharded_optimizer
     from extent.context_recovery import tiled_nll
     cfg,_=load_config(ROOT/'config/hybrid_1_7b_gqa_v5e8.yaml')
-    c=contract_for(args.experiment,args.worker);hub=artifact_config_from_env()
+    c=contract_for(args.experiment,args.worker,args.max_steps);horizon=c['horizon'];eval_steps=c['eval_steps'];hub=artifact_config_from_env()
     if hub is None:raise ValueError('HF secrets required')
     s=session(args,c,hub);payloads={};bases={};layouts={};kernels={};evaluators={};specs={};teacher_params=None
     if s.result.get('status')=='completed':s.persist(force=True);return s.result
@@ -128,15 +129,16 @@ def run(args):
             cursor=saved[1]['step'] if saved else source_cursor
             row=s.result['branches'].setdefault(name,dict(step=cursor,source_step=source_cursor,history=[],evaluations=[]))
             if not saved and row.get('durable_step',source_cursor)>source_cursor:raise FileNotFoundError('durable continuation missing')
+            if saved and row.get('durable_step',source_cursor)>cursor:raise ValueError('durable report cursor ahead of restored checkpoint')
             reconcile(row,cursor,int(payload['best_step']));payloads[name]=payload
             row['invocation_updates']=0;row['timing_samples']=[]
             row['coordinates']=sum(a.size for a in jax.tree.leaves(q));row['payload_bytes']=sum(a.size*a.dtype.itemsize for a in jax.tree.leaves(template))
-            kernels[name]=GuardedJit(make_step(cfg,tc,columns,spec,tx,block_fn=block_forward))
-            evaluators[name]=GuardedJit(lambda q,t,step,base=base,spec=spec:token_nll(cfg,base,q,t,columns,spec,step,block_fn=block_forward))
-            def evaluate(q,windows,step,tail=None,function=evaluators[name]):
+            kernels[name]=GuardedJit(make_step(cfg,tc,columns,spec,tx,block_fn=block_forward,return_gradients=args.experiment==135))
+            evaluators[name]=GuardedJit(lambda b,q,t,step,spec=spec:token_nll(cfg,b,q,t,columns,spec,step,block_fn=block_forward))
+            def evaluate(q,windows,step,tail=None,function=evaluators[name],weights=base):
                 losses=[]
                 for t in windows:
-                    s.check();v=np.asarray(function(q,jax.device_put(t[None],batch_sharding(mesh)),jnp.asarray(step,jnp.float32)))[0]
+                    s.check();v=np.asarray(function(weights,q,jax.device_put(t[None],batch_sharding(mesh)),jnp.asarray(step,jnp.float32)))[0]
                     if not np.all(np.isfinite(v)):raise FloatingPointError('nonfinite ordinary held-out NLL')
                     losses.append(float(np.mean(v if tail is None else v[-tail:])))
                 return dict(nll=float(np.mean(losses)),windows=losses,targets_per_window=255 if tail is None else tail)
@@ -153,11 +155,12 @@ def run(args):
             if 'source_profile' not in row:row['source_profile']=evaluators[name].inspector.profile(q,tokens['A'][:1],source_cursor)
             s.persist()
             del template,q,state;gc.collect()
+        reference_probe=ReferenceProbe(patient,devices[0]) if args.experiment==135 else None
         del patient,clean,source_payload;gc.collect()
-        rows=s.result['branches'];s.result['status']='running';s.persist();last_sync=time.monotonic();last_notice=time.monotonic();dense_campaign=any(v['dense'] for v in specs.values())
+        rows=s.result['branches'];s.result['status']='running';s.persist();last_sync=time.monotonic();last_notice=time.monotonic()
         def evaluate_endpoint(name,force=False):
             row=rows[name];payload=payloads[name];spec=specs[name];at=row['step']
-            if not force and (at not in EVAL_STEPS or any(e['step']==at for e in row['evaluations'])):return
+            if not force and (at not in eval_steps or any(e['step']==at for e in row['evaluations'])):return
             ready=spec['ramp_steps']==0 or at>=spec['ramp_steps'];point=dict(step=at,selection_eligible=ready,panels={})
             if ready and at==row['source_step']:
                 point['panels']=row['source_controls'];point['reuses_source_control']=True
@@ -167,22 +170,23 @@ def run(args):
             if ready and (row['best_nll'] is None or point['panels']['A']['nll']<row['best_nll']):
                 payload['best']=payload['parameters'];payload['best_step']=jnp.asarray(at,jnp.int32)
                 row.update(best_nll=point['panels']['A']['nll'],best_step=at)
-            if at in (4096,8192,16384,32768):point['profile']=evaluators[name].inspector.profile(payload['parameters'],tokens['A'][:1],at)
+            if at in (4096,8192,16384,32768,65536,98304,131072):point['profile']=evaluators[name].inspector.profile(payload['parameters'],tokens['A'][:1],at)
             if not force:row['evaluations'].append(point)
             s.persist();return point
         try:
-            while any(r['step']<32768 and not r.get('failed') for r in rows.values()):
-                eligible=[n for n,r in rows.items() if r['step']<32768 and not r.get('failed')]
+            while any(r['step']<horizon and not r.get('failed') for r in rows.values()):
+                eligible=[n for n,r in rows.items() if r['step']<horizon and not r.get('failed')]
                 name=min(eligible,key=lambda n:rows[n]['step']-rows[n]['source_step']);row=rows[name];payload=payloads[name];spec=specs[name]
-                cursor=row['step'];block_size=512 if spec['dense'] else 128;target=min(32768,((cursor//block_size)+1)*block_size)
+                cursor=row['step'];block_size=512 if spec['dense'] else 128;target=min(horizon,((cursor//block_size)+1)*block_size)
                 try:
                     evaluate_endpoint(name)
                     while cursor<target:
                         s.check();t=training_batch(tokens['FIT'],cursor,133)
                         begun=time.monotonic();cost=s.result['cost'];cost['attempted_updates']+=1;cost['input_tokens']+=t.size;cost['ce_targets']+=t.shape[1]-1
                         if spec['alpha']:cost['teacher_input_tokens']+=t.size
-                        proposed,after,health=kernels[name](payload['parameters'],payload['optimizer'],bases[name],teacher_params,
+                        outputs=kernels[name](payload['parameters'],payload['optimizer'],bases[name],teacher_params,
                             jax.device_put(t,batch_sharding(mesh)),jnp.asarray(cursor,jnp.float32))
+                        proposed,after,health=outputs[:3]
                         seconds=time.monotonic()-begun;cost['training_seconds']=cost.get('training_seconds',0)+seconds;h=plain(health)
                         if 'first_update_health' not in row or not h['finite']:
                             row['first_update_health' if 'first_update_health' not in row else 'failed_health']=dict(step=cursor,seconds=seconds,health=h)
@@ -190,23 +194,35 @@ def run(args):
                             s.persist(force=True,checkpoints=False)
                         if not h['finite']:
                             row['failed']=dict(step=cursor,reason='nonfinite proposal rejected',failed_stages=[k for k,v in h['stages'].items() if not v['finite']]);break
+                        if reference_probe is not None:
+                            probe_started=time.monotonic()
+                            check=reference_probe.compare(payload['parameters'],t,cursor,h['loss'],outputs[3])
+                            check['seconds']=time.monotonic()-probe_started
+                            cost['reference_probe_seconds']=cost.get('reference_probe_seconds',0)+check['seconds'];cost['reference_probe_input_tokens']=cost.get('reference_probe_input_tokens',0)+t.size
+                            row['gradient_replay']=dict(step=cursor,**check);s.persist(force=True,checkpoints=False)
+                            reference_probe=None;gc.collect()
+                            if not check['passed']:
+                                row['failed']=dict(step=cursor,reason='legacy/full gradient replay differs; proposal rejected');break
                         payload['parameters']=jax.device_put(proposed,layouts[name]['parameters']);payload['optimizer']=jax.device_put(after,layouts[name]['optimizer'])
                         cursor+=1;row['step']=cursor;row.pop('final',None)
                         cost['accepted_updates']=cost.get('accepted_updates',0)+1;cost['accepted_input_tokens']=cost.get('accepted_input_tokens',0)+t.size;cost['accepted_ce_targets']=cost.get('accepted_ce_targets',0)+t.shape[0]*(t.shape[1]-1)
                         row['accepted_new_updates']=row.get('accepted_new_updates',0)+1;row['invocation_updates']+=1
                         row.setdefault('timing_samples',[]).append(seconds);row['timing_samples']=row['timing_samples'][-16:]
                         if row['invocation_updates']>=8:
-                            median=float(np.median(row['timing_samples'][-6:]));remaining=(32768-cursor)*median/3600
-                            row['throughput']=dict(seconds_per_update=median,estimated_training_hours_to32768=remaining,remaining_work_hours=max(0,s.deadline-time.monotonic())/3600,
+                            median=float(np.median(row['timing_samples'][-6:]));remaining=max(0,32768-cursor)*median/3600
+                            row['throughput']=dict(seconds_per_update=median,estimated_training_hours_to32768=remaining,estimated_training_hours_to_ceiling=max(0,horizon-cursor)*median/3600,ceiling=horizon,remaining_work_hours=max(0,s.deadline-time.monotonic())/3600,
                                 caveat='recent training throughput only; evaluations/saves excluded; not a completion promise')
                         if row['invocation_updates']==8:s.emit(name+' throughput checked: '+str(row.get('throughput')))
                         if row['invocation_updates']<=8 or cursor%32==0:
                             row['history'].append(dict(step=cursor,seconds=seconds,**h));s.persist(local_only=True)
                         evaluate_endpoint(name)
+                        if cursor==32768:
+                            row['first_goal_reached']=True
+                            if args.experiment==135:s.checkpoint(name,payload,cursor);s.persist(force=True);s.emit('32768 goal reached'+('; continuing within wall budget' if horizon>32768 else ''))
                         if cursor%block_size==0:s.checkpoint(name,payload,cursor)
                     s.checkpoint(name,payload,cursor)
                 except TimeoutError:raise
-                if time.monotonic()-last_sync>=7200 or (not dense_campaign and any(r['step']-r.get('durable_step',r['source_step'])>=4096 for r in rows.values())):
+                if time.monotonic()-last_sync>=7200 or (args.experiment==135 and any(r['step']-r.get('durable_step',r['source_step'])>=4096 for r in rows.values())):
                     s.persist(force=True);last_sync=time.monotonic()
                     if s.result.get('storage_error'):raise TimeoutError('upload cap; progress saved locally')
                 if time.monotonic()-last_notice>=1800:s.emit('progress');last_notice=time.monotonic()
@@ -253,6 +269,7 @@ def parser():
     p.add_argument('--experiment',type=int,choices=range(135,142),required=True)
     p.add_argument('--worker',type=int)
     p.add_argument('--max-wall-hours',type=float)
+    p.add_argument('--max-steps',type=int,default=131072,help='Large ceiling;32768 is first goal, wall time usually stops earlier')
     p.add_argument('--save-reserve-minutes',type=float,default=60.)
     p.add_argument('--max-new-hf-gb',type=float)
     p.add_argument('--output-dir',default='/kaggle/working/extent-results')
@@ -266,13 +283,14 @@ def parser():
 def main(argv=None):
     args=parser().parse_args(argv)
     if args.max_wall_hours is None:args.max_wall_hours=11.5 if args.experiment in GPU_EXPERIMENTS else 8.5
-    if args.max_new_hf_gb is None:args.max_new_hf_gb=40. if args.experiment==141 else 24. if args.experiment==139 else 4.
+    if args.max_steps<32768:raise ValueError('ceiling must be at least32768')
+    if args.max_new_hf_gb is None:args.max_new_hf_gb=6. if args.experiment==135 else 40. if args.experiment==141 else 24. if args.experiment==139 else 4.
     from scripts.m3q_batch_recovery_campaign import session_budget
     session_budget(args.max_wall_hours,args.save_reserve_minutes)
     if args.save_reserve_minutes<30 or not np.isfinite(args.max_new_hf_gb) or args.max_new_hf_gb<=0:raise ValueError('invalid reserve or upload cap')
     if args.worker is not None and (args.experiment not in GPU_EXPERIMENTS or not 0<=args.worker<len(recipes(args.experiment))):raise ValueError('invalid GPU worker')
     if args.plan_only:
-        value=contract_for(args.experiment,args.worker);print(json.dumps(value,indent=2));return value
+        value=contract_for(args.experiment,args.worker,args.max_steps);print(json.dumps(value,indent=2));return value
     if args.experiment in TPU_EXPERIMENTS or args.worker is not None:return run(args)
     # Fresh processes see exactly the assigned GPUs, regardless of notebook JAX state.
     from scripts.m3q_t4_campaign import notify,write
@@ -283,7 +301,7 @@ def main(argv=None):
         env=os.environ.copy();env.update(CUDA_VISIBLE_DEVICES='0,1' if args.experiment==135 else str(worker),JAX_PLATFORMS='cuda,cpu',XLA_PYTHON_CLIENT_PREALLOCATE='false')
         env['PYTHONPATH']=str(ROOT)+os.pathsep+env.get('PYTHONPATH','')
         cmd=[sys.executable,'-u','-m','scripts.m3q_reset_followup_campaign','--experiment',str(args.experiment),'--worker',str(worker),
-            '--max-wall-hours',str(args.max_wall_hours),'--save-reserve-minutes',str(args.save_reserve_minutes),'--max-new-hf-gb',str(args.max_new_hf_gb/workers),
+            '--max-wall-hours',str(args.max_wall_hours),'--max-steps',str(args.max_steps),'--save-reserve-minutes',str(args.save_reserve_minutes),'--max-new-hf-gb',str(args.max_new_hf_gb/workers),
             '--output-dir',args.output_dir,'--cache-dir',str(Path(args.cache_dir)/f'worker-{worker}'),'--checkpoint-dir',args.checkpoint_dir,
             '--telegram' if args.telegram else '--no-telegram']
         handle=(output/f'exp{args.experiment}-worker-{worker}.log').open('w');handles.append(handle)

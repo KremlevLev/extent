@@ -23,6 +23,7 @@ result = run_reset_experiment([
     "--experiment", "136",
     "--max-wall-hours", "11.5",
     "--save-reserve-minutes", "60",
+    "--max-steps", "131072",
     "--max-new-hf-gb", "4",
 ])
 ```

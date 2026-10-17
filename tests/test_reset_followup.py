@@ -30,7 +30,7 @@ def patient():
 def test_seven_plans_match_allocated_hardware_and_sources():
     from scripts.m3q_reset_followup_campaign import contract_for
     for e in range(135,142):
-        c=contract_for(e);assert c['horizon']==32768 and c['batch_size']==1
+        c=contract_for(e);assert c['horizon']==131072 and c['first_goal_step']==32768 and c['batch_size']==1
         assert len(c['recipes'])==(1 if e==135 else 2)
     assert recipes(135)[0]['start']=='130-exact'
     assert [s['reset_parts'] for s in recipes(136)]==['all','projections']
@@ -130,16 +130,24 @@ def test_actual_runner_continuation_keeps_source_adam_cursor_and_saves_before_fi
     monkeypatch.setattr(patient_module,'Patient',lambda *a:p)
     monkeypatch.setattr(math_module,'source130',lambda *a:(payload,pin))
     monkeypatch.setattr(math_module,'Inspector',lambda *a:SimpleNamespace(profile=lambda *a:dict(layers=[])))
+    monkeypatch.setattr(math_module,'ReferenceProbe',lambda *a:SimpleNamespace(compare=lambda *a:dict(passed=True)))
     monkeypatch.setattr(hub_module,'artifact_config_from_env',lambda:object())
     monkeypatch.setattr(data_module,'load_data',lambda *a:({k:np.zeros((n,256),np.int32) for k,n in [('A',64),('B',32),('C',64),('FIT',16384)]},{}))
     actual_devices=jax.devices
     monkeypatch.setattr(jax,'devices',lambda backend=None:actual_devices('cpu')[:2] if backend=='gpu' else actual_devices(backend))
-    monkeypatch.setattr(diagnostics_module,'GuardedJit',lambda f:f)
+    arities=[]
+    def guarded(function):
+        def call(*args):
+            arities.append(len(args))
+            if len(args)==4:assert 'embed_tokens' in args[0] # frozen base is explicit, never a giant closed-over constant
+            return function(*args)
+        return call
+    monkeypatch.setattr(diagnostics_module,'GuardedJit',guarded)
     seen=[];source_counts=[]
     def make(*args,**kwargs):
         def step(q,state,*rest):
             source_counts.append([int(np.asarray(v)) for path,v in jax.tree.leaves_with_path(state) if getattr(path[-1],'name',None)=='count'])
-            return jax.tree.map(lambda x:x+1e-6,q),state,dict(finite=healthy,loss=1.,ce=1.,kl=0.,stages={'gradients':{'finite':healthy}})
+            return jax.tree.map(lambda x:x+1e-6,q),state,dict(finite=healthy,loss=1.,ce=1.,kl=0.,stages={'gradients':{'finite':healthy}}),{}
         return step
     monkeypatch.setattr(tpu_module,'make_step',make)
     monkeypatch.setattr(tpu_module,'token_nll',lambda cfg,base,q,t,*a,**k:jnp.zeros((t.shape[0],t.shape[1]-1)))
@@ -157,6 +165,7 @@ def test_actual_runner_continuation_keeps_source_adam_cursor_and_saves_before_fi
     args=runner.parser().parse_args(['--experiment','135','--worker','0','--output-dir',str(tmp_path)])
     args.max_wall_hours=11.5;args.max_new_hf_gb=4
     result=runner.run(args);row=result['branches']['RESET130-CONTINUE']
+    assert 4 in arities and 6 in arities
     assert row['step']==(3436 if healthy else 3434) and row['source_step']==3434
     assert source_counts and all(all(v==7 for v in counts) for counts in source_counts)
     assert ('persist',0,True) in seen # first proposal inspected before accepting any update
@@ -186,3 +195,35 @@ def test_clean_qkvo_path_uses_teacher_arrays_no_local_training_and_bf16_storage(
     spec=recipes(137)[0];b,q,_=prepare(p,spec)
     profile=Inspector(p.cfg,b,p.columns,spec).profile(q,np.asarray(t),2048)
     assert all(row['accepted'] for row in profile['layers'])
+
+
+def test_gradient_replay_detects_direction_changes_and_handles_large_values():
+    from extent.reset_followup import compare_gradients
+    g={'x':np.asarray([1e30,-2e30],np.float32)}
+    assert compare_gradients(g,g)['passed']
+    assert not compare_gradients(g,{'x':-g['x']})['passed']
+    assert not compare_gradients(g,{'x':g['x']*2})['passed']
+    assert compare_gradients({'x':np.zeros(2)},{'x':np.zeros(2)})['passed']
+
+
+def test_optional_gradient_output_matches_gradient_used_for_update():
+    from extent.competitor_tpu import objective
+    p,t=patient();spec=recipes(136)[0];base,q,_=prepare(p,spec);tx=optimizer(q,spec)
+    out=jax.jit(make_step(p.cfg,p.tc,p.columns,spec,tx,block_fn=block_forward,return_gradients=True))(q,tx.init(q),base,{},t,jnp.asarray(2048.))
+    expected=jax.jit(jax.grad(lambda r:objective(p.cfg,base,r,t,p.columns,spec,jnp.asarray(2048.),block_fn=block_forward)[0]))(q)
+    for a,b in zip(jax.tree.leaves(out[3]),jax.tree.leaves(expected)):np.testing.assert_allclose(a,b,rtol=1e-5,atol=1e-7)
+
+
+def test_real_legacy_streamed_gradient_probe_matches_full_compiled_step():
+    from scripts.m3q_t4_preflight import tiny_patient
+    from extent.reset_followup import ReferenceProbe
+    p,_,params,t=tiny_patient(jax.devices('cpu')[0])
+    p.cfg=replace(p.cfg,param_dtype='float32',compute_dtype='float32');p.tc=replace(p.tc,param_dtype='float32',compute_dtype='float32')
+    p.base=jax.tree.map(lambda v:v.astype(jnp.float32),params);p.current=p.base
+    p.columns=2*int(p.cfg.hidden_size*p.cfg.mamba.expand)+2*p.cfg.mamba.mimo_rank*p.cfg.mamba.groups*p.cfg.mamba.d_state
+    p.coordinates=initialize_corrections(p.base,p.cfg.mamba_layer_indices,'INOUT-LORA',seed=123,rank=8,head_dim=p.cfg.mamba.head_dim)
+    q=initialize(p,arm_for(130,1));spec=recipes(135)[0];base,q,_=prepare(p,spec,source_payload={'parameters':q})
+    t=np.asarray(t[:,:8]);tx=optimizer(q,spec)
+    out=jax.jit(make_step(p.cfg,p.tc,p.columns,spec,tx,block_fn=block_forward,return_gradients=True))(q,tx.init(q),base,{},jnp.asarray(t),jnp.asarray(3434.))
+    check=ReferenceProbe(p,jax.devices('cpu')[0]).compare(q,t,3434,float(out[2]['loss']),out[3])
+    assert check['passed'],check

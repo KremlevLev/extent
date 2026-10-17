@@ -1,6 +1,6 @@
 # Ячейки EXP-135–141
 
-Существующий GPU notebook для135–138; TPU notebook для139–141. Все лимиты включают резерв.
+GPU notebook для135–138; TPU notebook для139–141. Первая цель32768; большой потолок131072; длительность ограничена временем с резервом.
 
 # EXP-135: 2×T4,12 часов
 
@@ -27,14 +27,15 @@ result = run_reset_experiment([
     "--experiment", "135",
     "--max-wall-hours", "11.5",
     "--save-reserve-minutes", "60",
-    "--max-new-hf-gb", "4",
+    "--max-steps", "131072",
+    "--max-new-hf-gb", "6",
 ])
 ```
 
 Итоговый файл: /kaggle/working/extent-results/extent-m3q-reset-135.json.
 Та же ячейка продолжает сохранённое состояние этого нового эксперимента.
 
-Один процесс использует ОБЕ GPU для одной траектории130 с3434 до32768. До принятия обновления проверяется источник; после8 новых шагов появляется оценка скорости. Полное прохождение32768 за одну сессию не обещано.
+Один процесс использует ОБЕ GPU для одной траектории130 с3434; первая цель32768, затем продолжение до лимита времени или131072. До принятия обновления проверяется источник; после8 новых шагов появляется оценка скорости. Полное прохождение32768 за одну сессию не обещано.
 
 
 # EXP-136: 2×T4,12 часов
@@ -62,6 +63,7 @@ result = run_reset_experiment([
     "--experiment", "136",
     "--max-wall-hours", "11.5",
     "--save-reserve-minutes", "60",
+    "--max-steps", "131072",
     "--max-new-hf-gb", "4",
 ])
 ```
@@ -95,6 +97,7 @@ result = run_reset_experiment([
     "--experiment", "137",
     "--max-wall-hours", "11.5",
     "--save-reserve-minutes", "60",
+    "--max-steps", "131072",
     "--max-new-hf-gb", "4",
 ])
 ```
@@ -128,6 +131,7 @@ result = run_reset_experiment([
     "--experiment", "138",
     "--max-wall-hours", "11.5",
     "--save-reserve-minutes", "60",
+    "--max-steps", "131072",
     "--max-new-hf-gb", "4",
 ])
 ```
@@ -161,6 +165,7 @@ result = run_reset_experiment([
     "--experiment", "139",
     "--max-wall-hours", "8.5",
     "--save-reserve-minutes", "60",
+    "--max-steps", "131072",
     "--max-new-hf-gb", "24",
 ])
 ```
@@ -194,6 +199,7 @@ result = run_reset_experiment([
     "--experiment", "140",
     "--max-wall-hours", "8.5",
     "--save-reserve-minutes", "60",
+    "--max-steps", "131072",
     "--max-new-hf-gb", "4",
 ])
 ```
@@ -227,6 +233,7 @@ result = run_reset_experiment([
     "--experiment", "141",
     "--max-wall-hours", "8.5",
     "--save-reserve-minutes", "60",
+    "--max-steps", "131072",
     "--max-new-hf-gb", "40",
 ])
 ```
