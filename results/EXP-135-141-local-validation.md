@@ -48,3 +48,30 @@ compiled evaluators, не замыкаются как большие конст�
 Для прекращения строго на32k до первого запуска выбрать --max-steps 32768.
 135 cap6GB;136–138 по4GB;13924GB;1404GB;14140GB. Суммарный верхний предел новых
 загрузок86GB, не оценка обязательного расхода. Репозиторий HF не очищался.
+
+
+## EXP135 startup failure: wall budget validation (2026-10-17)
+
+User cloud log stopped at 111.5 seconds in main(), before session creation or
+training: the inherited EXP108 helper rejected 11.5 hours (hard limit 9).
+The supplied GPU cells for 135-138 were all affected; TPU 139-141 at 8.5 hours
+pass that particular check. Dependency warnings were not the fatal exception.
+Earlier tests mocked session creation/run and missed the real CLI budget guard.
+
+The follow-up runner now owns a hardware-aware budget helper: <=12h GPU,
+<=9h TPU, >=30min reserve strictly below the total wall time. Both main() and
+the actual session constructor use it; older experiment limits are unchanged.
+17 budget regression checks passed (0.96s), including real plan-only parent
+and child entrypoints for all seven experiments, real session constructors
+for GPU/TPU with remote I/O mocked, invalid limits and nonfinite inputs.
+This does not establish full-scale accelerator memory, throughput or training.
+
+The supplied failure happened before any new contract/report/checkpoint could
+be created, so EXP135 can rerun its existing pull-and-reload launch cell.
+Do not interrupt already-running jobs. Code hashes change with this fix;
+any job that created state on the previous revision must resume that exact
+revision, rather than bypassing its contract check. The engineering plan was
+regenerated for the fixed code. Scientific recipe/source/optimizer unchanged.
+
+Full follow-up suite collected before adding the two session-constructor cases:
+27 passed in 59.13s. Both added cases then passed in the 17-case budget subset.

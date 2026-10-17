@@ -43,10 +43,19 @@ def contract_for(experiment,worker=None,max_steps=131072):
     return json.loads(json.dumps(value))
 
 
+def session_budget(experiment,max_wall_hours,save_reserve_minutes):
+    """Validate this suite's hardware limits, including GPU worker invocations."""
+    limit=12. if experiment in GPU_EXPERIMENTS else 9.
+    if not np.isfinite(max_wall_hours) or not 0 < max_wall_hours <= limit:
+        raise ValueError(f'EXP{experiment} wall budget must be >0 and <={limit:g}h')
+    if not np.isfinite(save_reserve_minutes) or not 30 <= save_reserve_minutes < max_wall_hours*60:
+        raise ValueError('save reserve must be >=30min and less than the wall budget')
+    return max_wall_hours*3600-save_reserve_minutes*60,save_reserve_minutes
+
+
 def session(args,contract,hub):
     # Reuse audited checkpoint/report transport, without the old 133 source recipe.
     from scripts.m3q_peer_tpu_campaign import Session as Transport
-    from scripts.m3q_batch_recovery_campaign import session_budget
     from extent.recovery_durability import RecoveryCheckpointStore
     from extent.hf_artifact_sync import restore_artifact
     import jax
@@ -54,7 +63,7 @@ def session(args,contract,hub):
     suffix=f'/worker-{args.worker}' if args.worker is not None else ''
     s.prefix=f'experiments/exp{args.experiment}-reset'+suffix
     s.stem=f'extent-m3q-reset-{args.experiment}'+(f'-worker-{args.worker}' if args.worker is not None else '')
-    work,_=session_budget(args.max_wall_hours,args.save_reserve_minutes);s.deadline=s.begun+work;s.wall=s.begun+args.max_wall_hours*3600
+    work,_=session_budget(args.experiment,args.max_wall_hours,args.save_reserve_minutes);s.deadline=s.begun+work;s.wall=s.begun+args.max_wall_hours*3600
     s.output=Path(args.output_dir);s.output.mkdir(parents=True,exist_ok=True);s.path=s.output/(s.stem+'.json');s.small=s.output/(s.stem+'-summary.txt')
     if not s.path.exists():restore_artifact(s.path,s.prefix+'/latest.json',hub)
     s.result=json.loads(s.path.read_text()) if s.path.exists() else dict(contract=contract,branches={},sessions=[],pending_slots=[],cost=dict(attempted_updates=0,input_tokens=0,ce_targets=0,teacher_input_tokens=0))
@@ -285,8 +294,7 @@ def main(argv=None):
     if args.max_wall_hours is None:args.max_wall_hours=11.5 if args.experiment in GPU_EXPERIMENTS else 8.5
     if args.max_steps<32768:raise ValueError('ceiling must be at least32768')
     if args.max_new_hf_gb is None:args.max_new_hf_gb=6. if args.experiment==135 else 40. if args.experiment==141 else 24. if args.experiment==139 else 4.
-    from scripts.m3q_batch_recovery_campaign import session_budget
-    session_budget(args.max_wall_hours,args.save_reserve_minutes)
+    session_budget(args.experiment,args.max_wall_hours,args.save_reserve_minutes)
     if args.save_reserve_minutes<30 or not np.isfinite(args.max_new_hf_gb) or args.max_new_hf_gb<=0:raise ValueError('invalid reserve or upload cap')
     if args.worker is not None and (args.experiment not in GPU_EXPERIMENTS or not 0<=args.worker<len(recipes(args.experiment))):raise ValueError('invalid GPU worker')
     if args.plan_only:

@@ -227,3 +227,40 @@ def test_real_legacy_streamed_gradient_probe_matches_full_compiled_step():
     out=jax.jit(make_step(p.cfg,p.tc,p.columns,spec,tx,block_fn=block_forward,return_gradients=True))(q,tx.init(q),base,{},jnp.asarray(t),jnp.asarray(3434.))
     check=ReferenceProbe(p,jax.devices('cpu')[0]).compare(q,t,3434,float(out[2]['loss']),out[3])
     assert check['passed'],check
+
+
+@pytest.mark.parametrize('experiment',range(135,142))
+def test_actual_entrypoint_accepts_documented_session_budgets(experiment,capsys):
+    from scripts.m3q_reset_followup_campaign import main,session_budget,recipes,GPU_EXPERIMENTS
+    wall=11.5 if experiment in GPU_EXPERIMENTS else 8.5
+    assert session_budget(experiment,wall,60)==((wall-1)*3600,60)
+    # Exercise real parent and child CLI validation, before any remote work.
+    workers=[None]+(list(range(len(recipes(experiment)))) if experiment in GPU_EXPERIMENTS else [])
+    for worker in workers:
+        argv=['--experiment',str(experiment),'--max-wall-hours',str(wall),'--save-reserve-minutes','60','--plan-only']
+        if worker is not None:argv+=['--worker',str(worker)]
+        assert main(argv)['experiment']==experiment
+    capsys.readouterr()
+
+
+@pytest.mark.parametrize('experiment,wall,reserve',[
+    (135,12.1,60),(139,9.1,60),(135,float('nan'),60),
+    (135,float('inf'),60),(139,0,60),(135,11.5,float('nan')),
+    (135,11.5,29),(135,1,60),
+])
+def test_session_budget_rejects_invalid_limits(experiment,wall,reserve):
+    from scripts.m3q_reset_followup_campaign import session_budget
+    with pytest.raises(ValueError):session_budget(experiment,wall,reserve)
+
+
+@pytest.mark.parametrize('experiment,wall',[(135,11.5),(139,8.5)])
+def test_real_session_constructor_uses_hardware_budget(experiment,wall,tmp_path,monkeypatch):
+    import scripts.m3q_reset_followup_campaign as runner
+    import extent.recovery_durability as durability
+    import extent.hf_artifact_sync as sync
+    monkeypatch.setattr(sync,'restore_artifact',lambda *a:False)
+    monkeypatch.setattr(durability,'RecoveryCheckpointStore',lambda *a:object())
+    args=runner.parser().parse_args(['--experiment',str(experiment),'--output-dir',str(tmp_path),'--max-wall-hours',str(wall)])
+    s=runner.session(args,{'test':True},None)
+    assert s.deadline-s.begun==pytest.approx((wall-1)*3600)
+    assert s.wall-s.begun==pytest.approx(wall*3600)
