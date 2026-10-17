@@ -39,6 +39,8 @@ def artifact_config_from_env(*, include_kaggle_secrets: bool = True) -> HubArtif
             return None
     if not token or not repo_id:
         return None
+    from extent.hf_download_retry import install_download_retries
+    install_download_retries()
     return HubArtifactConfig(repo_id, validate_repo_type(repo_type), token)
 
 
@@ -112,6 +114,8 @@ def restore_artifact(
     download: Any | None = None,
 ) -> bool:
     """Atomically restore one artifact; return False when it does not exist."""
+    from extent.hf_download_retry import install_download_retries
+    install_download_retries()
     from huggingface_hub import hf_hub_download
     from huggingface_hub.errors import EntryNotFoundError
 

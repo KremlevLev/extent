@@ -1,3 +1,18 @@
+# 18 October2026: HF download resilience regression
+
+35 CPU tests passed:17 in test_hf_download_retry.py + test_hf_artifact_sync.py
+(2.11s),18 in test_reset_long.py + test_hf_checkpoint_sync.py (26.35s).
+Fault injection includes8 consecutive429s then success with exact args/pin,
+Retry-After seconds/date, deadline inside a long cooldown, 503/network timeout,
+401/403/404/integrity rejection, safe logs, atomic artifact/legacy checkpoint
+restoration, idempotent SDK installation. TWO real subprocesses share the same
+file-locked pacing/cooldown state and recover from simulated429. No real HF
+traffic or Telegram messages in these tests. All four complete contract_for()
+outputs equal frozen EXP-143-146-engineering-plan.json exactly. No numeric
+kernel, dataset window, source revision or optimizer change. Source replay/SHA
+checks remain active. Actual Kaggle/HF429 recovery remains to be observed after
+relaunch; CPU tests are not a physical T4 training result.
+
 # EXP143-146 preparation validation (2026-10-18)
 
 No cloud model training launched. Scientific quality/speed remain unmeasured.

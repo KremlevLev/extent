@@ -1,3 +1,31 @@
+# 18 October2026 - EXP143-146 source-download HF429 failure and transport fix
+
+User reports ALL four cloud sessions failed. Supplied traceback identifies
+EXP143, both workers in read_parameter_chunks -> restore_artifact -> HF SDK
+Xet token refresh: HTTP429, 1000 API requests per5minutes. No branch/update was
+recorded in that log. Other3 exact tracebacks not supplied; same download paths.
+
+Added extent/hf_download_retry.py, enabled at artifact config/restore boundary.
+The SDK entry point is wrapped once BEFORE patient/data/source loading, covering
+runtime SDK imports for chunks, legacy checkpoint pairs, Qwen and Wiki files.
+Retry429 using Retry-After seconds/date or300s fallback +1..60s jitter; transient
+408/500/502/503/504 and network timeouts/connections use exponential delay.
+No retry for auth/missing files/SHA/model errors. Two local GPU workers share a
+file-locked cooldown and2s request spacing. Different VMs use jitter only.
+No tokens/URLs/error bodies in retry logs and no retry Telegram messages.
+
+Updated existing launch cells set a shared ABSOLUTE work deadline inherited by
+children: wall budget minus30min saving reserve. Waits <=30s, retry until success
+or deadline, not a fixed small attempt count. Default without cell variable is
+11.2h from first install. Deadline bounds waits/attempt starts, not an SDK call
+already transferring bytes. Large downloads retain SDK partial-file behavior.
+Sources/chunks already restored to local destinations are reusable in SAME VM;
+destroyed cloud VMs lose local cache. No remote checkpoint deletion or cleanup.
+All scientific runner/code hashes, old source pins, Adam/data clocks and long-v1
+namespace unchanged; no checkpoint migration needed. Transport helper itself is
+outside the frozen135-146 code hash lists. Launch files include reinstallation
+for a reused notebook and explicit remaining-time budget guidance.
+
 # 18 October2026 — EXP143-146 PREPARED; long T4 runs, hard Telegram cap
 
 User authorizes4 more T4x2/12h sessions, prioritize stronger136/138 and reduce
