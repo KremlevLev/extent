@@ -1,3 +1,59 @@
+# 18 October2026 — EXP143-146 PREPARED; long T4 runs, hard Telegram cap
+
+User authorizes4 more T4x2/12h sessions, prioritize stronger136/138 and reduce
+~150 Telegram messages.135 deferred (gradient-replay magnitude mismatch unresolved).
+New isolated scripts/m3q_reset_long_campaign.py, extent/reset_long_recovery.py,
+reset_long_patient.py,reset_quiet.py,reset_precision_probe.py. Existing streamed
+step/math and ALL135-142 contracts untouched; verified equal to frozen plans.
+Launches results/EXP-143-146-launches.md and individual143..146 launch files;
+protocol EXP-143-146-protocol.md, frozen engineering plan and source audit.
+No new cloud job launched or scientific NLL result from this preparation.
+
+143 exact136 current12586 FULL and12051 PROJECTIONS including original q/Adam/data.
+144 source138-CE11965 both; control originalLR vsALL rates/3, preserve sameAdam/counts.
+145 common136-FULL12586: old factors+NEWAdam vsfolded base+newrank32+NEWAdam BOTH.
+Preserve data cursor12586, both optimizers warm from0; tests folding/factor stage,
+not just optimizer reset.146 independently PREPARED source456111MAIN32768,
+fullreset vsprojection-only exactly136 recipe/ramp2048. Prep/model seed456;
+data permutation/reset generator remain shared123 for a scoped replication.
+
+Sources pinned HF e5a25058a543ff5e5811a8e676b924a60a32d029. All1461 chunks
+344,939,220B SHA verified, full3 actual q/Adam/best templates restored; allsix
+clocks12586/12051/11965, selectedbest12288/10240/10240. Actual synthetic-gradient
+optimizer step on each REAL source equals original recipe and increments counts;
+no1.7B model gradient/GPU execution locally. All48 seed456069/072 metadata
+contracts and111 main manifest independently verified at original immutable pins.
+Source numerical hashes checked with CRLF->LF normalization; raw checkpoint SHA
+stays byte-exact. New descriptors/code hashes canonicalLF to avoid Windows drift.
+Host reconstruction shares frozen MLP/embedding buffers; folding only Mamba trees,
+avoiding several GB transient NumPy copies. Tiny parity tests cover equivalence.
+
+Each experiment2 independent1GPU workers.11.7h INCLUDING30min save/final reserve,
+18min external notebook margin. Train until11.2h work deadline; ceiling131072NEW
+updates so fast runs keep using session. step=original parent experiment data
+cursor; new_steps=step-source_step. Register source baseline, common NEW points,
+plus original-data-clock16384/20480/24576/etc for143 equal-total136 comparisons.
+A64 selection, B/C descriptive; last separate. Ancestor prep/cost not free.
+Local128 new updates, remote120min+exit;4GB upload cap TOTAL/session,2GB/worker,
+16GB cap allfour; q/Adam/best only. Same new cell resumes own long-v1 exact state.
+Sources immutable, never overwritten/deleted. Per-window initial NLL replay.03
+before accepting training; finite guard/checkpoint/hard HBM guard remain intact.
+
+Telegram ONLY parent: start,4h/8h progress,final (normally4), plus atmostoneerror,
+hardmax5/invocation including reservedfinal. Children forced--no-telegram even
+when invoked directly. Detailed events, throughput after8 updates remain log/JSON.
+arm_failed yields visible parent failure; aggregate includes worker errors/tails.
+Return ONE extent-m3q-long-ID.json/session. Notebook setup alerts outside cap.
+
+BF16 training/FP32 corrections and recurrence retained for comparability. Worker0
+runs short BF16/FP16/FP32 forward-GEMM timing ontwo MLP shapes; perf_counter,
+JIT warmup/block_until_ready, not full-step speedup or dtype-policy selection.
+Optional probe failure logged without stopping valid training. No physicalGPU
+precision-speed result exists yet. Source-aware15 new tests covered:14 passed
+33.98s + addedLR/count test passed6.31s; relevant old/new combined25 passed158.43s.
+Final parent/CLI/notification subset4 passed.86s after descriptive cleanup.
+Physical new-run HBM/throughput/quality pending; reuse working1GPU streamed math.
+
 # 18 October2026 — EXP138 CE improves source130; pure KL loses matched test
 
 User supplies full138 aggregate. Exact JSON archived results/EXP-138-streamed-v2-session-1.json;

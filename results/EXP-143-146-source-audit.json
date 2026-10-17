@@ -1,0 +1,88 @@
+{
+  "scope": "all1461 actual source chunks SHA verified; real parameter/Adam templates restored onCPU; one SYNTHETIC-gradient optimizer step equals old recipe; NO full1.7B model gradient or GPU run",
+  "sources": [
+    {
+      "source": "136-all",
+      "step": 12586,
+      "adam_and_schedule_counts": [
+        12586,
+        12586,
+        12586,
+        12586,
+        12586,
+        12586
+      ],
+      "best_step": 12288,
+      "trainable_count": 7182336,
+      "payload_bytes": 114917404,
+      "chunks": 487,
+      "restored": true,
+      "all_finite": true,
+      "synthetic_gradient_optimizer_step_matches_old_recipe": true,
+      "optimizer_counts_after_synthetic_step": [
+        12587,
+        12587,
+        12587,
+        12587,
+        12587,
+        12587
+      ]
+    },
+    {
+      "source": "136-projections",
+      "step": 12051,
+      "adam_and_schedule_counts": [
+        12051,
+        12051,
+        12051,
+        12051,
+        12051,
+        12051
+      ],
+      "best_step": 10240,
+      "trainable_count": 7182336,
+      "payload_bytes": 114917404,
+      "chunks": 487,
+      "restored": true,
+      "all_finite": true,
+      "synthetic_gradient_optimizer_step_matches_old_recipe": true,
+      "optimizer_counts_after_synthetic_step": [
+        12052,
+        12052,
+        12052,
+        12052,
+        12052,
+        12052
+      ]
+    },
+    {
+      "source": "138-ce",
+      "step": 11965,
+      "adam_and_schedule_counts": [
+        11965,
+        11965,
+        11965,
+        11965,
+        11965,
+        11965
+      ],
+      "best_step": 10240,
+      "trainable_count": 7182336,
+      "payload_bytes": 114917404,
+      "chunks": 487,
+      "restored": true,
+      "all_finite": true,
+      "synthetic_gradient_optimizer_step_matches_old_recipe": true,
+      "optimizer_counts_after_synthetic_step": [
+        11966,
+        11966,
+        11966,
+        11966,
+        11966,
+        11966
+      ]
+    }
+  ],
+  "seed456_manifest_verified": true,
+  "seed456_preparation_metadata48_verified": true
+}
