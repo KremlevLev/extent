@@ -1,0 +1,38 @@
+{
+  "scope": "REAL145 current q+Adam+best restored on CPU; synthetic-gradient optimizer check only, not model gradient or T4 execution",
+  "repo_id": "levkremlev888/extent",
+  "revision": "9d0a8f95d3df2ae566175fae950fca8f2759a233",
+  "step": 24965,
+  "adam_counts": [
+    12379,
+    12379,
+    12379,
+    12379,
+    12379,
+    12379
+  ],
+  "next_synthetic_adam_counts": [
+    12380,
+    12380,
+    12380,
+    12380,
+    12380,
+    12380
+  ],
+  "best_step": 24874,
+  "coordinate_count": 7182336,
+  "manifest_sha256": "5d57c9bb6ad4884260db7a36b738b94de5be3b8da76a218ad79fbfff8113b8a6",
+  "raw_chunk_count": 487,
+  "raw_chunk_bytes": 114979740,
+  "parameters_sha256": "7a24788aa8c315ba794dea32a6c1c0263274fd99213d9fc4dc33ca4e903081f5",
+  "best_sha256": "9e3fcf208f8a8141bea1cdc5bc275c937b65aa9e8d363c89d3b9d5fc1c00fd51",
+  "empty_attention_keys": [
+    "6",
+    "13",
+    "20",
+    "27"
+  ],
+  "original_vs_new_optimizer_synthetic_step": "bitwise equal for all update/state leaves",
+  "ancestor136_q_count": 7182336,
+  "ancestor_scope": "actual136 q-only path used by145 folded base; every q chunk SHA checked; no unused moments restored"
+}

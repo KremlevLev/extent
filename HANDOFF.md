@@ -1,3 +1,52 @@
+# 18 October2026 - EXP147/148 PREPARED for two7h T4x2 accounts
+
+User wants continue145 NOW while143/144 still~10h togo; two accounts7h each.
+Two independent one-GPU workers/account, existing T4 notebook last-cell launch.
+147:145 CURRENT24965 with preserved Adam12379, LRoriginal vsALL groups/3.
+148:repaired145 failed SAME-FACTORS/FRESH-ADAM control from136current12586
+(oldfactors, freshAdam0) vs145CURRENT24965 preservedAdam12379 withALL LR/10.
+148 arms have DIFFERENT source checkpoints; do NOT compare raw finalNLL as a
+paired ablation. Compare148control against ARCHIVED145 treatment at matched
+NEW counts from136; compare3 continuation rates at matched NEW counts from145.
+Existing143 ordinary-continuation results will later provide further control.
+No another fold/newrank at current5.78 until existing correction explored.
+
+New extent/fold_continue_recovery.py and scripts/m3q_fold_continue_campaign.py
+only. Existing143/144 shared files/code/contracts untouched (verified allold
+and fixed plans). Sources immutable; same weights/architecture/data/BF16streamed
+math.145base reconstructed by folding136CURRENT12586 ONCE into original patient
+base; source145 q is loaded without folding again. Only ancestor136 q downloaded
+for base, not unused moments/best.147/148 source-pin descriptor fixes snapshot
+9d0a8f95d3df2ae566175fae950fca8f2759a233, raw manifest hash and all160 reference
+window NLLs from145last5.782680/5.804467/5.364202.136 ancestor pinned original e5.
+Empty GQA containers explicitly retained. Global cursor24965 !=Adam12379;
+LR variants keep original moments/counts/no renewed warmup. Control12586 !=Adam0.
+Inherited sourcebest24874 preserved in provenance; new selection baseline uses
+better CURRENT24965. Each source allwindow replay<=.03 mandatory before updates.
+
+FULL REAL145 checkpoint487chunks114,979,740B downloaded and SHA-verified locally,
+q/Adam/best restored via new loader; allsix counts12379, best24874,7,182,336q
+parameters, emptyGQA6/13/20/27. Actual synthetic-gradient CPU next update equals
+original optimizer BITWISE, counters->12380; not a model gradient/GPU proof.
+Actual136 q-only reader restoredancestor locally with eachqchunkSHA check.
+27 CPU tests pass:4 tiny real NLL/streamed-update/ownsave-resume paths, source
+roundtrip mismatch global-vsAdam counter rejection, LRscale/state test and actual
+CLI/two-worker dispatch;20 existing HFretry/artifact tests. Source-audit,
+local-validation,protocol,plan,source-pin and per-account launch docs committed.
+
+Budget default6.8h TOTAL including30min save reserve;12min external setup margin
+under7h quota; work6.3h includes restore/JIT/eval. CLI hard max7h for these jobs.
+First additionalgoal8192, ceiling65536; no early stop atgoal, wall governs. Actual
+more steps depend on startup;145~2.8s/update gives ideal~8100 before overhead,
+not a30k promise. No repeat GEMM probe. Local128updates saves, remote120min+exit,
+4GB TOTAL/account(2GB/worker), no frozen base upload. Work/save-verification retry
+deadlines separated; shared perVM cooldown/jitter429; no source mutations/cleanup.
+Parent Telegram start/4h/final normally3, hardmax5 incl error, children disabled.
+New namespace experiments/expID-fold-continue-v1/worker-W, exact OWN resume.
+Aggregate extent-m3q-fold-continue-147.json /148.json, one download peraccount.
+Source earlier136+145 cost stays inherited, NEW tokens counted separately.
+No cloud147/148 job launched by local preparation; no new quality result yet.
+
 # 18 October2026 - EXP145 partial scientific result: fold/newR32 to5.78
 
 User supplied aggregate archived byte-exact in results/EXP-145-long-v1-session-1.json;
