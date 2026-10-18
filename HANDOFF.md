@@ -1,3 +1,23 @@
+# 18 October2026 - EXP144 pair complete: original LR wins late matched evaluations
+
+Worker0 received; raw preserved in EXP-144-fixed-worker0-session-1.json.
+Full pair analysis: results/EXP-144-paired-analysis.json/.md.
+Original LR normal deadline_partial11.29449h,11965->23190;11225 accepted
+updates/2,873,600 NEW input tokens. No Adam reset/new parameters. Source replay
+passes; identical data and shared contract excluding worker/recipes.
+LR/3 better early, original LR wins all A/B/C at matched8192 and10240.
+At10240 original5.781944/5.812152/5.413618 vs /3 5.832523/5.850099/5.443914.
+Original final5.754784/5.784173/5.365549 atnew11225; /3 final
+5.803475/5.824708/5.409201 atnew11889. Use MATCHED counts for LR effect.
+Original registered A-bestglobal22205/new10240; arbitrary final is better but
+not relabeled as registered best. A improves.03511 from8192 tofinal; no hard
+plateau established. Only one preparation seed; reused A/B/C, no independenttest.
+Profiles pass; tiny8window context256->1024 worsens5.537693->5.550043.
+Report pending/durable21437, but pinned remote manifest23190 confirmed with
+exact report contract plus arm; full payload not restored. Existing147/148
+rate screen starts145current, a different conditioning point; keep it.
+Only143worker0 still missing for paired143 capacity comparison.
+
 # 18 October2026 - EXP144 repaired worker1: LR/3 reaches5.803
 
 Worker1 CE-LR-DIV3 only, not whole paired144 aggregate. Raw byte-preserved under

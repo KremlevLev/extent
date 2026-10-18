@@ -1,0 +1,10 @@
+{
+  "scope": "read-only final manifest; full payload restoration not performed",
+  "revision": "a848e128385229c8cfcf20f1cc0614485c812109",
+  "path": "experiments/exp144-long-fixed-v2/worker-0/checkpoints/CE-CONTINUE/checkpoint.json",
+  "step": 23190,
+  "generation": "step-23190-1ce247abddde426bb09ce4e867d1b8bf",
+  "payload_bytes": 114979740,
+  "contract_matches_report_plus_arm": true,
+  "contract_comparison": "exact report contract plus arm=CE-CONTINUE; only additional manifest field is arm"
+}
