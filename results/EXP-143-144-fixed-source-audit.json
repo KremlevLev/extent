@@ -1,0 +1,71 @@
+{
+  "scope": "REAL immutable source q/Adam/best restored on CPU; no model forward/GPU run",
+  "sources": [
+    {
+      "source": "136-all",
+      "step": 12586,
+      "best_step": 12288,
+      "optimizer_counts": [
+        12586,
+        12586,
+        12586,
+        12586,
+        12586,
+        12586
+      ],
+      "empty_attention_keys": [
+        "6",
+        "13",
+        "20",
+        "27"
+      ],
+      "coordinate_count": 7182336,
+      "raw_manifest_sha256": "9ac7ce5ce4a557a45785cd86b9479e710c220efbda500ba166fdba6c18e8932b",
+      "checks": "original manifest and every tensor chunk SHA; exact source contract; all missing frozen attention containers reconstructed"
+    },
+    {
+      "source": "136-projections",
+      "step": 12051,
+      "best_step": 10240,
+      "optimizer_counts": [
+        12051,
+        12051,
+        12051,
+        12051,
+        12051,
+        12051
+      ],
+      "empty_attention_keys": [
+        "6",
+        "13",
+        "20",
+        "27"
+      ],
+      "coordinate_count": 7182336,
+      "raw_manifest_sha256": "c2252f65aa571dde777bd7cdd5690b89f1e4ac31051b768ee31ed7245ee96fc6",
+      "checks": "original manifest and every tensor chunk SHA; exact source contract; all missing frozen attention containers reconstructed"
+    },
+    {
+      "source": "138-ce",
+      "step": 11965,
+      "best_step": 10240,
+      "optimizer_counts": [
+        11965,
+        11965,
+        11965,
+        11965,
+        11965,
+        11965
+      ],
+      "empty_attention_keys": [
+        "6",
+        "13",
+        "20",
+        "27"
+      ],
+      "coordinate_count": 7182336,
+      "raw_manifest_sha256": "f55fef104c475f8bf79b20daefb631fe8ea1ded1fb76816dca4007c73866302d",
+      "checks": "original manifest and every tensor chunk SHA; exact source contract; all missing frozen attention containers reconstructed"
+    }
+  ]
+}

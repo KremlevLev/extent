@@ -1,4 +1,7 @@
-# EXP143-146: four long T4x2 sessions
+# EXP143-146: launch routing after source-container repair
+
+143/144: use EXP-143-fixed-launch.md / EXP-144-fixed-launch.md instead.
+The old cell below is retained for145/146 ONLY; do not interrupt current runs.
 
 Download transport fixed after reported cloud failures. Use the EXISTING T4 notebook.
 Each account gets one experiment, two independent one-GPU workers.
@@ -13,7 +16,7 @@ import subprocess
 import sys
 import time
 
-EXP = 143  # Account1:143; account2:144; account3:145; account4:146
+EXP = 145  #145 or146 ONLY;143/144 require the separate fixed runner.
 repo = "/kaggle/working/extent"
 subprocess.run(["git", "pull", "--ff-only"], cwd=repo, env=git_env, check=True)
 os.chdir(repo)

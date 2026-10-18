@@ -1,12 +1,10 @@
-# EXP-143: Continue saved136 full/projection resets
+# EXP-143: corrected source restoration
 
-# EXP143-146: four long T4x2 sessions
-
-Download transport fixed after reported cloud failures. Use the EXISTING T4 notebook.
-Each account gets one experiment, two independent one-GPU workers.
-Parent Telegram only: start, progress at4h/8h, final; at mostone additional
-failure alert, hard maximum5 messages/invocation. Child events stay in logs/JSON.
-Notebook setup messages are outside this runner's cap.
+Use the EXISTING T4 notebook. Applies to143/144 only. Leave running145/146 alone.
+Two independent1GPU workers;11.7h includes30min save reserve. Set WALL_HOURS to
+the remaining budget if reusing a runtime. Same scientific sources, recipes,
+Adam moments/counts and data cursor. The earlier143/144 attempts accepted ZERO
+updates and produced no new NLL measurement.
 
 ```python
 import importlib
@@ -15,7 +13,7 @@ import subprocess
 import sys
 import time
 
-EXP = 143
+EXP = 143  # Repaired runner accepts143 or144 ONLY; leave145/146 running.
 repo = "/kaggle/working/extent"
 subprocess.run(["git", "pull", "--ff-only"], cwd=repo, env=git_env, check=True)
 os.chdir(repo)
@@ -32,15 +30,16 @@ os.environ["EXTENT_HF_RETRY_STATE_DIR"] = "/kaggle/working/extent-hf-download"
 from extent.hf_download_retry import install_download_retries
 install_download_retries()
 for module in (
+    "extent.reset_long_fixed_sources",
     "extent.reset_long_patient",
     "extent.reset_long_recovery",
     "extent.reset_precision_probe",
     "extent.reset_quiet",
-    "scripts.m3q_reset_long_campaign",
+    "scripts.m3q_reset_long_fixed_campaign",
 ):
     if module in sys.modules:
         importlib.reload(sys.modules[module])
-from scripts.m3q_reset_long_campaign import main
+from scripts.m3q_reset_long_fixed_campaign import main
 
 result = main([
     "--experiment", str(EXP),
@@ -51,36 +50,22 @@ result = main([
 ])
 ```
 
-11.7h INCLUDES30min reserve;18min outside runner for notebook setup. Startup,
-source restore, compilation and evaluations consume runner time. Train until work
-deadline (11.2h), not until an arbitrary small step limit.131072 is a large ceiling
-in NEW updates; not a promise to reach it in12h. After8 new accepted updates the
-worker log/JSON reports recent throughput and ETA, without a Telegram message.
+Expected first signals: source_replay.passed=true in worker JSON, then accepted
+updates/step above source12586+12051(143) or11965(144). Source replay and all
+integrity/finite/HBM checks stay active. A successful download alone is not a
+successful experiment. Exact physical T4 recovery remains to be verified.
 
-Download ONE aggregate: extent-results/extent-m3q-long-143.json. Child exceptions
-and log tails are included there and printed in Kaggle output. arm_failed is a
-visible parent failure, even if the child exited0. deadline_partial is a saved
-time stop. Same cell resumes OWN long-v1 state, not a new start on every session.
-Source143/144 Adam/data clocks are inherited;145 deliberately resets Adam BOTH
-arms. Old experiments and their files/contracts unchanged. Local128-update saves,
-remote120min+exit.4GB new HF cap TOTAL/session (2GB perworker), no base model upload.
-The last unsynced tail can be lost if the cloud VM is abruptly destroyed.
+Download ONE aggregate: extent-results/extent-m3q-long-143.json.
+Worker files use extent-m3q-long-fixed-143-worker-W.json; remote prefix
+experiments/exp143-long-fixed-v2/worker-W. Old long-v1 states remain intact.
+The same new cell resumes its OWN fixed-v2 checkpoints. Missing EMPTY frozen
+attention entries are reconstructed before initializing the restore template;
+all tensor leaves and optimizer state come from the immutable original source.
+Missing trainable Mamba entries are an error. Existing145/146 code/contracts are
+unchanged. New CPU tests exercise real save/restore, NLL, profiles, streamed
+updates and own-checkpoint resume; CPU checks do not prove full-size GPU success.
 
-BF16 training remains unchanged, FP32 correction/Adam/recurrence as before.
-Worker0 records a short synthetic BF16/FP16/FP32 GEMM-forward benchmark with JIT
-warmup and block_until_ready. Its ratio is NOT full-model/gradient speedup and does
-not switch training dtype. Benchmark failure is recorded and does not reject
-otherwise valid training. No physical new-run GPU result exists yet.
-
-18 October download fix: HF429 waits Retry-After (or300s if absent) plus random
-1..60s. Other transient HTTP/network failures use exponential backoff. Retry
-until success or the work deadline, with waits split into <=30s. Both workers
-on ONE VM share request pacing (2s minimum) and a cooldown; separate Kaggle VMs
-use independent jitter, not a fictitious cross-VM lock. This may take longer to
-restore sources. Partial local files remain reusable in the same runtime.
-401/403/404 and integrity errors keep their original semantics. Per-retry events
-are printed only in worker logs, without Telegram. No experiment contract, pinned
-source, numerical kernel or optimizer was changed. Resume uses the same long-v1
-prefix. This is a transport fix, not a new experiment or a scientific result.
-If resuming inside an already used VM, set WALL_HOURS to the remaining runtime
-budget (including the >=30min reserve), not to a fresh11.7h.
+HF download retry remains enabled:429 Retry-After or300s fallback plus jitter,
+shared pacing/cooldown for two workers on one VM; separate VMs use jitter only.
+Waits stop at the work deadline to preserve saving time. Retry events log only.
+Parent Telegram stays capped at5 messages, normally start,4h,8h,final.

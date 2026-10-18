@@ -1,3 +1,36 @@
+# 18 October2026 - EXP143/144 failed before updates;145/146 still RUNNING
+
+User clarified145/146 have run~9h; do NOT interrupt/modify their code/contracts.
+New aggregate files143 and144 confirm BOTH workers KeyError('6') in ordinary
+source NLL: competitor_tpu.hidden indexes q[str(i)]. Source leaf-only parameter
+reader omits EMPTY frozen GQA dictionaries6/13/20/27; restore template built from
+that sparse q also lacks these nodes in q/best/Adam. Streamed update and Inspector
+also index every layer.143 parent wall0.89377h,1441.44775h, ZERO attempted/accepted
+updates in both; no scientific quality result. Raw byte-preserved reports and
+analysis archived under EXP-143/144-failed-long-v1-session-1.json and
+EXP-143-144-failure-analysis.json. Initial failure snapshots had been saved/synced
+at SOURCE steps; do not call those new training.
+
+Isolated fix ONLY143/144: scripts/m3q_reset_long_fixed_campaign.py,
+extent/reset_long_fixed_sources.py. No original runner, recovery or numerical
+source file changed; original143-146 full contracts still equal frozen plans.
+Fixed source reader recreates ONLY missing empty attention coordinate entries
+BEFORE constructing optimizer restore template. Missing Mamba/extra layer =>error.
+Actual q/Adam moments/counts/best come from original SHA-checked chunks, not fresh
+training initialization. Actual3 pinned source checkpoints re-restored locally:
+7,182,336q parameters each; allsix original counters12586/12051/11965 retained,
+best clocks12288/10240/10240; empty GQA entries present in current and best.
+Audit results/EXP-143-144-fixed-source-audit.json. No full-size GPU execution.
+
+Fixed143/144 namespace experiments/expID-long-fixed-v2/worker-W deliberately
+avoids old FAILED long-v1 states/contracts; original sources/data/recipes unchanged.
+Worker local stem extent-m3q-long-fixed-ID-worker-W, single aggregate filename
+extent-m3q-long-ID.json as before. New contract hashes both new implementation
+files and preserves all original numerical hashes. Same fixed cell resumes its
+own fixed-v2 state. launch.md aliases143/144 now route to fixed runner; shared
+143-146 launcher marks old cell145/146 ONLY. Existing145/146 untouched and can
+finish/save with old code. HF retry and quiet notification policy remain active.
+
 # 18 October2026 - EXP143-146 source-download HF429 failure and transport fix
 
 User reports ALL four cloud sessions failed. Supplied traceback identifies

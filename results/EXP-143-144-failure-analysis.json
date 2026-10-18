@@ -1,0 +1,113 @@
+{
+  "scope": "runtime/restore schema failure before any update; no quality result",
+  "experiments": [
+    {
+      "experiment": 143,
+      "status": "failed",
+      "wall_hours": 0.8937727492652777,
+      "raw_sha256": "c2d214eff3fa476674f255f618f65787fb14599051334c21f12a55dcb0710270",
+      "workers": [
+        {
+          "worker": 0,
+          "status": "failed",
+          "error": {
+            "type": "KeyError",
+            "message": "'6'",
+            "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 160, in run\n    control={p:evaluate(q,tokens[p],source_cursor) for p in ('A','B','C')}\n               ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 155, in evaluate\n    s.check();v=np.asarray(function(weights,q,jax.device_put(t[None],batch_sharding(mesh)),jnp.asarray(step,jnp.float32)))[0]\n                           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/plateau_forensics.py\", line 39, in __call__\n    exe=self.function.lower(*args).compile(); m=exe.memory_analysis()\n        ~~~~~~~~~~~~~~~~~~~^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 151, in <lambda>\n    evaluators[name]=GuardedJit(lambda b,q,t,step,spec=spec:token_nll(cfg,b,q,t,columns,spec,step,block_fn=block_forward))\n                                                            ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 91, in token_nll\n    return tiled_nll(cfg,base,hidden(cfg,base,q,tokens,columns,spec,step,block_fn=block_fn),tokens)\n                              ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 18, in hidden\n    h=(jax.checkpoint(fn,prevent_cse=False) if remat else fn)(base[f'layers_{i}'],q[str(i)],h)\n                                                                                  ~^^^^^^^^\nKeyError: '6'\n--------------------\nFor simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n"
+          },
+          "cost": {
+            "attempted_updates": 0,
+            "input_tokens": 0,
+            "ce_targets": 0,
+            "teacher_input_tokens": 0
+          },
+          "branches": {
+            "ALL-CONTINUE": {
+              "step": 12586,
+              "source_step": 12586,
+              "invocation_updates": 0,
+              "durable_step": 12586
+            }
+          }
+        },
+        {
+          "worker": 1,
+          "status": "failed",
+          "error": {
+            "type": "KeyError",
+            "message": "'6'",
+            "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 160, in run\n    control={p:evaluate(q,tokens[p],source_cursor) for p in ('A','B','C')}\n               ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 155, in evaluate\n    s.check();v=np.asarray(function(weights,q,jax.device_put(t[None],batch_sharding(mesh)),jnp.asarray(step,jnp.float32)))[0]\n                           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/plateau_forensics.py\", line 39, in __call__\n    exe=self.function.lower(*args).compile(); m=exe.memory_analysis()\n        ~~~~~~~~~~~~~~~~~~~^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 151, in <lambda>\n    evaluators[name]=GuardedJit(lambda b,q,t,step,spec=spec:token_nll(cfg,b,q,t,columns,spec,step,block_fn=block_forward))\n                                                            ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 91, in token_nll\n    return tiled_nll(cfg,base,hidden(cfg,base,q,tokens,columns,spec,step,block_fn=block_fn),tokens)\n                              ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 18, in hidden\n    h=(jax.checkpoint(fn,prevent_cse=False) if remat else fn)(base[f'layers_{i}'],q[str(i)],h)\n                                                                                  ~^^^^^^^^\nKeyError: '6'\n--------------------\nFor simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n"
+          },
+          "cost": {
+            "attempted_updates": 0,
+            "input_tokens": 0,
+            "ce_targets": 0,
+            "teacher_input_tokens": 0
+          },
+          "branches": {
+            "PROJECTIONS-CONTINUE": {
+              "step": 12051,
+              "source_step": 12051,
+              "invocation_updates": 0,
+              "durable_step": 12051
+            }
+          }
+        }
+      ]
+    },
+    {
+      "experiment": 144,
+      "status": "failed",
+      "wall_hours": 1.4477479854116664,
+      "raw_sha256": "b4095151771b22066eac796228322fa29bb19ad69837383a81ed668de1416c81",
+      "workers": [
+        {
+          "worker": 0,
+          "status": "failed",
+          "error": {
+            "type": "KeyError",
+            "message": "'6'",
+            "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 160, in run\n    control={p:evaluate(q,tokens[p],source_cursor) for p in ('A','B','C')}\n               ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 155, in evaluate\n    s.check();v=np.asarray(function(weights,q,jax.device_put(t[None],batch_sharding(mesh)),jnp.asarray(step,jnp.float32)))[0]\n                           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/plateau_forensics.py\", line 39, in __call__\n    exe=self.function.lower(*args).compile(); m=exe.memory_analysis()\n        ~~~~~~~~~~~~~~~~~~~^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 151, in <lambda>\n    evaluators[name]=GuardedJit(lambda b,q,t,step,spec=spec:token_nll(cfg,b,q,t,columns,spec,step,block_fn=block_forward))\n                                                            ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 91, in token_nll\n    return tiled_nll(cfg,base,hidden(cfg,base,q,tokens,columns,spec,step,block_fn=block_fn),tokens)\n                              ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 18, in hidden\n    h=(jax.checkpoint(fn,prevent_cse=False) if remat else fn)(base[f'layers_{i}'],q[str(i)],h)\n                                                                                  ~^^^^^^^^\nKeyError: '6'\n--------------------\nFor simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n"
+          },
+          "cost": {
+            "attempted_updates": 0,
+            "input_tokens": 0,
+            "ce_targets": 0,
+            "teacher_input_tokens": 0
+          },
+          "branches": {
+            "CE-CONTINUE": {
+              "step": 11965,
+              "source_step": 11965,
+              "invocation_updates": 0,
+              "durable_step": 11965
+            }
+          }
+        },
+        {
+          "worker": 1,
+          "status": "failed",
+          "error": {
+            "type": "KeyError",
+            "message": "'6'",
+            "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 160, in run\n    control={p:evaluate(q,tokens[p],source_cursor) for p in ('A','B','C')}\n               ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 155, in evaluate\n    s.check();v=np.asarray(function(weights,q,jax.device_put(t[None],batch_sharding(mesh)),jnp.asarray(step,jnp.float32)))[0]\n                           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/plateau_forensics.py\", line 39, in __call__\n    exe=self.function.lower(*args).compile(); m=exe.memory_analysis()\n        ~~~~~~~~~~~~~~~~~~~^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 151, in <lambda>\n    evaluators[name]=GuardedJit(lambda b,q,t,step,spec=spec:token_nll(cfg,b,q,t,columns,spec,step,block_fn=block_forward))\n                                                            ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 91, in token_nll\n    return tiled_nll(cfg,base,hidden(cfg,base,q,tokens,columns,spec,step,block_fn=block_fn),tokens)\n                              ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 18, in hidden\n    h=(jax.checkpoint(fn,prevent_cse=False) if remat else fn)(base[f'layers_{i}'],q[str(i)],h)\n                                                                                  ~^^^^^^^^\nKeyError: '6'\n--------------------\nFor simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n"
+          },
+          "cost": {
+            "attempted_updates": 0,
+            "input_tokens": 0,
+            "ce_targets": 0,
+            "teacher_input_tokens": 0
+          },
+          "branches": {
+            "CE-LR-DIV3": {
+              "step": 11965,
+              "source_step": 11965,
+              "invocation_updates": 0,
+              "durable_step": 11965
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
