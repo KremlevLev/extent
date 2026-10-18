@@ -1,3 +1,24 @@
+# 18 October2026 - EXP147 received: original LR continuation reaches A5.692
+
+Raw byte-preserved EXP-147-fold-continue-session-1.json; analysisJSON/MD covers
+allthree145continuation rates147/0,147/1,148/1. All same145current24965,
+Adam12379 restored, identical data, no new folding/rank/optimizer restart.
+Both147 exit0/deadline_partial6.3959h,3Telegram;pending[],durable==last.
+Source replay and final/best profiles pass; finalHF manifests31126/31095
+and contracts confirmed; full payload not restored.
+Original6161new/1,577,216tokens ->final5.692111/5.718191/5.292497.
+LR/3 6130new/1,569,280tokens ->final5.757107/5.738609/5.346462.
+LR/10(148)6158new ->final5.758164/5.762702/5.349371.
+Finals NOT exactly matched counts. Common5120 original5.728547/5.739723/5.323132
+vs/3 5.727711/5.747919/5.329712 vs/10 5.748516/5.764374/5.334363.
+Aoriginalvs/3 effectivelytied; originalbetterB/C. At4096original winsallABC.
+Original registered A-bestnew6144/global31109:5.707909/5.720280/5.315491;
+final31126 improves materially after17updates, not relabeledregisteredbest.
+Original source->last gainA.090471/B.086339/C.071708; noisy, no hard5.8plateau.
+OriginalLR remains practicaldefault; no universaloptimum/independenttestclaim.
+Tinycontext256->1024 no usefulgain; profiles do not prove plateau mechanism.
+Keep148 control interpretation,143FULL still awaited. No runner edits/newruns.
+
 # 18 October2026 - EXP148 received: repaired Adam control and LR/10
 
 Raw byte-preserved results/EXP-148-fold-continue-session-1.json; analysisJSON/MD

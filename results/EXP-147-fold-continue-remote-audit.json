@@ -1,0 +1,24 @@
+{
+  "scope": "read-only manifests; full payload restore not performed",
+  "revision": "a848e128385229c8cfcf20f1cc0614485c812109",
+  "workers": [
+    {
+      "worker": 0,
+      "path": "experiments/exp147-fold-continue-v1/worker-0/checkpoints/CONTINUE145-LR-DIV1/checkpoint.json",
+      "step": 31126,
+      "generation": "step-31126-637a13cdbb4e43f783e843a602c6b78d",
+      "payload_bytes": 114979740,
+      "contract_matches_report_plus_arm": true,
+      "step_matches_final": true
+    },
+    {
+      "worker": 1,
+      "path": "experiments/exp147-fold-continue-v1/worker-1/checkpoints/CONTINUE145-LR-DIV3/checkpoint.json",
+      "step": 31095,
+      "generation": "step-31095-356104c437834e38963543004bf6b1a6",
+      "payload_bytes": 114979740,
+      "contract_matches_report_plus_arm": true,
+      "step_matches_final": true
+    }
+  ]
+}
