@@ -1,0 +1,258 @@
+{
+  "raw_sha256": "41a4b239a43c81ac2a91657d59f23edbd9a4987a22302c3f06a4e4b20d1d2d85",
+  "aggregate_status": "failed",
+  "wall_hours": 11.302454650915,
+  "comparison_status": "incomplete: SAME-FACTORS control failed before first update; FOLD-NEW treatment trajectory valid",
+  "control": {
+    "worker": 0,
+    "error": {
+      "type": "KeyError",
+      "message": "'6'",
+      "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 160, in run\n    control={p:evaluate(q,tokens[p],source_cursor) for p in ('A','B','C')}\n               ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 155, in evaluate\n    s.check();v=np.asarray(function(weights,q,jax.device_put(t[None],batch_sharding(mesh)),jnp.asarray(step,jnp.float32)))[0]\n                           ~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/plateau_forensics.py\", line 39, in __call__\n    exe=self.function.lower(*args).compile(); m=exe.memory_analysis()\n        ~~~~~~~~~~~~~~~~~~~^^^^^^^\n  File \"/kaggle/working/extent/scripts/m3q_reset_long_campaign.py\", line 151, in <lambda>\n    evaluators[name]=GuardedJit(lambda b,q,t,step,spec=spec:token_nll(cfg,b,q,t,columns,spec,step,block_fn=block_forward))\n                                                            ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 91, in token_nll\n    return tiled_nll(cfg,base,hidden(cfg,base,q,tokens,columns,spec,step,block_fn=block_fn),tokens)\n                              ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/kaggle/working/extent/extent/competitor_tpu.py\", line 18, in hidden\n    h=(jax.checkpoint(fn,prevent_cse=False) if remat else fn)(base[f'layers_{i}'],q[str(i)],h)\n                                                                                  ~^^^^^^^^\nKeyError: '6'\n--------------------\nFor simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.\n"
+    },
+    "cost": {
+      "attempted_updates": 0,
+      "input_tokens": 0,
+      "ce_targets": 0,
+      "teacher_input_tokens": 0
+    }
+  },
+  "treatment": {
+    "worker": 1,
+    "arm": "FOLD-NEW-R32-NEW-ADAM",
+    "status": "deadline_partial",
+    "step": 24965,
+    "source_step": 12586,
+    "new_updates": 12379,
+    "cost": {
+      "attempted_updates": 12380,
+      "input_tokens": 3169280,
+      "ce_targets": 3156900,
+      "teacher_input_tokens": 0,
+      "training_seconds": 34698.23733895498,
+      "accepted_updates": 12379,
+      "accepted_input_tokens": 3169024,
+      "accepted_ce_targets": 3156645
+    },
+    "source": {
+      "A": 6.000774331390858,
+      "B": 6.0044484585523605,
+      "C": 5.6173869371414185
+    },
+    "last": {
+      "A": 5.782679624855518,
+      "B": 5.8044673204422,
+      "C": 5.364202193915844
+    },
+    "last_improvement": {
+      "A": 0.21809470653533936,
+      "B": 0.19998113811016083,
+      "C": 0.2531847432255745
+    },
+    "registered_best": {
+      "A": 5.795827351510525,
+      "B": 5.806025579571724,
+      "C": 5.363321773707867
+    },
+    "registered_best_step": 24874,
+    "registered_best_new_step": 12288,
+    "source_replay": {
+      "passed": true,
+      "per_panel_max_error": {
+        "A": 0.00074005126953125,
+        "B": 0.0006670951843261719,
+        "C": 0.0006809234619140625
+      },
+      "tolerance": 0.03
+    },
+    "profile_checks": {
+      "last": {
+        "layers": 28,
+        "rejected": []
+      },
+      "best": {
+        "layers": 28,
+        "rejected": []
+      }
+    },
+    "evaluations": [
+      {
+        "step": 12586,
+        "new_steps": 0,
+        "panels": {
+          "A": 6.000774331390858,
+          "B": 6.0044484585523605,
+          "C": 5.6173869371414185
+        }
+      },
+      {
+        "step": 12714,
+        "new_steps": 128,
+        "panels": {
+          "A": 5.970554709434509,
+          "B": 5.980592876672745,
+          "C": 5.575812101364136
+        }
+      },
+      {
+        "step": 13098,
+        "new_steps": 512,
+        "panels": {
+          "A": 5.95735215395689,
+          "B": 5.969595909118652,
+          "C": 5.545317582786083
+        }
+      },
+      {
+        "step": 13610,
+        "new_steps": 1024,
+        "panels": {
+          "A": 5.934272587299347,
+          "B": 5.969293028116226,
+          "C": 5.563916116952896
+        }
+      },
+      {
+        "step": 14634,
+        "new_steps": 2048,
+        "panels": {
+          "A": 5.957615919411182,
+          "B": 5.947869464755058,
+          "C": 5.55148308724165
+        }
+      },
+      {
+        "step": 15146,
+        "new_steps": 2560,
+        "panels": {
+          "A": 5.9247531071305275,
+          "B": 5.939751118421555,
+          "C": 5.52197889238596
+        }
+      },
+      {
+        "step": 15658,
+        "new_steps": 3072,
+        "panels": {
+          "A": 5.908254235982895,
+          "B": 5.935005158185959,
+          "C": 5.51821069419384
+        }
+      },
+      {
+        "step": 16020,
+        "new_steps": 3434,
+        "panels": {
+          "A": 5.917754098773003,
+          "B": 5.940657362341881,
+          "C": 5.514137506484985
+        }
+      },
+      {
+        "step": 16170,
+        "new_steps": 3584,
+        "panels": {
+          "A": 5.913141719996929,
+          "B": 5.943803936243057,
+          "C": 5.496466062963009
+        }
+      },
+      {
+        "step": 16384,
+        "new_steps": 3798,
+        "panels": {
+          "A": 5.910593211650848,
+          "B": 5.929842412471771,
+          "C": 5.489859014749527
+        }
+      },
+      {
+        "step": 16682,
+        "new_steps": 4096,
+        "panels": {
+          "A": 5.907919712364674,
+          "B": 5.910614550113678,
+          "C": 5.496228277683258
+        }
+      },
+      {
+        "step": 17194,
+        "new_steps": 4608,
+        "panels": {
+          "A": 5.893653340637684,
+          "B": 5.9073958694934845,
+          "C": 5.487372241914272
+        }
+      },
+      {
+        "step": 17706,
+        "new_steps": 5120,
+        "panels": {
+          "A": 5.868213921785355,
+          "B": 5.907475024461746,
+          "C": 5.497675694525242
+        }
+      },
+      {
+        "step": 18730,
+        "new_steps": 6144,
+        "panels": {
+          "A": 5.8906006291508675,
+          "B": 5.887088775634766,
+          "C": 5.477891273796558
+        }
+      },
+      {
+        "step": 20480,
+        "new_steps": 7894,
+        "panels": {
+          "A": 5.853956572711468,
+          "B": 5.856123313307762,
+          "C": 5.41627649217844
+        }
+      },
+      {
+        "step": 20778,
+        "new_steps": 8192,
+        "panels": {
+          "A": 5.8470752984285355,
+          "B": 5.842906475067139,
+          "C": 5.419480063021183
+        }
+      },
+      {
+        "step": 22826,
+        "new_steps": 10240,
+        "panels": {
+          "A": 5.855947382748127,
+          "B": 5.832162946462631,
+          "C": 5.4348099604249
+        }
+      },
+      {
+        "step": 24576,
+        "new_steps": 11990,
+        "panels": {
+          "A": 5.812536604702473,
+          "B": 5.816290766000748,
+          "C": 5.367333188652992
+        }
+      },
+      {
+        "step": 24874,
+        "new_steps": 12288,
+        "panels": {
+          "A": 5.795827351510525,
+          "B": 5.806025579571724,
+          "C": 5.363321773707867
+        }
+      }
+    ],
+    "durable_step_in_report": 22442,
+    "pending_in_report": [
+      "FOLD-NEW-R32-NEW-ADAM"
+    ]
+  },
+  "cost_scope": "new treatment input tokens3169024; source136 cursor12586 adds3222016; combined6391040 input tokens excludes earlier inherited preparation and failed-control overhead",
+  "interpretation": "folding plus new zero-effect R32 and fresh Adam preserves source function and continues recovery below6; cannot isolate folding/capacity from Adam reset or extra training without SAME-FACTORS control and plain same-budget continuation"
+}

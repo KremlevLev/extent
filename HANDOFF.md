@@ -1,3 +1,37 @@
+# 18 October2026 - EXP145 partial scientific result: fold/newR32 to5.78
+
+User supplied aggregate archived byte-exact in results/EXP-145-long-v1-session-1.json;
+analysis.json/md separate scientific trajectory from control failure. Parent
+failed11.30245h: worker0 SAME-FACTORS-NEW-ADAM KeyError('6') in initial source
+NLL, ZERO attempted/accepted updates. Worker1 FOLD-NEW-R32-NEW-ADAM exit0,
+deadline_partial, finalization completed. Do not mark both branches failed or
+claim the intended paired comparison was completed.
+
+Treatment global source12586 ->last24965 =12379 new accepted updates,
+3,169,024 input tokens. Final A/B/C5.782680/5.804467/5.364202 from folded source
+6.000774/6.004448/5.617387. Registered A-best global24874(new12288):
+5.795827/5.806026/5.363322. C slightly worse at arbitrary last. Source folding
+replay max per-window error.000740<.03. Source/last/best layer-profile consistency
+all pass. Late checkpoints improve but not monotonically across entire run.
+Context256->1024 tail5.551133->5.553845: no useful long-context gain.
+
+This folds136 learned Mamba corrections/reset into BF16 base, adds NEW zero-effect
+rank32 corrections and NEW Adam, retains learned pregate weights and original
+data cursor. No quality collapse at stage transition. Not proof that increasing
+rank alone caused improvement: SAME-FACTORS freshAdam control failed, matched
+plain continuation143 not yet available. No exact effective rank64 claim after
+BF16 folding. Combined136+new145 accepted input tokens24965*256=6,391,040,
+still excluding inherited earlier prep. New-stage3.17M is not full-pipeline cost.
+
+Report pending with durable22442. Targeted read-only live HF snapshot
+9d0a8f95d3df2ae566175fae950fca8f2759a233 confirms FINAL manifest24965 and
+contract matches treatment report. Audit in EXP-145-remote-checkpoint-audit.json;
+full payload restore not performed. Existing save-reserve retry fix already
+published224df06; no new numerical code, launch or cloud training in this review.
+Control schema defect remains in OLD145 runner; do not blindly rerun both arms
+and expect repaired control. Preserve successful treatment checkpoint and plan
+an isolated repaired control/continuation once new session budget is requested.
+
 # 18 October2026 - EXP146 actual results; prepared seed456 recovery reproduced
 
 Raw results/EXP-146-long-v1-session-1.json byte-preserved from user; analysis.json

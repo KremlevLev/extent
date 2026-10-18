@@ -1,0 +1,9 @@
+{
+  "scope": "read-only final manifest; full payload restore not performed",
+  "revision": "9d0a8f95d3df2ae566175fae950fca8f2759a233",
+  "path": "experiments/exp145-long-v1/worker-1/checkpoints/FOLD-NEW-R32-NEW-ADAM/checkpoint.json",
+  "step": 24965,
+  "generation": "step-24965-c5a34c88caeb45549d43f2fafb6b0653",
+  "payload_bytes": 114979740,
+  "contract_matches_report": true
+}
