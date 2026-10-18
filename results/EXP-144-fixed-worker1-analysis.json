@@ -1,0 +1,260 @@
+{
+  "raw_sha256": "50f8fc0907385a91845578b3b379434db601651181ee59fb7120128cd338293e",
+  "scope": "worker1 only: LR/3 from138CE; originalLR worker0 absent",
+  "status": "deadline_partial",
+  "wall_hours": 11.291030894318332,
+  "arm": "CE-LR-DIV3",
+  "source_step": 11965,
+  "step": 23854,
+  "new_steps": 11889,
+  "source_replay": {
+    "passed": true,
+    "per_panel_max_error": {
+      "A": 0.0005640983581542969,
+      "B": 0.0007596015930175781,
+      "C": 0.0006432533264160156
+    },
+    "tolerance": 0.03
+  },
+  "recipe": {
+    "lora": true,
+    "scales": false,
+    "alpha": 0.0,
+    "penalty": 0.0,
+    "pregate": true,
+    "tanh": true,
+    "reset": false,
+    "unprotect": false,
+    "mlp": false,
+    "mlp_rank": 32,
+    "mlp_lr": 3.3333333333333335e-05,
+    "norm_lr": 3.3333333333333335e-05,
+    "mamba_lr": 9.999999999999999e-05,
+    "dense": false,
+    "relative": null,
+    "absolute": null,
+    "ramp_steps": 0,
+    "train_offset": 0,
+    "temperature": 1.0,
+    "beta2": 0.999,
+    "lr_warmup": 256,
+    "decay_steps": 0,
+    "min_lr_frac": 1.0,
+    "name": "CE-LR-DIV3",
+    "start": "130-folded",
+    "reset_parts": "all",
+    "source": "138-ce",
+    "mode": "lr-div3",
+    "source_seed": 123
+  },
+  "cost": {
+    "attempted_updates": 11890,
+    "input_tokens": 3043840,
+    "ce_targets": 3031950,
+    "teacher_input_tokens": 0,
+    "training_seconds": 33988.539099028836,
+    "accepted_updates": 11889,
+    "accepted_input_tokens": 3043584,
+    "accepted_ce_targets": 3031695
+  },
+  "source": {
+    "A": 6.000852093100548,
+    "B": 5.992128565907478,
+    "C": 5.566408321261406
+  },
+  "last": {
+    "A": 5.803474850952625,
+    "B": 5.824707701802254,
+    "C": 5.409201122820377
+  },
+  "improvement": {
+    "A": 0.19737724214792252,
+    "B": 0.1674208641052246,
+    "C": 0.1572071984410286
+  },
+  "registered_best_step": 20157,
+  "registered_best_new_step": 8192,
+  "registered_best": {
+    "A": 5.818954259157181,
+    "B": 5.875901743769646,
+    "C": 5.429943069815636
+  },
+  "tail_from8192": {
+    "additional_updates": 3697,
+    "improvement": {
+      "A": 0.015479408204555511,
+      "B": 0.05119404196739197,
+      "C": 0.02074194699525833
+    }
+  },
+  "profiles": {
+    "last": {
+      "layers": 28,
+      "rejected": []
+    },
+    "best": {
+      "layers": 28,
+      "rejected": []
+    }
+  },
+  "durable_step_in_report": 21565,
+  "pending_in_report": [
+    "CE-LR-DIV3"
+  ],
+  "evaluations": [
+    {
+      "step": 11965,
+      "new_steps": 0,
+      "panels": {
+        "A": 6.000852093100548,
+        "B": 5.992128565907478,
+        "C": 5.566408321261406
+      }
+    },
+    {
+      "step": 12093,
+      "new_steps": 128,
+      "panels": {
+        "A": 5.9623217806220055,
+        "B": 5.946403294801712,
+        "C": 5.5293228328228
+      }
+    },
+    {
+      "step": 12477,
+      "new_steps": 512,
+      "panels": {
+        "A": 5.930962949991226,
+        "B": 5.9197621792554855,
+        "C": 5.5021993815898895
+      }
+    },
+    {
+      "step": 12989,
+      "new_steps": 1024,
+      "panels": {
+        "A": 5.919193804264069,
+        "B": 5.911280333995819,
+        "C": 5.5058130994439125
+      }
+    },
+    {
+      "step": 14013,
+      "new_steps": 2048,
+      "panels": {
+        "A": 5.902841649949551,
+        "B": 5.914729297161102,
+        "C": 5.536390691995621
+      }
+    },
+    {
+      "step": 14525,
+      "new_steps": 2560,
+      "panels": {
+        "A": 5.90034344047308,
+        "B": 5.899537652730942,
+        "C": 5.500325798988342
+      }
+    },
+    {
+      "step": 15037,
+      "new_steps": 3072,
+      "panels": {
+        "A": 5.881522372364998,
+        "B": 5.892925933003426,
+        "C": 5.487644635140896
+      }
+    },
+    {
+      "step": 15399,
+      "new_steps": 3434,
+      "panels": {
+        "A": 5.878038831055164,
+        "B": 5.8860961347818375,
+        "C": 5.5039224699139595
+      }
+    },
+    {
+      "step": 15549,
+      "new_steps": 3584,
+      "panels": {
+        "A": 5.863220565021038,
+        "B": 5.891818434000015,
+        "C": 5.495707355439663
+      }
+    },
+    {
+      "step": 16061,
+      "new_steps": 4096,
+      "panels": {
+        "A": 5.881199032068253,
+        "B": 5.899956434965134,
+        "C": 5.48273528367281
+      }
+    },
+    {
+      "step": 16384,
+      "new_steps": 4419,
+      "panels": {
+        "A": 5.870281435549259,
+        "B": 5.899136781692505,
+        "C": 5.46511172503233
+      }
+    },
+    {
+      "step": 16573,
+      "new_steps": 4608,
+      "panels": {
+        "A": 5.860165394842625,
+        "B": 5.891300290822983,
+        "C": 5.4517024382948875
+      }
+    },
+    {
+      "step": 17085,
+      "new_steps": 5120,
+      "panels": {
+        "A": 5.860774375498295,
+        "B": 5.867446109652519,
+        "C": 5.472170747816563
+      }
+    },
+    {
+      "step": 18109,
+      "new_steps": 6144,
+      "panels": {
+        "A": 5.889541901648045,
+        "B": 5.879280582070351,
+        "C": 5.499802619218826
+      }
+    },
+    {
+      "step": 20157,
+      "new_steps": 8192,
+      "panels": {
+        "A": 5.818954259157181,
+        "B": 5.875901743769646,
+        "C": 5.429943069815636
+      }
+    },
+    {
+      "step": 20480,
+      "new_steps": 8515,
+      "panels": {
+        "A": 5.856355994939804,
+        "B": 5.857534661889076,
+        "C": 5.440319702029228
+      }
+    },
+    {
+      "step": 22205,
+      "new_steps": 10240,
+      "panels": {
+        "A": 5.832523003220558,
+        "B": 5.8500994592905045,
+        "C": 5.443913951516151
+      }
+    }
+  ],
+  "interpretation": "LR/3 viable and improves from~6 to~5.80 with preserved source optimizer; causal rate advantage requires144worker0, not143/145 with different ancestors; tail improvement small onA, ongoing onB/C, not a proven hard plateau"
+}

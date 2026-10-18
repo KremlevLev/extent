@@ -1,0 +1,9 @@
+{
+  "scope": "read-only final manifest; full payload restoration not performed",
+  "revision": "a848e128385229c8cfcf20f1cc0614485c812109",
+  "path": "experiments/exp144-long-fixed-v2/worker-1/checkpoints/CE-LR-DIV3/checkpoint.json",
+  "step": 23854,
+  "generation": "step-23854-319c89419cc34fa09f93edf8b96de1d1",
+  "payload_bytes": 114979740,
+  "contract_matches_report": true
+}

@@ -1,3 +1,28 @@
+# 18 October2026 - EXP144 repaired worker1: LR/3 reaches5.803
+
+Worker1 CE-LR-DIV3 only, not whole paired144 aggregate. Raw byte-preserved under
+EXP-144-fixed-worker1-session-1.json, analysisJSON/MD and remote audit saved.
+Normal deadline_partial/noerror11.291h. Source138CE11965 ->23854,11889 accepted
+updates/3,043,584 NEW input tokens, no optimizer restart. ALL LR groups/3:
+Mamba1e-4,pregate3.333e-5. Initial allwindow replay maxerror<.000760<.03.
+Final A/B/C5.803475/5.824708/5.409201 from6.000852/5.992129/5.566408.
+Registered A-bestglobal20157(new8192):5.818954/5.875902/5.429943.
+After8192,3697 further updates improveA.01548/B.05119/C.02074; noisy, slowing A,
+not a demonstrated hard plateau. All source/final profiles pass consistency.
+Context256->1024 tail5.554079->5.560328 no useful long-context gain.
+
+LR/3 is viable; advantage over originalLR requires144worker0(same138CEstart,
+Adam/data). DO NOT compare raw finalNLL to143PROJ or145 as a causal rate claim:
+their ancestors/parameters/optimizer histories differ even atsimilar startingA6.
+Current147/148 rate screen starts145current24965/5.78, a separate conditioning
+point. No cancellation/change to those runs. Need144worker0 and143worker0 for
+paired conclusions; onlyworker1 results received for143/144 atthis point.
+
+Report pending/durable21565. Targeted read-only HF snapshot
+ a848e128385229c8cfcf20f1cc0614485c812109 confirms final manifest23854 and contract
+matches report; full payload restore not performed. Existing save-readback fix
+already published; no runner/numerical code changed in this result review.
+
 # 18 October2026 - EXP143 repaired worker1 received: PROJ continuation5.91
 
 Only worker1 supplied (not complete paired143 aggregate). Raw byte-exact report,
