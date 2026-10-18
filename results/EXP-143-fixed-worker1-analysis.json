@@ -1,0 +1,111 @@
+{
+  "raw_sha256": "79f1c342189ae9a0282ad84c0c226a72a50c39c3b6ceb3b3f95b5e41d40a3804",
+  "scope": "worker1 only; FULL worker0 not supplied in this turn",
+  "status": "deadline_partial",
+  "wall_hours": 11.296427008676945,
+  "arm": "PROJECTIONS-CONTINUE",
+  "source_step": 12051,
+  "step": 24393,
+  "new_steps": 12342,
+  "source_replay": {
+    "passed": true,
+    "per_panel_max_error": {
+      "A": 0.0,
+      "B": 0.0,
+      "C": 0.0
+    },
+    "tolerance": 0.03
+  },
+  "cost": {
+    "attempted_updates": 12343,
+    "input_tokens": 3159808,
+    "ce_targets": 3147465,
+    "teacher_input_tokens": 0,
+    "training_seconds": 34925.2746802899,
+    "accepted_updates": 12342,
+    "accepted_input_tokens": 3159552,
+    "accepted_ce_targets": 3147210
+  },
+  "source": {
+    "A": 6.112765893340111,
+    "B": 6.17913781106472,
+    "C": 5.7283222153782845
+  },
+  "last": {
+    "A": 5.906141564249992,
+    "B": 5.915106147527695,
+    "C": 5.499488294124603
+  },
+  "registered_best_step": 24339,
+  "registered_best_new_step": 12288,
+  "registered_best": {
+    "A": 5.919346295297146,
+    "B": 5.947111427783966,
+    "C": 5.493688985705376
+  },
+  "profiles": {
+    "last": {
+      "layers": 28,
+      "rejected": []
+    },
+    "best": {
+      "layers": 28,
+      "rejected": []
+    }
+  },
+  "durable_step_in_report": 21907,
+  "pending_in_report": [
+    "PROJECTIONS-CONTINUE"
+  ],
+  "matched_added_step_comparison_to145": [
+    {
+      "new_steps": 8192,
+      "scope": "descriptive only: different136 starting models/cursors PROJ vsFULL, not matched-initialization causal ablation",
+      "panels": {
+        "A": {
+          "proj143": 5.965748056769371,
+          "fold145": 5.8470752984285355,
+          "proj143_improvement": 0.14701783657073975,
+          "fold145_improvement": 0.15369903296232224
+        },
+        "B": {
+          "proj143": 6.033657297492027,
+          "fold145": 5.842906475067139,
+          "proj143_improvement": 0.14548051357269287,
+          "fold145_improvement": 0.16154198348522186
+        },
+        "C": {
+          "proj143": 5.601553104817867,
+          "fold145": 5.419480063021183,
+          "proj143_improvement": 0.12676911056041718,
+          "fold145_improvement": 0.19790687412023544
+        }
+      }
+    },
+    {
+      "new_steps": 12288,
+      "scope": "descriptive only: different136 starting models/cursors PROJ vsFULL, not matched-initialization causal ablation",
+      "panels": {
+        "A": {
+          "proj143": 5.919346295297146,
+          "fold145": 5.795827351510525,
+          "proj143_improvement": 0.19341959804296494,
+          "fold145_improvement": 0.20494697988033295
+        },
+        "B": {
+          "proj143": 5.947111427783966,
+          "fold145": 5.806025579571724,
+          "proj143_improvement": 0.2320263832807541,
+          "fold145_improvement": 0.1984228789806366
+        },
+        "C": {
+          "proj143": 5.493688985705376,
+          "fold145": 5.363321773707867,
+          "proj143_improvement": 0.23463322967290878,
+          "fold145_improvement": 0.2540651634335518
+        }
+      }
+    }
+  ],
+  "interpretation": "protectedR32 PROJECTIONS continuation improves without folding/new factors/Adam reset; 145 advantage is not established by absolute end NLL, await143FULL and repaired freshAdam control148"
+}

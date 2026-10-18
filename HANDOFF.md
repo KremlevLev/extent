@@ -1,3 +1,28 @@
+# 18 October2026 - EXP143 repaired worker1 received: PROJ continuation5.91
+
+Only worker1 supplied (not complete paired143 aggregate). Raw byte-exact report,
+analysisJSON/MD and live remote audit saved as EXP-143-fixed-worker1-*.
+Source replay maxerror EXACT0 onallA/B/C, so prior emptyGQA repair works on T4.
+Normal deadline_partial11.2964h, no error. PROJECTIONS-CONTINUE source12051 ->
+current24393,12342 accepted NEW updates/3,159,552 input tokens. Protected rank32,
+normalization and existing partial reset retained; NO newrank/folding/Adamreset.
+Final A/B/C5.906142/5.915106/5.499488 from6.112766/6.179138/5.728322.
+Registered best global24339(new12288):5.919346/5.947111/5.493689.
+All source/final profile checks pass; late8192->12288 improvesA.0464/B.0865/C.1079,
+nonmonotonic earlier. Tiny context gain256->1024~.00144 on8windows not meaningful.
+
+Important interpretation for145: at same NEW12288,143PROJ A gain.19342 vs145fold
+.20495, B gain.23203 vs.19842, C gain.23463 vs.25407. Absolute145A advantage
+mostly predates these continuations. NOT a causal rank-stage ablation because
+143/1 starts PROJECTIONS12051 vs145 FULL12586. Await143/0 FULL (same136 source
+as145) and148repaired freshAdam-only control. Do not call143PROJ ordinary dense
+CE/random baseline. No unique capacity benefit established yet.
+
+Report pending/durable21907; targeted read-only HF snapshot
+ a848e128385229c8cfcf20f1cc0614485c812109 confirms final manifest24393, original
+contract matches report. Full payload restore NOT performed. All old/new147/148
+runner/source files unchanged by this review; no cloud job launched.
+
 # 18 October2026 - EXP147/148 PREPARED for two7h T4x2 accounts
 
 User wants continue145 NOW while143/144 still~10h togo; two accounts7h each.
