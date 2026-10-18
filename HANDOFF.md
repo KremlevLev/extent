@@ -1,3 +1,23 @@
+# 18 October2026 - EXP148 received: repaired Adam control and LR/10
+
+Raw byte-preserved results/EXP-148-fold-continue-session-1.json; analysisJSON/MD
+and targeted remote audit. Both exit0/deadline_partial6.3986h;3 Telegrammessages.
+Report pending[],durable==last; all source replay/final profiles pass.
+148/0 SAME136FULL12586 factors,freshAdam0,originalLR:6328 accepted updates,
+1,619,968 inputtokens; final18914 A/B/C5.895821/5.888958/5.493516.
+148/1 resumes145current24965 withAdam12379 andALLLR/10:6158 updates,
+1,576,448 inputtokens; final31123 A/B/C5.758164/5.762702/5.349371.
+Registered A-best30085/new5120:5.748516/5.764374/5.334363. Final worsensA/C.
+Small LR10 gain; need147 same-start matched continuation to rank rates.
+Arms start DIFFERENT models/cursors: no direct endpoint comparison.
+Matchednew6144 control5.917068/5.910803/5.521145 vs145fold
+5.890601/5.887089/5.477891. Fold winsallABC atshared512..6144; A nearlytied5120.
+Modest conditional fold-stage benefit beyond freshAdam, not pure capacity proof:
+coordinates change and BF16fold rounds; single seed/reused validation.
+Ramp2048 already saturated atglobal12586; same FIT/data permutation verified.
+Remote final manifests18914/31123 and contracts confirmed; full restore notdone.
+No runner changes/cloud launches. Await147 and143FULL.
+
 # 18 October2026 - EXP144 pair complete: original LR wins late matched evaluations
 
 Worker0 received; raw preserved in EXP-144-fixed-worker0-session-1.json.
