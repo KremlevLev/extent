@@ -187,3 +187,40 @@ assert p.call(download)=='ok'
     assert all(len(row) == 2 and row[1] - row[0] >= .1 for row in rows)
     calls = sorted(t for row in rows for t in row)
     assert all(b-a >= .025 for a,b in zip(calls,calls[1:]))
+
+
+def test_remote_verification_uses_save_budget_without_extending_sources(tmp_path,monkeypatch):
+    import huggingface_hub
+    clock=Clock(); p=policy(tmp_path/'coord',clock,deadline=990)
+    monkeypatch.setattr(retry,'_policy',p)
+    monkeypatch.delenv('EXTENT_HF_DOWNLOAD_DEADLINE_UNIX',raising=False)
+    monkeypatch.setenv('EXTENT_HF_SAVE_DEADLINE_UNIX','1100')
+    calls=[]
+    def download(**kwargs):
+        calls.append(kwargs)
+        if len(calls)==1:raise HttpError(429,{'Retry-After':'5'})
+        return 'verified'
+    monkeypatch.setattr(huggingface_hub,'hf_hub_download',download)
+    retry.install_download_retries()
+    with pytest.raises(TimeoutError):
+        huggingface_hub.hf_hub_download(filename='source',local_dir=tmp_path/'source')
+    assert calls==[]
+    assert huggingface_hub.hf_hub_download(filename='checkpoint.json',local_dir=tmp_path/'remote-verification'/'uuid'/'tmp')=='verified'
+    assert len(calls)==2 and p.deadline==990
+    clock.now=1101
+    with pytest.raises(TimeoutError):
+        huggingface_hub.hf_hub_download(filename='sample.npy',local_dir=tmp_path/'remote-verification'/'uuid'/'tmp')
+
+
+def test_default_verification_budget_retains_last_minute(tmp_path,monkeypatch):
+    import huggingface_hub
+    clock=Clock();p=policy(tmp_path/'coord',clock,deadline=900)
+    monkeypatch.setattr(retry,'_policy',p)
+    monkeypatch.delenv('EXTENT_HF_DOWNLOAD_DEADLINE_UNIX',raising=False)
+    monkeypatch.delenv('EXTENT_HF_SAVE_DEADLINE_UNIX',raising=False)
+    monkeypatch.setattr(huggingface_hub,'hf_hub_download',lambda **kw:'ok')
+    retry.install_download_retries()
+    args=dict(local_dir=tmp_path/'remote-verification'/'uuid')
+    assert huggingface_hub.hf_hub_download(**args)=='ok'
+    clock.now=900+29*60
+    with pytest.raises(TimeoutError):huggingface_hub.hf_hub_download(**args)

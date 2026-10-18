@@ -75,26 +75,28 @@ class DownloadPolicy:
             temporary.replace(self.path)
             return (ready, granted) if reserve else ready
 
-    def pause(self, until):
+    def pause(self, until, deadline=None):
+        deadline = self.deadline if deadline is None else deadline
         while True:
             now = self.clock()
             if now >= until:
                 break
-            remaining = self.deadline - now
+            remaining = deadline - now
             if remaining <= 0:
                 raise TimeoutError('HF download wait reached session work deadline')
             self.sleep(min(30., until - now, remaining))
-        if self.clock() >= self.deadline:
+        if self.clock() >= deadline:
             raise TimeoutError('HF download wait reached session work deadline')
 
-    def call(self, download, *args, **kwargs):
+    def call(self, download, *args, _retry_deadline=None, **kwargs):
+        deadline = self.deadline if _retry_deadline is None else _retry_deadline
         failures = 0
         while True:
-            if self.clock() >= self.deadline:
+            if self.clock() >= deadline:
                 raise TimeoutError('HF download reached session work deadline')
             ready, granted = self.update(reserve=True)
             if not granted:
-                self.pause(ready)
+                self.pause(ready, deadline)
                 continue  # Recheck: another worker may have extended cooldown.
             try:
                 return download(*args, **kwargs)
@@ -109,7 +111,7 @@ class DownloadPolicy:
                 until = self.clock() + delay
                 self.update(cooldown=until)
                 self.log(f'hf_download_retry status={status or "network"} attempt={failures} wait_seconds={delay:.1f}', flush=True)
-                self.pause(until)
+                self.pause(until, deadline)
 
 
 _policy = None
@@ -138,6 +140,14 @@ def install_download_retries():
 
     @wraps(original)
     def download(*args, **kwargs):
-        return _policy.call(original, *args, **kwargs)
+        # RecoveryCheckpointStore reads its just-uploaded manifest/sample into
+        # remote-verification/ during the SAVE reserve. The source/work deadline
+        # must not block that read. Only this existing verification staging path
+        # gets the separate save budget; all source/training downloads keep theirs.
+        verification = 'remote-verification' in Path(kwargs.get('local_dir') or '').parts
+        deadline = None
+        if verification:
+            deadline = float(os.environ.get('EXTENT_HF_SAVE_DEADLINE_UNIX', _policy.deadline + 29 * 60))
+        return _policy.call(original, *args, _retry_deadline=deadline, **kwargs)
     download._extent_download_retry = True
     huggingface_hub.hf_hub_download = download

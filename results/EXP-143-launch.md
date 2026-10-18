@@ -26,6 +26,7 @@ RESERVE_MINUTES = 30
 os.environ["EXTENT_HF_DOWNLOAD_DEADLINE_UNIX"] = str(
     time.time() + WALL_HOURS * 3600 - RESERVE_MINUTES * 60
 )
+os.environ["EXTENT_HF_SAVE_DEADLINE_UNIX"] = str(time.time() + WALL_HOURS * 3600 - 60)
 os.environ["EXTENT_HF_RETRY_STATE_DIR"] = "/kaggle/working/extent-hf-download"
 from extent.hf_download_retry import install_download_retries
 install_download_retries()

@@ -1,3 +1,45 @@
+# 18 October2026 - EXP146 actual results; prepared seed456 recovery reproduced
+
+Raw results/EXP-146-long-v1-session-1.json byte-preserved from user; analysis.json
+contains costs/matched-step differences vs136 and within146. Both exit0,
+deadline_partial from work deadline, parent11.30464h. FULL accepted13089 updates,
+3,350,784 NEW input tokens; PROJ13171,3,371,776. One further attempted update each
+was not accepted at deadline; distinguish cost vsaccepted. Inherited preparation
+cost excluded from these new-stage token counts. Model/preparation seed456;
+original data/reset RNG shared123, NOT independent all-RNG/corpus replication.
+
+Final arbitrary endpoints FULL13089 A/B/C5.976876/6.002024/5.614221;
+PROJ13171 6.118156/6.122296/5.740983. Registered A-selected best is10240 BOTH:
+FULL6.097788/6.098570/5.753431 vsPROJ6.222167/6.150277/5.836028. FULL wins these
+matched-step panels, but PROJ often wins early and at8192 ALL panels.12288 both
+worsen, then arbitrary last recovers; not monotonic, no claim of proven new
+plateau or unlimited decrease. Final arbitrary last is better than registered
+best but must not retroactively replace prescribed checkpoint selection.
+Source A/B/C7.264239/7.328428/7.111578; same source in both paired arms.
+All recorded source/final-last/final-best layer-profile consistency checks pass;
+this does NOT establish one universal activation cause. Tail context256->1024
+FULL5.729379->5.733841,PROJ5.821835->5.833437: no useful long-context improvement.
+Recovery near6 agrees with136 on a second preparation; not a new large jump
+beyond prior136 near6.0 or teacher-quality restoration(originalQwen~3).
+
+SAVING: user report has both pending slots and durable_step12672. Read-only live
+HF snapshot229e32d5c6fb2674cf68e239ab7a9845e6277de9 confirms final remote manifests
+13089/13171 with new immutable generations; see remote-checkpoint-audit.json.
+Full payload restore NOT performed; optional extra listing/sample audit hit TLS
+unexpected EOF, no remote mutations. Do not report final source as fully restored
+or lost. Metadata published after uploads per existing atomic protocol.
+
+Found transport issue: work download deadline blocked RecoveryCheckpointStore's
+post-upload manifest/sample reads during save reserve. HF retry wrapper now uses
+separate save deadline ONLY for existing remote-verification staging paths;
+all source/data downloads retain original work deadline. Default save deadline
+work+29min; launch cells explicitly set actual wall end-60s for longer reserves.
+Shared cooldown and bounded retries remain active; save deadline is not an
+unlimited bypass. No numerical/source/runner file changed; all existing contracts
+remain identical. Old in-flight145/146 processes are not interrupted or updated.
+20 HF artifact/retry tests pass, including work expired/save active, retry429 in
+save phase, save expiry and default last-minute reserve. No cloud relaunch here.
+
 # 18 October2026 - EXP143/144 failed before updates;145/146 still RUNNING
 
 User clarified145/146 have run~9h; do NOT interrupt/modify their code/contracts.

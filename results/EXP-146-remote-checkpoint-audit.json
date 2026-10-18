@@ -1,0 +1,26 @@
+{
+  "revision": "229e32d5c6fb2674cf68e239ab7a9845e6277de9",
+  "read_only": true,
+  "scope": "targeted immutable snapshot manifests only; no full payload restoration",
+  "additional_payload_audit": "incomplete: TLS unexpected EOF during optional listing/sample reads",
+  "workers": [
+    {
+      "worker": 0,
+      "slot": "SEED456-ALL",
+      "revision": "229e32d5c6fb2674cf68e239ab7a9845e6277de9",
+      "path": "experiments/exp146-long-v1/worker-0/checkpoints/SEED456-ALL/checkpoint.json",
+      "step": 13089,
+      "generation": "step-13089-a8eda5be353847e99585144129e543a0",
+      "payload_bytes": 114979740
+    },
+    {
+      "worker": 1,
+      "slot": "SEED456-PROJECTIONS",
+      "revision": "229e32d5c6fb2674cf68e239ab7a9845e6277de9",
+      "path": "experiments/exp146-long-v1/worker-1/checkpoints/SEED456-PROJECTIONS/checkpoint.json",
+      "step": 13171,
+      "generation": "step-13171-3deacd93bc4045bfa9ce32c8285a723c",
+      "payload_bytes": 114979740
+    }
+  ]
+}
