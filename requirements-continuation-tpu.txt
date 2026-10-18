@@ -1,0 +1,7 @@
+# Install BEFORE importing JAX / initializing TPU in the notebook.
+-r requirements-tpu.txt
+jax[tpu]==0.11.0
+flax==0.12.8
+optax==0.2.8
+transformers==4.51.0
+pyarrow>=15

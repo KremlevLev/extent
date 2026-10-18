@@ -1,3 +1,47 @@
+# 19 October2026 - EXP149-154 PREPARED: four9h TPU +12h/6h T4
+
+User authorizes six new experiments. New runner scripts/m3q_continuation_matrix_campaign.py
+and extent/continuation_matrix.py only; all143-148 numerical/source contracts
+verified unchanged. Source147 ORIGINAL CURRENT31126 (notbest31109),Adam18540,
+A/B/C5.692111/5.718191/5.292497. Immutable snapshot a848e128385229c8cfcf20f1cc0614485c812109,
+manifest SHA04961b41fd00cc0d8961ecac0f2d36ed9e5baa9dabb94792809ccb8100616c6d.
+All487chunks114,979,740B downloaded/SHAchecked and payload actually restored.
+CPU synthetic-gradient next optimizer update bitwise equals original, all6
+counts18540->18541; emptyGQA6/13/20/27 kept. NOT full1.7Bgradient/TPU proof.
+
+149 TPU exact continuation/Adam preserved;150 TPU SAME factors/freshAdam;
+151 TPU fold147+freshR32/freshAdam;152 TPU fold147+freshR128/freshAdam.
+153 T4x2 GPU0foldR64/GPU1foldR256,12haccount;154 T4x2 exact/foldR32 bridge,6h.
+All sourceglobal31126, same original rates, batch1/seq256/FIT permutation.
+Base136current12586 is folded ONCE to rebuild145/147base. Do not fold147 q
+for exact/freshAdam-only. Fold arms intentionally add one extra stage, preserve
+pregate learned weights, initial zero-effect correction. No reset of dynamics.
+
+TPU defaults8.7h including45minsave;15311.7h/45min;1545.8h/30min.262144 NEW
+updates high ceiling (67.1M presentations); continue after8192 untilwall.
+25-30M perTPUsession is user's estimate, NOT measured throughput guarantee.
+Same4.19M FIT pool repeats, not unique tokens. Compare common NEW counts.
+TPU single arm uses8devices inNOTEBOOKprocess;GPU two independent subprocesses.
+TPUsetup requires requirements-continuation-tpu.txt BEFORE JAX initialization:
+jax[tpu]0.11.0/flax0.12.8/optax0.2.8. T4notebook setup unchanged.
+
+Source all160 per-window NLL<=.03 gate, all source chunks SHA checked.
+First actual TPU gradient compared to existing streamed reference BEFORE acceptance:
+relativeL2<=.15/cosine>=.98/CEerror<=.03, finite stages. If mismatch/HBM guard,
+select reference streamed on SAME8TPU, never accept failed compiled proposal or
+weaken thresholds. execution_checks records choice; extra audit tokens separate,
+audit time included. Resume rechecks; hardware change not bitwise trajectory.
+Reference nonfinite rejected. All numerical code guarded for firstproposal.
+
+Local128newupdate saves;HF120min+exit;own experiments/expID-continuation-matrix-v1
+namespace, exact OWN resume with Adam-count check. Original sources read-only.
+HF download429retry/cooldown and save readback deadline remain installed.
+Caps149-1514GB each,1528GB,15316GB TOTAL,1544GB TOTAL;no frozenbase uploads.
+Quiet parent-only Telegram start/4h/final,max5. One aggregate per session
+extent-m3q-continuation-matrix-ID.json. Six launch.md, protocol, sourcepin,
+sourceaudit and engineeringplan committed. Single seed/exposedvalidation; cross-
+hardware rank comparisons exploratory. No new cloud job launched locally.
+
 # 18 October2026 - EXP147 received: original LR continuation reaches A5.692
 
 Raw byte-preserved EXP-147-fold-continue-session-1.json; analysisJSON/MD covers

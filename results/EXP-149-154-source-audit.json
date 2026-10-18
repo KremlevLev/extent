@@ -1,0 +1,34 @@
+{
+  "scope": "real147 full payload restore and CPU synthetic-gradient next optimizer update; NOT full1.7B model gradient/forward/TPU proof",
+  "revision": "a848e128385229c8cfcf20f1cc0614485c812109",
+  "manifest_sha256": "04961b41fd00cc0d8961ecac0f2d36ed9e5baa9dabb94792809ccb8100616c6d",
+  "chunks": 487,
+  "payload_bytes": 114979740,
+  "global_step": 31126,
+  "adam_before": [
+    18540,
+    18540,
+    18540,
+    18540,
+    18540,
+    18540
+  ],
+  "adam_after": [
+    18541,
+    18541,
+    18541,
+    18541,
+    18541,
+    18541
+  ],
+  "source_best_step": 31109,
+  "empty_GQA": [
+    6,
+    13,
+    20,
+    27
+  ],
+  "parameter_elements": 7182336,
+  "next_update_bitwise_matches_original": true,
+  "seconds": 18.03200000000652
+}
