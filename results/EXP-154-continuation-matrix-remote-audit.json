@@ -1,0 +1,10 @@
+{
+  "scope": "read-only final manifest; full payload restore not performed",
+  "path": "experiments/exp154-continuation-matrix-v1/worker-0/checkpoints/KEEP-ADAM-R32/checkpoint.json",
+  "revision": "8d4763d25a522ff2f0f1fdabe26ce81b4dd5b230",
+  "step": 36120,
+  "generation": "step-36120-f37c2dbea5ba42c0af1d5b0d7f006dc7",
+  "payload_bytes": 114979740,
+  "contract_matches_report_plus_arm": true,
+  "step_matches_last": true
+}

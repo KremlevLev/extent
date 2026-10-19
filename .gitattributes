@@ -31,3 +31,5 @@ results/EXP-144-fixed-worker1-session-1.json -text
 results/EXP-144-fixed-worker0-session-1.json -text
 results/EXP-148-fold-continue-session-1.json -text
 results/EXP-147-fold-continue-session-1.json -text
+results/EXP-153-continuation-matrix-session-1.json -text
+results/EXP-154-continuation-matrix-session-1.json -text

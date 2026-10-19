@@ -1,0 +1,55 @@
+{
+  "raw_sha256": "4087e19cb54ae10228167005125d783e43f0f8733b2ec4639f4a4498f1063dd5",
+  "aggregate_status": "failed",
+  "wall_hours": 1.0350447695522222,
+  "notification_count": 3,
+  "workers": [
+    {
+      "worker": 0,
+      "exit": 1,
+      "arm": "FOLD-FRESH-R64",
+      "status": "failed",
+      "error": {
+        "type": "ValueError",
+        "message": "immutable source NLL replay differs; refusing update",
+        "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/extent/scripts/m3q_continuation_matrix_campaign.py\", line 160, in run\n    if max(errors.values())>.03:raise ValueError('immutable source NLL replay differs; refusing update')\n                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: immutable source NLL replay differs; refusing update\n"
+      },
+      "source_step": 31126,
+      "step": 31126,
+      "new_steps": 0,
+      "cost": {
+        "attempted_updates": 0,
+        "input_tokens": 0,
+        "ce_targets": 0,
+        "teacher_input_tokens": 0
+      },
+      "pending": [],
+      "durable_step": 31126,
+      "source_replay": null
+    },
+    {
+      "worker": 1,
+      "exit": 1,
+      "arm": "FOLD-FRESH-R256",
+      "status": "failed",
+      "error": {
+        "type": "ValueError",
+        "message": "immutable source NLL replay differs; refusing update",
+        "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/extent/scripts/m3q_continuation_matrix_campaign.py\", line 160, in run\n    if max(errors.values())>.03:raise ValueError('immutable source NLL replay differs; refusing update')\n                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: immutable source NLL replay differs; refusing update\n"
+      },
+      "source_step": 31126,
+      "step": 31126,
+      "new_steps": 0,
+      "cost": {
+        "attempted_updates": 0,
+        "input_tokens": 0,
+        "ce_targets": 0,
+        "teacher_input_tokens": 0
+      },
+      "pending": [],
+      "durable_step": 31126,
+      "source_replay": null
+    }
+  ],
+  "interpretation": "153 no updates: both folded starts fail source NLL replay.154 ordinary continuation succeeds; foldedR32 fails too. This narrows failure to added fold/intervention path, not rank64/256 specifically. Exact arithmetic cause unconfirmed; source replay window errors were not persisted by runner."
+}

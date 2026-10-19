@@ -1,3 +1,29 @@
+# 19 October2026 - EXP154 valid continuation to5.617; folded153/154 fail replay
+
+Raw153/154 reports byte-preserved in EXP-ID-continuation-matrix-session-1.json.
+AnalysisJSON perexperiment, combined results/EXP-153-154-continuation-matrix-analysis.md.
+154 aggregate FAILED dueworker1; ordinaryworker0 exit0/deadline_partial,
+5.3924h parent,4994 acceptedNEW/1,278,464inputtokens;global31126->36120.
+Source replaypasses maxerror<=.001242<.03. Adam18540 preserved, final23534.
+SourceA/B/C5.692100/5.718168/5.292490 ->last5.616958/5.675724/5.247005.
+RegisteredA-best35734/new4608:5.619403/5.672699/5.231323;finalbetterA,worseB/C.
+No addedrank/fold/Adamreset. Nonmonotonic progress, no hard5.69plateau proven.
+Source,last,best profile consistency passes; no useful longcontextgain.
+Report pending[],durable36120; pinnedHF8d4763d25a522ff2f0f1fdabe26ce81b4dd5b230
+finalmanifest36120 and contract verified; full payload notrestored.4notifications.
+
+153 both R64/R256 failed beforeany training: source replay>.03;parent1.035h.
+154 foldedR32 failed SAMEgate beforeany training. Thus NOT largerank training
+failure. Ordinary154 success validates shared original source/base restoration;
+additional discrepancy is in addedfold/newcorrection path, exact causeunknown.
+Do NOT loosen .03gate or blindly rerun153. Actual error magnitudes/windows
+not persisted because runner raises before savingcontrols; diagnostic gap.
+Need actual source-vs-fold layer/projection/BF16 host/device comparison and
+persisted replayfailure measurements. Previous33 CPU tests did not verify
+full-model BF16 foldstage function preservation.149/150 retainedfactorpath,
+151/152 addedfoldpath; actualTPUstatus unknown without reports.
+No runner edits/new cloudlaunch in this review. Old contracts remain unchanged.
+
 # 19 October2026 - EXP149-154 PREPARED: four9h TPU +12h/6h T4
 
 User authorizes six new experiments. New runner scripts/m3q_continuation_matrix_campaign.py

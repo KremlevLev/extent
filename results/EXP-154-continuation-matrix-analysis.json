@@ -1,0 +1,195 @@
+{
+  "raw_sha256": "2cfa61e4c75cb38e4f71f8a94b35b90da0fe07bd95e83d260f1084fd43dddd26",
+  "aggregate_status": "failed",
+  "wall_hours": 5.392437026005834,
+  "notification_count": 4,
+  "workers": [
+    {
+      "worker": 0,
+      "exit": 0,
+      "arm": "KEEP-ADAM-R32",
+      "status": "deadline_partial",
+      "error": null,
+      "source_step": 31126,
+      "step": 36120,
+      "new_steps": 4994,
+      "cost": {
+        "attempted_updates": 4995,
+        "input_tokens": 1278720,
+        "ce_targets": 1273725,
+        "teacher_input_tokens": 0,
+        "training_seconds": 14144.918592005008,
+        "accepted_updates": 4994,
+        "accepted_input_tokens": 1278464,
+        "accepted_ce_targets": 1273470
+      },
+      "pending": [],
+      "durable_step": 36120,
+      "source_replay": {
+        "passed": true,
+        "per_panel_max_error": {
+          "A": 0.0012416839599609375,
+          "B": 0.0008702278137207031,
+          "C": 0.0011048316955566406
+        },
+        "tolerance": 0.03
+      },
+      "source": {
+        "A": 5.692099653184414,
+        "B": 5.71816822886467,
+        "C": 5.292489781975746
+      },
+      "last": {
+        "A": 5.6169575452804565,
+        "B": 5.675724118947983,
+        "C": 5.2470050528645515
+      },
+      "registered_best_step": 35734,
+      "registered_best": {
+        "A": 5.619402952492237,
+        "B": 5.6726990938186646,
+        "C": 5.231323190033436
+      },
+      "evaluations": [
+        {
+          "step": 31126,
+          "new_steps": 0,
+          "panels": {
+            "A": 5.692099653184414,
+            "B": 5.71816822886467,
+            "C": 5.292489781975746
+          }
+        },
+        {
+          "step": 31254,
+          "new_steps": 128,
+          "panels": {
+            "A": 5.6906513422727585,
+            "B": 5.70820552110672,
+            "C": 5.288254678249359
+          }
+        },
+        {
+          "step": 31638,
+          "new_steps": 512,
+          "panels": {
+            "A": 5.694892503321171,
+            "B": 5.737849086523056,
+            "C": 5.312602534890175
+          }
+        },
+        {
+          "step": 32150,
+          "new_steps": 1024,
+          "panels": {
+            "A": 5.715905033051968,
+            "B": 5.701873406767845,
+            "C": 5.30435936152935
+          }
+        },
+        {
+          "step": 33174,
+          "new_steps": 2048,
+          "panels": {
+            "A": 5.68634282797575,
+            "B": 5.689853087067604,
+            "C": 5.252976544201374
+          }
+        },
+        {
+          "step": 33686,
+          "new_steps": 2560,
+          "panels": {
+            "A": 5.6531738713383675,
+            "B": 5.692543387413025,
+            "C": 5.2577871307730675
+          }
+        },
+        {
+          "step": 34198,
+          "new_steps": 3072,
+          "panels": {
+            "A": 5.647642605006695,
+            "B": 5.66615654528141,
+            "C": 5.260409526526928
+          }
+        },
+        {
+          "step": 34560,
+          "new_steps": 3434,
+          "panels": {
+            "A": 5.675643391907215,
+            "B": 5.692627906799316,
+            "C": 5.269812136888504
+          }
+        },
+        {
+          "step": 34710,
+          "new_steps": 3584,
+          "panels": {
+            "A": 5.67364601790905,
+            "B": 5.682500660419464,
+            "C": 5.261952541768551
+          }
+        },
+        {
+          "step": 35222,
+          "new_steps": 4096,
+          "panels": {
+            "A": 5.636984221637249,
+            "B": 5.654042914509773,
+            "C": 5.242176555097103
+          }
+        },
+        {
+          "step": 35734,
+          "new_steps": 4608,
+          "panels": {
+            "A": 5.619402952492237,
+            "B": 5.6726990938186646,
+            "C": 5.231323190033436
+          }
+        }
+      ],
+      "profiles": {
+        "last": [],
+        "best": []
+      },
+      "context_last": {
+        "128": 5.448456674814224,
+        "256": 5.422374486923218,
+        "512": 5.438665181398392,
+        "1024": 5.438578575849533
+      },
+      "improvement": {
+        "A": 0.07514210790395737,
+        "B": 0.04244410991668701,
+        "C": 0.04548472911119461
+      }
+    },
+    {
+      "worker": 1,
+      "exit": 1,
+      "arm": "FOLD-FRESH-R32",
+      "status": "failed",
+      "error": {
+        "type": "ValueError",
+        "message": "immutable source NLL replay differs; refusing update",
+        "traceback": "Traceback (most recent call last):\n  File \"/kaggle/working/extent/scripts/m3q_continuation_matrix_campaign.py\", line 160, in run\n    if max(errors.values())>.03:raise ValueError('immutable source NLL replay differs; refusing update')\n                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: immutable source NLL replay differs; refusing update\n"
+      },
+      "source_step": 31126,
+      "step": 31126,
+      "new_steps": 0,
+      "cost": {
+        "attempted_updates": 0,
+        "input_tokens": 0,
+        "ce_targets": 0,
+        "teacher_input_tokens": 0
+      },
+      "pending": [],
+      "durable_step": 31126,
+      "source_replay": null
+    }
+  ],
+  "interpretation": "153 no updates: both folded starts fail source NLL replay.154 ordinary continuation succeeds; foldedR32 fails too. This narrows failure to added fold/intervention path, not rank64/256 specifically. Exact arithmetic cause unconfirmed; source replay window errors were not persisted by runner."
+}
