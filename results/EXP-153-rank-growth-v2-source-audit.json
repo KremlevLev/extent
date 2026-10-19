@@ -1,0 +1,27 @@
+{
+  "scope": "real147 full source restoration and coordinate growth; base SHAPES only; NOT full1.7B BF16 forward/GPU proof",
+  "revision": "a848e128385229c8cfcf20f1cc0614485c812109",
+  "source_step": 31126,
+  "source_adam_step": 18540,
+  "rows": [
+    {
+      "total_rank": 64,
+      "retained_rank": 32,
+      "extra_rank": 32,
+      "source_all_leaves_bitwise_equal": true,
+      "extra_b_all_zero": true,
+      "extra_a_finite": true,
+      "trainable_elements": 14327808
+    },
+    {
+      "total_rank": 256,
+      "retained_rank": 32,
+      "extra_rank": 224,
+      "source_all_leaves_bitwise_equal": true,
+      "extra_b_all_zero": true,
+      "extra_a_finite": true,
+      "trainable_elements": 57200640
+    }
+  ],
+  "seconds": 4.156000000000859
+}

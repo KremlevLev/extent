@@ -1,3 +1,38 @@
+# 19 October2026 - EXP153 v2 PREPARED: retain32, grow to64/256 without newfold
+
+User requests rewrite153 after failed replay. New isolated files
+extent/rank_growth_153.py and scripts/m3q_rank_growth_153_campaign.py.
+New semantics explicitly REPLACE failed folding hypothesis: no extra147hostfold,
+same immutable147CURRENT31126/A5.692/Adam18540 source. Preserve source32
+factors and pregate EXACTLY, append zero-B components32/224 to TOTAL64/256.
+Both old and added factors trainable, freshAdam0 BOTH arms, originalrates,
+warm256, GLOBALdata31126. Same original136->145/147base reconstruction as
+successful154ordinary. Sum source32 dot plus extra dot inFP32, oneBF16cast;
+keep source dotshape, do not concatenate and change its initial arithmetic.
+This bypasses, does NOT diagnose/fix the old full-model foldstage discrepancy.
+
+IMPORTANT oldStreamedStep ignores block_fn argument; new GrowthStreamedStep
+overrides forward+VJP kernels. New tests require addedB really updates; merely
+passing new function into oldmake_step would silently leave extra coordinates
+untrained. Old library not edited, existing149-154 contracts verified unchanged.
+All160 replaywindows<=.03 gate unchanged; observed/reference/maxerrors/worst
+windows persisted locally+HF BEFORE exception; previous silentdiagnosticgapfixed.
+New namespace exp153-rank-growth-v2/worker-W, not oldfailed states; aggregate
+extent-m3q-rank-growth-153.json. New launcher alias results/EXP-153-launch.md.
+T4notebook setup unchanged;lastcell NEW module import.11.7h includes45minsave,
+262144NEWceiling,continueafter8192;HFcap16GBtotal,local128/HF120min+exit,
+quiet parent-only start/4h/final max5. At lesser weekly quota reducewall.
+
+6 CPUtests pass71.59s: mature nonzero BF16source/NumPyrestore, source NLL
+preservation bothranks/3windows, actualextraVJP/update/protectedcolumns,
+compiled-gradient.15/.98 parity, ownsave/resume, actualrunner startup/update/
+deadline and persistedfailedgate, CLIdispatch+oldcontractaudit.
+Real147payload restored and actualsourcegrowth checked: alloldleaves bitwise,
+extraBzero/extraAfinite;64total14,327,808params;256total57,200,640.
+ActualbaseSHAPESonly;not full1.7BNLL/T4proof. Cloudreplay remains mandatory.
+Protocol/validation/sourceaudit/engineeringplan and newlaunch committed.
+No cloud run launched locally; no claim of improved quality from v2 yet.
+
 # 19 October2026 - EXP154 valid continuation to5.617; folded153/154 fail replay
 
 Raw153/154 reports byte-preserved in EXP-ID-continuation-matrix-session-1.json.
