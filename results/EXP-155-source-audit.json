@@ -1,0 +1,18 @@
+{
+  "source_manifest_sha256": "fe0b63d43df72f04b7d3aec3535c04d8363802115fb652dc948edf79b0ad8864",
+  "revision": "db3ae61fc99cb3baa10d6f7236f9895654527dc2",
+  "current_step": 37910,
+  "best_step": 37270,
+  "optimizer_counts": [
+    6784,
+    6784,
+    6784,
+    6784,
+    6784,
+    6784
+  ],
+  "parameter_elements": 57200640,
+  "trained_extra_b_nonzero": 30277632,
+  "seconds": 19.64100000000326,
+  "scope": "Actual pinned153v2 R256 full current+Adam+best restored on CPU; all871 chunk hashes verified by production reader. No full1.7B forward or physical TPU run."
+}

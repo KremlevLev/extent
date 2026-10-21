@@ -1,3 +1,26 @@
+# 22 October 2026 — EXP155 PREPARED: continue153v2 R256 CURRENT37910 on TPU
+
+User reports ONE restored Kaggle account and9hTPU available; authorizes continuation.
+New extent/rank_continue_155.py and scripts/m3q_rank_continue_155_campaign.py.
+Pinned source153v2worker1 at db3ae61fc99cb3baa10d6f7236f9895654527dc2;
+CURRENT37910, six Adam6784; preserve moments, trained extra224, old32,pregate,
+selectedbest37270. NO newfold/reset/growth/LRchange. Rebuild existing136baseonce.
+Source CURRENT not previously evaluated: replay inherited BEST37270 against160
+pinned windows<=.03, persist diagnostics before rejection, then measure CURRENT.
+Best A/B/C5.575060/5.611766/5.149767 must NOT be attributed to37910.
+Single8TPU process, growth-aware compiled-vs-GrowthStreamedStep actual gradient
+parity .15/.98/CE.03; fallback finite streamed on SAME8TPU without weakeninggate.
+One9h session: runner8.7h TOTALincl45minsave,262144NEWceiling,HFcap8GB,
+local128/remote120min+exit,quietmax5. Newnamespace exp155-rank-continue-v1,
+one report extent-m3q-rank-continue-155.json; own exactresume.
+Source actual871chunks915MB restored/verified,57,200,640parameter elements,
+30,277,632 trained nonzero extraB coefficients; best37270/counts6784confirmed.
+5 CPU tests96.27s; tinyBF16 eightvirtualCPU mesh1x4x2 actual gradient/updatepasses
+(.010437relativeL2/.999946cos/.000154CE); compiled selected. NOT physicalTPU.
+Source code hashes unchanged. Launch/protocol/pin/sourceaudit/mesh audit/plan in
+results/EXP-155-*. No cloud started locally. Existing TPU notebook setup uses
+requirements-continuation-tpu.txt BEFORE firstJAXimport. Lastcell NEW155module.
+
 # 20 October 2026 — draft update and preserved EXP153-v2 results
 
 paper/draft.md and draft.ru.md now include Sections4.9–4.11 and Figures8–10.

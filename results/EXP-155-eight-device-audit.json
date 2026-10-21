@@ -1,0 +1,33 @@
+{
+  "devices": 8,
+  "backend": "CPU virtual devices, NOT physical TPU",
+  "mesh": {
+    "data": 1,
+    "fsdp": 4,
+    "tensor": 2
+  },
+  "accepted_proposal_finite": true,
+  "optimizer_counts_after": [
+    3,
+    3,
+    3,
+    3,
+    3,
+    3
+  ],
+  "engine_gate": {
+    "passed": true,
+    "relative_l2": 0.010436655192307206,
+    "cosine": 0.9999457528623935,
+    "relative_l2_tolerance": 0.15,
+    "minimum_cosine": 0.98,
+    "ce_error": 0.00015354156494140625,
+    "ce_tolerance": 0.03,
+    "gradient_evaluations": 2,
+    "compiled_accepted": true,
+    "selected": "compiled",
+    "scope": "first real unaccepted proposal per invocation; audit tokens/time extra, not an accepted update"
+  },
+  "seconds": 33.10899999999674,
+  "scope": "tiny mature BF16 R256, actual 1x4x2 distributed forward/backward and preserved optimizer; no full-model performance proof"
+}
