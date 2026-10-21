@@ -1,0 +1,307 @@
+{
+  "date": "2026-10-20",
+  "sources": [
+    {
+      "path": "results/EXP-136-streamed-v2-session-1.json",
+      "sha256": "f9fbad5239347e8d377935f21c0ad20f8885245a7d3a976bb47a62722d8b97bb"
+    },
+    {
+      "path": "results/EXP-145-long-v1-session-1.json",
+      "sha256": "41a4b239a43c81ac2a91657d59f23edbd9a4987a22302c3f06a4e4b20d1d2d85"
+    },
+    {
+      "path": "results/EXP-147-fold-continue-session-1.json",
+      "sha256": "137a171d5754a14553c2053efe268b401734eaa70761f6f13138ec9c1f7bc509"
+    },
+    {
+      "path": "results/EXP-154-continuation-matrix-session-1.json",
+      "sha256": "2cfa61e4c75cb38e4f71f8a94b35b90da0fe07bd95e83d260f1084fd43dddd26"
+    },
+    {
+      "path": "results/kaggle-recovery-2026-10-20/exp153-rank-growth-v2-worker-0.json",
+      "sha256": "55a35b341327930d47829ea898dbef41d5666832d36304efa513d62c5d744532"
+    },
+    {
+      "path": "results/kaggle-recovery-2026-10-20/exp153-rank-growth-v2-worker-1.json",
+      "sha256": "02c3f15726a4790de83107a3bb56871c55d8f93137f9a611d61fd44ab436b764"
+    },
+    {
+      "path": "results/EXP-148-fold-continue-analysis.json",
+      "sha256": "115c1a7a3bc16510c178d9ca186503fbe094d262f1c89bb0a234941e2deed1ed"
+    },
+    {
+      "path": "results/EXP-147-fold-continue-analysis.json",
+      "sha256": "66e51d3a2fc45b51e5768f3e6ead0c33dc71c1ba2980336bcf442cee690d168c"
+    }
+  ],
+  "scope": "One seed; same exposed A/B/C panels; partial horizons; frozen report snapshots.",
+  "matched_growth": [
+    {
+      "new_updates": 0,
+      "input_tokens": 0,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.692099653184414,
+          "B": 5.71816822886467,
+          "C": 5.292489781975746
+        },
+        "R64, fresh Adam": {
+          "A": 5.692103125154972,
+          "B": 5.7181471437215805,
+          "C": 5.292454652488232
+        },
+        "R256, fresh Adam": {
+          "A": 5.692070513963699,
+          "B": 5.718268930912018,
+          "C": 5.292541429400444
+        }
+      }
+    },
+    {
+      "new_updates": 128,
+      "input_tokens": 32768,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.6906513422727585,
+          "B": 5.70820552110672,
+          "C": 5.288254678249359
+        },
+        "R64, fresh Adam": {
+          "A": 5.682151138782501,
+          "B": 5.702381581068039,
+          "C": 5.289450742304325
+        },
+        "R256, fresh Adam": {
+          "A": 5.685871921479702,
+          "B": 5.703065291047096,
+          "C": 5.2921682596206665
+        }
+      }
+    },
+    {
+      "new_updates": 512,
+      "input_tokens": 131072,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.694892503321171,
+          "B": 5.737849086523056,
+          "C": 5.312602534890175
+        },
+        "R64, fresh Adam": {
+          "A": 5.698463164269924,
+          "B": 5.729818180203438,
+          "C": 5.308197304606438
+        },
+        "R256, fresh Adam": {
+          "A": 5.705501399934292,
+          "B": 5.737389355897903,
+          "C": 5.31126519292593
+        }
+      }
+    },
+    {
+      "new_updates": 1024,
+      "input_tokens": 262144,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.715905033051968,
+          "B": 5.701873406767845,
+          "C": 5.30435936152935
+        },
+        "R64, fresh Adam": {
+          "A": 5.721031941473484,
+          "B": 5.7121125012636185,
+          "C": 5.309908926486969
+        },
+        "R256, fresh Adam": {
+          "A": 5.73541134595871,
+          "B": 5.7260738760232925,
+          "C": 5.326721504330635
+        }
+      }
+    },
+    {
+      "new_updates": 2048,
+      "input_tokens": 524288,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.68634282797575,
+          "B": 5.689853087067604,
+          "C": 5.252976544201374
+        },
+        "R64, fresh Adam": {
+          "A": 5.691198728978634,
+          "B": 5.700338676571846,
+          "C": 5.2645558044314384
+        },
+        "R256, fresh Adam": {
+          "A": 5.686572164297104,
+          "B": 5.695210367441177,
+          "C": 5.257589414715767
+        }
+      }
+    },
+    {
+      "new_updates": 2560,
+      "input_tokens": 655360,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.6531738713383675,
+          "B": 5.692543387413025,
+          "C": 5.2577871307730675
+        },
+        "R64, fresh Adam": {
+          "A": 5.665279567241669,
+          "B": 5.7031834572553635,
+          "C": 5.269617013633251
+        },
+        "R256, fresh Adam": {
+          "A": 5.638865888118744,
+          "B": 5.686062201857567,
+          "C": 5.257255978882313
+        }
+      }
+    },
+    {
+      "new_updates": 3072,
+      "input_tokens": 786432,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.647642605006695,
+          "B": 5.66615654528141,
+          "C": 5.260409526526928
+        },
+        "R64, fresh Adam": {
+          "A": 5.645831927657127,
+          "B": 5.665707930922508,
+          "C": 5.260364815592766
+        },
+        "R256, fresh Adam": {
+          "A": 5.653164625167847,
+          "B": 5.670260116457939,
+          "C": 5.257711812853813
+        }
+      }
+    },
+    {
+      "new_updates": 3434,
+      "input_tokens": 879104,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.675643391907215,
+          "B": 5.692627906799316,
+          "C": 5.269812136888504
+        },
+        "R64, fresh Adam": {
+          "A": 5.6720622554421425,
+          "B": 5.701150164008141,
+          "C": 5.264371499419212
+        },
+        "R256, fresh Adam": {
+          "A": 5.6576972380280495,
+          "B": 5.699596956372261,
+          "C": 5.255382247269154
+        }
+      }
+    },
+    {
+      "new_updates": 3584,
+      "input_tokens": 917504,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.67364601790905,
+          "B": 5.682500660419464,
+          "C": 5.261952541768551
+        },
+        "R64, fresh Adam": {
+          "A": 5.6702155992388725,
+          "B": 5.68625083565712,
+          "C": 5.25363752245903
+        },
+        "R256, fresh Adam": {
+          "A": 5.669087961316109,
+          "B": 5.68010838329792,
+          "C": 5.255300588905811
+        }
+      }
+    },
+    {
+      "new_updates": 4096,
+      "input_tokens": 1048576,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.636984221637249,
+          "B": 5.654042914509773,
+          "C": 5.242176555097103
+        },
+        "R64, fresh Adam": {
+          "A": 5.636513888835907,
+          "B": 5.66218489408493,
+          "C": 5.241726435720921
+        },
+        "R256, fresh Adam": {
+          "A": 5.628189571201801,
+          "B": 5.653943404555321,
+          "C": 5.227138347923756
+        }
+      }
+    },
+    {
+      "new_updates": 4608,
+      "input_tokens": 1179648,
+      "arms": {
+        "R32, preserved Adam": {
+          "A": 5.619402952492237,
+          "B": 5.6726990938186646,
+          "C": 5.231323190033436
+        },
+        "R64, fresh Adam": {
+          "A": 5.6092894449830055,
+          "B": 5.6710080951452255,
+          "C": 5.224713243544102
+        },
+        "R256, fresh Adam": {
+          "A": 5.60062575340271,
+          "B": 5.686834126710892,
+          "C": 5.217819273471832
+        }
+      }
+    }
+  ],
+  "growth_snapshot_status": [
+    {
+      "arm": "GROW-R64",
+      "status": "running",
+      "durable_step": 38294,
+      "latest_evaluation_step": 37270,
+      "best_step": 37270,
+      "cost": {
+        "attempted_updates": 7168,
+        "input_tokens": 1835008,
+        "ce_targets": 1827840,
+        "teacher_input_tokens": 0,
+        "training_seconds": 20691.911671992977,
+        "accepted_updates": 7168,
+        "accepted_input_tokens": 1835008,
+        "accepted_ce_targets": 1827840
+      }
+    },
+    {
+      "arm": "GROW-R256",
+      "status": "running",
+      "durable_step": 37910,
+      "latest_evaluation_step": 37270,
+      "best_step": 37270,
+      "cost": {
+        "attempted_updates": 6784,
+        "input_tokens": 1736704,
+        "ce_targets": 1729920,
+        "teacher_input_tokens": 0,
+        "training_seconds": 20633.621983497058,
+        "accepted_updates": 6784,
+        "accepted_input_tokens": 1736704,
+        "accepted_ce_targets": 1729920
+      }
+    }
+  ]
+}

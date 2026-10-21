@@ -1,3 +1,23 @@
+# 20 October 2026 — draft update and preserved EXP153-v2 results
+
+paper/draft.md and draft.ru.md now include Sections4.9–4.11 and Figures8–10.
+Offline rebuild: paper/make_continuation_figures.py; raw points/provenance in
+paper/figures/continuation_points.csv and continuation_provenance.json.
+Uses archived136/145/147/154 and pinned153v2 worker reports under
+results/kaggle-recovery-2026-10-20/. Snapshot db3ae61fc99cb3baa10d6f7236f9895654527dc2.
+153v2 reports still RUNNING, NOT completed: durable38294/37910, evaluated37270
+(new6144/1,572,864 input tokens) both. R64 A/B/C5.604823/5.636056/5.194702;
+R256 5.575060/5.611766/5.149767. Both freshAdam, replaymax<.00128<.03.
+At shared4608 R256 beats154ordinaryR32 onA/C but losesB; don't claim dominance.
+154ordinary preservesAdam; no freshAdamR32 at this source yet. Old153fold
+failures remain separate v1 engineering failures before training.
+Full-panel-only plots exclude early136A16 monitor. All panels reused, seed123;
+146 second preparation seed discussed separately. No new training executed.
+User reports four Kaggle accounts banned for automation/multiple accounts.
+No new cloud launches. Unsent support draft in results. Checkpoint backup under
+ignored work/kaggle-recovery-2026-10-20:1742chunks/1,144,678,200bytes SHAchecked;
+receipt archived in results. Current/Adam/best only; full-model forward not rerun.
+
 # 19 October2026 - EXP153 v2 PREPARED: retain32, grow to64/256 without newfold
 
 User requests rewrite153 after failed replay. New isolated files

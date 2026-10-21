@@ -1,0 +1,146 @@
+{
+  "revision": "db3ae61fc99cb3baa10d6f7236f9895654527dc2",
+  "scope": "read-only latest reports and checkpoint manifests; full tensor payloads not restored",
+  "rows": [
+    {
+      "path": "experiments/exp149-continuation-matrix-v1/latest.json",
+      "http_status": 404
+    },
+    {
+      "path": "experiments/exp150-continuation-matrix-v1/latest.json",
+      "http_status": 404
+    },
+    {
+      "path": "experiments/exp151-continuation-matrix-v1/latest.json",
+      "http_status": 404
+    },
+    {
+      "path": "experiments/exp152-continuation-matrix-v1/latest.json",
+      "http_status": 404
+    },
+    {
+      "path": "experiments/exp153-rank-growth-v2/worker-0/latest.json",
+      "local_file": "work\\kaggle-recovery-2026-10-20\\exp153-rank-growth-v2-worker-0.json",
+      "status": "running",
+      "error": null,
+      "branches": [
+        {
+          "arm": "GROW-R64",
+          "reported_step": 38294,
+          "source_step": 31126,
+          "durable_step": 38294,
+          "checkpoint": {
+            "step": 38294,
+            "generation": "step-38294-63572165a97b4272ae432699888a0f79",
+            "payload_bytes": 229356444,
+            "contract_matches": true
+          },
+          "best_nll": 5.604823000729084,
+          "source_replay": {
+            "passed": true,
+            "tolerance": 0.03,
+            "panels": {
+              "A": {
+                "actual_nll": 5.692103125154972,
+                "reference_nll": 5.69211096316576,
+                "max_error": 0.0012769699096679688,
+                "worst_window": 42,
+                "worst_actual": 6.135318756103516,
+                "worst_reference": 6.134041786193848,
+                "passed": true
+              },
+              "B": {
+                "actual_nll": 5.7181471437215805,
+                "reference_nll": 5.718190833926201,
+                "max_error": 0.0007991790771484375,
+                "worst_window": 0,
+                "worst_actual": 5.252551555633545,
+                "worst_reference": 5.253350734710693,
+                "passed": true
+              },
+              "C": {
+                "actual_nll": 5.292454652488232,
+                "reference_nll": 5.292496718466282,
+                "max_error": 0.0008311271667480469,
+                "worst_window": 56,
+                "worst_actual": 5.025900840759277,
+                "worst_reference": 5.026731967926025,
+                "passed": true
+              }
+            },
+            "per_panel_max_error": {
+              "A": 0.0012769699096679688,
+              "B": 0.0007991790771484375,
+              "C": 0.0008311271667480469
+            }
+          },
+          "failed": null
+        }
+      ],
+      "raw_sha256": "55a35b341327930d47829ea898dbef41d5666832d36304efa513d62c5d744532",
+      "archived_report": "results\\kaggle-recovery-2026-10-20\\exp153-rank-growth-v2-worker-0.json"
+    },
+    {
+      "path": "experiments/exp153-rank-growth-v2/worker-1/latest.json",
+      "local_file": "work\\kaggle-recovery-2026-10-20\\exp153-rank-growth-v2-worker-1.json",
+      "status": "running",
+      "error": null,
+      "branches": [
+        {
+          "arm": "GROW-R256",
+          "reported_step": 37910,
+          "source_step": 31126,
+          "durable_step": 37910,
+          "checkpoint": {
+            "step": 37910,
+            "generation": "step-37910-3d15eeafdc62433a8837caa7e5a6719c",
+            "payload_bytes": 915321756,
+            "contract_matches": true
+          },
+          "best_nll": 5.575060062110424,
+          "source_replay": {
+            "passed": true,
+            "tolerance": 0.03,
+            "panels": {
+              "A": {
+                "actual_nll": 5.692070513963699,
+                "reference_nll": 5.69211096316576,
+                "max_error": 0.0006480216979980469,
+                "worst_window": 34,
+                "worst_actual": 6.278339385986328,
+                "worst_reference": 6.278987407684326,
+                "passed": true
+              },
+              "B": {
+                "actual_nll": 5.718268930912018,
+                "reference_nll": 5.718190833926201,
+                "max_error": 0.0007114410400390625,
+                "worst_window": 18,
+                "worst_actual": 5.5564866065979,
+                "worst_reference": 5.555775165557861,
+                "passed": true
+              },
+              "C": {
+                "actual_nll": 5.292541429400444,
+                "reference_nll": 5.292496718466282,
+                "max_error": 0.0007433891296386719,
+                "worst_window": 26,
+                "worst_actual": 5.890097618103027,
+                "worst_reference": 5.889354228973389,
+                "passed": true
+              }
+            },
+            "per_panel_max_error": {
+              "A": 0.0006480216979980469,
+              "B": 0.0007114410400390625,
+              "C": 0.0007433891296386719
+            }
+          },
+          "failed": null
+        }
+      ],
+      "raw_sha256": "02c3f15726a4790de83107a3bb56871c55d8f93137f9a611d61fd44ab436b764",
+      "archived_report": "results\\kaggle-recovery-2026-10-20\\exp153-rank-growth-v2-worker-1.json"
+    }
+  ]
+}

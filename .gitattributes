@@ -33,3 +33,7 @@ results/EXP-148-fold-continue-session-1.json -text
 results/EXP-147-fold-continue-session-1.json -text
 results/EXP-153-continuation-matrix-session-1.json -text
 results/EXP-154-continuation-matrix-session-1.json -text
+
+results/kaggle-recovery-2026-10-20/exp153-rank-growth-v2-worker-0.json -text
+
+results/kaggle-recovery-2026-10-20/exp153-rank-growth-v2-worker-1.json -text

@@ -1,0 +1,496 @@
+figure,arm,panel,step,input_tokens,nll,kind
+continuation_lineage,136: combined reset,A,2048,524288,7.253242999315262,registered
+continuation_lineage,136: combined reset,A,2560,655360,6.787255220115185,registered
+continuation_lineage,136: combined reset,A,3072,786432,6.536118969321251,registered
+continuation_lineage,136: combined reset,A,3434,879104,6.554638177156448,registered
+continuation_lineage,136: combined reset,A,3584,917504,6.484092205762863,registered
+continuation_lineage,136: combined reset,A,4096,1048576,6.522368378937244,registered
+continuation_lineage,136: combined reset,A,4608,1179648,6.334410332143307,registered
+continuation_lineage,136: combined reset,A,5120,1310720,6.334731452167034,registered
+continuation_lineage,136: combined reset,A,6144,1572864,6.455446839332581,registered
+continuation_lineage,136: combined reset,A,8192,2097152,6.136631831526756,registered
+continuation_lineage,136: combined reset,A,10240,2621440,6.156050242483616,registered
+continuation_lineage,136: combined reset,A,12288,3145728,6.040120907127857,registered
+continuation_lineage,136: combined reset,A,12586,3222016,6.000788755714893,deadline
+continuation_lineage,145: fold + fresh R32/Adam,A,12586,3222016,6.000774331390858,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,12714,3254784,5.970554709434509,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,13098,3353088,5.95735215395689,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,13610,3484160,5.934272587299347,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,14634,3746304,5.957615919411182,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,15146,3877376,5.9247531071305275,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,15658,4008448,5.908254235982895,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,16020,4101120,5.917754098773003,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,16170,4139520,5.913141719996929,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,16384,4194304,5.910593211650848,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,16682,4270592,5.907919712364674,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,17194,4401664,5.893653340637684,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,17706,4532736,5.868213921785355,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,18730,4794880,5.8906006291508675,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,20480,5242880,5.853956572711468,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,20778,5319168,5.8470752984285355,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,22826,5843456,5.855947382748127,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,24576,6291456,5.812536604702473,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,24874,6367744,5.795827351510525,registered
+continuation_lineage,145: fold + fresh R32/Adam,A,24965,6391040,5.782679624855518,deadline
+continuation_lineage,147: keep R32/Adam,A,24965,6391040,5.782581627368927,registered
+continuation_lineage,147: keep R32/Adam,A,25093,6423808,5.794271536171436,registered
+continuation_lineage,147: keep R32/Adam,A,25477,6522112,5.756663337349892,registered
+continuation_lineage,147: keep R32/Adam,A,25989,6653184,5.780078671872616,registered
+continuation_lineage,147: keep R32/Adam,A,27013,6915328,5.777017138898373,registered
+continuation_lineage,147: keep R32/Adam,A,27525,7046400,5.751449815928936,registered
+continuation_lineage,147: keep R32/Adam,A,28037,7177472,5.7517291978001595,registered
+continuation_lineage,147: keep R32/Adam,A,28399,7270144,5.762345567345619,registered
+continuation_lineage,147: keep R32/Adam,A,28549,7308544,5.771072365343571,registered
+continuation_lineage,147: keep R32/Adam,A,28672,7340032,5.764550417661667,registered
+continuation_lineage,147: keep R32/Adam,A,29061,7439616,5.725550837814808,registered
+continuation_lineage,147: keep R32/Adam,A,29573,7570688,5.709290064871311,registered
+continuation_lineage,147: keep R32/Adam,A,30085,7701760,5.728546656668186,registered
+continuation_lineage,147: keep R32/Adam,A,31109,7963904,5.707909360527992,registered
+continuation_lineage,147: keep R32/Adam,A,31126,7968256,5.69211096316576,deadline
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,31126,7968256,5.692070513963699,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,31254,8001024,5.685871921479702,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,31638,8099328,5.705501399934292,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,32150,8230400,5.73541134595871,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,33174,8492544,5.686572164297104,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,33686,8623616,5.638865888118744,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,34198,8754688,5.653164625167847,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,34560,8847360,5.6576972380280495,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,34710,8885760,5.669087961316109,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,35222,9016832,5.628189571201801,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,35734,9147904,5.60062575340271,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,36246,9278976,5.59164647012949,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,A,37270,9541120,5.575060062110424,registered
+continuation_lineage,136: combined reset,B,2048,524288,7.294940829277039,registered
+continuation_lineage,136: combined reset,B,2560,655360,6.7201103419065475,registered
+continuation_lineage,136: combined reset,B,3072,786432,6.55215048789978,registered
+continuation_lineage,136: combined reset,B,3434,879104,6.55144177377224,registered
+continuation_lineage,136: combined reset,B,3584,917504,6.502815917134285,registered
+continuation_lineage,136: combined reset,B,4096,1048576,6.52515535056591,registered
+continuation_lineage,136: combined reset,B,4608,1179648,6.326424151659012,registered
+continuation_lineage,136: combined reset,B,5120,1310720,6.36842505633831,registered
+continuation_lineage,136: combined reset,B,6144,1572864,6.4656694531440735,registered
+continuation_lineage,136: combined reset,B,8192,2097152,6.141517400741577,registered
+continuation_lineage,136: combined reset,B,10240,2621440,6.159661665558815,registered
+continuation_lineage,136: combined reset,B,12288,3145728,6.02095103263855,registered
+continuation_lineage,136: combined reset,B,12586,3222016,6.004431590437889,deadline
+continuation_lineage,145: fold + fresh R32/Adam,B,12586,3222016,6.0044484585523605,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,12714,3254784,5.980592876672745,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,13098,3353088,5.969595909118652,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,13610,3484160,5.969293028116226,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,14634,3746304,5.947869464755058,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,15146,3877376,5.939751118421555,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,15658,4008448,5.935005158185959,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,16020,4101120,5.940657362341881,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,16170,4139520,5.943803936243057,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,16384,4194304,5.929842412471771,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,16682,4270592,5.910614550113678,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,17194,4401664,5.9073958694934845,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,17706,4532736,5.907475024461746,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,18730,4794880,5.887088775634766,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,20480,5242880,5.856123313307762,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,20778,5319168,5.842906475067139,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,22826,5843456,5.832162946462631,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,24576,6291456,5.816290766000748,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,24874,6367744,5.806025579571724,registered
+continuation_lineage,145: fold + fresh R32/Adam,B,24965,6391040,5.8044673204422,deadline
+continuation_lineage,147: keep R32/Adam,B,24965,6391040,5.804529786109924,registered
+continuation_lineage,147: keep R32/Adam,B,25093,6423808,5.793825671076775,registered
+continuation_lineage,147: keep R32/Adam,B,25477,6522112,5.796431794762611,registered
+continuation_lineage,147: keep R32/Adam,B,25989,6653184,5.800676763057709,registered
+continuation_lineage,147: keep R32/Adam,B,27013,6915328,5.78015473484993,registered
+continuation_lineage,147: keep R32/Adam,B,27525,7046400,5.768026053905487,registered
+continuation_lineage,147: keep R32/Adam,B,28037,7177472,5.767791792750359,registered
+continuation_lineage,147: keep R32/Adam,B,28399,7270144,5.77501517534256,registered
+continuation_lineage,147: keep R32/Adam,B,28549,7308544,5.746439889073372,registered
+continuation_lineage,147: keep R32/Adam,B,28672,7340032,5.75976537168026,registered
+continuation_lineage,147: keep R32/Adam,B,29061,7439616,5.751581385731697,registered
+continuation_lineage,147: keep R32/Adam,B,29573,7570688,5.751016065478325,registered
+continuation_lineage,147: keep R32/Adam,B,30085,7701760,5.739722922444344,registered
+continuation_lineage,147: keep R32/Adam,B,31109,7963904,5.72027961909771,registered
+continuation_lineage,147: keep R32/Adam,B,31126,7968256,5.718190833926201,deadline
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,31126,7968256,5.718268930912018,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,31254,8001024,5.703065291047096,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,31638,8099328,5.737389355897903,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,32150,8230400,5.7260738760232925,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,33174,8492544,5.695210367441177,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,33686,8623616,5.686062201857567,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,34198,8754688,5.670260116457939,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,34560,8847360,5.699596956372261,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,34710,8885760,5.68010838329792,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,35222,9016832,5.653943404555321,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,35734,9147904,5.686834126710892,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,36246,9278976,5.644969671964645,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,B,37270,9541120,5.61176572740078,registered
+continuation_lineage,136: combined reset,C,2048,524288,7.0394021943211555,registered
+continuation_lineage,136: combined reset,C,2560,655360,6.442747101187706,registered
+continuation_lineage,136: combined reset,C,3072,786432,6.205515071749687,registered
+continuation_lineage,136: combined reset,C,3434,879104,6.380582474172115,registered
+continuation_lineage,136: combined reset,C,3584,917504,6.178974404931068,registered
+continuation_lineage,136: combined reset,C,4096,1048576,6.260873474180698,registered
+continuation_lineage,136: combined reset,C,4608,1179648,5.998356036841869,registered
+continuation_lineage,136: combined reset,C,5120,1310720,6.023893594741821,registered
+continuation_lineage,136: combined reset,C,6144,1572864,6.076032228767872,registered
+continuation_lineage,136: combined reset,C,8192,2097152,5.750019408762455,registered
+continuation_lineage,136: combined reset,C,10240,2621440,5.784676738083363,registered
+continuation_lineage,136: combined reset,C,12288,3145728,5.619626939296722,registered
+continuation_lineage,136: combined reset,C,12586,3222016,5.617432102560997,deadline
+continuation_lineage,145: fold + fresh R32/Adam,C,12586,3222016,5.6173869371414185,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,12714,3254784,5.575812101364136,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,13098,3353088,5.545317582786083,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,13610,3484160,5.563916116952896,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,14634,3746304,5.55148308724165,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,15146,3877376,5.52197889238596,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,15658,4008448,5.51821069419384,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,16020,4101120,5.514137506484985,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,16170,4139520,5.496466062963009,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,16384,4194304,5.489859014749527,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,16682,4270592,5.496228277683258,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,17194,4401664,5.487372241914272,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,17706,4532736,5.497675694525242,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,18730,4794880,5.477891273796558,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,20480,5242880,5.41627649217844,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,20778,5319168,5.419480063021183,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,22826,5843456,5.4348099604249,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,24576,6291456,5.367333188652992,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,24874,6367744,5.363321773707867,registered
+continuation_lineage,145: fold + fresh R32/Adam,C,24965,6391040,5.364202193915844,deadline
+continuation_lineage,147: keep R32/Adam,C,24965,6391040,5.364204779267311,registered
+continuation_lineage,147: keep R32/Adam,C,25093,6423808,5.3624314814805984,registered
+continuation_lineage,147: keep R32/Adam,C,25477,6522112,5.38438730686903,registered
+continuation_lineage,147: keep R32/Adam,C,25989,6653184,5.376315005123615,registered
+continuation_lineage,147: keep R32/Adam,C,27013,6915328,5.377816900610924,registered
+continuation_lineage,147: keep R32/Adam,C,27525,7046400,5.360752522945404,registered
+continuation_lineage,147: keep R32/Adam,C,28037,7177472,5.335005834698677,registered
+continuation_lineage,147: keep R32/Adam,C,28399,7270144,5.317121312022209,registered
+continuation_lineage,147: keep R32/Adam,C,28549,7308544,5.3086370304226875,registered
+continuation_lineage,147: keep R32/Adam,C,28672,7340032,5.311926759779453,registered
+continuation_lineage,147: keep R32/Adam,C,29061,7439616,5.309792190790176,registered
+continuation_lineage,147: keep R32/Adam,C,29573,7570688,5.314047954976559,registered
+continuation_lineage,147: keep R32/Adam,C,30085,7701760,5.323132261633873,registered
+continuation_lineage,147: keep R32/Adam,C,31109,7963904,5.315490588545799,registered
+continuation_lineage,147: keep R32/Adam,C,31126,7968256,5.292496718466282,deadline
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,31126,7968256,5.292541429400444,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,31254,8001024,5.2921682596206665,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,31638,8099328,5.31126519292593,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,32150,8230400,5.326721504330635,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,33174,8492544,5.257589414715767,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,33686,8623616,5.257255978882313,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,34198,8754688,5.257711812853813,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,34560,8847360,5.255382247269154,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,34710,8885760,5.255300588905811,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,35222,9016832,5.227138347923756,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,35734,9147904,5.217819273471832,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,36246,9278976,5.203428745269775,registered
+continuation_lineage,153 v2: grow to R256 + fresh Adam,C,37270,9541120,5.149767488241196,registered
+rank_growth_matched,"R32, preserved Adam",A,0,0,5.692099653184414,registered
+rank_growth_matched,"R32, preserved Adam",A,128,32768,5.6906513422727585,registered
+rank_growth_matched,"R32, preserved Adam",A,512,131072,5.694892503321171,registered
+rank_growth_matched,"R32, preserved Adam",A,1024,262144,5.715905033051968,registered
+rank_growth_matched,"R32, preserved Adam",A,2048,524288,5.68634282797575,registered
+rank_growth_matched,"R32, preserved Adam",A,2560,655360,5.6531738713383675,registered
+rank_growth_matched,"R32, preserved Adam",A,3072,786432,5.647642605006695,registered
+rank_growth_matched,"R32, preserved Adam",A,3434,879104,5.675643391907215,registered
+rank_growth_matched,"R32, preserved Adam",A,3584,917504,5.67364601790905,registered
+rank_growth_matched,"R32, preserved Adam",A,4096,1048576,5.636984221637249,registered
+rank_growth_matched,"R32, preserved Adam",A,4608,1179648,5.619402952492237,registered
+rank_growth_matched,"R64, fresh Adam",A,0,0,5.692103125154972,registered
+rank_growth_matched,"R64, fresh Adam",A,128,32768,5.682151138782501,registered
+rank_growth_matched,"R64, fresh Adam",A,512,131072,5.698463164269924,registered
+rank_growth_matched,"R64, fresh Adam",A,1024,262144,5.721031941473484,registered
+rank_growth_matched,"R64, fresh Adam",A,2048,524288,5.691198728978634,registered
+rank_growth_matched,"R64, fresh Adam",A,2560,655360,5.665279567241669,registered
+rank_growth_matched,"R64, fresh Adam",A,3072,786432,5.645831927657127,registered
+rank_growth_matched,"R64, fresh Adam",A,3434,879104,5.6720622554421425,registered
+rank_growth_matched,"R64, fresh Adam",A,3584,917504,5.6702155992388725,registered
+rank_growth_matched,"R64, fresh Adam",A,4096,1048576,5.636513888835907,registered
+rank_growth_matched,"R64, fresh Adam",A,4608,1179648,5.6092894449830055,registered
+rank_growth_matched,"R64, fresh Adam",A,5120,1310720,5.618755362927914,registered
+rank_growth_matched,"R64, fresh Adam",A,6144,1572864,5.604823000729084,registered
+rank_growth_matched,"R256, fresh Adam",A,0,0,5.692070513963699,registered
+rank_growth_matched,"R256, fresh Adam",A,128,32768,5.685871921479702,registered
+rank_growth_matched,"R256, fresh Adam",A,512,131072,5.705501399934292,registered
+rank_growth_matched,"R256, fresh Adam",A,1024,262144,5.73541134595871,registered
+rank_growth_matched,"R256, fresh Adam",A,2048,524288,5.686572164297104,registered
+rank_growth_matched,"R256, fresh Adam",A,2560,655360,5.638865888118744,registered
+rank_growth_matched,"R256, fresh Adam",A,3072,786432,5.653164625167847,registered
+rank_growth_matched,"R256, fresh Adam",A,3434,879104,5.6576972380280495,registered
+rank_growth_matched,"R256, fresh Adam",A,3584,917504,5.669087961316109,registered
+rank_growth_matched,"R256, fresh Adam",A,4096,1048576,5.628189571201801,registered
+rank_growth_matched,"R256, fresh Adam",A,4608,1179648,5.60062575340271,registered
+rank_growth_matched,"R256, fresh Adam",A,5120,1310720,5.59164647012949,registered
+rank_growth_matched,"R256, fresh Adam",A,6144,1572864,5.575060062110424,registered
+rank_growth_matched,"R32, preserved Adam",B,0,0,5.71816822886467,registered
+rank_growth_matched,"R32, preserved Adam",B,128,32768,5.70820552110672,registered
+rank_growth_matched,"R32, preserved Adam",B,512,131072,5.737849086523056,registered
+rank_growth_matched,"R32, preserved Adam",B,1024,262144,5.701873406767845,registered
+rank_growth_matched,"R32, preserved Adam",B,2048,524288,5.689853087067604,registered
+rank_growth_matched,"R32, preserved Adam",B,2560,655360,5.692543387413025,registered
+rank_growth_matched,"R32, preserved Adam",B,3072,786432,5.66615654528141,registered
+rank_growth_matched,"R32, preserved Adam",B,3434,879104,5.692627906799316,registered
+rank_growth_matched,"R32, preserved Adam",B,3584,917504,5.682500660419464,registered
+rank_growth_matched,"R32, preserved Adam",B,4096,1048576,5.654042914509773,registered
+rank_growth_matched,"R32, preserved Adam",B,4608,1179648,5.6726990938186646,registered
+rank_growth_matched,"R64, fresh Adam",B,0,0,5.7181471437215805,registered
+rank_growth_matched,"R64, fresh Adam",B,128,32768,5.702381581068039,registered
+rank_growth_matched,"R64, fresh Adam",B,512,131072,5.729818180203438,registered
+rank_growth_matched,"R64, fresh Adam",B,1024,262144,5.7121125012636185,registered
+rank_growth_matched,"R64, fresh Adam",B,2048,524288,5.700338676571846,registered
+rank_growth_matched,"R64, fresh Adam",B,2560,655360,5.7031834572553635,registered
+rank_growth_matched,"R64, fresh Adam",B,3072,786432,5.665707930922508,registered
+rank_growth_matched,"R64, fresh Adam",B,3434,879104,5.701150164008141,registered
+rank_growth_matched,"R64, fresh Adam",B,3584,917504,5.68625083565712,registered
+rank_growth_matched,"R64, fresh Adam",B,4096,1048576,5.66218489408493,registered
+rank_growth_matched,"R64, fresh Adam",B,4608,1179648,5.6710080951452255,registered
+rank_growth_matched,"R64, fresh Adam",B,5120,1310720,5.64988785982132,registered
+rank_growth_matched,"R64, fresh Adam",B,6144,1572864,5.636056184768677,registered
+rank_growth_matched,"R256, fresh Adam",B,0,0,5.718268930912018,registered
+rank_growth_matched,"R256, fresh Adam",B,128,32768,5.703065291047096,registered
+rank_growth_matched,"R256, fresh Adam",B,512,131072,5.737389355897903,registered
+rank_growth_matched,"R256, fresh Adam",B,1024,262144,5.7260738760232925,registered
+rank_growth_matched,"R256, fresh Adam",B,2048,524288,5.695210367441177,registered
+rank_growth_matched,"R256, fresh Adam",B,2560,655360,5.686062201857567,registered
+rank_growth_matched,"R256, fresh Adam",B,3072,786432,5.670260116457939,registered
+rank_growth_matched,"R256, fresh Adam",B,3434,879104,5.699596956372261,registered
+rank_growth_matched,"R256, fresh Adam",B,3584,917504,5.68010838329792,registered
+rank_growth_matched,"R256, fresh Adam",B,4096,1048576,5.653943404555321,registered
+rank_growth_matched,"R256, fresh Adam",B,4608,1179648,5.686834126710892,registered
+rank_growth_matched,"R256, fresh Adam",B,5120,1310720,5.644969671964645,registered
+rank_growth_matched,"R256, fresh Adam",B,6144,1572864,5.61176572740078,registered
+rank_growth_matched,"R32, preserved Adam",C,0,0,5.292489781975746,registered
+rank_growth_matched,"R32, preserved Adam",C,128,32768,5.288254678249359,registered
+rank_growth_matched,"R32, preserved Adam",C,512,131072,5.312602534890175,registered
+rank_growth_matched,"R32, preserved Adam",C,1024,262144,5.30435936152935,registered
+rank_growth_matched,"R32, preserved Adam",C,2048,524288,5.252976544201374,registered
+rank_growth_matched,"R32, preserved Adam",C,2560,655360,5.2577871307730675,registered
+rank_growth_matched,"R32, preserved Adam",C,3072,786432,5.260409526526928,registered
+rank_growth_matched,"R32, preserved Adam",C,3434,879104,5.269812136888504,registered
+rank_growth_matched,"R32, preserved Adam",C,3584,917504,5.261952541768551,registered
+rank_growth_matched,"R32, preserved Adam",C,4096,1048576,5.242176555097103,registered
+rank_growth_matched,"R32, preserved Adam",C,4608,1179648,5.231323190033436,registered
+rank_growth_matched,"R64, fresh Adam",C,0,0,5.292454652488232,registered
+rank_growth_matched,"R64, fresh Adam",C,128,32768,5.289450742304325,registered
+rank_growth_matched,"R64, fresh Adam",C,512,131072,5.308197304606438,registered
+rank_growth_matched,"R64, fresh Adam",C,1024,262144,5.309908926486969,registered
+rank_growth_matched,"R64, fresh Adam",C,2048,524288,5.2645558044314384,registered
+rank_growth_matched,"R64, fresh Adam",C,2560,655360,5.269617013633251,registered
+rank_growth_matched,"R64, fresh Adam",C,3072,786432,5.260364815592766,registered
+rank_growth_matched,"R64, fresh Adam",C,3434,879104,5.264371499419212,registered
+rank_growth_matched,"R64, fresh Adam",C,3584,917504,5.25363752245903,registered
+rank_growth_matched,"R64, fresh Adam",C,4096,1048576,5.241726435720921,registered
+rank_growth_matched,"R64, fresh Adam",C,4608,1179648,5.224713243544102,registered
+rank_growth_matched,"R64, fresh Adam",C,5120,1310720,5.234387695789337,registered
+rank_growth_matched,"R64, fresh Adam",C,6144,1572864,5.194702222943306,registered
+rank_growth_matched,"R256, fresh Adam",C,0,0,5.292541429400444,registered
+rank_growth_matched,"R256, fresh Adam",C,128,32768,5.2921682596206665,registered
+rank_growth_matched,"R256, fresh Adam",C,512,131072,5.31126519292593,registered
+rank_growth_matched,"R256, fresh Adam",C,1024,262144,5.326721504330635,registered
+rank_growth_matched,"R256, fresh Adam",C,2048,524288,5.257589414715767,registered
+rank_growth_matched,"R256, fresh Adam",C,2560,655360,5.257255978882313,registered
+rank_growth_matched,"R256, fresh Adam",C,3072,786432,5.257711812853813,registered
+rank_growth_matched,"R256, fresh Adam",C,3434,879104,5.255382247269154,registered
+rank_growth_matched,"R256, fresh Adam",C,3584,917504,5.255300588905811,registered
+rank_growth_matched,"R256, fresh Adam",C,4096,1048576,5.227138347923756,registered
+rank_growth_matched,"R256, fresh Adam",C,4608,1179648,5.217819273471832,registered
+rank_growth_matched,"R256, fresh Adam",C,5120,1310720,5.203428745269775,registered
+rank_growth_matched,"R256, fresh Adam",C,6144,1572864,5.149767488241196,registered
+continuation_controls_fold,Retain factors + fresh Adam,A,0,0,6.00079458206892,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,128,32768,5.96768269687891,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,512,131072,5.969653636217117,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,1024,262144,5.98677534610033,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,2048,524288,5.988707892596722,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,2560,655360,5.928191497921944,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,3072,786432,5.935827389359474,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,3434,879104,5.958897061645985,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,3584,917504,5.9301145896315575,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,3798,972288,5.920114085078239,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,4096,1048576,5.921496316790581,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,4608,1179648,5.926036603748798,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,5120,1310720,5.86981488764286,matched
+continuation_controls_fold,Retain factors + fresh Adam,A,6144,1572864,5.917068153619766,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,0,0,6.000774331390858,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,128,32768,5.970554709434509,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,512,131072,5.95735215395689,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,1024,262144,5.934272587299347,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,2048,524288,5.957615919411182,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,2560,655360,5.9247531071305275,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,3072,786432,5.908254235982895,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,3434,879104,5.917754098773003,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,3584,917504,5.913141719996929,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,3798,972288,5.910593211650848,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,4096,1048576,5.907919712364674,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,4608,1179648,5.893653340637684,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,5120,1310720,5.868213921785355,matched
+continuation_controls_fold,Fold + fresh R32/Adam,A,6144,1572864,5.8906006291508675,matched
+continuation_controls_lr,Original LR,A,0,0,5.782581627368927,matched
+continuation_controls_lr,Original LR,A,128,32768,5.794271536171436,matched
+continuation_controls_lr,Original LR,A,512,131072,5.756663337349892,matched
+continuation_controls_lr,Original LR,A,1024,262144,5.780078671872616,matched
+continuation_controls_lr,Original LR,A,2048,524288,5.777017138898373,matched
+continuation_controls_lr,Original LR,A,2560,655360,5.751449815928936,matched
+continuation_controls_lr,Original LR,A,3072,786432,5.7517291978001595,matched
+continuation_controls_lr,Original LR,A,3434,879104,5.762345567345619,matched
+continuation_controls_lr,Original LR,A,3584,917504,5.771072365343571,matched
+continuation_controls_lr,Original LR,A,3707,948992,5.764550417661667,matched
+continuation_controls_lr,Original LR,A,4096,1048576,5.725550837814808,matched
+continuation_controls_lr,Original LR,A,4608,1179648,5.709290064871311,matched
+continuation_controls_lr,Original LR,A,5120,1310720,5.728546656668186,matched
+continuation_controls_lr,LR / 3,A,0,0,5.782696068286896,matched
+continuation_controls_lr,LR / 3,A,128,32768,5.765446104109287,matched
+continuation_controls_lr,LR / 3,A,512,131072,5.7576878145337105,matched
+continuation_controls_lr,LR / 3,A,1024,262144,5.757236905395985,matched
+continuation_controls_lr,LR / 3,A,2048,524288,5.771168917417526,matched
+continuation_controls_lr,LR / 3,A,2560,655360,5.75101425498724,matched
+continuation_controls_lr,LR / 3,A,3072,786432,5.7509864047169685,matched
+continuation_controls_lr,LR / 3,A,3434,879104,5.769136130809784,matched
+continuation_controls_lr,LR / 3,A,3584,917504,5.758033812046051,matched
+continuation_controls_lr,LR / 3,A,3707,948992,5.760861076414585,matched
+continuation_controls_lr,LR / 3,A,4096,1048576,5.7384664714336395,matched
+continuation_controls_lr,LR / 3,A,4608,1179648,5.734420761466026,matched
+continuation_controls_lr,LR / 3,A,5120,1310720,5.727710850536823,matched
+continuation_controls_lr,LR / 10,A,0,0,5.782684572041035,matched
+continuation_controls_lr,LR / 10,A,128,32768,5.769806228578091,matched
+continuation_controls_lr,LR / 10,A,512,131072,5.767325475811958,matched
+continuation_controls_lr,LR / 10,A,1024,262144,5.759868152439594,matched
+continuation_controls_lr,LR / 10,A,2048,524288,5.773743234574795,matched
+continuation_controls_lr,LR / 10,A,2560,655360,5.761168964207172,matched
+continuation_controls_lr,LR / 10,A,3072,786432,5.760880373418331,matched
+continuation_controls_lr,LR / 10,A,3434,879104,5.767640754580498,matched
+continuation_controls_lr,LR / 10,A,3584,917504,5.7660264149308205,matched
+continuation_controls_lr,LR / 10,A,3707,948992,5.761392831802368,matched
+continuation_controls_lr,LR / 10,A,4096,1048576,5.750667989253998,matched
+continuation_controls_lr,LR / 10,A,4608,1179648,5.754002332687378,matched
+continuation_controls_lr,LR / 10,A,5120,1310720,5.74851580709219,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,0,0,6.004430398344994,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,128,32768,5.975800961256027,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,512,131072,6.002728059887886,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,1024,262144,6.008810892701149,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,2048,524288,5.960759952664375,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,2560,655360,5.987784445285797,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,3072,786432,5.9745983481407166,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,3434,879104,6.001381814479828,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,3584,917504,6.007428586483002,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,3798,972288,5.9610326141119,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,4096,1048576,5.940983831882477,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,4608,1179648,5.956408575177193,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,5120,1310720,5.942963466048241,matched
+continuation_controls_fold,Retain factors + fresh Adam,B,6144,1572864,5.910803005099297,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,0,0,6.0044484585523605,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,128,32768,5.980592876672745,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,512,131072,5.969595909118652,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,1024,262144,5.969293028116226,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,2048,524288,5.947869464755058,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,2560,655360,5.939751118421555,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,3072,786432,5.935005158185959,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,3434,879104,5.940657362341881,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,3584,917504,5.943803936243057,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,3798,972288,5.929842412471771,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,4096,1048576,5.910614550113678,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,4608,1179648,5.9073958694934845,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,5120,1310720,5.907475024461746,matched
+continuation_controls_fold,Fold + fresh R32/Adam,B,6144,1572864,5.887088775634766,matched
+continuation_controls_lr,Original LR,B,0,0,5.804529786109924,matched
+continuation_controls_lr,Original LR,B,128,32768,5.793825671076775,matched
+continuation_controls_lr,Original LR,B,512,131072,5.796431794762611,matched
+continuation_controls_lr,Original LR,B,1024,262144,5.800676763057709,matched
+continuation_controls_lr,Original LR,B,2048,524288,5.78015473484993,matched
+continuation_controls_lr,Original LR,B,2560,655360,5.768026053905487,matched
+continuation_controls_lr,Original LR,B,3072,786432,5.767791792750359,matched
+continuation_controls_lr,Original LR,B,3434,879104,5.77501517534256,matched
+continuation_controls_lr,Original LR,B,3584,917504,5.746439889073372,matched
+continuation_controls_lr,Original LR,B,3707,948992,5.75976537168026,matched
+continuation_controls_lr,Original LR,B,4096,1048576,5.751581385731697,matched
+continuation_controls_lr,Original LR,B,4608,1179648,5.751016065478325,matched
+continuation_controls_lr,Original LR,B,5120,1310720,5.739722922444344,matched
+continuation_controls_lr,LR / 3,B,0,0,5.804501250386238,matched
+continuation_controls_lr,LR / 3,B,128,32768,5.785269856452942,matched
+continuation_controls_lr,LR / 3,B,512,131072,5.785978078842163,matched
+continuation_controls_lr,LR / 3,B,1024,262144,5.78656005859375,matched
+continuation_controls_lr,LR / 3,B,2048,524288,5.77810426056385,matched
+continuation_controls_lr,LR / 3,B,2560,655360,5.763928726315498,matched
+continuation_controls_lr,LR / 3,B,3072,786432,5.763454183936119,matched
+continuation_controls_lr,LR / 3,B,3434,879104,5.767546236515045,matched
+continuation_controls_lr,LR / 3,B,3584,917504,5.760547384619713,matched
+continuation_controls_lr,LR / 3,B,3707,948992,5.751713782548904,matched
+continuation_controls_lr,LR / 3,B,4096,1048576,5.762109965085983,matched
+continuation_controls_lr,LR / 3,B,4608,1179648,5.7510562390089035,matched
+continuation_controls_lr,LR / 3,B,5120,1310720,5.747918650507927,matched
+continuation_controls_lr,LR / 10,B,0,0,5.804454803466797,matched
+continuation_controls_lr,LR / 10,B,128,32768,5.78606790304184,matched
+continuation_controls_lr,LR / 10,B,512,131072,5.781539633870125,matched
+continuation_controls_lr,LR / 10,B,1024,262144,5.786309450864792,matched
+continuation_controls_lr,LR / 10,B,2048,524288,5.780808255076408,matched
+continuation_controls_lr,LR / 10,B,2560,655360,5.774672836065292,matched
+continuation_controls_lr,LR / 10,B,3072,786432,5.770645871758461,matched
+continuation_controls_lr,LR / 10,B,3434,879104,5.774230897426605,matched
+continuation_controls_lr,LR / 10,B,3584,917504,5.770817011594772,matched
+continuation_controls_lr,LR / 10,B,3707,948992,5.766668647527695,matched
+continuation_controls_lr,LR / 10,B,4096,1048576,5.770482525229454,matched
+continuation_controls_lr,LR / 10,B,4608,1179648,5.7614312916994095,matched
+continuation_controls_lr,LR / 10,B,5120,1310720,5.764373734593391,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,0,0,5.617394611239433,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,128,32768,5.569967187941074,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,512,131072,5.5737340450286865,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,1024,262144,5.637909479439259,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,2048,524288,5.596339263021946,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,2560,655360,5.559319116175175,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,3072,786432,5.5653661116957664,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,3434,879104,5.566147089004517,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,3584,917504,5.507345020771027,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,3798,972288,5.501359812915325,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,4096,1048576,5.52297318726778,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,4608,1179648,5.538292981684208,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,5120,1310720,5.516329310834408,matched
+continuation_controls_fold,Retain factors + fresh Adam,C,6144,1572864,5.521145083010197,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,0,0,5.6173869371414185,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,128,32768,5.575812101364136,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,512,131072,5.545317582786083,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,1024,262144,5.563916116952896,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,2048,524288,5.55148308724165,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,2560,655360,5.52197889238596,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,3072,786432,5.51821069419384,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,3434,879104,5.514137506484985,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,3584,917504,5.496466062963009,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,3798,972288,5.489859014749527,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,4096,1048576,5.496228277683258,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,4608,1179648,5.487372241914272,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,5120,1310720,5.497675694525242,matched
+continuation_controls_fold,Fold + fresh R32/Adam,C,6144,1572864,5.477891273796558,matched
+continuation_controls_lr,Original LR,C,0,0,5.364204779267311,matched
+continuation_controls_lr,Original LR,C,128,32768,5.3624314814805984,matched
+continuation_controls_lr,Original LR,C,512,131072,5.38438730686903,matched
+continuation_controls_lr,Original LR,C,1024,262144,5.376315005123615,matched
+continuation_controls_lr,Original LR,C,2048,524288,5.377816900610924,matched
+continuation_controls_lr,Original LR,C,2560,655360,5.360752522945404,matched
+continuation_controls_lr,Original LR,C,3072,786432,5.335005834698677,matched
+continuation_controls_lr,Original LR,C,3434,879104,5.317121312022209,matched
+continuation_controls_lr,Original LR,C,3584,917504,5.3086370304226875,matched
+continuation_controls_lr,Original LR,C,3707,948992,5.311926759779453,matched
+continuation_controls_lr,Original LR,C,4096,1048576,5.309792190790176,matched
+continuation_controls_lr,Original LR,C,4608,1179648,5.314047954976559,matched
+continuation_controls_lr,Original LR,C,5120,1310720,5.323132261633873,matched
+continuation_controls_lr,LR / 3,C,0,0,5.364207297563553,matched
+continuation_controls_lr,LR / 3,C,128,32768,5.345641806721687,matched
+continuation_controls_lr,LR / 3,C,512,131072,5.354424349963665,matched
+continuation_controls_lr,LR / 3,C,1024,262144,5.353304125368595,matched
+continuation_controls_lr,LR / 3,C,2048,524288,5.374100007116795,matched
+continuation_controls_lr,LR / 3,C,2560,655360,5.351995527744293,matched
+continuation_controls_lr,LR / 3,C,3072,786432,5.333604276180267,matched
+continuation_controls_lr,LR / 3,C,3434,879104,5.328146308660507,matched
+continuation_controls_lr,LR / 3,C,3584,917504,5.330247715115547,matched
+continuation_controls_lr,LR / 3,C,3707,948992,5.319852977991104,matched
+continuation_controls_lr,LR / 3,C,4096,1048576,5.315632380545139,matched
+continuation_controls_lr,LR / 3,C,4608,1179648,5.318833954632282,matched
+continuation_controls_lr,LR / 3,C,5120,1310720,5.329711735248566,matched
+continuation_controls_lr,LR / 10,C,0,0,5.364218883216381,matched
+continuation_controls_lr,LR / 10,C,128,32768,5.347161285579205,matched
+continuation_controls_lr,LR / 10,C,512,131072,5.345066078007221,matched
+continuation_controls_lr,LR / 10,C,1024,262144,5.3481830060482025,matched
+continuation_controls_lr,LR / 10,C,2048,524288,5.362567208707333,matched
+continuation_controls_lr,LR / 10,C,2560,655360,5.350123718380928,matched
+continuation_controls_lr,LR / 10,C,3072,786432,5.347601026296616,matched
+continuation_controls_lr,LR / 10,C,3434,879104,5.3422354236245155,matched
+continuation_controls_lr,LR / 10,C,3584,917504,5.341839179396629,matched
+continuation_controls_lr,LR / 10,C,3707,948992,5.335454307496548,matched
+continuation_controls_lr,LR / 10,C,4096,1048576,5.33000323921442,matched
+continuation_controls_lr,LR / 10,C,4608,1179648,5.331835821270943,matched
+continuation_controls_lr,LR / 10,C,5120,1310720,5.334362991154194,matched

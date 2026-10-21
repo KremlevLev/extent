@@ -1,0 +1,25 @@
+{
+  "scope": "all raw checkpoint chunks downloaded and SHA verified; full model forward not evaluated",
+  "revision": "db3ae61fc99cb3baa10d6f7236f9895654527dc2",
+  "repo": "levkremlev888/extent",
+  "chunks": 1742,
+  "payload_bytes": 1144678200,
+  "checkpoints": [
+    {
+      "arm": "GROW-R64",
+      "step": 38294,
+      "generation": "step-38294-63572165a97b4272ae432699888a0f79",
+      "payload_bytes": 229356444,
+      "chunks": 871,
+      "directory": "C:\\Users\\lkremlev\\extent\\work\\kaggle-recovery-2026-10-20\\checkpoints\\GROW-R64"
+    },
+    {
+      "arm": "GROW-R256",
+      "step": 37910,
+      "generation": "step-37910-3d15eeafdc62433a8837caa7e5a6719c",
+      "payload_bytes": 915321756,
+      "chunks": 871,
+      "directory": "C:\\Users\\lkremlev\\extent\\work\\kaggle-recovery-2026-10-20\\checkpoints\\GROW-R256"
+    }
+  ]
+}

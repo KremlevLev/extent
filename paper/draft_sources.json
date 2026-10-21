@@ -1,5 +1,5 @@
 {
-  "draft_date": "2026-10-17",
+  "draft_date": "2026-10-20",
   "files": [
     {
       "path": "results/EXP-061-production-aligned-scaling-campaign-summary.md",
@@ -133,5 +133,83 @@
     "points": "paper/figures/recent_points.csv",
     "provenance": "paper/figures/recent_provenance.json",
     "scope": "Single seed; reused panels; partial horizons; Figures4-7; no training performed by rebuild."
+  },
+  "continuation_sources": [
+    {
+      "path": "results/EXP-136-streamed-v2-session-1.json",
+      "sha256": "f9fbad5239347e8d377935f21c0ad20f8885245a7d3a976bb47a62722d8b97bb",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/EXP-145-long-v1-session-1.json",
+      "sha256": "41a4b239a43c81ac2a91657d59f23edbd9a4987a22302c3f06a4e4b20d1d2d85",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/EXP-147-fold-continue-session-1.json",
+      "sha256": "137a171d5754a14553c2053efe268b401734eaa70761f6f13138ec9c1f7bc509",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/EXP-154-continuation-matrix-session-1.json",
+      "sha256": "2cfa61e4c75cb38e4f71f8a94b35b90da0fe07bd95e83d260f1084fd43dddd26",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/kaggle-recovery-2026-10-20/exp153-rank-growth-v2-worker-0.json",
+      "sha256": "55a35b341327930d47829ea898dbef41d5666832d36304efa513d62c5d744532",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/kaggle-recovery-2026-10-20/exp153-rank-growth-v2-worker-1.json",
+      "sha256": "02c3f15726a4790de83107a3bb56871c55d8f93137f9a611d61fd44ab436b764",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/EXP-148-fold-continue-analysis.json",
+      "sha256": "115c1a7a3bc16510c178d9ca186503fbe094d262f1c89bb0a234941e2deed1ed",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/EXP-147-fold-continue-analysis.json",
+      "sha256": "66e51d3a2fc45b51e5768f3e6ead0c33dc71c1ba2980336bcf442cee690d168c",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/EXP-144-paired-analysis.md",
+      "sha256": "67fd0699eeb98743944a9b88c459b251043c1f7afe20564f4ba57ad720c9ee74",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/EXP-146-analysis.md",
+      "sha256": "753bb35a4c17dc39043dd56d02853bda9199248ae25dde7b34275e1887b03912",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/EXP-153-154-continuation-matrix-analysis.md",
+      "sha256": "62ac0420bac18a16eef775572e3cc41b1f41c462f4d3ff286a49498f10b588a7",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/EXP-153-rank-growth-v2-protocol.md",
+      "sha256": "e7a7d7b45f2ceee6be081000209b59417e9f0793560957a9e16b11bd27c9cca9",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/kaggle-recovery-2026-10-20/inventory.json",
+      "sha256": "d4fb06c2664acab51d8cd1ec8b47336513b753a2059d8bdf43648decbbc09883",
+      "type": "continuation_snapshot_or_audit"
+    },
+    {
+      "path": "results/kaggle-recovery-2026-10-20/backup-receipt.json",
+      "sha256": "0be3687afc725c435c3f56cafa818138e547136dbf05db4b0dcfb01cb66d2995",
+      "type": "continuation_snapshot_or_audit"
+    }
+  ],
+  "continuation_figures": {
+    "script": "paper/make_continuation_figures.py",
+    "points": "paper/figures/continuation_points.csv",
+    "provenance": "paper/figures/continuation_provenance.json",
+    "scope": "Figures 8-10; same exposed panels, partial horizons; offline rebuild only."
   }
 }
