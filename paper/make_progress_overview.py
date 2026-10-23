@@ -201,7 +201,10 @@ def main():
     fig.text(.065,.021,'EXP-130 предложил рецепт сброса; EXP-136 повторил его из EXP-111 (затраты EXP-130 не прибавлены). Один сид; повторно используемая валидация. Разрыв оценки отмечен.',
              fontsize=9.5,color='#617269')
     for ext in ('png','pdf','svg'):
-        fig.savefig(OUT/f'progress_overview.ru.{ext}',dpi=180,facecolor=fig.get_facecolor())
+        path=OUT/f'progress_overview.ru.{ext}'
+        fig.savefig(path,dpi=180,facecolor=fig.get_facecolor())
+        if ext=='svg':
+            path.write_text('\n'.join(line.rstrip() for line in path.read_text(encoding='utf-8').splitlines())+'\n',encoding='utf-8')
     plt.close(fig)
     with (OUT/'progress_overview_points.csv').open('w',encoding='utf-8',newline='') as f:
         writer=csv.DictWriter(f,fieldnames=list(POINTS[0]));writer.writeheader();writer.writerows(POINTS)
