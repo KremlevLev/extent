@@ -1,0 +1,127 @@
+{
+  "revision": "74cd4878817a330e1ae8399acbafe5e76b40a4c5",
+  "read_only": true,
+  "scope": "Pinned latest report and complete checkpoint manifest only; full tensor payload not restored in this review",
+  "rows": [
+    {
+      "path": "experiments/exp155-rank-continue-v1/latest.json",
+      "status": "deadline_partial",
+      "branches": {
+        "CONTINUE-R256-ADAM": {
+          "step": 80260,
+          "durable_step": 80260,
+          "best_step": 78870,
+          "best_nll": 5.122928220778704
+        }
+      },
+      "pending_slots": []
+    },
+    {
+      "path": "experiments/exp155-rank-continue-v1/checkpoints/CONTINUE-R256-ADAM/checkpoint.json",
+      "step": 80260,
+      "generation": "step-80260-e6aebc3c8c2e46cba27575350108b6f6",
+      "contract_matches_received_report": true,
+      "chunks": 871,
+      "bytes": 915321756
+    }
+  ],
+  "scalar_payload_check": {
+    "optimizer_counts": [
+      49134,
+      49134,
+      49134,
+      49134,
+      49134,
+      49134
+    ],
+    "best_step": 78870,
+    "leaves": [
+      {
+        "path": [
+          "optimizer",
+          "1",
+          "inner_states",
+          "mamba",
+          "inner_state",
+          "0",
+          "count"
+        ],
+        "value": 49134,
+        "sha_verified": true
+      },
+      {
+        "path": [
+          "optimizer",
+          "1",
+          "inner_states",
+          "mamba",
+          "inner_state",
+          "1",
+          "count"
+        ],
+        "value": 49134,
+        "sha_verified": true
+      },
+      {
+        "path": [
+          "optimizer",
+          "1",
+          "inner_states",
+          "mlp",
+          "inner_state",
+          "0",
+          "count"
+        ],
+        "value": 49134,
+        "sha_verified": true
+      },
+      {
+        "path": [
+          "optimizer",
+          "1",
+          "inner_states",
+          "mlp",
+          "inner_state",
+          "1",
+          "count"
+        ],
+        "value": 49134,
+        "sha_verified": true
+      },
+      {
+        "path": [
+          "optimizer",
+          "1",
+          "inner_states",
+          "norm",
+          "inner_state",
+          "0",
+          "count"
+        ],
+        "value": 49134,
+        "sha_verified": true
+      },
+      {
+        "path": [
+          "optimizer",
+          "1",
+          "inner_states",
+          "norm",
+          "inner_state",
+          "1",
+          "count"
+        ],
+        "value": 49134,
+        "sha_verified": true
+      },
+      {
+        "path": [
+          "best_step"
+        ],
+        "value": 78870,
+        "sha_verified": true
+      }
+    ],
+    "scope": "Seven scalar chunks SHA verified and decoded; other tensor chunks not downloaded"
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-23",
+  "raw_sha256": "5dfd919d83a6f19e65bfd8895ec72708c4059d77125ecb3905c21540a8c64251",
+  "status": "deadline_partial",
+  "source_step": 37910,
+  "last_step": 80260,
+  "registered_best_step": 78870,
+  "accepted_updates": 42350,
+  "accepted_input_tokens": 10841600,
+  "audit_extra_input_tokens": 256,
+  "wall_hours": 8.026205479400277,
+  "training_hours": 4.544596258654594,
+  "notification_count": 3,
+  "source": {
+    "A": 5.573294997215271,
+    "B": 5.619816690683365,
+    "C": 5.200392626225948
+  },
+  "last": {
+    "A": 5.109495963901281,
+    "B": 5.150924265384674,
+    "C": 4.665558807551861
+  },
+  "registered_best": {
+    "A": 5.122928220778704,
+    "B": 5.152130424976349,
+    "C": 4.645769149065018
+  },
+  "source_minus_last": {
+    "A": 0.46379903331398964,
+    "B": 0.4688924252986908,
+    "C": 0.5348338186740875
+  },
+  "late_32768_to40960_gain": {
+    "A": 0.05772959813475609,
+    "B": 0.0907079428434372,
+    "C": 0.109795942902565
+  },
+  "interpretation": "Successful work-deadline continuation, not completed262144 horizon. No hard plateau in observed late window; no causal rank claim. Single seed, reused validation, cyclic FIT, prep excluded. Last is distinct from A-selected registered best."
+}

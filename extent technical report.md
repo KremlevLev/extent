@@ -2217,3 +2217,26 @@ remaining context utility and numerical profiles reported. Source preparation
 and teacher passes excluded from marginal tokens but never efficiency claims.
 Local mathematical/sharding/serialization validation is not physical1.7B GPU/TPU
 HBM,throughput,source parity or scientific efficacy evidence.
+
+
+## 2026-10-23 — EXP-155 measured TPU continuation of trained R256
+
+MEASURED: Eight TPUv5lite devices, same prepared153v2 CURRENT37910/Adam6784,
+42350 accepted updates, registered work deadline after8.0262h. Status
+`deadline_partial`, endpoint finalization completed, no reported exception.
+CURRENT source A/B/C5.573295/5.619817/5.200393 ->last80260
+5.109496/5.150924/4.665559. Registered A-selectedbest78870:
+5.122928/5.152130/4.645769, distinct from arbitrary last.
+DERIVED:10,841,600 accepted input-token presentations (256/update), plus256
+extra actual gradient-audit positions; prep/search excluded, fixed FIT repeats.
+MEASURED: source-best perwindow replaymax.010774<.03, first TPU gradient
+relativeL2.029159/cos.999575/CEerror.000158; compiled selected. Late registered
+NEW32768->40960 allpanelgains.057730/.090708/.109796 over2.097M inputpositions;
+nonmonotonic overall, no hardplateau demonstrated. Not a causal rank claim.
+MEASURED: HF finalmanifest80260 matchescontract;7scalarSHAchecks confirm six
+Adamcounts49134 and best78870. Full915MB tensor restore not performed here.
+Source/last/best profileconsistencypasses, no useful tiny-auditcontext gain.
+Artifacts: results/EXP-155-analysis.md, EXP-155-analysis.json,
+EXP-155-session-1.json, EXP-155-remote-audit.json, EXP-155-trajectory.png.
+Single preparation seed/reused validation. No teacher recovery, fresh-test,
+fullpipeline efficiency or optimizedinference claim.

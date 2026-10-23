@@ -1,3 +1,22 @@
+# 23 October2026 — EXP155 TPU continuation succeeds toA5.109/B5.151/C4.666
+
+Raw results/EXP-155-session-1.json bytepreserved; analysisMD/JSON,69points CSV,
+PNG/PDF/SVG figure from scripts/analyze_exp155.py. No runner changes/cloudlaunch.
+Normalworkdeadline8.0262h/statusdeadline_partial,finalizationcompleted, noerror.
+42350NEWaccepted/attempted,10,841,600inputpresentations,extragradientaudit256.
+CURRENT37910->80260; restoreAdam6784,remoteactualsixcounts49134confirmed.
+Source A/B/C5.573295/5.619817/5.200393 ->last5.109496/5.150924/4.665559.
+RegisteredA-best78870/new40960:5.122928/5.152130/4.645769; keep distinctfromlast.
+Late NEW32768->40960 gainsA.057730/B.090708/C.109796, nohardplateau shown.
+Inheritedbest37270 perwindowreplaymax.010774<.03 passes; actualTPUgradient
+relativeL2.029159/cos.999575/CE.000158 passes,compiledselected.8TPUv5lite.
+Allsource/best/lastprofiles pass; tinycontext256->1024no usefulqualitygain.
+Report pending[],durable80260. PinnedHF74cd4878817a330e1ae8399acbafe5e76b40a4c5
+finalmanifest80260/exactcontract+armconfirmed,871chunks915MB.7scalarSHAchecks
+confirmAdam49134/best78870; fullpayloadnotrestored.3notifications,totalupload3.696GB.
+Recommend same155OWNresumeCURRENT80260/Adam49134,inheritedbest78870; noreset,
+fold/rankchange needed. Single seed/reusedpanels, notisolatedrankproof/freshtest.
+
 # 22 October 2026 — EXP155 PREPARED: continue153v2 R256 CURRENT37910 on TPU
 
 User reports ONE restored Kaggle account and9hTPU available; authorizes continuation.
