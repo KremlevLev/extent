@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-24",
+  "sources": [
+    {
+      "path": "paper/figures/points.csv",
+      "sha256": "25737b541f521f8c4763d9a951a51f32e1d5ea381ecc9b4d53cd243635fbdd7b"
+    },
+    {
+      "path": "paper/figures/quality_points.csv",
+      "sha256": "0ab5b60478c78f785eecaf3ed4d03301a980d1e4baae8d767da9579ff82b12bf"
+    },
+    {
+      "path": "paper/figures/quality_provenance.json",
+      "sha256": "0bbccb436aad1f69925c442be7b19826a1bfdb4188e60bd4f8d7d977487def94"
+    },
+    {
+      "path": "results/EXP-097-numerical-stability.json",
+      "sha256": "ea63119ea8b5b556e9292a14441aa63d2c763cc850db1f5ff4d3e59c16f6f72d"
+    },
+    {
+      "path": "paper/draft.ru.md",
+      "sha256": "92b55020b24ec16a0cb42bf28d96b51faeef61e9cde4111fec1dfada85a48ee5"
+    },
+    {
+      "path": "results/EXP-111-113-recovery-efficiency-protocol.md",
+      "sha256": "a8efbf317382137c1f20eeefaeaeaad2c30cb86a148f768c8ea851fdad088511"
+    },
+    {
+      "path": "results/EXP-072-completed-summary.md",
+      "sha256": "ea7341a0971c7f299270116c38679dba378d76dbd5c4274d01dce4e44e960bfe"
+    },
+    {
+      "path": "results/EXP-136-streamed-v2-session-1.json",
+      "sha256": "f9fbad5239347e8d377935f21c0ad20f8885245a7d3a976bb47a62722d8b97bb"
+    },
+    {
+      "path": "results/EXP-145-long-v1-session-1.json",
+      "sha256": "41a4b239a43c81ac2a91657d59f23edbd9a4987a22302c3f06a4e4b20d1d2d85"
+    },
+    {
+      "path": "results/EXP-147-fold-continue-session-1.json",
+      "sha256": "137a171d5754a14553c2053efe268b401734eaa70761f6f13138ec9c1f7bc509"
+    },
+    {
+      "path": "results/kaggle-recovery-2026-10-20/exp153-rank-growth-v2-worker-1.json",
+      "sha256": "02c3f15726a4790de83107a3bb56871c55d8f93137f9a611d61fd44ab436b764"
+    },
+    {
+      "path": "results/EXP-155-session-1.json",
+      "sha256": "5dfd919d83a6f19e65bfd8895ec72708c4059d77125ecb3905c21540a8c64251"
+    }
+  ],
+  "selected_seed": 123,
+  "points": 290,
+  "full_model_training_positions": 28935168,
+  "local_preparation_positions": {
+    "069_exact_dual_local": 1572864,
+    "069_recurrent_local": 3145728,
+    "072_onpolicy_local": 12582912
+  },
+  "local_preparation_total": 17301504,
+  "ridge_calibration_positions_separate": 12288,
+  "stage_updates": {
+    "EXP111": 32768,
+    "EXP136": 12586,
+    "EXP145": 12379,
+    "EXP147": 6161,
+    "EXP153v2": 6784,
+    "EXP155": 42350
+  },
+  "scope": "Selected lineage only. Not total research compute. No smooth curve across changed evaluation panels. Not unique tokens or FLOP equivalent.",
+  "preparation_basis": "paper/draft.ru.md section3.4 and EXP111 protocol: reuse EXP069 local checkpoints -> EXP072 ONPOLICY -> EXP111; no EXP097 state reuse.",
+  "historical_raw_sha256": "a85d7dcbc9e4f57a1e06346a72474b646779456c8bb0dba53654a9c3aaa9ba8d"
+}

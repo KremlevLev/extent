@@ -1,0 +1,291 @@
+experiment,panel,nll,global_step,full_model_input_positions,kind,source
+072,historical072,22.346362471580505,,,historical_comparison,"paper/figures/points.csv: seed123, depth24, TEACHER"
+072,historical072,10.545254066586494,,,historical_comparison,"paper/figures/points.csv: seed123, depth24, ONPOLICY"
+111,historical111,12.968005813658237,,0,registered,quality_points.csv: reproduction seed123 step0
+111,historical111,11.326870083808899,,262144,registered,quality_points.csv: reproduction seed123 step1024
+111,historical111,7.637317672371864,,524288,registered,quality_points.csv: reproduction seed123 step2048
+111,historical111,7.683840274810791,,786432,registered,quality_points.csv: reproduction seed123 step3072
+111,historical111,7.52476766705513,,1048576,registered,quality_points.csv: reproduction seed123 step4096
+111,historical111,7.424368180334568,,1310720,registered,quality_points.csv: reproduction seed123 step5120
+111,historical111,7.243407107889652,,1572864,registered,quality_points.csv: reproduction seed123 step6144
+111,historical111,7.44599062204361,,1835008,registered,quality_points.csv: reproduction seed123 step7168
+111,historical111,7.38811718672514,,2097152,registered,quality_points.csv: reproduction seed123 step8192
+111,historical111,7.5318464785814285,,2359296,registered,quality_points.csv: reproduction seed123 step9216
+111,historical111,7.277701266109943,,2621440,registered,quality_points.csv: reproduction seed123 step10240
+111,historical111,7.3338355123996735,,2883584,registered,quality_points.csv: reproduction seed123 step11264
+111,historical111,7.303177699446678,,3145728,registered,quality_points.csv: reproduction seed123 step12288
+111,historical111,7.2788737416267395,,3407872,registered,quality_points.csv: reproduction seed123 step13312
+111,historical111,7.263225704431534,,3670016,registered,quality_points.csv: reproduction seed123 step14336
+111,historical111,7.195814952254295,,3932160,registered,quality_points.csv: reproduction seed123 step15360
+111,historical111,7.292795039713383,,4194304,registered,quality_points.csv: reproduction seed123 step16384
+111,historical111,7.26908764988184,,4456448,registered,quality_points.csv: reproduction seed123 step17408
+111,historical111,7.2636444345116615,,4718592,registered,quality_points.csv: reproduction seed123 step18432
+111,historical111,7.182018615305424,,4980736,registered,quality_points.csv: reproduction seed123 step19456
+111,historical111,7.29059161990881,,5242880,registered,quality_points.csv: reproduction seed123 step20480
+111,historical111,7.189378552138805,,5505024,registered,quality_points.csv: reproduction seed123 step21504
+111,historical111,7.299976371228695,,5767168,registered,quality_points.csv: reproduction seed123 step22528
+111,historical111,7.2329365611076355,,6029312,registered,quality_points.csv: reproduction seed123 step23552
+111,historical111,7.224115490913391,,6291456,registered,quality_points.csv: reproduction seed123 step24576
+111,historical111,7.3098563477396965,,6553600,registered,quality_points.csv: reproduction seed123 step25600
+111,historical111,7.293076187372208,,6815744,registered,quality_points.csv: reproduction seed123 step26624
+111,historical111,7.278723262250423,,7077888,registered,quality_points.csv: reproduction seed123 step27648
+111,historical111,7.342464551329613,,7340032,registered,quality_points.csv: reproduction seed123 step28672
+111,historical111,7.2776824831962585,,7602176,registered,quality_points.csv: reproduction seed123 step29696
+111,historical111,7.2393137738108635,,7864320,registered,quality_points.csv: reproduction seed123 step30720
+111,historical111,7.279989667236805,,8126464,registered,quality_points.csv: reproduction seed123 step31744
+111,historical111,7.293884538114071,,8388608,registered,quality_points.csv: reproduction seed123 step32768
+136,A,7.264064021408558,0,8388608,source_no_intervention,136/source_controls/A
+136,B,7.375623241066933,0,8388608,source_no_intervention,136/source_controls/B
+136,C,7.190919354557991,0,8388608,source_no_intervention,136/source_controls/C
+136,A,7.253242999315262,2048,8912896,registered,136/evaluations-or-final/step2048/A
+136,B,7.294940829277039,2048,8912896,registered,136/evaluations-or-final/step2048/B
+136,C,7.0394021943211555,2048,8912896,registered,136/evaluations-or-final/step2048/C
+136,A,6.787255220115185,2560,9043968,registered,136/evaluations-or-final/step2560/A
+136,B,6.7201103419065475,2560,9043968,registered,136/evaluations-or-final/step2560/B
+136,C,6.442747101187706,2560,9043968,registered,136/evaluations-or-final/step2560/C
+136,A,6.536118969321251,3072,9175040,registered,136/evaluations-or-final/step3072/A
+136,B,6.55215048789978,3072,9175040,registered,136/evaluations-or-final/step3072/B
+136,C,6.205515071749687,3072,9175040,registered,136/evaluations-or-final/step3072/C
+136,A,6.554638177156448,3434,9267712,registered,136/evaluations-or-final/step3434/A
+136,B,6.55144177377224,3434,9267712,registered,136/evaluations-or-final/step3434/B
+136,C,6.380582474172115,3434,9267712,registered,136/evaluations-or-final/step3434/C
+136,A,6.484092205762863,3584,9306112,registered,136/evaluations-or-final/step3584/A
+136,B,6.502815917134285,3584,9306112,registered,136/evaluations-or-final/step3584/B
+136,C,6.178974404931068,3584,9306112,registered,136/evaluations-or-final/step3584/C
+136,A,6.522368378937244,4096,9437184,registered,136/evaluations-or-final/step4096/A
+136,B,6.52515535056591,4096,9437184,registered,136/evaluations-or-final/step4096/B
+136,C,6.260873474180698,4096,9437184,registered,136/evaluations-or-final/step4096/C
+136,A,6.334410332143307,4608,9568256,registered,136/evaluations-or-final/step4608/A
+136,B,6.326424151659012,4608,9568256,registered,136/evaluations-or-final/step4608/B
+136,C,5.998356036841869,4608,9568256,registered,136/evaluations-or-final/step4608/C
+136,A,6.334731452167034,5120,9699328,registered,136/evaluations-or-final/step5120/A
+136,B,6.36842505633831,5120,9699328,registered,136/evaluations-or-final/step5120/B
+136,C,6.023893594741821,5120,9699328,registered,136/evaluations-or-final/step5120/C
+136,A,6.455446839332581,6144,9961472,registered,136/evaluations-or-final/step6144/A
+136,B,6.4656694531440735,6144,9961472,registered,136/evaluations-or-final/step6144/B
+136,C,6.076032228767872,6144,9961472,registered,136/evaluations-or-final/step6144/C
+136,A,6.136631831526756,8192,10485760,registered,136/evaluations-or-final/step8192/A
+136,B,6.141517400741577,8192,10485760,registered,136/evaluations-or-final/step8192/B
+136,C,5.750019408762455,8192,10485760,registered,136/evaluations-or-final/step8192/C
+136,A,6.156050242483616,10240,11010048,registered,136/evaluations-or-final/step10240/A
+136,B,6.159661665558815,10240,11010048,registered,136/evaluations-or-final/step10240/B
+136,C,5.784676738083363,10240,11010048,registered,136/evaluations-or-final/step10240/C
+136,A,6.040120907127857,12288,11534336,registered,136/evaluations-or-final/step12288/A
+136,B,6.02095103263855,12288,11534336,registered,136/evaluations-or-final/step12288/B
+136,C,5.619626939296722,12288,11534336,registered,136/evaluations-or-final/step12288/C
+136,A,6.000788755714893,12586,11610624,deadline,136/evaluations-or-final/step12586/A
+136,B,6.004431590437889,12586,11610624,deadline,136/evaluations-or-final/step12586/B
+136,C,5.617432102560997,12586,11610624,deadline,136/evaluations-or-final/step12586/C
+145,A,6.000774331390858,12586,11610624,registered,145/evaluations-or-final/step12586/A
+145,B,6.0044484585523605,12586,11610624,registered,145/evaluations-or-final/step12586/B
+145,C,5.6173869371414185,12586,11610624,registered,145/evaluations-or-final/step12586/C
+145,A,5.970554709434509,12714,11643392,registered,145/evaluations-or-final/step12714/A
+145,B,5.980592876672745,12714,11643392,registered,145/evaluations-or-final/step12714/B
+145,C,5.575812101364136,12714,11643392,registered,145/evaluations-or-final/step12714/C
+145,A,5.95735215395689,13098,11741696,registered,145/evaluations-or-final/step13098/A
+145,B,5.969595909118652,13098,11741696,registered,145/evaluations-or-final/step13098/B
+145,C,5.545317582786083,13098,11741696,registered,145/evaluations-or-final/step13098/C
+145,A,5.934272587299347,13610,11872768,registered,145/evaluations-or-final/step13610/A
+145,B,5.969293028116226,13610,11872768,registered,145/evaluations-or-final/step13610/B
+145,C,5.563916116952896,13610,11872768,registered,145/evaluations-or-final/step13610/C
+145,A,5.957615919411182,14634,12134912,registered,145/evaluations-or-final/step14634/A
+145,B,5.947869464755058,14634,12134912,registered,145/evaluations-or-final/step14634/B
+145,C,5.55148308724165,14634,12134912,registered,145/evaluations-or-final/step14634/C
+145,A,5.9247531071305275,15146,12265984,registered,145/evaluations-or-final/step15146/A
+145,B,5.939751118421555,15146,12265984,registered,145/evaluations-or-final/step15146/B
+145,C,5.52197889238596,15146,12265984,registered,145/evaluations-or-final/step15146/C
+145,A,5.908254235982895,15658,12397056,registered,145/evaluations-or-final/step15658/A
+145,B,5.935005158185959,15658,12397056,registered,145/evaluations-or-final/step15658/B
+145,C,5.51821069419384,15658,12397056,registered,145/evaluations-or-final/step15658/C
+145,A,5.917754098773003,16020,12489728,registered,145/evaluations-or-final/step16020/A
+145,B,5.940657362341881,16020,12489728,registered,145/evaluations-or-final/step16020/B
+145,C,5.514137506484985,16020,12489728,registered,145/evaluations-or-final/step16020/C
+145,A,5.913141719996929,16170,12528128,registered,145/evaluations-or-final/step16170/A
+145,B,5.943803936243057,16170,12528128,registered,145/evaluations-or-final/step16170/B
+145,C,5.496466062963009,16170,12528128,registered,145/evaluations-or-final/step16170/C
+145,A,5.910593211650848,16384,12582912,registered,145/evaluations-or-final/step16384/A
+145,B,5.929842412471771,16384,12582912,registered,145/evaluations-or-final/step16384/B
+145,C,5.489859014749527,16384,12582912,registered,145/evaluations-or-final/step16384/C
+145,A,5.907919712364674,16682,12659200,registered,145/evaluations-or-final/step16682/A
+145,B,5.910614550113678,16682,12659200,registered,145/evaluations-or-final/step16682/B
+145,C,5.496228277683258,16682,12659200,registered,145/evaluations-or-final/step16682/C
+145,A,5.893653340637684,17194,12790272,registered,145/evaluations-or-final/step17194/A
+145,B,5.9073958694934845,17194,12790272,registered,145/evaluations-or-final/step17194/B
+145,C,5.487372241914272,17194,12790272,registered,145/evaluations-or-final/step17194/C
+145,A,5.868213921785355,17706,12921344,registered,145/evaluations-or-final/step17706/A
+145,B,5.907475024461746,17706,12921344,registered,145/evaluations-or-final/step17706/B
+145,C,5.497675694525242,17706,12921344,registered,145/evaluations-or-final/step17706/C
+145,A,5.8906006291508675,18730,13183488,registered,145/evaluations-or-final/step18730/A
+145,B,5.887088775634766,18730,13183488,registered,145/evaluations-or-final/step18730/B
+145,C,5.477891273796558,18730,13183488,registered,145/evaluations-or-final/step18730/C
+145,A,5.853956572711468,20480,13631488,registered,145/evaluations-or-final/step20480/A
+145,B,5.856123313307762,20480,13631488,registered,145/evaluations-or-final/step20480/B
+145,C,5.41627649217844,20480,13631488,registered,145/evaluations-or-final/step20480/C
+145,A,5.8470752984285355,20778,13707776,registered,145/evaluations-or-final/step20778/A
+145,B,5.842906475067139,20778,13707776,registered,145/evaluations-or-final/step20778/B
+145,C,5.419480063021183,20778,13707776,registered,145/evaluations-or-final/step20778/C
+145,A,5.855947382748127,22826,14232064,registered,145/evaluations-or-final/step22826/A
+145,B,5.832162946462631,22826,14232064,registered,145/evaluations-or-final/step22826/B
+145,C,5.4348099604249,22826,14232064,registered,145/evaluations-or-final/step22826/C
+145,A,5.812536604702473,24576,14680064,registered,145/evaluations-or-final/step24576/A
+145,B,5.816290766000748,24576,14680064,registered,145/evaluations-or-final/step24576/B
+145,C,5.367333188652992,24576,14680064,registered,145/evaluations-or-final/step24576/C
+145,A,5.795827351510525,24874,14756352,registered,145/evaluations-or-final/step24874/A
+145,B,5.806025579571724,24874,14756352,registered,145/evaluations-or-final/step24874/B
+145,C,5.363321773707867,24874,14756352,registered,145/evaluations-or-final/step24874/C
+145,A,5.782679624855518,24965,14779648,deadline,145/evaluations-or-final/step24965/A
+145,B,5.8044673204422,24965,14779648,deadline,145/evaluations-or-final/step24965/B
+145,C,5.364202193915844,24965,14779648,deadline,145/evaluations-or-final/step24965/C
+147,A,5.782581627368927,24965,14779648,registered,147/evaluations-or-final/step24965/A
+147,B,5.804529786109924,24965,14779648,registered,147/evaluations-or-final/step24965/B
+147,C,5.364204779267311,24965,14779648,registered,147/evaluations-or-final/step24965/C
+147,A,5.794271536171436,25093,14812416,registered,147/evaluations-or-final/step25093/A
+147,B,5.793825671076775,25093,14812416,registered,147/evaluations-or-final/step25093/B
+147,C,5.3624314814805984,25093,14812416,registered,147/evaluations-or-final/step25093/C
+147,A,5.756663337349892,25477,14910720,registered,147/evaluations-or-final/step25477/A
+147,B,5.796431794762611,25477,14910720,registered,147/evaluations-or-final/step25477/B
+147,C,5.38438730686903,25477,14910720,registered,147/evaluations-or-final/step25477/C
+147,A,5.780078671872616,25989,15041792,registered,147/evaluations-or-final/step25989/A
+147,B,5.800676763057709,25989,15041792,registered,147/evaluations-or-final/step25989/B
+147,C,5.376315005123615,25989,15041792,registered,147/evaluations-or-final/step25989/C
+147,A,5.777017138898373,27013,15303936,registered,147/evaluations-or-final/step27013/A
+147,B,5.78015473484993,27013,15303936,registered,147/evaluations-or-final/step27013/B
+147,C,5.377816900610924,27013,15303936,registered,147/evaluations-or-final/step27013/C
+147,A,5.751449815928936,27525,15435008,registered,147/evaluations-or-final/step27525/A
+147,B,5.768026053905487,27525,15435008,registered,147/evaluations-or-final/step27525/B
+147,C,5.360752522945404,27525,15435008,registered,147/evaluations-or-final/step27525/C
+147,A,5.7517291978001595,28037,15566080,registered,147/evaluations-or-final/step28037/A
+147,B,5.767791792750359,28037,15566080,registered,147/evaluations-or-final/step28037/B
+147,C,5.335005834698677,28037,15566080,registered,147/evaluations-or-final/step28037/C
+147,A,5.762345567345619,28399,15658752,registered,147/evaluations-or-final/step28399/A
+147,B,5.77501517534256,28399,15658752,registered,147/evaluations-or-final/step28399/B
+147,C,5.317121312022209,28399,15658752,registered,147/evaluations-or-final/step28399/C
+147,A,5.771072365343571,28549,15697152,registered,147/evaluations-or-final/step28549/A
+147,B,5.746439889073372,28549,15697152,registered,147/evaluations-or-final/step28549/B
+147,C,5.3086370304226875,28549,15697152,registered,147/evaluations-or-final/step28549/C
+147,A,5.764550417661667,28672,15728640,registered,147/evaluations-or-final/step28672/A
+147,B,5.75976537168026,28672,15728640,registered,147/evaluations-or-final/step28672/B
+147,C,5.311926759779453,28672,15728640,registered,147/evaluations-or-final/step28672/C
+147,A,5.725550837814808,29061,15828224,registered,147/evaluations-or-final/step29061/A
+147,B,5.751581385731697,29061,15828224,registered,147/evaluations-or-final/step29061/B
+147,C,5.309792190790176,29061,15828224,registered,147/evaluations-or-final/step29061/C
+147,A,5.709290064871311,29573,15959296,registered,147/evaluations-or-final/step29573/A
+147,B,5.751016065478325,29573,15959296,registered,147/evaluations-or-final/step29573/B
+147,C,5.314047954976559,29573,15959296,registered,147/evaluations-or-final/step29573/C
+147,A,5.728546656668186,30085,16090368,registered,147/evaluations-or-final/step30085/A
+147,B,5.739722922444344,30085,16090368,registered,147/evaluations-or-final/step30085/B
+147,C,5.323132261633873,30085,16090368,registered,147/evaluations-or-final/step30085/C
+147,A,5.707909360527992,31109,16352512,registered,147/evaluations-or-final/step31109/A
+147,B,5.72027961909771,31109,16352512,registered,147/evaluations-or-final/step31109/B
+147,C,5.315490588545799,31109,16352512,registered,147/evaluations-or-final/step31109/C
+147,A,5.69211096316576,31126,16356864,deadline,147/evaluations-or-final/step31126/A
+147,B,5.718190833926201,31126,16356864,deadline,147/evaluations-or-final/step31126/B
+147,C,5.292496718466282,31126,16356864,deadline,147/evaluations-or-final/step31126/C
+153 v2,A,5.692070513963699,31126,16356864,registered,153 v2/evaluations-or-final/step31126/A
+153 v2,B,5.718268930912018,31126,16356864,registered,153 v2/evaluations-or-final/step31126/B
+153 v2,C,5.292541429400444,31126,16356864,registered,153 v2/evaluations-or-final/step31126/C
+153 v2,A,5.685871921479702,31254,16389632,registered,153 v2/evaluations-or-final/step31254/A
+153 v2,B,5.703065291047096,31254,16389632,registered,153 v2/evaluations-or-final/step31254/B
+153 v2,C,5.2921682596206665,31254,16389632,registered,153 v2/evaluations-or-final/step31254/C
+153 v2,A,5.705501399934292,31638,16487936,registered,153 v2/evaluations-or-final/step31638/A
+153 v2,B,5.737389355897903,31638,16487936,registered,153 v2/evaluations-or-final/step31638/B
+153 v2,C,5.31126519292593,31638,16487936,registered,153 v2/evaluations-or-final/step31638/C
+153 v2,A,5.73541134595871,32150,16619008,registered,153 v2/evaluations-or-final/step32150/A
+153 v2,B,5.7260738760232925,32150,16619008,registered,153 v2/evaluations-or-final/step32150/B
+153 v2,C,5.326721504330635,32150,16619008,registered,153 v2/evaluations-or-final/step32150/C
+153 v2,A,5.686572164297104,33174,16881152,registered,153 v2/evaluations-or-final/step33174/A
+153 v2,B,5.695210367441177,33174,16881152,registered,153 v2/evaluations-or-final/step33174/B
+153 v2,C,5.257589414715767,33174,16881152,registered,153 v2/evaluations-or-final/step33174/C
+153 v2,A,5.638865888118744,33686,17012224,registered,153 v2/evaluations-or-final/step33686/A
+153 v2,B,5.686062201857567,33686,17012224,registered,153 v2/evaluations-or-final/step33686/B
+153 v2,C,5.257255978882313,33686,17012224,registered,153 v2/evaluations-or-final/step33686/C
+153 v2,A,5.653164625167847,34198,17143296,registered,153 v2/evaluations-or-final/step34198/A
+153 v2,B,5.670260116457939,34198,17143296,registered,153 v2/evaluations-or-final/step34198/B
+153 v2,C,5.257711812853813,34198,17143296,registered,153 v2/evaluations-or-final/step34198/C
+153 v2,A,5.6576972380280495,34560,17235968,registered,153 v2/evaluations-or-final/step34560/A
+153 v2,B,5.699596956372261,34560,17235968,registered,153 v2/evaluations-or-final/step34560/B
+153 v2,C,5.255382247269154,34560,17235968,registered,153 v2/evaluations-or-final/step34560/C
+153 v2,A,5.669087961316109,34710,17274368,registered,153 v2/evaluations-or-final/step34710/A
+153 v2,B,5.68010838329792,34710,17274368,registered,153 v2/evaluations-or-final/step34710/B
+153 v2,C,5.255300588905811,34710,17274368,registered,153 v2/evaluations-or-final/step34710/C
+153 v2,A,5.628189571201801,35222,17405440,registered,153 v2/evaluations-or-final/step35222/A
+153 v2,B,5.653943404555321,35222,17405440,registered,153 v2/evaluations-or-final/step35222/B
+153 v2,C,5.227138347923756,35222,17405440,registered,153 v2/evaluations-or-final/step35222/C
+153 v2,A,5.60062575340271,35734,17536512,registered,153 v2/evaluations-or-final/step35734/A
+153 v2,B,5.686834126710892,35734,17536512,registered,153 v2/evaluations-or-final/step35734/B
+153 v2,C,5.217819273471832,35734,17536512,registered,153 v2/evaluations-or-final/step35734/C
+153 v2,A,5.59164647012949,36246,17667584,registered,153 v2/evaluations-or-final/step36246/A
+153 v2,B,5.644969671964645,36246,17667584,registered,153 v2/evaluations-or-final/step36246/B
+153 v2,C,5.203428745269775,36246,17667584,registered,153 v2/evaluations-or-final/step36246/C
+153 v2,A,5.575060062110424,37270,17929728,registered,153 v2/evaluations-or-final/step37270/A
+153 v2,B,5.61176572740078,37270,17929728,registered,153 v2/evaluations-or-final/step37270/B
+153 v2,C,5.149767488241196,37270,17929728,registered,153 v2/evaluations-or-final/step37270/C
+155,A,5.573294997215271,37910,18093568,registered,155/evaluations-or-final/step37910/A
+155,B,5.619816690683365,37910,18093568,registered,155/evaluations-or-final/step37910/B
+155,C,5.200392626225948,37910,18093568,registered,155/evaluations-or-final/step37910/C
+155,A,5.548186652362347,38038,18126336,registered,155/evaluations-or-final/step38038/A
+155,B,5.6305073499679565,38038,18126336,registered,155/evaluations-or-final/step38038/B
+155,C,5.157061539590359,38038,18126336,registered,155/evaluations-or-final/step38038/C
+155,A,5.5637485310435295,38422,18224640,registered,155/evaluations-or-final/step38422/A
+155,B,5.586602300405502,38422,18224640,registered,155/evaluations-or-final/step38422/B
+155,C,5.143578730523586,38422,18224640,registered,155/evaluations-or-final/step38422/C
+155,A,5.578469343483448,38934,18355712,registered,155/evaluations-or-final/step38934/A
+155,B,5.600007101893425,38934,18355712,registered,155/evaluations-or-final/step38934/B
+155,C,5.1492335349321365,38934,18355712,registered,155/evaluations-or-final/step38934/C
+155,A,5.521594330668449,39958,18617856,registered,155/evaluations-or-final/step39958/A
+155,B,5.5690207332372665,39958,18617856,registered,155/evaluations-or-final/step39958/B
+155,C,5.1166737377643585,39958,18617856,registered,155/evaluations-or-final/step39958/C
+155,A,5.546002641320229,40470,18748928,registered,155/evaluations-or-final/step40470/A
+155,B,5.580997586250305,40470,18748928,registered,155/evaluations-or-final/step40470/B
+155,C,5.134820580482483,40470,18748928,registered,155/evaluations-or-final/step40470/C
+155,A,5.509575419127941,40982,18880000,registered,155/evaluations-or-final/step40982/A
+155,B,5.579773962497711,40982,18880000,registered,155/evaluations-or-final/step40982/B
+155,C,5.0678577199578285,40982,18880000,registered,155/evaluations-or-final/step40982/C
+155,A,5.481016248464584,41344,18972672,registered,155/evaluations-or-final/step41344/A
+155,B,5.533227354288101,41344,18972672,registered,155/evaluations-or-final/step41344/B
+155,C,5.065620690584183,41344,18972672,registered,155/evaluations-or-final/step41344/C
+155,A,5.503776304423809,41494,19011072,registered,155/evaluations-or-final/step41494/A
+155,B,5.5391912162303925,41494,19011072,registered,155/evaluations-or-final/step41494/B
+155,C,5.084406137466431,41494,19011072,registered,155/evaluations-or-final/step41494/C
+155,A,5.4929835349321365,42006,19142144,registered,155/evaluations-or-final/step42006/A
+155,B,5.533696681261063,42006,19142144,registered,155/evaluations-or-final/step42006/B
+155,C,5.089104920625687,42006,19142144,registered,155/evaluations-or-final/step42006/C
+155,A,5.469083018600941,42518,19273216,registered,155/evaluations-or-final/step42518/A
+155,B,5.5247825384140015,42518,19273216,registered,155/evaluations-or-final/step42518/B
+155,C,5.069324307143688,42518,19273216,registered,155/evaluations-or-final/step42518/C
+155,A,5.481369107961655,43030,19404288,registered,155/evaluations-or-final/step43030/A
+155,B,5.535298436880112,43030,19404288,registered,155/evaluations-or-final/step43030/B
+155,C,5.070254132151604,43030,19404288,registered,155/evaluations-or-final/step43030/C
+155,A,5.49374158680439,44054,19666432,registered,155/evaluations-or-final/step44054/A
+155,B,5.535035029053688,44054,19666432,registered,155/evaluations-or-final/step44054/B
+155,C,5.061673521995544,44054,19666432,registered,155/evaluations-or-final/step44054/C
+155,A,5.412016600370407,46102,20190720,registered,155/evaluations-or-final/step46102/A
+155,B,5.476553022861481,46102,20190720,registered,155/evaluations-or-final/step46102/B
+155,C,5.022003725171089,46102,20190720,registered,155/evaluations-or-final/step46102/C
+155,A,5.430339276790619,48150,20715008,registered,155/evaluations-or-final/step48150/A
+155,B,5.440155550837517,48150,20715008,registered,155/evaluations-or-final/step48150/B
+155,C,4.966214559972286,48150,20715008,registered,155/evaluations-or-final/step48150/C
+155,A,5.388885989785194,50198,21239296,registered,155/evaluations-or-final/step50198/A
+155,B,5.445066899061203,50198,21239296,registered,155/evaluations-or-final/step50198/B
+155,C,4.952868834137917,50198,21239296,registered,155/evaluations-or-final/step50198/C
+155,A,5.321723394095898,54294,22287872,registered,155/evaluations-or-final/step54294/A
+155,B,5.376757830381393,54294,22287872,registered,155/evaluations-or-final/step54294/B
+155,C,4.892987675964832,54294,22287872,registered,155/evaluations-or-final/step54294/C
+155,A,5.293977417051792,58390,23336448,registered,155/evaluations-or-final/step58390/A
+155,B,5.348418474197388,58390,23336448,registered,155/evaluations-or-final/step58390/B
+155,C,4.875549793243408,58390,23336448,registered,155/evaluations-or-final/step58390/C
+155,A,5.25084937363863,62486,24385024,registered,155/evaluations-or-final/step62486/A
+155,B,5.274814620614052,62486,24385024,registered,155/evaluations-or-final/step62486/B
+155,C,4.81745570152998,62486,24385024,registered,155/evaluations-or-final/step62486/C
+155,A,5.210878759622574,66582,25433600,registered,155/evaluations-or-final/step66582/A
+155,B,5.28072589635849,66582,25433600,registered,155/evaluations-or-final/step66582/B
+155,C,4.772596478462219,66582,25433600,registered,155/evaluations-or-final/step66582/C
+155,A,5.18065781891346,70678,26482176,registered,155/evaluations-or-final/step70678/A
+155,B,5.242838367819786,70678,26482176,registered,155/evaluations-or-final/step70678/B
+155,C,4.755565091967583,70678,26482176,registered,155/evaluations-or-final/step70678/C
+155,A,5.122928220778704,78870,28579328,registered,155/evaluations-or-final/step78870/A
+155,B,5.152130424976349,78870,28579328,registered,155/evaluations-or-final/step78870/B
+155,C,4.645769149065018,78870,28579328,registered,155/evaluations-or-final/step78870/C
+155,A,5.109495963901281,80260,28935168,deadline,155/evaluations-or-final/step80260/A
+155,B,5.150924265384674,80260,28935168,deadline,155/evaluations-or-final/step80260/B
+155,C,4.665558807551861,80260,28935168,deadline,155/evaluations-or-final/step80260/C
