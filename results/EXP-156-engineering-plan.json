@@ -31,7 +31,7 @@
     "normalization": "acc and acc_norm (character count of unprefixed answer text); Wino/MMLU acc primary",
     "code": {
       "extent/quality_benchmark_156.py": "4ad9d53660d0b7b57a7d92b019810f2aa3610e68c7c5f5a2fe8f626fff2db418",
-      "scripts/m3q_quality_benchmark_156.py": "e38a6374af3899c6f4d8e4c1cfc6b20e1fabf31c2654aa567794a15341f63040"
+      "scripts/m3q_quality_benchmark_156.py": "adac80f01e09b2b3e20037a88d41dd0e7b7eddd50970ee1a5f3835b28757596d"
     },
     "limitations": "single checkpoint; zero-shot diagnostic, not official 5-shot MMLU or generation pass@1; fresh means unused in our adaptation/evaluation, not absent from Qwen pretraining"
   },
@@ -39,5 +39,6 @@
   "planned_generations_per_model": 36,
   "session_hours": 11.5,
   "reserve_minutes": 30,
-  "local_validation": "7 CPU tests; actual all MC Parquet/format/tokenization checks; no physical full1.7B T4 evaluation"
+  "local_validation": "9 CPU tests pass45.17s; actual tiny Transformers/JAX FP32 bridge + BF16 diagnostic and wrong-weight negative control; physical full1.7B T4 repair rerun pending",
+  "startup_repair": "strict FP32 <=.003 formula gate; BF16 cross-backend delta recorded; code-only completely empty failed preflight may be archived and restarted"
 }

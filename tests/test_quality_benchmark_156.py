@@ -76,6 +76,60 @@ def test_original_teacher_matches_independent_full_flax_forward():
     assert any(v.shape==base['embed_tokens']['embedding'].shape for v in traced.in_avals)
 
 
+def test_actual_transformers_fp32_bridge_and_bf16_diagnostic(tmp_path,monkeypatch):
+    import torch
+    from transformers import Qwen3Config,Qwen3ForCausalLM as TorchQwen
+    from flax import traverse_util
+    from extent.weight_mapping import teacher_qwen_mappings
+    from scripts import m3q_quality_benchmark_156 as runner
+    p,t,_=mature_source();tc=replace(p.tc,tie_word_embeddings=True)
+    base=Qwen3ForCausalLM(tc).init(jax.random.key(156),t)['params']
+    cfg=Qwen3Config(vocab_size=tc.vocab_size,hidden_size=tc.hidden_size,
+        intermediate_size=tc.intermediate_size,num_hidden_layers=tc.num_layers,
+        num_attention_heads=tc.num_attention_heads,num_key_value_heads=tc.num_key_value_heads,
+        head_dim=tc.head_dim,rms_norm_eps=tc.rms_norm_eps,rope_theta=tc.rope_theta,
+        max_position_embeddings=tc.max_position_embeddings,tie_word_embeddings=True)
+    cfg._attn_implementation='eager';model=TorchQwen(cfg).eval()
+    flat=traverse_util.flatten_dict(base);state=model.state_dict()
+    for entry in teacher_qwen_mappings(tc):
+        value=np.asarray(flat[tuple(entry.target.split('/'))].astype(jnp.float32))
+        if entry.transform=='transpose':value=value.T
+        state[entry.source]=torch.from_numpy(value.copy())
+    state['lm_head.weight']=state['model.embed_tokens.weight']
+    model.load_state_dict(state,strict=True);folder=tmp_path/'patient/qwen';folder.mkdir(parents=True)
+    model.save_pretrained(folder)
+    engine=bench.InferenceEngine(p.cfg,tc,base,{},0,{},'teacher')
+    result=runner.teacher_reference_check(engine,Tokenizer(),tmp_path)
+    assert result['passed'] and result['tolerance']==.003
+    assert len(result['rows'])==5 and all(r['passed'] for r in result['rows'])
+    assert result['benchmark_dtype']=='bfloat16'
+    # Reproduce the class of observed startup failure: a BF16 backend delta
+    # must be visible, while the independent FP32 formula gate remains strict.
+    original=engine.token_nll
+    monkeypatch.setattr(engine,'token_nll',lambda tokens:original(tokens)+.2)
+    shifted=runner.teacher_reference_check(engine,Tokenizer(),tmp_path)
+    assert shifted['passed'] and not shifted['bf16_backend_diagnostic']['used_as_equivalence_gate']
+    assert max(r['max_abs_token_nll_error'] for r in shifted['bf16_backend_diagnostic']['rows'])>.1
+    # A real mapping/formula error in the original checkpoint is still rejected.
+    with torch.no_grad():model.model.norm.weight.mul_(2)
+    model.save_pretrained(folder)
+    invalid=runner.teacher_reference_check(engine,Tokenizer(),tmp_path)
+    assert not invalid['passed']
+    (tmp_path/'teacher-reference-test.json').write_text(json.dumps(dict(
+        reference=result,bf16_drift_injected=shifted,wrong_hf_norm=invalid)),encoding='utf-8')
+
+
+def test_only_empty_failed_preflight_can_cross_code_repair():
+    from scripts import m3q_quality_benchmark_156 as runner
+    c=bench.contract();old=dict(c,code={'old':'hash'})
+    prior=dict(status='failed',contract=old,workers={'teacher':dict(status='failed',items={},nll={},generations={})})
+    assert runner.empty_failed_preflight(prior,c)
+    prior['workers']['teacher']['items']={'piqa:0':{}}
+    assert not runner.empty_failed_preflight(prior,c)
+    prior['workers']['teacher']['items']={};prior['contract']=dict(old,source_step=0)
+    assert not runner.empty_failed_preflight(prior,c)
+
+
 def test_paired_statistics_use_common_items_not_different_endpoints():
     a={};b={}
     for i in range(5):
@@ -156,6 +210,13 @@ def test_parent_dispatch_two_gpus_one_report_no_remote_training(tmp_path,monkeyp
     manifest=dict(counts={k:1 for k in bench.TASKS})
     monkeypatch.setattr(runner,'prepare_data',lambda *a:([],{},manifest))
     commands=[];c=bench.contract()
+    old=dict(c,code={'legacy':'preflight-v1'})
+    failed_workers={role:dict(contract=old,role=role,status=status,items={},nll={},generations={})
+                    for role,status in (('teacher','failed'),('hybrid','loading'))}
+    failed=dict(contract=old,status='failed',workers=failed_workers)
+    (tmp_path/'extent-m3q-quality-156.json').write_text(json.dumps(failed))
+    for role,row in failed_workers.items():
+        (tmp_path/f'extent-m3q-quality-156-{role}.json').write_text(json.dumps(row))
     class Child:
         returncode=0
         def __init__(self,cmd,**kw):
@@ -169,5 +230,7 @@ def test_parent_dispatch_two_gpus_one_report_no_remote_training(tmp_path,monkeyp
     monkeypatch.setattr(runner.subprocess,'Popen',Child)
     r=runner.main(['--max-wall-hours','11.5','--output-dir',str(tmp_path),'--cache-dir',str(tmp_path/'cache'),'--no-telegram'])
     assert r['status']=='completed' and r['paired']['piqa']['n_common']==1
+    archive=Path(r['retired_failed_preflight']['path'])
+    assert json.loads(archive.read_text())==failed
     assert [(role,gpu) for role,gpu,cmd in commands]==[('teacher','0'),('hybrid','1')]
     assert uploads and (tmp_path/'extent-m3q-quality-156.json').exists()

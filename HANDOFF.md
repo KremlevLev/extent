@@ -1,3 +1,23 @@
+# 24 October2026 — EXP156 first startup failure and reference-check repair
+
+User supplied Kaggle stdout; actual HF latest aggregate archived byte-preserved
+as results/EXP-156-startup-failure-1.json. No items/NLL/generations. Teacher
+fails CPU Transformers BF16 vs GPU JAX BF16 .03 gate: EN max .1038608551,
+RU .0289543867; hybrid peer stopped while loading. Not a benchmark quality
+result or demonstrated numerical cause. Versions/source GPU preflight passed.
+Repaired runner: short five-probe FP32 formula/mapping comparison <=.003,
+temporary FP32 JAX parameters freed before sourceBF16 benchmark; CPU/GPU BF16
+per-token discrepancy recorded separately, no equivalence claim. Source hybrid
+replay unchanged. Original worker traceback/log tails now print to Kaggle stdout.
+Only code-only EMPTY failed preflight can be archived/restarted; any scored
+items/NLL/generations or changed source/data rejects cross-contract resume.
+Actual tiny Transformers/JAX test includes injected BF16 diagnostic drift and
+deliberately wrong HF weights as negative control. Full1.7B/T4 rerun still needed.
+Existing T4 notebook and launch cell unchanged; git pull gets repair.
+Repair tests9pass45.17s; final reference+parent archive tests2pass22.87s.
+Tiny CPU FP32 max4.76837e-7; wrong HF norm .8924978 rejected. Detailed audit
+results/EXP-156-reference-repair-audit.json. Physical1.7B T4 fix rerun pending.
+
 # 24 October2026 — EXP156 PREPARED: frozen full-quality assessment on2T4
 
 User authorizes substantial benchmark,12hT4 session. New

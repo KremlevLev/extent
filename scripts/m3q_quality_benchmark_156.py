@@ -18,6 +18,16 @@ PREFIX='experiments/exp156-frozen-quality-v1'
 STEM='extent-m3q-quality-156'
 
 
+def empty_failed_preflight(prior,c):
+    """Only a failed, completely unscored run may cross a code-only repair."""
+    if prior.get('status')!='failed' or not prior.get('workers'):return False
+    old={k:v for k,v in prior.get('contract',{}).items() if k!='code'}
+    new={k:v for k,v in c.items() if k!='code'}
+    if old!=new:return False
+    return all(not row.get('items') and not row.get('nll') and not row.get('generations')
+               and row.get('status') in ('failed','loading') for row in prior['workers'].values())
+
+
 def readout(result):
     lines=['# EXP156 frozen capability assessment','',
            '| Task | Common questions / full set | Qwen % | Hybrid % | Hybrid minus Qwen, pp |',
@@ -32,27 +42,63 @@ def readout(result):
 
 
 def teacher_reference_check(engine,tokenizer,cache):
-    """Actual original checkpoint vs Transformers on CPU; no second GPU allocation."""
+    """Validate the formula in FP32; record BF16 backend drift separately.
+
+    A CPU BF16 vs GPU BF16 comparison changes both rounding/fusion and backend.
+    It is not a tight implementation-equivalence gate. The actual benchmark
+    remains source BF16. No tolerance is relaxed for hybrid checkpoint replay.
+    """
+    import gc
+    from dataclasses import replace
+    import jax
+    import jax.numpy as jnp
     import torch
     import transformers
     from transformers import AutoModelForCausalLM
+    from extent.quality_benchmark_156 import InferenceEngine
     torch.set_num_threads(2)
-    model=AutoModelForCausalLM.from_pretrained(Path(cache)/'patient/qwen',torch_dtype=torch.bfloat16,
+    model=AutoModelForCausalLM.from_pretrained(Path(cache)/'patient/qwen',torch_dtype=torch.float32,
         attn_implementation='eager',trust_remote_code=False).cpu().eval()
-    rows=[]
-    for text in ('The capital of France is Paris.','Вода замерзает при низкой температуре.'):
-        ids=tokenizer.encode(text,add_special_tokens=False)[:16]
+    texts=('The capital of France is Paris.','Вода замерзает при низкой температуре.',
+           'Question: Which object conducts electricity?\nAnswer: copper',
+           '2 + 3 = 5. Multiplying by two gives 10.',
+           'def add(a, b):\n    return a + b')
+    probes=[(text,tokenizer.encode(text,add_special_tokens=False)[:32]) for text in texts]
+    rows=[];bf16=[];bridge=None
+    def reference(ids):
         tokens=torch.tensor([ids],dtype=torch.long)
         with torch.inference_mode():
             logits=model(tokens,use_cache=False).logits[:,:-1].float()
-            reference=-torch.log_softmax(logits,-1).gather(-1,tokens[:,1:,None])[...,0].cpu().numpy()
-        actual=engine.token_nll(np.asarray([ids],np.int32));error=float(np.max(np.abs(actual-reference)))
-        rows.append(dict(text=text,tokens=len(ids),max_abs_token_nll_error=error,passed=bool(np.isfinite(error) and error<=.03)))
-    del model
-    return dict(passed=all(r['passed'] for r in rows),tolerance=.03,rows=rows,
+            return -torch.log_softmax(logits,-1).gather(-1,tokens[:,1:,None])[...,0].cpu().numpy()
+    try:
+        # Short probes only; the temporary FP32 parameters are freed before any
+        # panel or task evaluation. No full-size FP32 training state exists.
+        base=jax.tree.map(lambda value:value.astype(jnp.float32),engine.base)
+        bridge=InferenceEngine(replace(engine.cfg,param_dtype='float32',compute_dtype='float32'),
+            replace(engine.tc,param_dtype='float32',compute_dtype='float32'),base,{},0,{},'teacher',engine.check)
+        del base
+        for text,ids in probes:
+            engine.check();expected=reference(ids);actual=bridge.token_nll(np.asarray([ids],np.int32))
+            error=float(np.max(np.abs(actual-expected)))
+            rows.append(dict(text=text,tokens=len(ids),max_abs_token_nll_error=error,
+                jax_token_nll=actual[0].tolist(),transformers_token_nll=expected[0].tolist(),
+                passed=bool(np.isfinite(error) and error<=.003)))
+        del bridge;bridge=None;gc.collect()
+        model.to(dtype=torch.bfloat16)
+        for text,ids in probes:
+            engine.check();expected=reference(ids);actual=engine.token_nll(np.asarray([ids],np.int32))
+            error=float(np.max(np.abs(actual-expected)))
+            if not np.isfinite(error):raise FloatingPointError('nonfinite BF16 reference probe')
+            bf16.append(dict(text=text,tokens=len(ids),max_abs_token_nll_error=error,
+                jax_token_nll=actual[0].tolist(),transformers_token_nll=expected[0].tolist()))
+    finally:
+        del bridge,model;gc.collect()
+    return dict(passed=all(r['passed'] for r in rows),tolerance=.003,rows=rows,
+                bf16_backend_diagnostic=dict(rows=bf16,used_as_equivalence_gate=False,
+                    scope='CPU Transformers BF16 vs GPU JAX BF16; rounding/fusion plus backend differ; not proven to be rounding alone'),
                 torch_version=str(torch.__version__),transformers_version=transformers.__version__,
-                dtype='bfloat16',attention_implementation='eager',
-                scope='actual BF16 original checkpoint, CPU Transformers vs GPU JAX; short prefixes, not all benchmark prompts')
+                gate_dtype='float32',benchmark_dtype='bfloat16',attention_implementation='eager',
+                scope='FP32 formula/mapping check on actual weights, CPU Transformers vs GPU JAX; BF16 discrepancy retained, not silently accepted as identity')
 
 
 def worker(args):
@@ -101,7 +147,7 @@ def worker(args):
         r['loading_seconds']=time.monotonic()-started
         if role=='teacher':
             r['transformers_reference']=teacher_reference_check(engine,tokenizer,cache);save(True)
-            if not r['transformers_reference']['passed']:raise ValueError('original-Qwen Transformers reference differs; refuse benchmark')
+            if not r['transformers_reference']['passed']:raise ValueError('original-Qwen FP32 formula reference differs; refuse benchmark')
         questions=json.loads((cache/'benchmark-data/questions.json').read_text())
         manifest=json.loads((cache/'benchmark-data/data-manifest.json').read_text())
         if digest_json(questions)!=manifest['questions_sha256']:raise ValueError('question cache SHA differs')
@@ -207,12 +253,35 @@ def main(argv=None):
     previous=output/f'{STEM}.json'
     if not previous.exists():restore_artifact(previous,PREFIX+'/latest.json',hub)
     prior=json.loads(previous.read_text()) if previous.exists() else {}
-    if prior and prior['contract']!=c:raise ValueError('benchmark contract differs; do not mix runs')
+    retired_preflight=None
+    if prior and prior['contract']!=c:
+        if not empty_failed_preflight(prior,c):raise ValueError('benchmark contract differs; do not mix runs')
+        # This known startup failure scored zero questions and no NLL panels.
+        # Preserve it, then start a clean repaired evaluation of the SAME weights.
+        for role in ('teacher','hybrid'):
+            local=output/f'{STEM}-{role}.json';journal=output/f'{STEM}-{role}-items.jsonl'
+            if journal.exists() and journal.stat().st_size:raise ValueError('nonempty old item journal; explicit separate benchmark namespace required')
+            if local.exists():
+                row=json.loads(local.read_text())
+                if row.get('contract')!=prior['contract'] or any(row.get(k) for k in ('items','nll','generations')):
+                    raise ValueError('local scored worker differs; refuse preflight-only recovery')
+        archive=output/f'{STEM}-failed-preflight-{digest_json(prior["contract"])[:12]}.json'
+        write_json_atomic(archive,prior)
+        retired_preflight=dict(path=str(archive),old_contract=prior['contract'],
+            errors={role:row.get('error') for role,row in prior['workers'].items()},
+            reason='code-only startup repair; zero scored items, panels or generations')
+        for role in ('teacher','hybrid'):
+            local=output/f'{STEM}-{role}.json'
+            if local.exists():local.unlink()
+        print('EXP156: archived empty failed preflight; restarting repaired reference check',flush=True)
+        prior={}
     for role,r in prior.get('workers',{}).items():write_json_atomic(output/f'{STEM}-{role}.json',r)
     def check():
         if time.time()>=work_deadline:raise TimeoutError('registered benchmark preparation deadline')
     children=[];handles=[];uploaded=0;sync_error=None;last_sync=0.
     result=dict(contract=c,workers={},status='preparing',sessions=prior.get('sessions',[]),notifications=[])
+    if retired_preflight:result['retired_failed_preflight']=retired_preflight
+    elif prior.get('retired_failed_preflight'):result['retired_failed_preflight']=prior['retired_failed_preflight']
     invocation=dict(started_unix=started,max_wall_hours=args.max_wall_hours,save_reserve_minutes=args.save_reserve_minutes)
     result['sessions'].append(invocation)
     notice.emit('started','frozen CURRENT80260 vs original Qwen; two GPUs; no training')
@@ -310,6 +379,13 @@ def main(argv=None):
         # Publish final status/notification receipt once more, still within cap.
         sync(True)
         print(result.get('summary_markdown','No paired benchmark items yet.'),flush=True)
+        if result['status']=='failed':
+            # Kaggle's notebook log must show the root cause, not just a generic
+            # parent RuntimeError while the real traceback sits only in JSON.
+            for role,row in result.get('workers',{}).items():
+                if row.get('error'):print(f'EXP156 {role} original error:\n'+row['error'].get('traceback',str(row['error'])),flush=True)
+            for role,tail in result.get('worker_log_tails',{}).items():
+                if tail:print(f'EXP156 {role} log tail:\n'+tail,flush=True)
     if result['status']=='failed':raise RuntimeError('EXP156 evaluation failed; aggregate includes original worker traceback')
     return result
 
