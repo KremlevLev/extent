@@ -1,7 +1,7 @@
 {
   "date": "2026-10-24",
-  "scope": "Actual tiny weights, local Windows CPU Transformers/JAX, NOT physical T4/full1.7B.",
-  "tests": "9 passed45.17s; final bridge and parent recovery tests2 passed22.87s",
+  "scope": "Actual tiny weights, local Windows CPU Transformers/JAX; explicit CPU-only bridge. NOT physical T4/full1.7B.",
+  "tests": "9 passed28.94s",
   "reference": {
     "passed": true,
     "tolerance": 0.003,
@@ -723,9 +723,10 @@
     "torch_version": "2.14.1+cpu",
     "transformers_version": "4.51.0",
     "gate_dtype": "float32",
+    "gate_platform": "cpu",
     "benchmark_dtype": "bfloat16",
     "attention_implementation": "eager",
-    "scope": "FP32 formula/mapping check on actual weights, CPU Transformers vs GPU JAX; BF16 discrepancy retained, not silently accepted as identity"
+    "scope": "FP32 formula/mapping check on actual weights, CPU Transformers vs CPU JAX; actual GPU BF16 discrepancy retained separately, not silently accepted as identity"
   },
   "bf16_drift_injected": {
     "passed": true,
@@ -1448,9 +1449,10 @@
     "torch_version": "2.14.1+cpu",
     "transformers_version": "4.51.0",
     "gate_dtype": "float32",
+    "gate_platform": "cpu",
     "benchmark_dtype": "bfloat16",
     "attention_implementation": "eager",
-    "scope": "FP32 formula/mapping check on actual weights, CPU Transformers vs GPU JAX; BF16 discrepancy retained, not silently accepted as identity"
+    "scope": "FP32 formula/mapping check on actual weights, CPU Transformers vs CPU JAX; actual GPU BF16 discrepancy retained separately, not silently accepted as identity"
   },
   "wrong_hf_norm": {
     "passed": false,
@@ -2173,8 +2175,9 @@
     "torch_version": "2.14.1+cpu",
     "transformers_version": "4.51.0",
     "gate_dtype": "float32",
+    "gate_platform": "cpu",
     "benchmark_dtype": "bfloat16",
     "attention_implementation": "eager",
-    "scope": "FP32 formula/mapping check on actual weights, CPU Transformers vs GPU JAX; BF16 discrepancy retained, not silently accepted as identity"
+    "scope": "FP32 formula/mapping check on actual weights, CPU Transformers vs CPU JAX; actual GPU BF16 discrepancy retained separately, not silently accepted as identity"
   }
 }

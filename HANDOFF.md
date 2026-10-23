@@ -1,3 +1,17 @@
+# 24 October2026 — EXP156 second startup: FP32 bridge GPU OOM, moved to CPU
+
+Raw HF aggregate results/EXP-156-startup-failure-2.json: teacher temporary
+FP32 bridge fails vocabulary-head compile/autotune (RESOURCE_EXHAUSTED9.27MiB,
+wrapped NOT_FOUND all configs failed). No scored MC/NLL/generations; hybrid
+loading peer stopped. Previous GPU duplicate was an engineering memory error.
+Move reference bridge entirely CPU: device_put(cpu) BEFORE .astype(float32),
+explicit CPU default-device context for parameters+forward+head, check all
+temporary parameter devices. .003 FP32 formula gate unchanged; actual BF16
+GPU benchmark/source replay unchanged. Return gate_platform=cpu, scope explicit:
+CPU formula check is not FP32 GPU equivalence. Existing empty failed preflight
+archive/restart handles second report without scored-result migration.
+Original training math/source pins unchanged. Physical1.7B T4 rerun pending.
+
 # 24 October2026 — EXP156 first startup failure and reference-check repair
 
 User supplied Kaggle stdout; actual HF latest aggregate archived byte-preserved

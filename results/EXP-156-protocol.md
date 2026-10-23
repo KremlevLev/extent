@@ -31,9 +31,12 @@ CUDA_VISIBLE_DEVICES; the parent prepares shared data/model downloads once.
   on every invocation, including own-result resumes.
 - Original (repaired after first startup failure): five short English/Russian,
   choice/math/code prefixes of the actual Qwen checkpoint compared with CPU
-  Transformers4.51.0/FP32 eager attention against a temporary FP32 GPU JAX
-  engine. Per-token NLL discrepancy must be<=.003. The temporary FP32 JAX
-  parameters are freed before evaluation; benchmark teacher stays BF16.
+  Transformers4.51.0/FP32 eager attention against a temporary FP32 CPU JAX
+  engine. Per-token NLL discrepancy must be<=.003. Parameters transfer to CPU
+  BEFORE dtype conversion, and a CPU default-device context covers both the
+  forward and vocabulary head. Temporary parameters are freed before evaluation;
+  benchmark teacher stays BF16 on GPU. This is a CPU formula/mapping gate,
+  not FP32 GPU implementation equivalence.
   CPU Transformers BF16 versus GPU JAX BF16 is also measured and retained
   per token, but is not a tight formula-equivalence gate across backends.
   It is not claimed bitwise-equivalent to official Transformers BF16 scores.
@@ -201,3 +204,19 @@ tests rerun after the archive-path assertion, two pass22.87s. Actual tiny FP32
 maximum per-token discrepancy4.76837e-7; deliberately doubled HF final norm
 gives .8924978 and is rejected. Full diagnostic rows in
 `EXP-156-reference-repair-audit.json`. Neither number is a full1.7B GPU result.
+
+## Second startup: FP32 GPU duplicate exhausts memory
+
+`EXP-156-startup-failure-2.json` preserves the received HF report. Teacher fails
+in the temporary FP32 bridge's vocabulary-head compilation/autotuning:
+`RESOURCE_EXHAUSTED`, allocation9.27MiB, surfaced as `NOT_FOUND: All configs
+failed during profiling`. No scored items, NLL panels or generations; hybrid
+peer stopped loading. This is a memory failure, not a failed FP32 parity value.
+
+The second repair places that entire temporary bridge on CPU as specified
+above. GPU-to-CPU transfer precedes FP32 casting; all parameter devices are
+checked, and the forward/head run inside the explicit CPU device context.
+The same strict .003 formula gate and BF16 benchmark math remain. BF16 actual
+GPU vs CPU Transformers diagnostics are still measured on the original engine.
+The empty failed preflight recovery also covers this startup. No claim is made
+that physical1.7B T4 memory/quality has been validated locally.

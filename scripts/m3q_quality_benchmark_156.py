@@ -71,18 +71,24 @@ def teacher_reference_check(engine,tokenizer,cache):
             logits=model(tokens,use_cache=False).logits[:,:-1].float()
             return -torch.log_softmax(logits,-1).gather(-1,tokens[:,1:,None])[...,0].cpu().numpy()
     try:
-        # Short probes only; the temporary FP32 parameters are freed before any
-        # panel or task evaluation. No full-size FP32 training state exists.
-        base=jax.tree.map(lambda value:value.astype(jnp.float32),engine.base)
-        bridge=InferenceEngine(replace(engine.cfg,param_dtype='float32',compute_dtype='float32'),
-            replace(engine.tc,param_dtype='float32',compute_dtype='float32'),base,{},0,{},'teacher',engine.check)
-        del base
-        for text,ids in probes:
-            engine.check();expected=reference(ids);actual=bridge.token_nll(np.asarray([ids],np.int32))
-            error=float(np.max(np.abs(actual-expected)))
-            rows.append(dict(text=text,tokens=len(ids),max_abs_token_nll_error=error,
-                jax_token_nll=actual[0].tolist(),transformers_token_nll=expected[0].tolist(),
-                passed=bool(np.isfinite(error) and error<=.003)))
+        # Explicitly transfer BEFORE converting dtype. Casting the whole model
+        # on its original GPU duplicates the BF16 model in FP32 and exhausted
+        # T4 memory during the second startup. All bridge arrays, constants,
+        # inputs and compiled executables must stay on CPU.
+        cpu=jax.devices('cpu')[0]
+        with jax.default_device(cpu):
+            base=jax.tree.map(lambda value:jax.device_put(value,cpu).astype(jnp.float32),engine.base)
+            if any(d.platform!='cpu' for value in jax.tree.leaves(base) for d in value.devices()):
+                raise ValueError('FP32 reference bridge must be CPU-only')
+            bridge=InferenceEngine(replace(engine.cfg,param_dtype='float32',compute_dtype='float32'),
+                replace(engine.tc,param_dtype='float32',compute_dtype='float32'),base,{},0,{},'teacher',engine.check)
+            del base
+            for text,ids in probes:
+                engine.check();expected=reference(ids);actual=bridge.token_nll(np.asarray([ids],np.int32))
+                error=float(np.max(np.abs(actual-expected)))
+                rows.append(dict(text=text,tokens=len(ids),max_abs_token_nll_error=error,
+                    jax_token_nll=actual[0].tolist(),transformers_token_nll=expected[0].tolist(),
+                    passed=bool(np.isfinite(error) and error<=.003)))
         del bridge;bridge=None;gc.collect()
         model.to(dtype=torch.bfloat16)
         for text,ids in probes:
@@ -97,8 +103,8 @@ def teacher_reference_check(engine,tokenizer,cache):
                 bf16_backend_diagnostic=dict(rows=bf16,used_as_equivalence_gate=False,
                     scope='CPU Transformers BF16 vs GPU JAX BF16; rounding/fusion plus backend differ; not proven to be rounding alone'),
                 torch_version=str(torch.__version__),transformers_version=transformers.__version__,
-                gate_dtype='float32',benchmark_dtype='bfloat16',attention_implementation='eager',
-                scope='FP32 formula/mapping check on actual weights, CPU Transformers vs GPU JAX; BF16 discrepancy retained, not silently accepted as identity')
+                gate_dtype='float32',gate_platform='cpu',benchmark_dtype='bfloat16',attention_implementation='eager',
+                scope='FP32 formula/mapping check on actual weights, CPU Transformers vs CPU JAX; actual GPU BF16 discrepancy retained separately, not silently accepted as identity')
 
 
 def worker(args):

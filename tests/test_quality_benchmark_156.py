@@ -102,7 +102,7 @@ def test_actual_transformers_fp32_bridge_and_bf16_diagnostic(tmp_path,monkeypatc
     result=runner.teacher_reference_check(engine,Tokenizer(),tmp_path)
     assert result['passed'] and result['tolerance']==.003
     assert len(result['rows'])==5 and all(r['passed'] for r in result['rows'])
-    assert result['benchmark_dtype']=='bfloat16'
+    assert result['benchmark_dtype']=='bfloat16' and result['gate_platform']=='cpu'
     # Reproduce the class of observed startup failure: a BF16 backend delta
     # must be visible, while the independent FP32 formula gate remains strict.
     original=engine.token_nll
