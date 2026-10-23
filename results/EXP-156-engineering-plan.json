@@ -1,0 +1,43 @@
+{
+  "prepared": "2026-10-24",
+  "contract": {
+    "protocol": "exp156-frozen-quality-v1",
+    "source_step": 80260,
+    "source_subset": "CURRENT parameters only",
+    "source_pin_sha": "595e89d814c4663cca5e3845f73c4fb046fdbbba2d4957074a01ee5a22811e8e",
+    "data_pin_sha": "efb15fb493416c1e5dce2092ccb042013da947ba773b313c00d6adbe64247c38",
+    "tasks": [
+      "arc_easy",
+      "arc_challenge",
+      "piqa",
+      "winogrande",
+      "hellaswag",
+      "mmlu"
+    ],
+    "fewshot": 0,
+    "seed": 156123,
+    "choice_batch": 2,
+    "max_context": 2048,
+    "primary_metric": {
+      "arc_easy": "acc_norm",
+      "arc_challenge": "acc_norm",
+      "piqa": "acc_norm",
+      "winogrande": "acc",
+      "hellaswag": "acc_norm",
+      "mmlu": "acc"
+    },
+    "precision": "source BF16 weights/activations, FP32 correction arithmetic and log-softmax; no FP16 conversion",
+    "selection": "snapshot fixed before benchmarks; no task result selects weights",
+    "normalization": "acc and acc_norm (character count of unprefixed answer text); Wino/MMLU acc primary",
+    "code": {
+      "extent/quality_benchmark_156.py": "4ad9d53660d0b7b57a7d92b019810f2aa3610e68c7c5f5a2fe8f626fff2db418",
+      "scripts/m3q_quality_benchmark_156.py": "e38a6374af3899c6f4d8e4c1cfc6b20e1fabf31c2654aa567794a15341f63040"
+    },
+    "limitations": "single checkpoint; zero-shot diagnostic, not official 5-shot MMLU or generation pass@1; fresh means unused in our adaptation/evaluation, not absent from Qwen pretraining"
+  },
+  "planned_questions_per_model": 30737,
+  "planned_generations_per_model": 36,
+  "session_hours": 11.5,
+  "reserve_minutes": 30,
+  "local_validation": "7 CPU tests; actual all MC Parquet/format/tokenization checks; no physical full1.7B T4 evaluation"
+}

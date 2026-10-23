@@ -1,0 +1,42 @@
+{
+  "tokenizer_revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+  "seconds": 69.625,
+  "tasks": {
+    "arc_easy": {
+      "questions": 2376,
+      "max_tokens": 167,
+      "over2048_ids": [],
+      "boundary_errors": []
+    },
+    "arc_challenge": {
+      "questions": 1172,
+      "max_tokens": 178,
+      "over2048_ids": [],
+      "boundary_errors": []
+    },
+    "piqa": {
+      "questions": 1838,
+      "max_tokens": 244,
+      "over2048_ids": [],
+      "boundary_errors": []
+    },
+    "winogrande": {
+      "questions": 1267,
+      "max_tokens": 37,
+      "over2048_ids": [],
+      "boundary_errors": []
+    },
+    "hellaswag": {
+      "questions": 10042,
+      "max_tokens": 148,
+      "over2048_ids": [],
+      "boundary_errors": []
+    },
+    "mmlu": {
+      "questions": 14042,
+      "max_tokens": 1011,
+      "over2048_ids": [],
+      "boundary_errors": []
+    }
+  }
+}

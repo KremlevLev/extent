@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-24",
+  "scope": "Actual six pinned MC Parquet files loaded and all documents formatted; fresh-language files metadata only",
+  "datasets": {
+    "arc_easy": {
+      "count": 2376,
+      "raw_sha256": "4160597d618ae851c7eb04e281574f3f654776216ac6b6641588d64527b47177",
+      "first_question_hash": "4f737ba0dfa36e892d87207f691660bd002d925e24daa20934808c6bcfae09bd",
+      "subjects": null
+    },
+    "arc_challenge": {
+      "count": 1172,
+      "raw_sha256": "62f03257e737aed263f55c6abf87c7bb0028a44a6bdd2a26eb1279eb42c1d1e9",
+      "first_question_hash": "30a7286ef60833db811111c03041f5b87ad2e7bdd0806d45e619fe37b1900b96",
+      "subjects": null
+    },
+    "piqa": {
+      "count": 1838,
+      "raw_sha256": "2b17ee1215b1ceb2ddabf4c90a05c5a8b833bef9d207960f57d111c43a2080f3",
+      "first_question_hash": "eb2529c3ce1c49ecf3f812f4f9f9dda873d711de889ce9cd4e265d5ff1f3e531",
+      "subjects": null
+    },
+    "winogrande": {
+      "count": 1267,
+      "raw_sha256": "f9d914d1818c0aba98cabdf8af2bc4bd943c462b9c5e7062647e05c2ce3315d1",
+      "first_question_hash": "a25ee519d8f6337a432e046aa4c4f5f1c8ef65198e28ca136295ecdcee5c30f5",
+      "subjects": null
+    },
+    "hellaswag": {
+      "count": 10042,
+      "raw_sha256": "899813071e1e95efafec90f856e1987d2150fa4d020fc005df6962c259f660cd",
+      "first_question_hash": "ce18c7d4d0dc5ea6fa4c7368815bd98e04e42a8879a822d3226eb72740adf460",
+      "subjects": null
+    },
+    "mmlu": {
+      "count": 14042,
+      "raw_sha256": "74a41822ce7d3def56e1682f958469c04642a5336a5ce912fa375fdb90fb25d7",
+      "first_question_hash": "497b443a3fd59b0cd058dd678b876b24786f4d28dc04a88af0a0448aff0f80f2",
+      "subjects": 57
+    },
+    "english_stories": {
+      "metadata_only": true,
+      "bytes": 9989127
+    },
+    "russian_wikipedia": {
+      "metadata_only": true,
+      "bytes": 581024230
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "source_step": 80260,
+  "revision": "74cd4878817a330e1ae8399acbafe5e76b40a4c5",
+  "manifest_sha256": "c8769bb2db8168c278cd7c5aaa5ff0ec90a5d7cd005f094434ca69f42e68e367",
+  "parameter_elements": 57200640,
+  "inference_chunk_bytes": 228830208,
+  "inference_chunks": 216,
+  "source_code_hashes_verified": true,
+  "scope": "Pinned manifest/parameter-subset metadata and source numerical-code hashes checked. Actual source156 parameter payload not downloaded locally; runtime SHA restore and160-window replay mandatory."
+}

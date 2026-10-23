@@ -2240,3 +2240,23 @@ Artifacts: results/EXP-155-analysis.md, EXP-155-analysis.json,
 EXP-155-session-1.json, EXP-155-remote-audit.json, EXP-155-trajectory.png.
 Single preparation seed/reused validation. No teacher recovery, fresh-test,
 fullpipeline efficiency or optimizedinference claim.
+
+
+## 2026-10-24 — EXP-156 capability assessment PREPARED, not measured
+
+TARGET: one12h2T4 evaluation-only session, originalQwen3-1.7B-Base versus
+frozenEXP155CURRENT80260/R256; 30737zero-shot questions/model across
+ARC-Easy/Challenge,PIQA,WinoGrande,HellaSwag,MMLU57subjects. Fullquestion
+capability results are NOT yet measured. Also freshEnglishTinyStories and
+RussianWikiNLL/tailcontext,24greedy+12sampled rawcompletions/model.
+No generatedcode execution or pass@1 claim. Samequestions/tokenizer/
+likelihoodrules; common-ID comparisons withWilson/pairedbootstrap intervals.
+OfficialQwenpublished5shotMMLU62.63 only contextual, not our0shotbaseline.
+MEASURED ENGINEERING: allsixrealMCfiles SHAchecked/formatted/tokenized30737
+questions, noboundaryfailure/maxMMLU1011tokens. ActualTinyStories+tokenizer
+packing; syntheticRussianfixture, not realRussianinference.7CPUtests22.11s
+covermatureBF16growth/head/padding/teacherforward/journal/dispatch/pairedstats.
+Full1.7B T4source160windowreplay andoriginalTransformersCPUreference gates
+remain mandatory. No physicalGPUmemory/speed/capability result here.
+Protocol/launch/pins/audits inresults/EXP-156-*; separateHFresultnamespace;
+no source/trainingcheckpoint changes, oneaggregate report, sparse notifications.

@@ -1,0 +1,20 @@
+{
+  "scope": "All real MC files and real TinyStories, actual Qwen tokenizer; synthetic Russian parquet exercises packing only, NOT actual Russian corpus or GPU inference",
+  "counts": {
+    "arc_easy": 2376,
+    "arc_challenge": 1172,
+    "piqa": 1838,
+    "winogrande": 1267,
+    "hellaswag": 10042,
+    "mmlu": 14042
+  },
+  "nll_panel_shapes": {
+    "english_stories": [
+      40960
+    ],
+    "russian_wikipedia": [
+      40960
+    ]
+  },
+  "question_sha256": "d3b198ccf89c955933d452dc299fe777a6e972cbfe1f63fb90e4cb004a6014af"
+}

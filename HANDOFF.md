@@ -1,3 +1,35 @@
+# 24 October2026 — EXP156 PREPARED: frozen full-quality assessment on2T4
+
+User authorizes substantial benchmark,12hT4 session. New
+extent/quality_benchmark_156.py + scripts/m3q_quality_benchmark_156.py,
+no training source/math changes. Original Qwen3-1.7B-Base GPU0 vs frozen
+EXP155 CURRENT80260/R256 GPU1, HF74cd4878817a330e1ae8399acbafe5e76b40a4c5.
+Pin/results EXP-156-*. Source CURRENT, NOT inheritedbest78870/newer155states.
+Onlyparameters216chunks229MB, noAdam. Rebuildsame136foldedbase; no155fold.
+T4BF16sourcepreserved. All160 sourcewindowreplay<=.03 everyinvocation;
+originalactualcheckpointCPUTransformers shortprefix vs GPUJAX<=.03 gate.
+Fatalworkererror stopspeer early. Quietparentmax5messages.
+SixMC zero-shot ARC-Easy2376/Challenge1172/PIQA1838/Wino1267/Hella10042/
+MMLU14042(57subjects),30737questionspermodel. Realfiles/SHA/tokenizer fully
+locally audited: noBPEboundaryerrors/over2048; largestMMLU1011. Tasksinterleave,
+MMLUsubjectsbalanced. Fulltargetuntildeadline; NOT stopafter150pilot.
+FreshEnglishTinyStories/RuWiki128x256 plus8windowtailcontext128/256/512/1024.
+ActualTinyStoriespackingtested; Rucorpus581MBmetadataSHAonly,syntheticfixture
+packingtested. 24rawEN/RU/Pythonprompts greedy64 +12sample64,36/model.
+GeneratedcodeNOTexecuted. Notchatthinking/MBPPpass@1. OfficialMMLU62.63is5shot,
+NOT directly comparable to our0shot; matchedoriginalteacher isprimarybaseline.
+Choicecontinuation-only likelihood,correctWinosuffix,acc+acc_normchar;
+Wilson95 andpairedquestionbootstrap onCOMMONIDs; peritemlosses/subjectcoverage.
+11.5hTOTALincl30minsave within12haccount,HF1GBcap reports only,hourly+exit,
+namespace exp156-frozen-quality-v1, ownstrictresume. Oneaggregate
+extent-m3q-quality-156.json containsbothroles+generations+comparisons/errors.
+ExistingT4notebook/setupunchanged; NEWlastcell results/EXP-156-launch.md.
+7CPUtests22.11s passed; dynamicembeddinghead avoids622MBconstantduplication.
+Actualworker journal/deadlineresume+parent2GPUpairedmerge mocked, realtiny
+BF16inference/teacherfullforward tested. NOT physical1.7BT4HBM/speed/result.
+Preparedprotocol,pins,source/data/tokenization/packing audits,plan archived.
+No cloud job launched here. TPU155 training remains independent of156snapshot.
+
 # 23 October2026 — EXP155 TPU continuation succeeds toA5.109/B5.151/C4.666
 
 Raw results/EXP-155-session-1.json bytepreserved; analysisMD/JSON,69points CSV,
