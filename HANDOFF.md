@@ -1,3 +1,37 @@
+# 24 October2026 — EXP158 received; EXP159 GPU intermediate distillation PREPARED
+
+158 completed both frozen80260/118304 workers,1536questions+24generations each,
+source replay passed, no report sync error. Fresh EN NLL7.43896->7.24573;
+RU11.44676->11.16595, paired-window intervals exclude zero on these panels.
+ARC-Easy acc_norm27.734->33.984 (+6.25pp, nominal pairedCI1.95..10.55pp).
+Other five task difference CIs include zero; MMLU21.484->26.172 is not conclusive.
+Generation remains poor. Thus later recovery generalizes SOMEWHAT beyond old
+panels; broad donor capability recovery is still absent. This does not establish
+overfitting as cause or isolate the source of the capability gap.
+Raw received result archived results/EXP-158-session-1.json.
+
+User has12hGPU while TPU157 runs. New159 on two independentT4 workers, SAME155
+CURRENT118304, same protectedR256, freshAdam, LR/warmup/data. GPU0 .5CE+.5forwardKL
+from originalQwen(T1); GPU1 same plus .1 normalized intermediate output MSE after
+blocks7/14/21/28. Teacher weights frozen and streamed from host one layer at a
+time, no persistent whole teacher onGPU. Student never consumes teacher states;
+hidden targets enter global chain rule at their layer outputs. FP32 scale-safe
+normalization and detached teacher. Distillation occurs at every prediction
+position, not only a final answer token. No matched CE-only GPU arm; TPU157 is
+cross-hardware context only. Hidden coefficient is a prespecified exploratory
+choice, not established optimum.
+
+11.8h total incl18min reserve, within12h platform session. No8192early stop,
+262144new-step ceiling; source160window replay<=.03 and finite proposal gate.
+Ordinary A/B/C and fresh EN/RU validation tracked; fresh data never trains model.
+Compare matched step points and time separately. Original155/156/157/158 math
+files untouched. Own159 resume namespace, parent start+finish notifications only,
+source download429 retries and report backoff, worker failure stops peer and
+prints log tails. Full raw result one extent-m3q-hidden-distill-159.json.
+CPU tiny BF16 gradient comparison, worker gate/step/checkpoint tests and parent
+isolation/failure tests are engineering checks, NOT physical1.7BT4 outcomes.
+See results/EXP-159-protocol.md and EXP-159-launch.md. No cloud job started here.
+
 # 24 October2026 — EXP155 session2 received; EXP156 quality gap; EXP157/158 PREPARED
 
 Received155 second session: CURRENT118304, A/B/C4.975879/5.061456/4.457787;

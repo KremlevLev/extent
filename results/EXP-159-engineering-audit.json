@@ -1,0 +1,35 @@
+{
+  "prepared": true,
+  "physical_gpu_run": false,
+  "source_step": 118304,
+  "source_revision": "5e0d5026d03da0320c72162f5216215b137e43c6",
+  "source_code_hashes_verified": 32,
+  "cpu_tests": [
+    {
+      "scope": "streamed KD and hidden-KD gradients vs monolithic objective, teacher frozen, checkpoint roundtrip, robust normalization, contract symmetry",
+      "passed": 4,
+      "seconds": 32.08
+    },
+    {
+      "scope": "actual worker proposal/gate/checkpoint and wrong source rejection",
+      "passed": 2,
+      "seconds": 31.73
+    },
+    {
+      "scope": "parent GPU isolation/completed and failed aggregate publication, contract checks",
+      "passed": 3,
+      "seconds": 1.32
+    }
+  ],
+  "budget": {
+    "total_hours": 11.8,
+    "save_reserve_minutes": 18,
+    "platform_margin_minutes": 12
+  },
+  "precision": "source BF16 with FP32 correction/head/normalized loss; no FP16 conversion",
+  "limitations": [
+    "Tiny CPU numerical evidence only; actual1.7BT4 memory and throughput still require the user launch",
+    "Two arms isolate adding hidden loss, not KD versus CE",
+    "Validation panels already inspected, no fresh confirmatory test claim"
+  ]
+}
