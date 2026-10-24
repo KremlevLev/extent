@@ -1,0 +1,32 @@
+{
+  "protocol": "exp158-quality-followup-v1",
+  "source_steps": [
+    80260,
+    118304
+  ],
+  "source_pins": [
+    "595e89d814c4663cca5e3845f73c4fb046fdbbba2d4957074a01ee5a22811e8e",
+    "3c5528f274fbb3745b04a1645d321409626305849153bb8e0d4b2ffba47656ec"
+  ],
+  "questions_per_task": 256,
+  "fresh_windows": 128,
+  "context_lengths": [
+    128,
+    256,
+    512,
+    1024
+  ],
+  "fewshot": 0,
+  "primary_metric": {
+    "arc_easy": "acc_norm",
+    "arc_challenge": "acc_norm",
+    "piqa": "acc_norm",
+    "winogrande": "acc",
+    "hellaswag": "acc_norm",
+    "mmlu": "acc"
+  },
+  "code_sha": "4da1c4eb023f63265a064c0a699b346c7b9881f4686aee8e5307d202fcd40293",
+  "engine_sha": "4ad9d53660d0b7b57a7d92b019810f2aa3610e68c7c5f5a2fe8f626fff2db418",
+  "data_pin_sha": "efb15fb493416c1e5dce2092ccb042013da947ba773b313c00d6adbe64247c38",
+  "scope": "paired checkpoint diagnostic; same156 question order and data; limited subset; no official benchmark claim"
+}

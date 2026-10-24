@@ -1,3 +1,48 @@
+# 24 October2026 — EXP155 session2 received; EXP156 quality gap; EXP157/158 PREPARED
+
+Received155 second session: CURRENT118304, A/B/C4.975879/5.061456/4.457787;
+previous CURRENT80260 had5.109496/5.150924/4.665559. New38044updates/9.739264M
+input presentations; cumulative15580394updates/20.580864M, two sessions.
+No pending slots; durable118304; selected BEST103446 remains separately recorded.
+Full report results/EXP-155-session-2.json. This is reused-panel improvement,
+not measured downstream capability recovery of118304.
+
+Received156 deadline_partial, normal work limit, no new crash. Common807–808
+questions/task: Qwen vs hybrid80260 ARC-Easy66.71/28.47, ARC-Challenge45.72/23.54,
+PIQA77.20/52.04,Wino62.95/48.95,Hella67.66/27.01,MMLU62.58/22.06 percent.
+Fresh EN NLL1.858/7.439, RU1.848/11.447. Source160windows replay passed;
+CPU FP32 Transformers/formula check passed; BF16 backend discrepancies retained
+separately.36generations/model often poor for hybrid. Compact received summary
+with raw SHA in results/EXP-156-received-summary.json. This does not prove the
+cause of the gap, a broken benchmark, or impossibility of further recovery.
+
+User requests new9hTPU intervention,18min reserve, broader/full training, and
+fresh-text reassessment of latest source. Prepared157: two token-prefix-matched
+arms from immutable155 CURRENT118304: protectedR256 freshAdam vs FULL-DECODER
+freshAdam, all28blocks trainable including Mamba/GQA/MLP/block norms; embeddings
+and final norm fixed.1.364B dense parameters; distinct rates by group; comparison
+is recipe-level, not isolated capacity. Source replay160windows mandatory,
+real first compiled/streamed gradient audit, stable clip1. No new dynamics reset.
+First8updates each before2048blocks. Reused panels and16fresh EN/RU windows at
+registered points,128fresh windows at final when time permits. Fresh156 text
+is diagnostic validation now, not untouched final test. No training on it.
+
+1579h total,18min reserve => work deadline8h42from runner entry, includes
+loading/compilation/evals/periodic saves.262144NEWstep ceiling, no8192early stop.
+Full checkpoint ~21.83GB; local atomic generations require50GB free, use large
+/dev/shm when available or working disk; reject insufficient space BEFORE
+training. Local obsolete generations pruned; HF every~4h+exit,80GB cap, pending
+state explicit. Actual HF network completion in18min cannot be guaranteed.
+Source immutable HF5e0d5026d03da0320c72162f5216215b137e43c6; source pin157.
+
+Prepared158 twoT4 frozen80260 vs118304: same EN/RU128windows+context tails,
+256questions/task,24greedy prompts per model. Own namespace/resume, source
+window replay each invocation. Bounded diagnostic finishes at planned subset,
+not necessarily full12h. No training. Old156 source/evaluator unchanged.
+See results/EXP-157-launch.md, EXP-158-launch.md, EXP-157-158-protocol.md.
+Engineering CPU/8-device CPU and shape audits are NOT physical TPU/T4 results.
+No cloud training/evaluation job launched by this preparation.
+
 # 24 October2026 — EXP156 second startup: FP32 bridge GPU OOM, moved to CPU
 
 Raw HF aggregate results/EXP-156-startup-failure-2.json: teacher temporary

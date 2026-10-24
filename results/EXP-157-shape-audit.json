@@ -1,0 +1,16 @@
+{
+  "trainable_count": 1364173952,
+  "trainable_master_bytes_per_device": 682506752,
+  "fixed_bytes_per_device": 420329728,
+  "current_and_proposed_weights_moments_gradients_updates_forward_bytes": 6221637120,
+  "activation_compile_workspace_allowance_bytes": 6442450944,
+  "conservative_bytes_per_device": 12664088064,
+  "teacher_device_resident": false,
+  "source_other_seed_device_resident": false,
+  "limitation": "policy estimate; actual compiler/allocator measurements required on TPU",
+  "devices": 8,
+  "scope": "shape-only; no actual full model compile or accelerator allocation",
+  "checkpoint_payload_bytes": 21826783232,
+  "local_previous_plus_next_checkpoint_bytes": 43653566464,
+  "other_arm_memory_and_evaluation_workspace_not_included": true
+}

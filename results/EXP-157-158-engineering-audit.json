@@ -1,0 +1,50 @@
+{
+  "source_step": 118304,
+  "source_revision": "5e0d5026d03da0320c72162f5216215b137e43c6",
+  "source_code_hashes_verified": 32,
+  "budget": {
+    "wall_hours": 9,
+    "reserve_minutes": 18,
+    "work_seconds": 31320
+  },
+  "tests": [
+    {
+      "scope": "six CPU numerical/runner/budget/comparison tests before final small additions",
+      "passed": 6,
+      "skipped_eight_device": 1,
+      "seconds": 88.73
+    },
+    {
+      "scope": "actual eight-device CPU sharded dense gradient/Adam update",
+      "passed": 1,
+      "seconds": 41.38
+    },
+    {
+      "scope": "final five quality-worker/comparison/source-contract/storage tests",
+      "passed": 5,
+      "seconds": 1.46
+    }
+  ],
+  "coverage": [
+    "nonzero trained extra-rank source replay",
+    "dense GQA and MLP gradients",
+    "actual compiled vs streamed first gradient",
+    "fresh Adam clocks",
+    "dense checkpoint roundtrip",
+    "two-arm runner updates and saves both",
+    "bad replay rejects all updates",
+    "frozen benchmark worker data/question/generation loop mocked",
+    "fresh paired NLL requires complete windows",
+    "18minute reserve and high ceiling",
+    "insufficient local checkpoint storage rejects pretraining"
+  ],
+  "limitations": [
+    "CPU numerical tests and mocked I/O are not full1.7B TPU/T4 execution",
+    "shape resource estimate is not measured HBM or speed",
+    "HF118304 manifest and code hashes verified; parameter download/replay occurs on accelerator before updates"
+  ],
+  "final_short_contract_worker_tests": {
+    "passed": 4,
+    "seconds": 1.36
+  }
+}
