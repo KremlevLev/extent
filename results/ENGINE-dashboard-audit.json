@@ -1,0 +1,12 @@
+{
+  "component": "engine_dashboard",
+  "date": "2026-10-25",
+  "tests": {"passed": 5, "command": "python -m pytest tests/test_engine_dashboard.py -q"},
+  "wandb_version": "0.31.0",
+  "real_sdk_offline_two_run_smoke": true,
+  "observer_imports_jax": false,
+  "training_source_changed": false,
+  "authenticated_online_test": false,
+  "live_server_test": false,
+  "limitation": "User must log into W&B and start the observer on the training server. No online board or URL has been created in this preparation."
+}

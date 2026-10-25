@@ -1,3 +1,18 @@
+# 25 October2026 — standalone W&B observer PREPARED
+
+User requests live learning curves. engine_dashboard.py observes existing EXP161
+WORK/results/runtime-b6.json; does not import JAX or change training sources,
+states, data, locks or updates. Attach while training runs, without restart.
+Separate requirements-dashboard.txt / engine-board-env; user logs into W&B in
+their terminal. See results/ENGINE-dashboard.md for exact nested server commands.
+Two named runs (Wiki/C4), per-branch new-input-token axes; BEST summary only;
+16/128-window fresh diagnostic panels separate. Backfill, local dedup/resume,
+recovery segments, GPU card-wide metrics and HF/report-age heartbeat. No code,
+console, automatic system metadata, weights, texts or complete reports uploaded.
+Five local tests pass including real W&B0.31 offline two-run smoke. JAX absent
+from observer import. Online account/server watcher not authenticated or run here;
+actual board links are produced only on user server startup after W&B login.
+
 # 25 October2026 — EXP161 batch6 continuation PREPARED
 
 User measured fresh batch6:~.917s/update,1675input tokens/s, peak live65.13GB,
