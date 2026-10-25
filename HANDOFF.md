@@ -1,3 +1,27 @@
+# 25 October2026 — bounded batch capacity probe PREPARED
+
+User supplied actual Blackwell compiled160 result:~.621s/update,~412input tokens/s,
+own memory~33.6GiB, nvidia-smi99% sample. Both branches passed real gates and chose
+compiled. Checkpoints resumed118893/118824 before new updates. This confirms
+~1.29x faster execution on that workload, not broad quality or full FLOP utilization.
+
+User asks quick batch autotune. New neutral engine_capacity.py + worker
+scripts/engine_probe_worker.py + extent/capacity_probe.py. Defaults1/2/4/8/16,
+5min HARD TOTAL including restore/compile, parent watchdog on own process group,
+incremental atomic runtime-capacity.json. Up to3 synchronized timing samples
+(minimum2) after compile/warmup, finite checks and OOM guard. Highest TPS wins;
+within3% prefer smaller. A timeout yields partial best or no_completed_measurement,
+never fabricated throughput. Record own allocator high water, not global GPU peak.
+
+Requires original worker STOP/save/exit; same server.lock prevents concurrency.
+Reads original local checkpoint with hub=None, deep-copies report, checkpoint and
+report sync are no-ops in worker; ZERO accepted q/Adam/data updates. Probe doesn't
+clear old STOP or resume training. One final notification only. Compile cache
+reused under work dir; no training states added. See EXP-160-capacity-probe.md.
+This script selects a batch recommendation; it does NOT silently apply a larger
+effective batch to existing160. Batched training requires new versioned data/
+optimizer-clock contract. Actual Blackwell batch measurements still pending.
+
 # 25 October2026 — EXP160 device execution upgrade PREPARED, live job not touched
 
 User ran server160: both initial gates/8 updates succeeded; measured~0.8095s,

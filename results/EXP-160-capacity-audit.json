@@ -1,0 +1,31 @@
+{
+  "status": "prepared_not_gpu_measured",
+  "date": "2026-10-25",
+  "cpu_tests_passed": 5,
+  "tests": [
+    "real compiled batch1/2 finite mean loss and unchanged q/Adam",
+    "recommendation excludes unfinished/near-tie policy",
+    "hard parent timeout preserves measured result and original files",
+    "training lock rejects concurrent probe",
+    "worker read-only store/no checkpoint writes/no parent report updates"
+  ],
+  "default_total_minutes": 5,
+  "default_batches": [
+    1,
+    2,
+    4,
+    8,
+    16
+  ],
+  "accepted_updates": 0,
+  "modifies_running_batch": false,
+  "original_server_contract_unchanged": true,
+  "gpu_benchmarks_run": false,
+  "server_job_stopped": false,
+  "limitations": [
+    "may not finish all compiles before deadline",
+    "no winner if no completed measurements",
+    "larger effective batch requires new training contract",
+    "allocator high water includes earlier trials/initialization"
+  ]
+}
