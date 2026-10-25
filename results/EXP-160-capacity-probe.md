@@ -6,6 +6,11 @@ both frozen branches/resident teacher allocation as in the real experiment,
 and the audited whole-step compiled objective. Actual probes use unaccepted
 proposals on one reported branch's SAME q/Adam, consecutive C4 inputs, context256.
 The current profiled branch is recorded; this is not a quality comparison.
+Custom batches can be ANY integer1..16, including6: `--batches 6`.
+For fair memory-capacity diagnosis, test larger candidates in a fresh invocation:
+the allocator pool/fragmentation from earlier candidates can cause an OOM even
+when the same batch fits in a fresh process. Memory guard details are recorded
+in memory_diagnostic; do not interpret every memory_limit as physical96GB exhaustion.
 
 ## Bounds and behavior
 

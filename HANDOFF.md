@@ -1,5 +1,14 @@
 # 25 October2026 — bounded batch capacity probe PREPARED
 
+Received user measurements on same source120181: batch1~416tokens/s, batch2~691,
+batch4 initially JaxRuntimeError after smaller trials. FRESH batch4 succeeds:
+~.7501s/update,1365tokens/s, peak JAX live48.15GB, pool76.48GB. Fresh batch8
+stopped by MemoryError (software executable memory guard; exact diagnostic not
+included in old output), so physical96GB impossibility is NOT established.
+Custom probe batches now allow ANY integer1..16, e.g6, and record error details.
+Batch6 measurement still pending. Default grid unchanged; prefer fresh-process
+single-size checks near memory limits to avoid preceding-pool effects.
+
 User supplied actual Blackwell compiled160 result:~.621s/update,~412input tokens/s,
 own memory~33.6GiB, nvidia-smi99% sample. Both branches passed real gates and chose
 compiled. Checkpoints resumed118893/118824 before new updates. This confirms

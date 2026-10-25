@@ -73,7 +73,7 @@ def measure_batches(cfg,tc,columns,spec,tx,args,window_provider,path,candidates,
         except Exception as exc:
             memory=isinstance(exc,MemoryError) or any(s in str(exc).lower() for s in ('resource_exhausted','out of memory'))
             if not memory:raise
-            row.update(status='memory_limit',error_type=type(exc).__name__);save();break
+            row.update(status='memory_limit',error_type=type(exc).__name__,memory_diagnostic=str(exc)[:4096]);save();break
         finally:
             del engine,tokens
         save()

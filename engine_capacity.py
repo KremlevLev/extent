@@ -41,8 +41,8 @@ def main(argv=None):
     a=p.parse_args(argv)
     if not math.isfinite(a.max_minutes) or a.max_minutes<=0:raise ValueError('positive finite minute budget required')
     batches=[int(b) for b in a.batches.split(',')]
-    if not batches or sorted(set(batches))!=batches or any(b not in (1,2,4,8,16) for b in batches):
-        raise ValueError('use ascending unique batch sizes from1,2,4,8,16')
+    if not batches or sorted(set(batches))!=batches or any(b<1 or b>16 for b in batches):
+        raise ValueError('use ascending unique integer batch sizes between1 and16')
     root=Path(a.work_dir).resolve()
     if not (root/'results/runtime-report.json').is_file():raise FileNotFoundError('current runtime-report.json required')
     if shutil.disk_usage(root).free<20*1e9:raise OSError('keep20GB free disk reserve before profiling')
