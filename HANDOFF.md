@@ -1,3 +1,18 @@
+# 25 October2026 — Telegram /check listener PREPARED
+
+W&B cloud unavailable in user's region. User instead requests SAME existing bot
+answer /check from phone, including concurrent sessions. engine_status.py is one
+standalone read-only getUpdates listener; /check, /check ALIAS, /sessions, /help.
+Defaults to local EXP161 runtime-b6; explicit --config registers multiple local
+work dirs or small remote HF reports. Remote liveness UNKNOWN; snapshot age/cache
+explicit. Do not start one listener per experiment. Detect webhook without deleting;
+409 fails clearly; token-hash local lock, private owner-chat only, no /exec or
+training mutation. Backoff+jitter/retry_after, persistent cursor, quiet on idle.
+Uses existing engine-core.env, same bot/token; only stdlib + filelock, no JAX/W&B
+imports. See results/ENGINE-status.md for exact server launch/config. Existing
+notifications untouched. Local tests only; user must launch on server, no live
+Telegram token/server verification performed here. No training restart needed.
+
 # 25 October2026 — standalone W&B observer PREPARED
 
 User requests live learning curves. engine_dashboard.py observes existing EXP161

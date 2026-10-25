@@ -1,0 +1,2 @@
+# Read-only Telegram command listener: no JAX, W&B or bot framework required.
+filelock>=3

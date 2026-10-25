@@ -1,0 +1,17 @@
+{
+  "component": "engine_status",
+  "date": "2026-10-25",
+  "live_telegram_test": false,
+  "live_server_test": false,
+  "training_source_changed": false,
+  "jax_imported": false,
+  "wandb_imported": false,
+  "verified_locally": [
+    "private owner authorization; two registered sessions and exact alias selection",
+    "current vs BEST; per-panel steps and deltas; explicit batch6 token clock",
+    "local report reader and remote cache fallback",
+    "429 retry_after at bootstrap; sanitized transport errors",
+    "webhook not deleted; conflicting polling fails rather than competing",
+    "persistent cursor across restart; old commands skipped; message chunking"
+  ]
+}
