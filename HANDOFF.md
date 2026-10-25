@@ -1,3 +1,31 @@
+# 25 October2026 — EXP161 batch6 continuation PREPARED
+
+User measured fresh batch6:~.917s/update,1675input tokens/s, peak live65.13GB,
+vs416/691/1365for1/2/4; batch8 software guard. User selects batch6 training.
+New neutral engine_batch.py, scripts/m3q_batch_recovery_161.py,
+extent/batch_recovery_161.py and extent/batch_execution_161.py. No old160/155
+scientific or current running-source files changed. No server access/run here.
+
+Explicit new fork161, not silent batch change inside160. Freeze server parent
+CURRENT manifests + complete q/Adam/best/runtime/corpus into WORK/batch6/source.json.
+Original160 remains read-only and independently resumable. New own report
+results/runtime-b6.json, states/runtime-b6, HFexp161-batch6-v1. Same cache/data-pack
+and shared server.lock/STOP. Retry source-plan publication; preserve pinned plan
+on own resumes. Never fallback to155/freshAdam if parent missing.
+
+Per branch parent origins G0/W0: global+Adam grow1/update, windows grow6/update;
+new inputs1536/targets1530 perupdate. C4 contiguous and never cycles; Wiki retains
+original GLOBAL-based permutation. Batch6 first gradient checked vs mean of6
+fixed-q single-example gradients then ONE Adam update. Compile largestbatch6
+first; existing BF16 gate and finite checks; explicit accumulated-batch6 fallback,
+never silently batch1. Parent CURRENT NLL compared when recorded reference exists;
+missing references explicitly unavailable, chunks/Adam/source guard still checked.
+
+21h adjustable incl18min save reserve;15min local/4hHF+exit;32GB session upload cap,
+80GB work cap/20GB free reserve; start/finish notices only. Source oldstates retained,
+new small states only (no second base/corpus copy). See EXP-161-launch.md and
+EXP-161-batch6-protocol.md. CPU engineering evidence is not physical GPU outcome.
+
 # 25 October2026 — bounded batch capacity probe PREPARED
 
 Received user measurements on same source120181: batch1~416tokens/s, batch2~691,

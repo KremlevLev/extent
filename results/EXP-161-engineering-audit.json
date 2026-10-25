@@ -1,0 +1,32 @@
+{
+  "status": "prepared_not_server_run",
+  "date": "2026-10-25",
+  "experiment": 161,
+  "batch": 6,
+  "cpu_tests_passed": 9,
+  "tests": [
+    "disjoint C4 windows and original Wiki clock",
+    "CURRENT/Adam/BEST fork preservation and own resume without parent",
+    "compiled mean-of-six gradient gate and one Adam increment",
+    "CURRENT replay mismatch rejection",
+    "immutable parent source plan",
+    "launcher shared cache/new protocol wiring",
+    "real Session independent state namespace and pending bootstrap",
+    "actual runner one batch6 update and next six windows on resume",
+    "actual runner parent replay rejection before any update"
+  ],
+  "original160_contract_unchanged": true,
+  "physical_batch6_capacity_user_measured": true,
+  "physical_batch6_training_tested": false,
+  "server_started": false,
+  "server_stopped": false,
+  "input_positions_per_update": 1536,
+  "next_token_targets_per_update": 1530,
+  "parent_source_pin": "created from actual server CURRENT manifests at first launch; no guessed local parent checkpoint",
+  "limitations": [
+    "batch6 changes optimization recipe despite preserved Adam/LR",
+    "compiled BF16 gradient gate is bounded numerical agreement, not trajectory identity",
+    "CURRENT NLL reference check only when parent recorded one; availability explicit",
+    "HF final upload may be pending; retain local states"
+  ]
+}
