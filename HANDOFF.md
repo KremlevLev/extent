@@ -1,3 +1,25 @@
+# 25 October2026 — EXP160 device execution upgrade PREPARED, live job not touched
+
+User ran server160: both initial gates/8 updates succeeded; measured~0.8095s,
+~316input tokens/s TOTAL time-shared, own memory~17.1GiB. User asks to utilize
+Blackwell better. New OPTIONAL entry engine_runtime.py + extent/device_execution.py.
+NO pinned160/155 math or server-control files modified; real current contract
+compared equal to ae219d3 server-plan. Existing engine_worker unchanged.
+
+Stop old job via existing STOP file, WAIT for save/process exit, then git pull and
+run python -m engine_runtime --engine auto --clear-stop --work-dir SAME_WORK_DIR.
+Exact own q/Adam/data resumes. Adapter explicitly records new code SHAs in
+execution_history, then first actual unaccepted batch per branch compares legacy,
+device activations/asynchronous layers, and whole-compiled no-remat execution.
+Resident gate tight1e-5; compiled uses existing BF16 .15relative/.98cos/.03CE gate.
+Time3 synchronized steady proposals/backend, choose fastest valid; memory/parity
+failure excludes candidate, legacy remains fallback. Audit probes DO NOT advance
+optimizer/data; extra teacher/student presentations separately recorded.
+No bitwise/long-trajectory identity or Blackwell speedup claimed. No GPU job
+stopped/restarted here. Four tinyCPU tests pass; real compiled/resident proposals,
+q/Adam parity, next optimizer count, memory fallback, adapter provenance tested.
+Details results/EXP-160-device-execution.md and EXP-160-device-audit.json.
+
 # 25 October2026 — EXP160 one-GPU Blackwell server mode PREPARED
 
 User switches target to company RTX PRO6000Blackwell96GB, Linux/Python3.12.3,

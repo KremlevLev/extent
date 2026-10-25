@@ -1,0 +1,23 @@
+{
+  "status": "prepared_not_gpu_verified",
+  "date": "2026-10-25",
+  "cpu_tests_passed": 4,
+  "tests": [
+    "resident gradient + q/Adam parity and immutable input",
+    "whole compiled gradient gate + next optimizer step",
+    "memory failure safe fallback",
+    "adapter provenance + hook restoration"
+  ],
+  "original_server_contract_equal_to_ae219d3_plan": true,
+  "original_scientific_files_modified": false,
+  "gpu_speedup_measured": false,
+  "server_stopped": false,
+  "server_restarted": false,
+  "entrypoint": "python -m engine_runtime --engine auto",
+  "selection": "gradient gate followed by synchronized steady timing; no batch/data/optimizer change",
+  "limitations": [
+    "BF16 compiled gate is bounded agreement, not bitwise or long-trajectory identity",
+    "whole graph compilation can require time/memory; guard/fallback applies",
+    "no actual Blackwell test executed here"
+  ]
+}
