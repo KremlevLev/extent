@@ -1,0 +1,58 @@
+{
+  "contract": {
+    "config": "en",
+    "dataset": "allenai/c4",
+    "dedup": "SHA256 NFKC whitespace-normalized document, validation reserved first; Wikipedia URLs excluded",
+    "eos_token_id": 151643,
+    "packing": "document concatenation with EOS; no implicit epochs",
+    "revision": "1588ec454efa1a09f29cd18ddd04fe05fc8653a2",
+    "sequence_length": 256,
+    "tokenizer": "Qwen/Qwen3-1.7B-Base",
+    "tokenizer_revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+    "train_tokens": 100000000,
+    "validation_tokens": 131072,
+    "vocab_size": 151936
+  },
+  "files": {
+    "train": {
+      "sha256": "f2b4577ddaa3137e3517fc5013e555ac52c6bdc017faa9f0c58f1d21594c240f",
+      "tokens": 100000000
+    },
+    "validation": {
+      "sha256": "a0a8b5593a8f79936ecd92b94094bab47bac47907efbd397048d7cc7fe91b13b",
+      "tokens": 131072
+    }
+  },
+  "format": "extent-c4-packed-v1",
+  "limitations": "normalized exact-document dedup only; no semantic or benchmark decontamination; sequential packed windows, EOS between documents",
+  "statistics": {
+    "contract": {
+      "config": "en",
+      "dataset": "allenai/c4",
+      "dedup": "SHA256 NFKC whitespace-normalized document, validation reserved first; Wikipedia URLs excluded",
+      "eos_token_id": 151643,
+      "packing": "document concatenation with EOS; no implicit epochs",
+      "revision": "1588ec454efa1a09f29cd18ddd04fe05fc8653a2",
+      "sequence_length": 256,
+      "tokenizer": "Qwen/Qwen3-1.7B-Base",
+      "tokenizer_revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+      "train_tokens": 100000000,
+      "validation_tokens": 131072,
+      "vocab_size": 151936
+    },
+    "counts": {
+      "train": 100000000,
+      "validation": 131072
+    },
+    "cursor": {
+      "train": 213972,
+      "validation": 295
+    },
+    "documents": {
+      "train": 204497,
+      "validation": 277
+    },
+    "duplicates": 0,
+    "rejected": 9495
+  }
+}

@@ -1,0 +1,15 @@
+# Linux Python3.12, driver>=580; observed user driver595.99.02 supports CUDA13.
+# Separate venv; do not change /opt/venv or existing inference services.
+jax[cuda13]==0.11.0
+flax==0.12.8
+optax==0.2.8
+numpy>=1.26,<3
+ml_dtypes>=0.5
+PyYAML>=6
+safetensors>=0.4
+huggingface_hub>=0.24
+transformers==4.51.0
+pyarrow>=15
+psutil>=5.9
+filelock>=3
+pytest>=8

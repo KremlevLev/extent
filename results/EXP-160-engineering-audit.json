@@ -1,0 +1,53 @@
+{
+  "status": "prepared_not_accelerator_run",
+  "date": "2026-10-25",
+  "local_tests": {
+    "command": "pytest tests/test_broad_corpus.py tests/test_corpus_recovery_160.py tests/test_launch_160.py tests/test_server_160.py; focused server suite after neutral name changes",
+    "unique_tests_passed": 20,
+    "scope": "CPU tiny gradients/teacher baseline, source replay rejection, resume cursor, orchestration, balanced server contract, stop/storage/checkpoint cadence; NOT a physical GPU test",
+    "additional_check": "teacher D reference matches full tiny Qwen NLL; pinned C4 contract rechecked after source guard addition"
+  },
+  "real_corpus": {
+    "status": "completed_and_sha_verified",
+    "identity": "dc1b2356a1ac3618fc5558ed746305b694a08387faf8ecc4c5e71403a37048bc",
+    "manifest_sha256": "c2c098fd369ceeaff99720dbb51b93e7dc57a14385293f99f75edf9da6750956",
+    "train_positions": 100000000,
+    "validation_positions": 131072,
+    "documents": {
+      "train": 204497,
+      "validation": 277
+    },
+    "duplicates_skipped": 0,
+    "rejected": 9495,
+    "source_temp_directories_remaining": 0,
+    "local_directory_bytes": 430871079,
+    "last_valid_window_index": 390624,
+    "first_window_shape": [
+      1,
+      256
+    ],
+    "last_window_shape": [
+      1,
+      256
+    ],
+    "location": "work/corpus-c4-en-100m-v1",
+    "hub_upload": false
+  },
+  "limitations": [
+    "C4 English only",
+    "normalized exact-document dedup, not semantic/benchmark decontamination",
+    "context256 for a controlled data intervention; not MOHAWK2048 reproduction",
+    "GPU0 intentionally repeats old Wiki as data control",
+    "no model training launched"
+  ],
+  "real_plan_contracts_validated": 2,
+  "server_prepared": {
+    "entrypoint": "python -m engine_worker",
+    "default_wall_hours": 21,
+    "gpu_driver_reported_by_user": "595.99.02",
+    "python_reported_by_user": "3.12.3",
+    "physical_gpu_test": false,
+    "training_launched": false,
+    "tpus_stopped": false
+  }
+}

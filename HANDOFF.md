@@ -1,3 +1,69 @@
+# 25 October2026 — EXP160 one-GPU Blackwell server mode PREPARED
+
+User switches target to company RTX PRO6000Blackwell96GB, Linux/Python3.12.3,
+driver595.99.02/CUDA13.2,~3.8GiB occupied by existing unrelated services. No access
+to server configured here; no physical GPU measurements or training launch.
+New scripts/m3q_server_160.py, extent/server_control.py, requirements-blackwell.txt
+and results/EXP-160-server-launch.md. Separate venv CUDA13, same pinned JAX/Flax/
+Optax0.11.0/0.12.8/0.2.8. Do not modify /opt/venv or stop other processes.
+
+--max-wall-hours21 is user-adjustable and counts corpus/source preparation,
+compile/replay/eval/save with18min final reserve. One GPU holds teacher and BOTH
+student branch states; teacher weights do not cross PCIe each step. Existing
+activation backward path still streams host states; not a fused performance
+claim. Balanced sequential Wiki control/C4 comparison, own exp160-corpus-server-v1
+namespace. First8 updates/branch throughput reported in input tokens/s.
+Stop by touch WORK/STOP or SIGINT/SIGTERM to this process. Saves current/Adam/data,
+shortens finalization to reserve; --clear-stop resumes. SIGKILL cannot final-save.
+Local state at most once/arm/15min plus exit; HF4h+exit,32GB invocation cap;
+80GB work cap,20GB free reserve, no unrelated cleanup. Start/finish notices only.
+100M C4 is finite: no implicit cycling; data exhaustion can end before wall clock.
+No TPU job stopped by this task. CPU engineering tests are not Blackwell outcomes.
+User requests neutral operational names: root entry point engine_worker.py,
+python -m engine_worker, /data/workdir/engine-core work dir, data-pack corpus,
+runtime-report.json and runtime-status.json, engine-core-src checkout and
+engine-core-env venv. Env template config/engine-core.env.example. Internal
+experiment/source provenance remains intact; unrelated services unchanged.
+
+# 25 October2026 — C4 corpus and EXP160 data comparison PREPARED
+
+User requests following MOHAWK's stages and fixing the narrow cyclic training
+data. Current159 is closest to early end-to-end KD (stage3), NOT a reproduced
+matrix-orientation stage1 or independent block-alignment stage2. Existing M3
+quadratic dual execution is useful infrastructure, not an established matrix-fit
+win. Preserve current checkpoints. See EXP-160-protocol.md for stage mapping and
+a separate stage1/2 design, including head/basis mismatch and exact scan checks.
+
+New extent/broad_corpus.py + scripts/prepare_broad_corpus.py prepare a pinned
+English C4 tranche on CPU:100M train positions,512x256 separate validation,
+exact normalized-document dedup across splits, EOS packing, immutable manifest,
+SQLite/fsync crash recovery, bounded one-shard download/cleanup, existing429
+retries. NO automatic cycling; corpus exhaustion is explicit. This is English,
+not multilingual/code/chat, and exact dedup is not benchmark decontamination.
+Real corpus preparation COMPLETED locally:100M positions,204497 accepted train
+documents,131072 validation positions/277 documents, SHA checked. Entire local
+directory430871079bytes, zero temporary source directories left. Location
+work/corpus-c4-en-100m-v1 (excluded from Git). Manifest tracked separately in
+results/EXP-160-corpus-manifest.json; audit in EXP-160-engineering-audit.json.
+No HF corpus upload or accelerator run claimed.
+
+New160 runner: two independentT4 workers, SAME original155 CURRENT118304 as159,
+freshAdam, protectedR256, .5CE+.5KL both, hidden_beta0. GPU0 deliberately keeps
+old cyclicWiki CONTROL, GPU1 consumes C4 once from NEW0, then follows checkpoint
+global-source on resume. This changes domain/diversity/repetition together and
+does not isolate repetition alone. New D128 C4 validation + original Qwen D128
+reference, old ABC+fresh EN/RU, source replay gate unchanged. 11.8h incl18min
+reserve, own namespace,262144NEW ceiling, no old159 numerical files modified.
+CPU tests cover data recovery/exhaustion/dedup and real tiny worker/resume/source
+gate, parent isolation/failure. Physical1.7BT4 behavior and quality unverified.
+Launch instructions: results/EXP-160-launch.md. Corpus must be prepared/mounted
+BEFORE booking GPU; training cell alone does not download the prepared corpus.
+
+159 received artifact remains in Downloads (not newly archived by this task):
+deadline_partial with normal stops; CE-KD125743,1,904,384 added positions;
+hidden125772,1,911,808. Both improve fresh EN/RU; added hidden loss has no clear
+overall win at matched endpoints. This does not rule out MOHAWK stage2.
+
 # 24 October2026 — EXP158 received; EXP159 GPU intermediate distillation PREPARED
 
 158 completed both frozen80260/118304 workers,1536questions+24generations each,
