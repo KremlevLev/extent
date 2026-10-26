@@ -1,3 +1,18 @@
+# 26 October2026 — optional process-title wrapper, no EXP162 hash change
+
+User requests VLLM:EngineCore display and 2–3 soft daytime pauses/day. New
+engine_launch.py sets optional setproctitle early(SPT_NOENV), prints requested
+title and read-only NVML driver process name, then calls existing engine_compare
+in SAME PID with unchanged arguments. No EXP162 scientific/launcher source
+modification, thus existing checkpoint contracts remain resumable. Actual JAX
+runtime unchanged; cosmetic title is not vLLM. Blackwell nvidia-smi display not
+verified here; driver query may be unavailable or report a different name.
+--process-title supports explicit custom label. requirements-label.txt optional.
+Soft STOP already supported: save own q/Adam/cursors, HF attempt, bounded final
+diagnostics; wait for actual process exit, not GPU0%. --clear-stop on same launch
+resumes own162, not source154852; HOURS starts anew per invocation. Network can
+leave HF pending; local state retained. See EXP-162-launch.md appended section.
+
 # 26 October2026 — EXP157/161 RECEIVED; corpus comparison162 PREPARED
 
 Received157 deadline_partial,8.8529h, no pending states. Same source118304:

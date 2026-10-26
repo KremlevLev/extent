@@ -1,0 +1,2 @@
+# Optional launch-title helper only. Does not change JAX/CUDA/runtime pins.
+setproctitle>=1.3,<2
