@@ -1,7 +1,7 @@
-"""EXP163 objective for expanded coordinates; original scientific source files stay pinned.
+"""EXP163 compiled objective for the selected recipe's expanded coordinates.
 
-No batch, objective, parameter, optimizer or data-cursor change. Selection is an
-explicit first-proposal audit, not an assumption of GPU numerical identity.
+Within each recipe, compiled and reference execution preserve the batch,
+objective, parameter/optimizer coordinates and data clock. Selection is audited.
 """
 import time
 import jax
@@ -43,5 +43,3 @@ def compiled_step(cfg,tc,columns,spec,tx):
         health=proposal_health(loss,parts,q,state,g,changes,proposed,after)
         return proposed,after,dict(loss=loss,**parts,**health,grad_max_abs=maximum,log10_grad_norm=lognorm),g
     return step
-
-
