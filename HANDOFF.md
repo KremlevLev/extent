@@ -1,3 +1,45 @@
+# 26 October2026 — EXP163 three methods PREPARED, not a measured result
+
+User stopped162 and now has14h Blackwell; asks to test beyond rank256. New163
+starts SAME161 C4CURRENT154852 in all three arms, not paused162. R256-CONTROL,
+UPPER8-MLP (full gate/up/down matrices20..27, +301,989,888 parameters), FULL-KD
+(all28decoder blocks, embeddings/finalnorm frozen). Same packed FineWeb-Edu prefix,
+batch6,length256,.5CE+.5KL, beta2.999, warm512, clip1. ALL fresh Adam, deliberately
+no inappropriate low-rank→dense moment transplant. Full LRs1e-5 mixers/MLPs,
+1e-6 blocknorm/pregate; control/upper3e-4 mixer/1e-4 pregate, upperMLP1e-5.
+Practical recipe comparison, not pure capacity isolation. Parent q/chunks/Adam
+descriptor verified, then CURRENT q converted; source A-D replay<=.03 mandatory
+before updates. Old155 reconstructs shape/frozen base ONLY. No silent fallback.
+
+New extent/method_sweep_163.py and method_execution_163.py, runner163,
+engine_methods.py; own methods/source.json,states/runtime-methods,
+results/runtime-methods.json,HFexp163-method-sweep-v1. Old160/161/162 scientific
+hashes unchanged. engine_launch --runner methods routes163; default compare162
+unchanged. User's previous server log confirms requested title and NVML BOTH
+VLLM:EngineCore; process-title helper is cosmetic, actual runtime remains JAX.
+
+Offload inactive q/Adam/best losslessly to host RAM; one active method at a time.
+Real batch6 compiled gradient checked vs six fixed-q microgradients, ONE Adam.
+New reference avoids computing six discarded dense Adam proposals to save HBM;
+finite objective/gradient checks per microstep and full health on final update.
+First16accepted updates/arm per invocation are pilot, counted as real training.
+Last6steady latencies estimate common target within.85remaining work budget;
+extend target if time remains, no arbitrary8192early stop. Equal-prefix registered
+points, not unequal last tails. Dense fallback may be much slower than161; no
+100M-token promise. Soft pauses retain OWN163 Adam/data cursor, wall budget new
+per invocation; pilot timing remeasured without reset. Failed method aborts and
+saves peers, never disguised as deadline success.
+
+Checkpoint storage revised for dense scope: ~28.5GB all3current/Adam/best states.
+Pruned atomic local current every30min+exit,80GB work/20GB free caps. Full states
+HF ONLY at exit/soft pause, small reports during work;32GB session cap, pending
+explicit. No repeated four-hour22GB uploads. Frequent soft pauses still cost
+large remote writes; do not delete local states before verifying durability.
+CommonA-E, teacherD/E, EN/RU16progress+128final; DselectsBEST, CURRENT separate;
+diagnostic panels inspected, no final test or capability recovery proof.
+See EXP-163-protocol.md and EXP-163-launch.md. CPU engineering tests only;
+real Blackwell HBM, speed, end-to-end uploads and model quality remain unverified.
+
 # 26 October2026 — optional process-title wrapper, no EXP162 hash change
 
 User requests VLLM:EngineCore display and 2–3 soft daytime pauses/day. New

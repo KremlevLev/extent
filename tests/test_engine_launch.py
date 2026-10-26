@@ -26,3 +26,12 @@ def test_custom_title_does_not_become_a_training_argument(monkeypatch):
     engine_launch.main(['--process-title','EngineCore','--no-telegram'])
     assert titles==['EngineCore'] and arguments==[['--no-telegram']]
     with pytest.raises(ValueError):engine_launch.main(['--process-title','bad\nname'])
+
+
+def test_methods_route_does_not_change_default_compare_or_training_args(monkeypatch):
+    arguments=[]
+    monkeypatch.setitem(sys.modules,'setproctitle',SimpleNamespace(setproctitle=lambda title:None))
+    monkeypatch.setitem(sys.modules,'engine_methods',SimpleNamespace(main=arguments.append))
+    monkeypatch.setattr(engine_launch,'nvml_process_name',lambda:None)
+    engine_launch.main(['--runner','methods','--max-wall-hours','14','--clear-stop'])
+    assert arguments==[['--max-wall-hours','14','--clear-stop']]

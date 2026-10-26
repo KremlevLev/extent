@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-26",
+  "experiment": 163,
+  "physical_blackwell_job_started": false,
+  "actual_full_model_gpu_memory_or_speed_verified": false,
+  "method_tests_passed": 9,
+  "launcher_and_status_regression_tests_passed": 12,
+  "additional_full_scope_single_adam_proposal_test_passed": true,
+  "verified": [
+    "all expanded parameterizations replay a mature nonzero rank256 source within numerical tolerance",
+    "actual batch6 compiled versus six fixed-q streamed-gradient audit for rank, upper MLP, full decoder",
+    "new MLP and full-decoder MLP gradients nonzero; one accepted Adam increment",
+    "accumulation computes one real Adam proposal rather than six discarded proposals",
+    "lossless state offload/restore and inherited CURRENT read followed by fresh Adam in every arm",
+    "actual three-method runner checkpoints both updates per arm with matching stream prefixes and fresh counters",
+    "wrong parent replay rejected before any accepted update",
+    "adaptive pilot common target reached and extended without premature stop",
+    "actual contract assembly with pinned corpus fields and shared diagnostic selection",
+    "soft STOP overrides periodic checkpoint throttle and forces saving newest state",
+    "old EXP161 scientific SHA checks and old EXP162 source files remain unchanged"
+  ],
+  "shape_estimates": {
+    "rank_parameters": 57200640,
+    "upper_mlp_additional_parameters": 301989888,
+    "upper_total_parameters": 359190528,
+    "full_parameters": 1364173952,
+    "three_current_adam_best_payload_bytes_approx": 28489041920
+  },
+  "limitations": "Tiny-model CPU tests and analytical sizes do not prove physical GPU fit, throughput, 14h equal-cost completion, successful HF upload, or recovered model quality. No cloud/server run was started here."
+}

@@ -25,6 +25,7 @@ def main(argv=None):
     # Only consume this wrapper's option; preserve every training argument.
     parser=argparse.ArgumentParser(add_help=False)
     parser.add_argument('--process-title',default='VLLM:EngineCore')
+    parser.add_argument('--runner',choices=('compare','methods'),default='compare')
     args,remaining=parser.parse_known_args(sys.argv[1:] if argv is None else argv)
     if not args.process_title or len(args.process_title)>64 or any(ord(c)<32 for c in args.process_title):
         raise ValueError('process title must contain 1..64 printable characters')
@@ -38,7 +39,10 @@ def main(argv=None):
     print('process_title_requested='+args.process_title,
           'nvml_process_name='+str(nvml_process_name() or 'unavailable'),flush=True)
     # Same process/PID/signals and stop logic; no subprocess, fork, or watchdog.
-    from engine_compare import main as run
+    if args.runner=='methods':
+        from engine_methods import main as run
+    else:
+        from engine_compare import main as run
     return run(remaining)
 
 
