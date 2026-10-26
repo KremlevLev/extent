@@ -10,7 +10,7 @@ import subprocess
 import time
 
 
-PANELS={'A':'wiki_A','B':'wiki_B','C':'wiki_C','D':'c4_D'}
+PANELS={'A':'wiki_A','B':'wiki_B','C':'wiki_C','D':'c4_D','E':'edu_E'}
 
 
 def number(value):

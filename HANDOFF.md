@@ -1,3 +1,40 @@
+# 26 October2026 — EXP157/161 RECEIVED; corpus comparison162 PREPARED
+
+Received157 deadline_partial,8.8529h, no pending states. Same source118304:
+R25620488updates/5.244928M inputs, final A/B/C4.946355/5.048180/4.419136;
+FULL-DECODER19887updates/5.091072M,7.319848/7.317566/7.066497. At matched16384
+updates rank A4.918915 vs dense7.545751. Dense BEST is source, not final. Both
+source replay and first gradient gates passed; dense deterioration is a negative
+recipe result, not proof full training is impossible or that activation cause is
+known. No teacher KD in157. See compact received summary/raw SHA.
+
+Received161 deadline_partial,18.8049h runner, no pending states. WikiCURRENT154749
+new53.096448M, A/B/C4.647571/4.746283/4.094495,D7.078082,EN/RU1286.103204/11.233391.
+C4CURRENT154852 new52.889088M,A/B/C5.958907/6.023339/5.602312,D5.231273,
+EN/RU1284.616741/7.762478. C4 previousD5.203392 then slight rebound; matchedEN16
+continues4.663120→4.651509. C4 BEST selected onWikiA remains118304; NEVER use it
+as the successful C4 CURRENT. Parent C4 training_windows_seen208713, Adam36548.
+Total161105.985536M new inputs SUM BOTHarms, plus equal teacher inputs. Domain
+tradeoff/diagnostic transfer, no downstream capability proof. Summary includes
+raw-fileSHA; original report is user's private/runtime-b6.json, no secrets copied.
+
+User agrees next C4 vsFineWeb-Edu comparison. New162 branches C4-CONTINUE/EDU-FRESH
+SAME C4CURRENT154852+Adam, no reset/rank/LR/objective change, batch6. C4 resumes
+208713, Edu starts0; common data limit30318updates/46.568448M inputs perarm.
+New engine_compare.py, extent/corpus_switch_162.py, runner162, bounded pinned Edu
+CPU preparer. Own report runtime-compare,states/runtime-compare,HFexp162 prefix;
+original160/161 scientific hashes unchanged (verified against received161).
+Same shared server.lock/STOP,18min save reserve, configurable hours(default21),
+quiet notices/local15min/HF4h+exit/storage caps. Parent q/Adam immutable; ONLY BEST
+bookkeeping restarts from CURRENT with shared D selection. Add E Edu128 and
+teacherE baseline; A-D parent CURRENT replay mandatory before updates. Exact C4
+doc exclusions protect newE against C4train and D against Edutrain; no semantic
+decontamination claim. Source parquet one at a time, no full dataset/weights copy.
+See EXP-162-protocol.md and EXP-162-launch.md. Local engineering tests are NOT
+physical Blackwell throughput or model quality. No server job launched here.
+Telegram updated for E, Russian key and BEST C4D; needs listener config/restart
+ONLY to observe runtime-compare. Existing161 training/report remains independent.
+
 # 25 October2026 — Telegram /check listener PREPARED
 
 W&B cloud unavailable in user's region. User instead requests SAME existing bot

@@ -1,0 +1,979 @@
+{
+  "experiment": 161,
+  "raw_sha256": "74f09b5782c52e2c5e64e0aac9212a6230a91b1ac493d71f2b46a93cb42d7b9b",
+  "status": "deadline_partial",
+  "stop_reason": "registered work deadline",
+  "sessions": [
+    {
+      "max_wall_hours": 18.99893516798814,
+      "save_reserve_minutes": 18.0,
+      "uploaded_bytes": 9221391788,
+      "hours": 18.804894894856908
+    }
+  ],
+  "cost": {
+    "attempted_updates": 69001,
+    "input_tokens": 105985536,
+    "ce_targets": 105571530,
+    "teacher_input_tokens": 105985536,
+    "training_seconds": 63826.62374324049,
+    "engine_audit_extra_input_tokens": 3072,
+    "engine_audit_extra_ce_targets": 3060,
+    "accepted_updates": 69001,
+    "accepted_input_tokens": 105985536,
+    "accepted_ce_targets": 105571530
+  },
+  "pending_slots": [],
+  "branches": {
+    "KD-WIKI-CYCLIC": {
+      "source_step": 120181,
+      "step": 154749,
+      "best_step": 152949,
+      "best_nll": 4.645724888890982,
+      "durable_step": 154749,
+      "accepted_new_updates": 34568,
+      "training_windows_seen": 209285,
+      "finalization_status": "completed",
+      "evaluations": [
+        {
+          "step": 120181,
+          "panels": {
+            "A": {
+              "nll": 4.938475161790848,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.024956986308098,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.440547335892916,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.092354513704777,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.414602100849152,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 10.951031863689423,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 120309,
+          "panels": {
+            "A": {
+              "nll": 4.8625014796853065,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.932590618729591,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.371186330914497,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.034668251872063,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 120437,
+          "panels": {
+            "A": {
+              "nll": 4.8511704578995705,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.9421636909246445,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.349454566836357,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.043239742517471,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 120693,
+          "panels": {
+            "A": {
+              "nll": 4.823566947132349,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.905884779989719,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.330185495316982,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.0196520164608955,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 121205,
+          "panels": {
+            "A": {
+              "nll": 4.8538477048277855,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.9487477988004684,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.336404874920845,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.0157809518277645,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.269517540931702,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 10.750921487808228,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 122229,
+          "panels": {
+            "A": {
+              "nll": 4.823407594114542,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.936552956700325,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.330354921519756,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.034457121044397,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.321474671363831,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 11.006569027900696,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 123253,
+          "panels": {
+            "A": {
+              "nll": 4.841550804674625,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.913701586425304,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.321386873722076,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.001723080873489,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.232201129198074,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 10.954446792602539,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 124277,
+          "panels": {
+            "A": {
+              "nll": 4.801809649914503,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.887736529111862,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.308122858405113,
+              "windows": 64
+            },
+            "D": {
+              "nll": 6.958579871803522,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.199764966964722,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 10.96742582321167,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 126325,
+          "panels": {
+            "A": {
+              "nll": 4.769606601446867,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.880270853638649,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.279155161231756,
+              "windows": 64
+            },
+            "D": {
+              "nll": 6.961998783051968,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.212408035993576,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 11.114484250545502,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 128373,
+          "panels": {
+            "A": {
+              "nll": 4.755737464874983,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.863453134894371,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.2541572116315365,
+              "windows": 64
+            },
+            "D": {
+              "nll": 6.938263826072216,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.1087663769721985,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 10.679263532161713,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 132469,
+          "panels": {
+            "A": {
+              "nll": 4.723583769053221,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.806383885443211,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.221336364746094,
+              "windows": 64
+            },
+            "D": {
+              "nll": 6.926861763000488,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.079770714044571,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 11.04223084449768,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 136565,
+          "panels": {
+            "A": {
+              "nll": 4.694967217743397,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.798210456967354,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.189686316996813,
+              "windows": 64
+            },
+            "D": {
+              "nll": 6.941939286887646,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.0622738897800446,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 10.740506112575531,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 144757,
+          "panels": {
+            "A": {
+              "nll": 4.659601308405399,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.76164960116148,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.150866288691759,
+              "windows": 64
+            },
+            "D": {
+              "nll": 6.986490558832884,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.053392142057419,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 10.932335555553436,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 152949,
+          "panels": {
+            "A": {
+              "nll": 4.645724888890982,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.745982833206654,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.115913920104504,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.006055220961571,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.097484856843948,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 11.310111105442047,
+              "windows": 16
+            }
+          }
+        }
+      ],
+      "final": {
+        "last": {
+          "step": 154749,
+          "panels": {
+            "A": {
+              "nll": 4.647570628672838,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.746283158659935,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.0944952219724655,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.078081898391247,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 6.103204194456339,
+              "windows": 128
+            },
+            "russian_wikipedia": {
+              "nll": 11.23339068889618,
+              "windows": 128
+            }
+          }
+        },
+        "best": {
+          "step": 152949,
+          "panels": {
+            "A": {
+              "nll": 4.645724888890982,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.745982833206654,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.115913920104504,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.006055220961571,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {}
+        }
+      },
+      "new_input_tokens": 53096448
+    },
+    "KD-C4-FRESH": {
+      "source_step": 120419,
+      "step": 154852,
+      "best_step": 118304,
+      "best_nll": 4.97692022845149,
+      "durable_step": 154852,
+      "accepted_new_updates": 34433,
+      "training_windows_seen": 208713,
+      "finalization_status": "completed",
+      "evaluations": [
+        {
+          "step": 120419,
+          "panels": {
+            "A": {
+              "nll": 6.1790303736925125,
+              "windows": 64
+            },
+            "B": {
+              "nll": 6.138977587223053,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.67055020481348,
+              "windows": 64
+            },
+            "D": {
+              "nll": 6.1497513353824615,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 5.561779022216797,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 10.576343595981598,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 120547,
+          "panels": {
+            "A": {
+              "nll": 5.786495007574558,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.761367425322533,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.314240641891956,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.949622981250286,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 120675,
+          "panels": {
+            "A": {
+              "nll": 5.8295992612838745,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.7957663834095,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.346676677465439,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.919158488512039,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 120931,
+          "panels": {
+            "A": {
+              "nll": 5.809491582214832,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.784361034631729,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.280628934502602,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.888736814260483,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 121443,
+          "panels": {
+            "A": {
+              "nll": 5.795884132385254,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.799479782581329,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.316512644290924,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.868875943124294,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 5.290134638547897,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 9.404720962047577,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 122467,
+          "panels": {
+            "A": {
+              "nll": 5.829978726804256,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.788324669003487,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.349171973764896,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.848036527633667,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 5.249084860086441,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 9.722884595394135,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 123491,
+          "panels": {
+            "A": {
+              "nll": 5.940709263086319,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.906867399811745,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.512604363262653,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.819521456956863,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 5.215386092662811,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 8.8541858792305,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 124515,
+          "panels": {
+            "A": {
+              "nll": 6.005815856158733,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.9496075958013535,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.547997146844864,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.692253489047289,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 5.190595835447311,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 8.768485248088837,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 126563,
+          "panels": {
+            "A": {
+              "nll": 6.034069336950779,
+              "windows": 64
+            },
+            "B": {
+              "nll": 6.028804793953896,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.611333079636097,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.635604150593281,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 5.139479428529739,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 9.65326315164566,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 128611,
+          "panels": {
+            "A": {
+              "nll": 6.049774497747421,
+              "windows": 64
+            },
+            "B": {
+              "nll": 6.031451731920242,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.6188939437270164,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.55710906162858,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 5.019791811704636,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 8.576390087604523,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 132707,
+          "panels": {
+            "A": {
+              "nll": 6.089148730039597,
+              "windows": 64
+            },
+            "B": {
+              "nll": 6.078864440321922,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.743872486054897,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.4859115071594715,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 4.986941933631897,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 8.204380303621292,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 136803,
+          "panels": {
+            "A": {
+              "nll": 6.0253963097929955,
+              "windows": 64
+            },
+            "B": {
+              "nll": 6.115379452705383,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.696736201643944,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.431261219084263,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 4.926038295030594,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.78551658987999,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 144995,
+          "panels": {
+            "A": {
+              "nll": 5.975878722965717,
+              "windows": 64
+            },
+            "B": {
+              "nll": 6.0280193239450455,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.6524713933467865,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.297835029661655,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 4.7860192358493805,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.213399946689606,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 153187,
+          "panels": {
+            "A": {
+              "nll": 5.883248321712017,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.910932302474976,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.559494398534298,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.203391559422016,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 4.663119852542877,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.479251176118851,
+              "windows": 16
+            }
+          }
+        }
+      ],
+      "final": {
+        "last": {
+          "step": 154852,
+          "panels": {
+            "A": {
+              "nll": 5.95890699326992,
+              "windows": 64
+            },
+            "B": {
+              "nll": 6.0233389884233475,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.602312006056309,
+              "windows": 64
+            },
+            "D": {
+              "nll": 5.23127343505621,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 4.6167414002120495,
+              "windows": 128
+            },
+            "russian_wikipedia": {
+              "nll": 7.762478284537792,
+              "windows": 128
+            }
+          }
+        },
+        "best": {
+          "step": 118304,
+          "panels": {
+            "A": {
+              "nll": 4.97692022845149,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.061376720666885,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.458321776241064,
+              "windows": 64
+            },
+            "D": {
+              "nll": 7.672121480107307,
+              "windows": 128
+            }
+          },
+          "fresh_nll": {}
+        }
+      },
+      "new_input_tokens": 52889088
+    }
+  }
+}

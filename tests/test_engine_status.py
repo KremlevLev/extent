@@ -110,6 +110,16 @@ def test_registry_validation_and_message_limit(tmp_path):
     assert status.sessions(None,tmp_path)[0]['id']=='blackwell'
 
 
+def test_comparison_reports_edu_russian_and_correct_selection_panel():
+    report=fixture();row=report['branches']['KD-C4-FRESH'];row['best_panel']='D'
+    row['final']['last']['panels']['E']={'nll':5.2}
+    row['final']['last']['fresh_nll']['russian_wikipedia']={'nll':7.7,'windows':[7.7]*128}
+    rendered=status.format_report('compare',report,1000,True,now=1100)
+    assert 'BEST C4 D:' in rendered and 'BEST Wiki A:' not in rendered
+    assert 'NLL edu_E: 5.2000' in rendered
+    assert 'russian_wikipedia_128windows_nll: 7.7000' in rendered
+
+
 def test_bootstrap_rate_limit_retries_and_old_commands_are_not_sent(tmp_path):
     class Stop:
         done=False

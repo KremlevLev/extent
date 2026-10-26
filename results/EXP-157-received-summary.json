@@ -1,0 +1,491 @@
+{
+  "experiment": 157,
+  "raw_sha256": "46ee5affce30512f62a3e143fe807ca3e97b7f59ff5c9369204c8bbb96666260",
+  "status": "deadline_partial",
+  "stop_reason": "registered work deadline",
+  "sessions": [
+    {
+      "max_wall_hours": 9.0,
+      "save_reserve_minutes": 18.0,
+      "uploaded_bytes": 45510509345,
+      "hours": 8.852900062055278
+    }
+  ],
+  "cost": {
+    "attempted_updates": 40375,
+    "input_tokens": 10336000,
+    "ce_targets": 10295625,
+    "teacher_input_tokens": 0,
+    "training_seconds": 18003.190084034843,
+    "engine_audit_extra_input_tokens": 512,
+    "engine_audit_extra_ce_targets": 510,
+    "accepted_updates": 40375,
+    "accepted_input_tokens": 10336000,
+    "accepted_ce_targets": 10295625
+  },
+  "pending_slots": [],
+  "branches": {
+    "R256-FRESH-ADAM": {
+      "source_step": 118304,
+      "step": 138792,
+      "best_step": 118816,
+      "best_nll": 4.908263545483351,
+      "durable_step": 138792,
+      "accepted_new_updates": 20488,
+      "training_windows_seen": null,
+      "finalization_status": "completed",
+      "evaluations": [
+        {
+          "step": 118304,
+          "panels": {
+            "A": {
+              "nll": 4.975879415869713,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.06145566701889,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.457786735147238,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 7.2465603947639465,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 11.318923473358154,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 118432,
+          "panels": {
+            "A": {
+              "nll": 4.90871499851346,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.012823134660721,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.400821823626757,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 118816,
+          "panels": {
+            "A": {
+              "nll": 4.908263545483351,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.99444243311882,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.412358738481998,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 119328,
+          "panels": {
+            "A": {
+              "nll": 4.922291472554207,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.027868717908859,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.435113564133644,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 120352,
+          "panels": {
+            "A": {
+              "nll": 4.983101963996887,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.042783156037331,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.505675118416548,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 122400,
+          "panels": {
+            "A": {
+              "nll": 4.969331480562687,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.040297508239746,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.4430661499500275,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 126496,
+          "panels": {
+            "A": {
+              "nll": 4.950919788330793,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.059648364782333,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.4181411154568195,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 7.168550670146942,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 11.105401575565338,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 134688,
+          "panels": {
+            "A": {
+              "nll": 4.918915148824453,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.008762985467911,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.396846901625395,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 7.2802285850048065,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 11.410746812820435,
+              "windows": 16
+            }
+          }
+        }
+      ],
+      "final": {
+        "last": {
+          "step": 138792,
+          "panels": {
+            "A": {
+              "nll": 4.946354541927576,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.0481802225112915,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.419136129319668,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 7.255928855389357,
+              "windows": 128
+            },
+            "russian_wikipedia": {
+              "nll": 11.284281991422176,
+              "windows": 128
+            }
+          }
+        },
+        "best": {
+          "step": 118816,
+          "panels": {
+            "A": {
+              "nll": 4.908263545483351,
+              "windows": 64
+            },
+            "B": {
+              "nll": 4.99444243311882,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.412358738481998,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        }
+      },
+      "new_input_tokens": 5244928
+    },
+    "FULL-DECODER": {
+      "source_step": 118304,
+      "step": 138191,
+      "best_step": 118304,
+      "best_nll": 4.9757962338626385,
+      "durable_step": 138191,
+      "accepted_new_updates": 19887,
+      "training_windows_seen": null,
+      "finalization_status": "completed",
+      "evaluations": [
+        {
+          "step": 118304,
+          "panels": {
+            "A": {
+              "nll": 4.9757962338626385,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.060742348432541,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.457725387066603,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 7.244659274816513,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 11.318831324577332,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 118432,
+          "panels": {
+            "A": {
+              "nll": 5.006266862154007,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.080690547823906,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.48630341142416,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 118816,
+          "panels": {
+            "A": {
+              "nll": 5.905149012804031,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.957440838217735,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.538793355226517,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 119328,
+          "panels": {
+            "A": {
+              "nll": 5.944882608950138,
+              "windows": 64
+            },
+            "B": {
+              "nll": 6.042062342166901,
+              "windows": 32
+            },
+            "C": {
+              "nll": 5.607028231024742,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 120352,
+          "panels": {
+            "A": {
+              "nll": 7.040169112384319,
+              "windows": 64
+            },
+            "B": {
+              "nll": 7.167890191078186,
+              "windows": 32
+            },
+            "C": {
+              "nll": 7.00746476650238,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 122400,
+          "panels": {
+            "A": {
+              "nll": 6.424095816910267,
+              "windows": 64
+            },
+            "B": {
+              "nll": 6.51739938557148,
+              "windows": 32
+            },
+            "C": {
+              "nll": 6.101174108684063,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        },
+        {
+          "step": 126496,
+          "panels": {
+            "A": {
+              "nll": 10.081089220941067,
+              "windows": 64
+            },
+            "B": {
+              "nll": 9.829972714185715,
+              "windows": 32
+            },
+            "C": {
+              "nll": 9.268708229064941,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 10.222747385501862,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 14.206488072872162,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 134688,
+          "panels": {
+            "A": {
+              "nll": 7.545751452445984,
+              "windows": 64
+            },
+            "B": {
+              "nll": 7.4935439974069595,
+              "windows": 32
+            },
+            "C": {
+              "nll": 7.313439220190048,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 8.635703265666962,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 14.275785624980927,
+              "windows": 16
+            }
+          }
+        }
+      ],
+      "final": {
+        "last": {
+          "step": 138191,
+          "panels": {
+            "A": {
+              "nll": 7.319847524166107,
+              "windows": 64
+            },
+            "B": {
+              "nll": 7.317565828561783,
+              "windows": 32
+            },
+            "C": {
+              "nll": 7.066496916115284,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {
+            "english_stories": {
+              "nll": 8.538966313004494,
+              "windows": 128
+            },
+            "russian_wikipedia": {
+              "nll": 13.97552616149187,
+              "windows": 128
+            }
+          }
+        },
+        "best": {
+          "step": 118304,
+          "panels": {
+            "A": {
+              "nll": 4.9757962338626385,
+              "windows": 64
+            },
+            "B": {
+              "nll": 5.060742348432541,
+              "windows": 32
+            },
+            "C": {
+              "nll": 4.457725387066603,
+              "windows": 64
+            }
+          },
+          "fresh_nll": {}
+        }
+      },
+      "new_input_tokens": 5091072
+    }
+  }
+}

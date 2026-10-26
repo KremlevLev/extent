@@ -121,7 +121,7 @@ def format_report(alias,report,modified,active=None,cached=False,now=None):
         # Same extractor as the read-only dashboard: never inject BEST as CURRENT.
         if number(origin):
             metric_points=points(report,arm)
-            for panel in ('wiki_A','wiki_B','wiki_C','c4_D'):
+            for panel in ('wiki_A','wiki_B','wiki_C','c4_D','edu_E'):
                 key='validation/'+panel+'_nll'
                 measured=[p for p in metric_points if key in p]
                 if not measured:continue
@@ -132,14 +132,16 @@ def format_report(alias,report,modified,active=None,cached=False,now=None):
             fresh={}
             for point in metric_points:
                 for key,value in point.items():
-                    if key.startswith(('validation/en_stories_','validation/ru_wiki_')):
+                    if key.startswith(('validation/en_stories_','validation/ru_wiki_','validation/russian_wikipedia_')):
                         fresh[key]=(value,point['progress/global_step'])
             for key,(value,measured_step) in fresh.items():
                 lines.append(f'NLL {key.removeprefix("validation/")}: {value:.4f} @ {measured_step}')
             timings=[p.get('performance/input_tokens_per_second') for p in metric_points
                      if 'performance/input_tokens_per_second' in p]
             if timings:lines.append(f'Скорость ядра: {sum(timings[-20:])/len(timings[-20:]):.0f} ток/с')
-        if number(row.get('best_nll')):lines.append(f'BEST Wiki A: {row["best_nll"]:.4f} @ {row.get("best_step","—")}')
+        if number(row.get('best_nll')):
+            label='C4 D' if row.get('best_panel')=='D' else 'Wiki A'
+            lines.append(f'BEST {label}: {row["best_nll"]:.4f} @ {row.get("best_step","—")}')
         if row.get('failed'):lines.append('⚠ Ветка отмечена failed')
         if row.get('durable_step') is not None:lines.append(f'Шаг удалённого сохранения: {row["durable_step"]}')
     lines.append(f'Ожидают HF: {len(report.get("pending_slots",[]))}')

@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-26",
+  "experiment": 162,
+  "physical_blackwell_run": false,
+  "physical_fineweb_edu_quality_result": false,
+  "fineweb_edu_revision_verified_via_hub_api": "87f09149ef4734204d70ed1d046ddc9ca3f2b8f9",
+  "pinned_sample_shard_inventory": "sample/10BT/000_00000.parquet through 013_00000.parquet",
+  "new_comparison_tests_passed": 7,
+  "status_dashboard_corpus_regression_tests_passed": 18,
+  "verification": [
+    "same parent CURRENT and Adam restored into both independent children; BEST reset to CURRENT only",
+    "C4 continues at parent data cursor, Edu starts at zero; disjoint six-window updates",
+    "same optimizer recipe except name/data_stream; matched unused-data ceiling; wrong Edu revision rejected",
+    "C4 training and validation exact document exclusions protect new Edu validation; C4 validation excluded from Edu training",
+    "real tiny-model CPU runner accepts batch6 update, resumes next six windows, increments inherited Adam once per update",
+    "bad parent replay rejected before any accepted training update",
+    "launcher uses shared caches and new comparison paths; EXP161 status report not overwritten",
+    "received EXP161 pinned scientific source hashes unchanged"
+  ],
+  "limits": "CPU engineering checks do not establish real GPU HBM/throughput, successful remote preparation, general model quality, or superiority to C4. No server job launched here."
+}
