@@ -1,0 +1,135 @@
+{
+  "raw_sha256": "8df19a0bb4a6d4b47b82daee021b173c74d06f15962ca93bf9874dc5453060ca",
+  "status": "failed",
+  "error": {
+    "type": "MemoryError",
+    "message": "streamed executable HBM guard: {\"device\": 0, \"platform\": \"gpu\", \"limit\": 56086233088, \"in_use\": 28757183232, \"argument_bytes\": 20433568280, \"output_bytes\": 21826797900, \"temp_bytes\": 8277039104, \"alias_bytes\": 0}",
+    "traceback": "Traceback (most recent call last):\n  File \"/data/workdir/_biometric-old/biometric-linking-guarded-v4/engine-core-src/scripts/m3q_full_adaptive_164.py\", line 203, in run\n    outputs=kernels[name](payload['parameters'],payload['optimizer'],bases[name],teacher_params,\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/workdir/_biometric-old/biometric-linking-guarded-v4/engine-core-src/extent/reset_streamed_gpu.py\", line 33, in __call__\n    raise MemoryError('streamed executable HBM guard: '+json.dumps(row))\nMemoryError: streamed executable HBM guard: {\"device\": 0, \"platform\": \"gpu\", \"limit\": 56086233088, \"in_use\": 28757183232, \"argument_bytes\": 20433568280, \"output_bytes\": 21826797900, \"temp_bytes\": 8277039104, \"alias_bytes\": 0}\n"
+  },
+  "cost": {
+    "attempted_updates": 2,
+    "input_tokens": 512,
+    "ce_targets": 510,
+    "teacher_input_tokens": 512,
+    "accepted_updates": 1,
+    "accepted_input_tokens": 256,
+    "accepted_ce_targets": 255,
+    "planner_input_presentations": 1280,
+    "training_seconds": 0.710388878826052
+  },
+  "pending_slots": [],
+  "batch_planner": {
+    "status": "completed",
+    "trials": [
+      {
+        "batch": 8,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 73.27840131800622
+      },
+      {
+        "batch": 7,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 75.7232659989968
+      },
+      {
+        "batch": 6,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 23.411045661196113
+      },
+      {
+        "batch": 5,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 74.79869636893272
+      },
+      {
+        "batch": 4,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 71.90334427799098
+      },
+      {
+        "batch": 3,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 75.36476638703607
+      },
+      {
+        "batch": 2,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 67.98734866199084
+      },
+      {
+        "batch": 1,
+        "status": "measured",
+        "completed_probe_proposals": 3,
+        "compile_warmup_seconds": 64.18683623196557,
+        "samples_seconds": [
+          0.6971651529893279,
+          0.6978188729844987
+        ],
+        "seconds_per_update": 0.6974920129869133,
+        "input_tokens_per_second": 367.0292924268986,
+        "elapsed_seconds": 66.42427989002317
+      }
+    ],
+    "selected_batch": 1,
+    "input_tokens_per_second": 367.0292924268986,
+    "elapsed_seconds": 533.2050064799841,
+    "accepted_updates": 0,
+    "scope": "fixed actual CURRENT/Adam; compilation excluded from steady samples; no state/data advance",
+    "gradient_audit": {
+      "passed": true,
+      "relative_l2": 0.024440231763575578,
+      "cosine": 0.9997079931244294,
+      "relative_l2_tolerance": 0.15,
+      "minimum_cosine": 0.98,
+      "ce_error": 0.0018630027770996094,
+      "ce_tolerance": 0.03,
+      "scope": "one unaccepted actual-batch gradient; not bitwise or long-trajectory identity"
+    },
+    "probe_input_presentations": 1280,
+    "failed_probe_partial_compute_not_measured": true
+  },
+  "session_hours": [
+    0.6045324809480613
+  ],
+  "branches": {
+    "FULL-KD": {
+      "step": 157685,
+      "source_step": 157684,
+      "durable_step": 157685,
+      "source_adam_step": 2832,
+      "adam_count_at_restore": [
+        2832,
+        2832,
+        2832,
+        2832,
+        2832,
+        2832
+      ],
+      "training_windows_seen": 16993,
+      "accepted_input_tokens": 256,
+      "accepted_new_updates": 1,
+      "coordinates": 1364173952,
+      "source_controls": {
+        "A": 5.870480388402939,
+        "B": 5.9144736379384995,
+        "C": 5.491409823298454,
+        "D": 5.176542937755585,
+        "E": 5.1104867942631245
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "status": "local_engineering_checks_passed",
+  "physical_blackwell_execution": false,
+  "parent164_source_drift": [],
+  "evidence": [
+    "Real reduced full-decoder two consecutive updates with NamedSharding: one cached executable, Adam advances twice",
+    "Lean q/Adam proposals agree with old four-output implementation; independent gradient-only calculation agrees with original gradient",
+    "BEST stored as exact independent host arrays; no retained GPU weight copy",
+    "Actual chunked164-to165 CURRENT fork preserves source step157685, Adam2833 and window16993; own restore avoids parent",
+    "Source freezer accepts durable last accepted checkpoint from received memory failure",
+    "Actual165 contract/session assembly uses correct source clocks and new report namespace",
+    "Wrapper routing and existing bot/observer/dashboard regression tests passed"
+  ],
+  "limitation": "CPU reduced model; actual Blackwell HBM fit and throughput remain unverified",
+  "code": {
+    "extent/full_steady_165.py": "6d173bf05f322f03527f6ed66483972917a6bc04952652f1beeb9146b65b7ec4",
+    "extent/steady_batch_planner.py": "fa02173fd2476e4e8f7506356a1a53860f62e4588ec8ab8cad1df2031c7b5d7c",
+    "extent/steady_execution.py": "5cc9e26a780ddf8795994d0a3de2d035cc2ec5675cd2d32a7fc8f55f38872802",
+    "scripts/m3q_full_steady_165.py": "6ce696ad47f77379279543c633d110c5591573748f71979fc09f946f5216746b",
+    "engine_full_next.py": "90ab96ef4936aedb91e6ced7f785b974ec826c35f33ed62a57994a96bfab4525"
+  }
+}
