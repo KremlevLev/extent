@@ -50,12 +50,12 @@ def test_legacy_runner_autoregisters_current_report_with_existing_bot(monkeypatc
     assert calls[0]==('bot','results/runtime-methods.json') and calls[1][0]=='run'
 
 
-def test_full_routes_to_steady165_and_legacy164_stays_explicit(monkeypatch):
+def test_full_routes_to_stream166_and_legacy164_stays_explicit(monkeypatch):
     calls=[]
     monkeypatch.setitem(sys.modules,'setproctitle',SimpleNamespace(setproctitle=lambda title:None))
     monkeypatch.setattr(engine_launch,'nvml_process_name',lambda:None)
-    monkeypatch.setitem(sys.modules,'engine_full_next',SimpleNamespace(main=lambda args:calls.append(('165',args))))
+    monkeypatch.setitem(sys.modules,'engine_full_stream',SimpleNamespace(main=lambda args:calls.append(('166',args))))
     monkeypatch.setitem(sys.modules,'engine_full',SimpleNamespace(main=lambda args:calls.append(('164',args))))
     engine_launch.main(['--runner','full','--max-wall-hours','13'])
     engine_launch.main(['--runner','full164','--max-wall-hours','13'])
-    assert calls==[('165',['--max-wall-hours','13']),('164',['--max-wall-hours','13'])]
+    assert calls==[('166',['--max-wall-hours','13']),('164',['--max-wall-hours','13'])]

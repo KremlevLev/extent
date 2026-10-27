@@ -2123,3 +2123,12 @@ Automatic Telegram service registers reports, maintains one per-token listener a
 Received private/runtime-full.json:164 failed at second attempted step, first accepted step157685 saved with Adam2833/Edu16993, HF pending0. Planner533s selectedbatch1, all larger shapes memory-rejected under~56.09GB allocator cap. Second guard required58.86GB due steady retained-BEST memory and loop sharding change. Previous reduced test did not cover this live transition. See results/EXP-164-received-summary.json and EXP-165-protocol.md.
 
 New165 uses separate immutable-source/model/runner/execution files. BEST retained losslessly on host RAM, lean3-output proposals, separate gradient-only numerical audit, explicit NamedSharding after each accepted update; source164 code untouched. `engine_launch --runner full` now165, legacy `--runner full164` explicit. Report/log runtime-full-next; /check auto-registers. Defaultlocal100GB (three retained state families~85GB), GPU fraction remains0.55 for user's59GB process target. No physical GPU validation of fix yet; launch instructions EXP-165-launch.md.
+
+
+## EXP165 repeated failure and EXP166 streamed batch execution (2026-10-27)
+
+Received newer runtime-full-next.json:2 failed invocations,0 accepted updates; higher pool still rejects all8 monolithic batches (192s latest scan). Source remains durable157685/Adam2833/Edu16993. Do not claim new quality results or assume physical59GB impossibility. Preserve165 scientific source hashes. Evidence: results/EXP-165-received-summary.json.
+
+Default engine_launch --runner full now EXP166 via engine_full_stream.py. Whole-batch layer-streamed MethodReference computes all decoder gradients, teacher GPU resident, activation/BEST host RAM; ONE Adam update per actual batch. Mandatory streamed batch1..8 scan and numerical comparison to mean microgradients; detailed failure messages plus allocator/NVML stats. GPU fit/performance not remotely verified. See EXP-166-protocol.md, engineering audit and launch.
+
+New source compact/external manifest eliminates recursive report growth. No bootstrap22GB copy and no full checkpoint upload on0-update preflight. New states/results runtime-full-stream; local allowance130GB for existing donors plus active atomic state. New --leave-free-gib 5 computes pool from current nvidia-smi use minus5GiB reserve and2GiB CUDA allowance before JAX import. /check auto-registers new report; no unrelated GPU processes touched.

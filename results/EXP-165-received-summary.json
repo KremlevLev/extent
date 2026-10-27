@@ -1,0 +1,112 @@
+{
+  "raw_sha256": "e4bc03d8321974832900ebb872f34987aa4b71d68ad87aba9400b9ede7258bb8",
+  "status": "failed",
+  "error": {
+    "type": "RuntimeError",
+    "message": "No compiled batch1..8 fits; refusing silent slow fallback",
+    "traceback": "Traceback (most recent call last):\n  File \"/data/workdir/_biometric-old/biometric-linking-guarded-v4/engine-core-src/scripts/m3q_full_steady_165.py\", line 195, in run\n    kernels[name],plan=plan_kernel(cfg,tc,columns,spec,tx,payload['parameters'],payload['optimizer'],\n                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/workdir/_biometric-old/biometric-linking-guarded-v4/engine-core-src/extent/steady_batch_planner.py\", line 28, in plan_kernel\n    result=benchmark(factory,invoke,release,check,record)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/data/workdir/_biometric-old/biometric-linking-guarded-v4/engine-core-src/extent/batch_planner.py\", line 34, in benchmark\n    if not valid:raise RuntimeError('No compiled batch1..8 fits; refusing silent slow fallback')\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: No compiled batch1..8 fits; refusing silent slow fallback\n"
+  },
+  "cost": {
+    "attempted_updates": 0,
+    "input_tokens": 0,
+    "ce_targets": 0,
+    "teacher_input_tokens": 0,
+    "accepted_updates": 0,
+    "accepted_input_tokens": 0,
+    "accepted_ce_targets": 0
+  },
+  "pending_slots": [],
+  "batch_planner": {
+    "trials": [
+      {
+        "batch": 8,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 20.877510505961254
+      },
+      {
+        "batch": 7,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 20.90119921695441
+      },
+      {
+        "batch": 6,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 20.861335957888514
+      },
+      {
+        "batch": 5,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "JaxRuntimeError",
+        "elapsed_seconds": 30.50836535403505
+      },
+      {
+        "batch": 4,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 20.517692363122478
+      },
+      {
+        "batch": 3,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 20.574952407972887
+      },
+      {
+        "batch": 2,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "JaxRuntimeError",
+        "elapsed_seconds": 30.36028761509806
+      },
+      {
+        "batch": 1,
+        "status": "memory_limit",
+        "completed_probe_proposals": 0,
+        "error_type": "MemoryError",
+        "elapsed_seconds": 20.219364686170593
+      }
+    ],
+    "elapsed_seconds": 192.04046703898348
+  },
+  "sessions": [
+    {
+      "max_wall_hours": 12.498182492057483,
+      "save_reserve_minutes": 18.0,
+      "uploaded_bytes": 21972713033,
+      "hours": 0.30602177396940533
+    },
+    {
+      "max_wall_hours": 11.99737287554476,
+      "save_reserve_minutes": 18.0,
+      "uploaded_bytes": 21973908938,
+      "hours": 0.12317147791476196
+    }
+  ],
+  "branches": {
+    "FULL-KD": {
+      "step": 157685,
+      "source_step": 157685,
+      "durable_step": 157685,
+      "adam_count_at_restore": [
+        2833,
+        2833,
+        2833,
+        2833,
+        2833,
+        2833
+      ],
+      "training_windows_seen": 16993,
+      "accepted_input_tokens": 0,
+      "accepted_new_updates": 0
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "status": "local_engineering_checks_passed",
+  "physical_blackwell_execution": false,
+  "parent165_scientific_source_drift": [],
+  "checks": [
+    "Real reduced full-decoder whole batch3 gradient vs fixed-q mean of3 streamed microgradients; finite proposals and two Adam increments",
+    "Actual planner wiring chooses the batched streamed engine, verifies its numerical gate, and leaves input q/Adam unchanged",
+    "All8 batch trial control flow, detailed error messages, memory snapshots, and all-fail refusal",
+    "Zero accepted updates cause no full-state checkpoint copy, pending slot or upload; accepted step enables normal checkpointing",
+    "Real chunked donor restore without bootstrap save, and own resume independent of donor",
+    "External immutable manifest removes recursive metadata; actual contract under1MB; base manifest expansion does not mutate report contract",
+    "Wrapper, Telegram observer and dashboard regressions; optional5GiB reserve CLI calculation verified against user GPU snapshot"
+  ],
+  "local_test_count": 31,
+  "limitation": "Reduced CPU model and mocked transport/device-query boundaries; physical Blackwell speed/memory must be measured by mandatory planner",
+  "code": {
+    "extent/full_stream_166.py": "8d4e2b3d4e8f8649dec622d3ae27e63f0c4b1225aa43de0ed77ab286cd9e3c0f",
+    "extent/stream_batch_planner.py": "f624e35d0998ea79bc0c4161de9ebc70ad260815b8de92fe8ade6bacc712e434",
+    "scripts/m3q_full_stream_166.py": "f30968dce29349bab7e874555af80526db6f41b45d3347fcb35c6638b5190ff9",
+    "engine_full_stream.py": "1250562cfa015aadf4fec7c7fad57c9108a0f626999bbf90080465e6d3dc13e2"
+  }
+}
