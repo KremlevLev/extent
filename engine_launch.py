@@ -3,6 +3,7 @@ import argparse
 import ctypes
 import os
 import sys
+from pathlib import Path
 
 
 def nvml_process_name():
@@ -25,7 +26,7 @@ def main(argv=None):
     # Only consume this wrapper's option; preserve every training argument.
     parser=argparse.ArgumentParser(add_help=False)
     parser.add_argument('--process-title',default='VLLM:EngineCore')
-    parser.add_argument('--runner',choices=('compare','methods'),default='compare')
+    parser.add_argument('--runner',choices=('compare','methods','full'),default='compare')
     args,remaining=parser.parse_known_args(sys.argv[1:] if argv is None else argv)
     if not args.process_title or len(args.process_title)>64 or any(ord(c)<32 for c in args.process_title):
         raise ValueError('process title must contain 1..64 printable characters')
@@ -38,8 +39,20 @@ def main(argv=None):
     setproctitle.setproctitle(args.process_title)
     print('process_title_requested='+args.process_title,
           'nvml_process_name='+str(nvml_process_name() or 'unavailable'),flush=True)
-    # Same process/PID/signals and stop logic; no subprocess, fork, or watchdog.
-    if args.runner=='methods':
+    # New full launcher registers after its training lock. Legacy runners keep
+    # pinned scientific files; attach their observer here without changing math.
+    if args.runner!='full' and '--no-telegram' not in remaining and os.environ.get('TELEGRAM_BOT_TOKEN') and (os.environ.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_USER_ID')):
+        observer=argparse.ArgumentParser(add_help=False)
+        observer.add_argument('--work-dir',default=str(Path(__file__).resolve().parent.parent/'engine-core'))
+        observed,_=observer.parse_known_args(remaining);root=Path(observed.work_dir).expanduser().resolve()
+        from engine_dashboard import trainer_active
+        if trainer_active(root) is not True:
+            from extent.status_autostart import ensure_listener
+            ensure_listener(root,'results/runtime-methods.json' if args.runner=='methods' else 'results/runtime-compare.json')
+    # Same training process/PID/signals; observer is an independent read-only process.
+    if args.runner=='full':
+        from engine_full import main as run
+    elif args.runner=='methods':
         from engine_methods import main as run
     else:
         from engine_compare import main as run

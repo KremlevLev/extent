@@ -2107,3 +2107,12 @@ Setup clone/install/secrets у пользователя обычно уже вы
 
 Уважать амбицию пользователя, оставаясь исследователем:
 факты → гипотеза → контролируемый эксперимент → измерение → обновление вывода.
+
+
+## EXP164 full-only and required batch planner (2026-10-27)
+
+User requests full decoder only, mandatory actual-state batch1..8 profiling before training each session, and automatic existing Telegram /check hookup. Future new server experiment runners must use this path/policy instead of silently falling back from a nominal large batch to many streamed passes. Preserve already pinned scientific sources.
+
+Prepared EXP164 in engine_full.py, extent/full_adaptive_164.py, extent/batch_planner.py and scripts/m3q_full_adaptive_164.py; launch via engine_launch --runner full. See results/EXP-164-protocol.md and results/EXP-164-launch.md. Source is durable EXP163 FULL-KD CURRENT157684 with Adam2832 and next Edu window16992. New CURRENT baseline is mandatory because received163 final diagnostics were incomplete. Scope is full decoder1.364B, head/embedding/finalnorm frozen. Preserve q/Adam/data; adaptive effective batch is an explicit new contract. Data cursor is checkpointed, token clock explicit. All8 physical batches tested each invocation; pick measured finite throughput, audit selected gradient, no silent slow fallback.
+
+Automatic Telegram service registers reports, maintains one per-token listener and reloads report registry per command. Quiet start/finish notices; /check on demand. Source received163 compact evidence archived at results/EXP-163-received-summary.json. Actual Blackwell run remains unverified until user launches.

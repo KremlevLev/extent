@@ -1,0 +1,291 @@
+"""EXP164: full decoder continuation with mandatory batch planner1..8."""
+import argparse,gc,hashlib,json,os,subprocess,sys,time,traceback
+from pathlib import Path
+from dataclasses import replace
+from importlib.metadata import version
+from types import SimpleNamespace
+import numpy as np
+from extent.full_adaptive_164 import recipes,TPU_EXPERIMENTS,GPU_EXPERIMENTS
+ROOT=Path(__file__).resolve().parents[1]
+EVAL_STEPS=(0,128,512,1024,2048,2560,3072,3434,3584,4096,4608,5120,6144,8192,10240,12288,16384,20480,24576,28672,32768,40960,49152,65536,81920,98304,114688,131072,163840,196608,229376,262144)
+
+
+def contract_for(experiment,worker=None,max_steps=1000000000,corpus_dir=None,execution='server-balanced',source_plan=None,edu_dir=None):
+    from extent.full_adaptive_164 import contract
+    return contract(experiment,worker,max_steps,corpus_dir,execution,source_plan,edu_dir)
+
+
+def session(args,c,hub):
+    from extent.full_adaptive_164 import make_session
+    return make_session(args,c,hub)
+
+
+def run(args):
+    import jax
+    import jax.numpy as jnp
+    from extent.config import load_config
+    from extent.full_adaptive_164 import block_forward,Inspector
+    from extent.full_adaptive_164 import prepare,restore_source,base_coordinates,adam_counts
+    from extent.full_adaptive_164 import optimizer
+    from extent.competitor_tpu import token_nll,reconcile
+    from extent.full_adaptive_164 import to_host
+    from extent.reset_streamed_gpu import make_step
+    from extent.plateau_forensics import GuardedJit,plain,state_digest
+    from extent.sharding import create_v5e_mesh,named_sharding_tree,batch_sharding,replicated_sharding
+    from extent.reset_long_patient import Patient
+    from extent.t4_scale_data import load_data
+    from extent.hf_artifact_sync import artifact_config_from_env
+    from scripts.m3q_peer_tpu_campaign import coordinate_layout,sharded_optimizer
+    cfg,_=load_config(ROOT/'config/hybrid_1_7b_gqa_v5e8.yaml')
+    execution=getattr(args,'execution','t4-pair')
+    c=contract_for(args.experiment,args.worker,args.max_steps,args.corpus_dir,execution,args.source_plan,args.edu_dir);horizon=c['horizon'];eval_steps=c['eval_steps'];hub=artifact_config_from_env()
+    if hub is None:raise ValueError('HF secrets required')
+    s=session(args,c,hub);payloads={};bases={};layouts={};kernels={};evaluators={};specs={};teacher_params=None
+    if s.result.get('status')=='completed':s.persist(force=True);return s.result
+    s.result['status']='preflight';s.emit('started')
+    try:
+        if not s.persist(force=True,checkpoints=False):raise RuntimeError('HF report preflight failed')
+        devices=jax.devices('gpu' if args.experiment in GPU_EXPERIMENTS else 'tpu')
+        expected=1 if args.experiment in GPU_EXPERIMENTS else 8
+        if len(devices)!=expected or jax.process_count()!=1:raise ValueError(f'expected{expected} local accelerator devices')
+        mesh=create_v5e_mesh(devices);s.result['devices']=[dict(id=d.id,kind=d.device_kind,platform=d.platform) for d in devices]
+        tokens,meta=load_data(Path(args.cache_dir)/'reset-data',s.check);s.result['data']=meta
+        from extent.full_adaptive_164 import source_pin
+        from extent.broad_corpus import PackedCorpus,CorpusExhausted
+        corpus=PackedCorpus(args.corpus_dir)
+        edu=PackedCorpus(args.edu_dir)
+        corpora={'c4':corpus,'edu':edu}
+        if json.loads(json.dumps(meta))!=source_pin()['data']:raise ValueError('source training/validation data identity changed')
+        tokens['D']=corpus.validation()[:128]
+        tokens['E']=edu.validation()[:128]
+        s.result['corpus_identity']=corpus.identity
+        s.result['edu_identity']=edu.identity
+        from extent.quality_benchmark_156 import prepare_data
+        from transformers import AutoTokenizer
+        from extent.qwen_source import QWEN3_1_7B_BASE
+        tokenizer=AutoTokenizer.from_pretrained(QWEN3_1_7B_BASE.repo_id,revision=QWEN3_1_7B_BASE.revision,cache_dir=Path(args.cache_dir)/'tokenizer')
+        fresh_dir=Path(args.cache_dir)/'benchmark-data'
+        prepare_data(fresh_dir,tokenizer,s.check)
+        fresh=dict(np.load(fresh_dir/'fresh-panels.npz',allow_pickle=False))
+        s.result['fresh_data_manifest']=json.loads((fresh_dir/'data-manifest.json').read_text())
+        # Host source loading, not full model initialization on accelerator.
+        patient=Patient(Path(args.cache_dir)/'reset-patient',hub,jax.devices('cpu')[0],s.check,seed=c['seed'])
+        if patient.cfg!=cfg:raise ValueError('patient/config mismatch')
+        columns=patient.columns;tc=patient.tc
+        ancestor136=None
+        ancestor136=base_coordinates(hub,Path(args.cache_dir)/'immutable',s.check)
+        teacher_params=patient.teacher
+        if execution=='server-balanced':
+            teacher_params=jax.device_put(teacher_params,named_sharding_tree(teacher_params,mesh))
+            s.result['teacher_execution']='resident GPU weights; no per-step host teacher weight copies'
+            s.result['teacher_resident_bytes']=sum(a.size*a.dtype.itemsize for a in jax.tree.leaves(teacher_params))
+        for spec in c['recipes']:
+            s.check();name=spec['name'];specs[name]=spec
+            source_payload=pin=None
+            source_payload,pin=restore_source(spec['source'],hub,Path(args.cache_dir)/'immutable',s.check)
+            if s.result['runtime']!=pin['runtime']:raise ValueError('source runtime differs; refusing nominal exact resume')
+            with jax.default_device(jax.devices('cpu')[0]):
+                base,q,source_cursor=prepare(patient,spec,source_payload,pin,ancestor136,parent=c['parent'],parent_root=Path(args.checkpoint_dir)/'runtime-b6')
+            pin=dict(pin,source_step=source_cursor,adam_step=c['full_source']['adam_count'])
+            for key in ('embed_tokens','norm'):
+                for left,right in zip(jax.tree.leaves(base[key]),jax.tree.leaves(patient.teacher[key])):
+                    if not np.array_equal(np.asarray(left),np.asarray(right)):raise ValueError('teacher/student shared frozen embedding/head differ')
+            s.result['teacher_shared_head_verified']=True
+            base=jax.device_put(base,named_sharding_tree(base,mesh));bases[name]=base
+            layout=coordinate_layout(q,mesh)
+            from scripts.m3q_paper_decoder_recovery_campaign import memory_estimate
+            resource=memory_estimate(q,base,layout,named_sharding_tree(base,mesh))
+            s.result.setdefault('resource_estimates',{})[name]=resource
+            s.persist(local_only=True)
+            q=jax.device_put(q,layout);tx=optimizer(q,spec)
+            state,state_layout=sharded_optimizer(tx,q,layout,mesh)
+            best=q;best_step=pin['source_step']
+            template=dict(parameters=q,optimizer=state,best=best,best_step=jnp.asarray(best_step,jnp.int32),data_windows=jnp.asarray(c['full_source']['windows'],jnp.int32))
+            layouts[name]=dict(parameters=layout,optimizer=state_layout,best=layout,best_step=replicated_sharding(mesh),data_windows=replicated_sharding(mesh))
+            saved=s.store.restore(name,dict(c,arm=name),template,layouts[name]);payload=saved[0] if saved else template
+            cursor=saved[1]['step'] if saved else source_cursor
+            row=s.result['branches'].setdefault(name,dict(step=cursor,source_step=source_cursor,history=[],evaluations=[]))
+            if not saved and row.get('durable_step',source_cursor)>source_cursor:raise FileNotFoundError('durable continuation missing')
+            if saved and row.get('durable_step',source_cursor)>cursor:raise ValueError('durable report cursor ahead of restored checkpoint')
+            reconcile(row,cursor,int(payload['best_step']));payloads[name]=payload
+            row['invocation_updates']=0;row['timing_samples']=[]
+            row['source_adam_step']=pin['adam_step']
+            row['immutable_source_adam_count']=pin['adam_step']
+            row['inherited_parent_adam_count']=c['full_source']['adam_count']
+            row['initialization']='EXP163 FULL-KD CURRENT157684; carry Adam2832 and Edu16992; adaptive physical batch'
+            row['trainable_scope']=spec['scope'];row['optimizer_reset_for_comparison']=False
+            row['adam_count_at_restore']=adam_counts(payload['optimizer'])
+            expected_count=pin['adam_step']+(cursor-source_cursor)
+            if row['adam_count_at_restore']!=[expected_count]*6:raise ValueError('own restored Adam/global clocks disagree')
+            row['coordinates']=sum(a.size for a in jax.tree.leaves(q));row['payload_bytes']=sum(a.size*a.dtype.itemsize for a in jax.tree.leaves(template))
+            from extent.method_sweep_163 import MethodStep
+            kernels[name]=MethodStep(cfg,tc,columns,spec,tx)
+            kernels[name].check=s.check
+            evaluators[name]=GuardedJit(lambda b,q,t,step,spec=spec:token_nll(cfg,b,q,t,columns,spec,step,block_fn=block_forward))
+            def evaluate(q,windows,step,tail=None,function=evaluators[name],weights=base):
+                losses=[]
+                for t in windows:
+                    s.check();v=np.asarray(function(weights,q,jax.device_put(t[None],batch_sharding(mesh)),jnp.asarray(step,jnp.float32)))[0]
+                    if not np.all(np.isfinite(v)):raise FloatingPointError('nonfinite ordinary held-out NLL')
+                    losses.append(float(np.mean(v if tail is None else v[-tail:])))
+                return dict(nll=float(np.mean(losses)),windows=losses,targets_per_window=255 if tail is None else tail)
+            if 'source_controls' not in row:
+                row['source_controls']={p:evaluate(payload['parameters'],tokens[p],cursor) for p in ('A','B','C','D','E')}
+                row['parent_replay']=dict(available=False,scope='CURRENT157684 lacks final NLL; exact chunks/Adam/data verified, new baseline measured before updates')
+                s.persist(local_only=True)
+            if 'teacher_edu_reference' not in s.result:
+                from extent.full_adaptive_164 import teacher_validation
+                s.result['teacher_edu_reference']=teacher_validation(cfg,kernels[name],base,teacher_params,tokens['E'],s.check)
+                s.result['teacher_edu_reference']['scope']='original Qwen; same E128 windows; evaluation cost only'
+            if 'teacher_c4_reference' not in s.result:
+                from extent.full_adaptive_164 import teacher_validation
+                s.result['teacher_c4_reference']=teacher_validation(cfg,kernels[name],base,teacher_params,tokens['D'],s.check)
+                s.persist(local_only=True)
+            row['best_nll']=evaluate(payload['best'],tokens['D'],int(payload['best_step']))['nll'] if int(payload['best_step'])>=0 else None
+            # Python callables are kept OUTSIDE JSON/checkpoint payloads.
+            evaluators[name]=SimpleNamespace(kernel=evaluators[name],evaluate=evaluate,inspector=Inspector(cfg,base,columns,spec,s.check))
+            if 'source_profile' not in row:row['source_profile']=evaluators[name].inspector.profile(payload['parameters'],tokens['A'][:1],cursor)
+            s.persist()
+            payloads[name]=to_host(payloads[name])
+            del template,q,state,payload,best,saved;gc.collect()
+        del patient,source_payload,ancestor136;gc.collect()
+        rows=s.result['branches'];s.result['status']='running';s.persist();last_sync=time.monotonic();last_notice=time.monotonic();last_console=time.monotonic()
+        target_budget=[horizon]
+        def evaluate_endpoint(name,force=False):
+            row=rows[name];payload=payloads[name];spec=specs[name];at=row['step']
+            if not force and ((at-row['source_step'] not in eval_steps and at not in c['global_eval_steps'] and at-row['source_step']!=target_budget[0]) or any(e['step']==at for e in row['evaluations'])):return
+            ready=spec['ramp_steps']==0 or at>=spec['ramp_steps'];point=dict(step=at,new_steps=at-row['source_step'],accepted_input_tokens=row.get('accepted_input_tokens',0),selection_eligible=ready,panels={})
+            if ready and at==row['source_step']:
+                point['panels']=row['source_controls'];point['reuses_source_control']=True
+            else:
+                for panel in ('A','B','C','D','E') if ready else ('A',):
+                    point['panels'][panel]=evaluators[name].evaluate(payload['parameters'],tokens[panel] if ready else tokens[panel][:16],at)
+            if (at-row['source_step'])%1024==0 or force:
+                point['fresh_nll']={key:evaluators[name].evaluate(payload['parameters'],arr[:4096].reshape(16,256),at) for key,arr in fresh.items()}
+            if ready and (row['best_nll'] is None or point['panels']['D']['nll']<row['best_nll']):
+                payload['best']=payload['parameters'];payload['best_step']=jnp.asarray(at,jnp.int32)
+                row.update(best_nll=point['panels']['D']['nll'],best_step=at)
+            if at-row['source_step'] in (4096,8192,16384,32768,65536,98304,131072):point['profile']=evaluators[name].inspector.profile(payload['parameters'],tokens['A'][:1],at)
+            if not force:row['evaluations'].append(point)
+            s.persist();return point
+        name='FULL-KD';row=rows[name];spec=specs[name]
+        payloads[name]=jax.device_put(payloads[name],layouts[name]);payload=payloads[name]
+        source_windows=c['full_source']['windows']
+        row['training_windows_seen']=int(payload['data_windows'])
+        if row['training_windows_seen']<source_windows:raise ValueError('restored Edu cursor before source')
+        row['accepted_input_tokens']=(row['training_windows_seen']-source_windows)*256
+        row['accepted_new_updates']=row['step']-row['source_step']
+        s.result['cost'].update(accepted_updates=row['accepted_new_updates'],accepted_input_tokens=row['accepted_input_tokens'],accepted_ce_targets=(row['training_windows_seen']-source_windows)*255)
+        # Both CURRENT source and resumed CURRENT are measured before planner.
+        try:
+            baseline=evaluate_endpoint(name,force=True)
+            s.invocation['restored_current']=baseline
+            if not any(e['step']==row['step'] for e in row['evaluations']):row['evaluations'].append(baseline)
+            s.persist(local_only=True)
+            from extent.batch_planner import plan_kernel
+            first=int(payload['data_windows'])
+            if first+8>len(edu.arrays['train'])//256:raise CorpusExhausted('fewer than8 Edu windows left for mandatory planner')
+            probe_tokens=np.concatenate([edu.batch(first+i) for i in range(8)],axis=0)
+            def record_plan(value):
+                s.invocation['batch_planner']=value;s.result['batch_planner']=value;s.persist(local_only=True)
+                print('Engine full: batch planner',[(t['batch'],t['status']) for t in value.get('trials',[])],flush=True)
+            kernels[name],plan=plan_kernel(cfg,tc,columns,spec,tx,payload['parameters'],payload['optimizer'],
+                bases[name],teacher_params,jax.device_put(probe_tokens,batch_sharding(mesh)),jnp.asarray(row['step'],jnp.float32),s.check,record_plan)
+            batch=plan['selected_batch'];row['selected_batch']=batch
+            s.result['cost']['planner_input_presentations']=s.result['cost'].get('planner_input_presentations',0)+plan['probe_input_presentations']
+            s.result['status']='running';s.persist(force=True,checkpoints=False)
+            while row['step']-row['source_step']<horizon:
+                s.check();cursor=row['step'];first=int(payload['data_windows'])
+                if first+batch>len(edu.arrays['train'])//256:raise CorpusExhausted('Edu exhausted; no repeat or short-batch change')
+                t=np.concatenate([edu.batch(first+i) for i in range(batch)],axis=0)
+                begun=time.monotonic();cost=s.result['cost'];cost['attempted_updates']+=1
+                cost['input_tokens']+=t.size;cost['ce_targets']+=batch*255;cost['teacher_input_tokens']+=t.size
+                outputs=kernels[name](payload['parameters'],payload['optimizer'],bases[name],teacher_params,
+                    jax.device_put(t,batch_sharding(mesh)),jnp.asarray(cursor,jnp.float32))
+                proposed,after,health=outputs[:3];h=plain(health);seconds=max(1e-6,time.monotonic()-begun)
+                cost['training_seconds']=cost.get('training_seconds',0)+seconds
+                if not h['finite']:raise FloatingPointError('nonfinite full decoder proposal rejected')
+                payload['parameters']=proposed;payload['optimizer']=after
+                payload['data_windows']=jax.device_put(jnp.asarray(first+batch,jnp.int32),replicated_sharding(mesh))
+                del outputs,proposed,after
+                row['step']=cursor+1;row['training_windows_seen']=first+batch;row['accepted_input_tokens']+=t.size
+                row['accepted_new_updates']=row.get('accepted_new_updates',0)+1;row['invocation_updates']+=1
+                row['training_seconds']=row.get('training_seconds',0)+seconds
+                cost['accepted_updates']=cost.get('accepted_updates',0)+1
+                cost['accepted_input_tokens']=cost.get('accepted_input_tokens',0)+t.size
+                cost['accepted_ce_targets']=cost.get('accepted_ce_targets',0)+batch*255
+                row.setdefault('timing_samples',[]).append(seconds);row['timing_samples']=row['timing_samples'][-16:]
+                median=float(np.median(row['timing_samples'][-6:]))
+                row['throughput']=dict(seconds_per_update=median,input_tokens_per_second=batch*256/median,
+                    teacher_input_tokens_per_second=batch*256/median,selected_batch=batch,
+                    remaining_work_hours=max(0,s.deadline-time.monotonic())/3600)
+                if row['invocation_updates']<=8 or row['step']%32==0:
+                    row['history'].append(dict(step=row['step'],seconds=seconds,batch=batch,input_tokens=t.size,accepted_input_tokens=row['accepted_input_tokens'],**h));s.persist(local_only=True)
+                row.pop('final',None);evaluate_endpoint(name)
+                s.checkpoint(name,payload,row['step'])
+                if time.monotonic()-last_console>=300:
+                    print('Engine full: step=',row['step'],'Edu window=',first+batch,'batch=',batch,'tokens/s=',round(batch*256/median),flush=True)
+                    last_console=time.monotonic()
+            s.result['status']='completed'
+        except CorpusExhausted as exc:s.result.update(status='data_exhausted',stop_reason=str(exc))
+        except TimeoutError as exc:s.result.update(status='deadline_partial',stop_reason=str(exc))
+        s.finalizing=True
+        s.checkpoint(name,payload,row['step'])
+        # CURRENT diagnostics before 22GB upload; preserve at least10min for sync.
+        s.deadline=max(time.monotonic(),s.wall-600)
+        try:
+            point=dict(step=row['step'],accepted_input_tokens=row['accepted_input_tokens'],panels={},context={});row['final']=dict(last=point)
+            for panel in ('D','E','A','B','C'):
+                point['panels'][panel]=evaluators[name].evaluate(payload['parameters'],tokens[panel],row['step']);s.persist(local_only=True)
+            point['fresh_nll']={key:evaluators[name].evaluate(payload['parameters'],arr[:32768].reshape(128,256),row['step']) for key,arr in fresh.items()}
+            row['finalization_status']='completed';s.result['finalization_status']='completed'
+        except TimeoutError:s.result['finalization_status']='deadline_partial'
+        s.result['accelerator_memory']=[plain(d.memory_stats() or {}) for d in devices]
+    except TimeoutError as exc:s.result.update(status='deadline_partial',stop_reason=str(exc))
+    except Exception as exc:
+        s.result.update(status='failed',error=dict(type=type(exc).__name__,message=str(exc),traceback=traceback.format_exc()));traceback.print_exc()
+    finally:
+        s.finalizing=True
+        for name,payload in payloads.items():s.checkpoint(name,payload,s.result['branches'][name]['step'])
+        s.persist(force=True)
+        if s.result.get('storage_error'):s.result['status']='storage_partial';s.persist(local_only=True)
+        s.emit('finished and saved' if not s.result['pending_slots'] and not s.result.get('report_sync_error') else 'finished; HF pending')
+    if s.result['status']=='failed':raise RuntimeError('follow-up stopped; see saved report')
+    return s.result
+
+
+def parser():
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--source-plan',required=True)
+    p.add_argument('--edu-dir',required=True)
+    p.add_argument('--corpus-dir',required=True,help='completed pinned CPU-prepared C4 directory')
+    p.add_argument('--execution',choices=('server-balanced',),default='server-balanced')
+    p.add_argument('--stop-file')
+    p.add_argument('--work-root')
+    p.add_argument('--max-local-gb',type=float,default=80.)
+    p.add_argument('--local-checkpoint-minutes',type=float,default=30.)
+    p.add_argument('--min-free-gb',type=float,default=20.)
+    p.add_argument('--experiment',type=int,choices=(164,),default=164)
+    p.add_argument('--max-wall-hours',type=float,default=13.8)
+    p.add_argument('--max-steps',type=int,default=1000000000,help='optimizer updates after FULL-KD CURRENT; data end or wall limit stops')
+    p.add_argument('--save-reserve-minutes',type=float,default=18.)
+    p.add_argument('--max-new-hf-gb',type=float,default=32.)
+    p.add_argument('--output-dir',default='/kaggle/working/extent-results')
+    p.add_argument('--cache-dir',default='/kaggle/working/extent-160-cache')
+    p.add_argument('--checkpoint-dir',default='/kaggle/working/extent-160-states')
+    p.add_argument('--plan-only',action='store_true')
+    p.add_argument('--telegram',action=argparse.BooleanOptionalAction,default=True)
+    p.add_argument('--worker',type=int,choices=(0,1))
+    p.add_argument('--deadline-unix',type=float)
+    return p
+
+
+
+
+def main(argv=None):
+    args=parser().parse_args(argv)
+    if args.worker is not None:raise ValueError('single-GPU full decoder only')
+    if args.plan_only:return contract_for(164,None,args.max_steps,args.corpus_dir,args.execution,args.source_plan,args.edu_dir)
+    return run(args)
+
+if __name__=='__main__':main()

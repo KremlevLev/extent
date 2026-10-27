@@ -28,7 +28,7 @@ def read_json(path):
 
 def points(report,arm):
     row=report['branches'][arm];c=report['contract'];origin=int(row['source_step'])
-    batch=int(c.get('batch',1));length=int(c.get('model',{}).get('sequence_length',256))
+    batch=int(c.get('batch',1) or 0);length=int(c.get('model',{}).get('sequence_length',256))
     # Current contracts store model context separately; all exported161 inputs
     # have verified length256. Validation targets_per_window is unrelated to B.
     if c.get('batch')==6:length=256
@@ -36,12 +36,14 @@ def points(report,arm):
     def at(step):
         step=int(step)
         if step<origin:return None
-        return values.setdefault(step,dict({'progress/global_step':step,
-            'progress/optimizer_updates':step-origin,
-            'progress/new_input_tokens':(step-origin)*batch*length}))
+        data=values.setdefault(step,dict({'progress/global_step':step,'progress/optimizer_updates':step-origin}))
+        if batch:data['progress/new_input_tokens']=(step-origin)*batch*length
+        elif step==origin:data['progress/new_input_tokens']=0
+        return data
     def evaluation(point):
         data=at(point['step'])
         if data is None:return
+        if number(point.get('accepted_input_tokens')):data['progress/new_input_tokens']=point['accepted_input_tokens']
         for panel,item in point.get('panels',{}).items():
             if panel in PANELS and number(item.get('nll')):data[f'validation/{PANELS[panel]}_nll']=item['nll']
         for key,item in point.get('fresh_nll',{}).items():
@@ -52,11 +54,12 @@ def points(report,arm):
     for item in row.get('history',[]):
         data=at(item['step'])
         if data is None:continue
+        if number(item.get('accepted_input_tokens')):data['progress/new_input_tokens']=item['accepted_input_tokens']
         for key in ('loss','ce','kl','grad_max_abs','log10_grad_norm'):
             if number(item.get(key)):data['train/'+key]=item[key]
         if number(item.get('seconds')) and item['seconds']>0 and 'engine_gate' not in item:
             data['performance/update_seconds']=item['seconds']
-            data['performance/input_tokens_per_second']=batch*length/item['seconds']
+            data['performance/input_tokens_per_second']=item.get('input_tokens',batch*length)/item['seconds']
     for item in row.get('evaluations',[]):evaluation(item)
     # LAST is the current model. Historical BEST must not become a second
     # current trajectory at the same x coordinate.

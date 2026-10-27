@@ -1,0 +1,25 @@
+{
+  "status": "local_engineering_checks_passed",
+  "physical_blackwell_execution": false,
+  "exp163_scientific_source_drift": [],
+  "checks": [
+    "actual full decoder batch1..8 scan on reduced model; winner gradient versus streamed reference; q/Adam unchanged by probes",
+    "actual checkpoint fork preserves full q, nonzero Adam moments/count2832, BEST and data cursor; own resume avoids donor",
+    "actual runner control path accepts only selected batch, resumes with different batch, preserves token cursor and final128-window diagnostics",
+    "actual contract/session assembly; soft stop forces final checkpoint inside periodic throttle",
+    "throughput winner selection and all-OOM refusal",
+    "bot one-listener startup/registry update, unknown-lock refusal, hot reload and adaptive token display",
+    "existing observer, dashboard and wrapper regressions; new wrapper autoregistration"
+  ],
+  "limitation": "Reduced CPU model and mocked GPU/service boundaries; no physical96GB allocation/timing or live Telegram/HF upload in this turn",
+  "code": {
+    "engine_full.py": "bc9ac775a0b64867ca30117ff148f3311fa90e7a6faa4893de1bc971804b1aef",
+    "extent/full_adaptive_164.py": "669554a4b3e4322f94245ac3e078c14318d6453a0545fc0b4d9c250c814ee230",
+    "extent/batch_planner.py": "a3e6523884858a005224f945f7041b457d12595e58d6d71912092f437155a671",
+    "scripts/m3q_full_adaptive_164.py": "f5ee691cf350c7955116c06d125c717c98c06708368a5f2f60ed1a96f58b41de",
+    "extent/status_autostart.py": "d23f3d8cf64b56e06b18f323ffc3deac4499153e64ac8521b377fb7a17e754d8",
+    "engine_status.py": "b2c33289e9e1307db32fcb49157584e80f42f5828b44f3336b853221b6899d68",
+    "engine_launch.py": "f6ef76461670080e38c635bfed712093dcbb27a7739bbb2f6443dbccfc9827cc",
+    "engine_dashboard.py": "2c85ffa0c091c56bf8b8453603e686c23af01c1233a8ca5e65a64bdb97a2241c"
+  }
+}

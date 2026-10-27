@@ -35,3 +35,16 @@ def test_methods_route_does_not_change_default_compare_or_training_args(monkeypa
     monkeypatch.setattr(engine_launch,'nvml_process_name',lambda:None)
     engine_launch.main(['--runner','methods','--max-wall-hours','14','--clear-stop'])
     assert arguments==[['--max-wall-hours','14','--clear-stop']]
+
+
+def test_legacy_runner_autoregisters_current_report_with_existing_bot(monkeypatch):
+    calls=[]
+    monkeypatch.setitem(sys.modules,'setproctitle',SimpleNamespace(setproctitle=lambda title:None))
+    monkeypatch.setitem(sys.modules,'engine_methods',SimpleNamespace(main=lambda args:calls.append(('run',args))))
+    monkeypatch.setattr(engine_launch,'nvml_process_name',lambda:None)
+    monkeypatch.setenv('TELEGRAM_BOT_TOKEN','test');monkeypatch.setenv('TELEGRAM_CHAT_ID','123')
+    import engine_dashboard,extent.status_autostart
+    monkeypatch.setattr(engine_dashboard,'trainer_active',lambda root:False)
+    monkeypatch.setattr(extent.status_autostart,'ensure_listener',lambda root,report:calls.append(('bot',report)))
+    engine_launch.main(['--runner','methods','--work-dir','/work'])
+    assert calls[0]==('bot','results/runtime-methods.json') and calls[1][0]=='run'

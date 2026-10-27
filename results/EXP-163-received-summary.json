@@ -1,0 +1,435 @@
+{
+  "raw_sha256": "28722ee9b33654cf77d5bab30e7d4af0bf8d48fdcebcf4aad5a0b20e3c0612aa",
+  "status": "deadline_partial",
+  "stop_reason": "requested soft stop",
+  "sessions": [
+    {
+      "max_wall_hours": 13.99831316113472,
+      "save_reserve_minutes": 18.0,
+      "uploaded_bytes": 19277291,
+      "hours": 0.0028137530086355077
+    },
+    {
+      "max_wall_hours": 122.99937617474131,
+      "save_reserve_minutes": 18.0,
+      "uploaded_bytes": 28668204657,
+      "hours": 14.09011540316,
+      "matched_target_new_updates": 24697,
+      "steady_seconds_per_update": {
+        "R256-CONTROL": 4.824763264972717,
+        "UPPER8-MLP": 4.901810457929969,
+        "FULL-KD": 5.4448379495879635
+      }
+    }
+  ],
+  "cost": {
+    "attempted_updates": 8886,
+    "input_tokens": 13648896,
+    "ce_targets": 13595580,
+    "teacher_input_tokens": 13648896,
+    "training_seconds": 45048.94889855455,
+    "engine_audit_extra_input_tokens": 0,
+    "engine_audit_extra_ce_targets": 0,
+    "engine_audit_extra_teacher_input_tokens": 0,
+    "accepted_updates": 8885,
+    "accepted_input_tokens": 13647360,
+    "accepted_ce_targets": 13594050
+  },
+  "pending_slots": [],
+  "finalization_status": "deadline_partial",
+  "branches": {
+    "R256-CONTROL": {
+      "step": 157940,
+      "source_step": 154852,
+      "durable_step": 157940,
+      "coordinates": 57200640,
+      "training_windows_seen": 18528,
+      "accepted_new_updates": 3088,
+      "execution_checks": [
+        {
+          "step": 154852,
+          "batch": 6,
+          "comparison": {
+            "memory": {
+              "message": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 48.38GiB. [tf-allocator-allocation-error=''] [executable_name='jit_step']",
+              "type": "JaxRuntimeError"
+            },
+            "passed": false,
+            "reason": "compiled memory guard"
+          },
+          "evaluation_unit": "one full batch6 equivalent",
+          "gradient_evaluations": 1,
+          "optimizer_updates_accepted_by_audit": 0,
+          "reference_microsteps": 6,
+          "scope": "candidate and six single-example gradients use same q/Adam/input; one proposal returned for caller acceptance",
+          "selected": "accumulated-batch6"
+        }
+      ],
+      "throughput": {
+        "seconds_per_update": 4.876678270520642,
+        "goal_new_steps": 8192,
+        "estimated_training_hours_to_goal": 6.914046081315933,
+        "estimated_training_hours_to_ceiling": 84.0089110068356,
+        "ceiling": 65104,
+        "remaining_work_hours": 109.06885738967239,
+        "input_tokens_per_second": 314.96849182876565,
+        "teacher_input_tokens_per_second": 314.96849182876565,
+        "c4_windows_remaining": null,
+        "caveat": "recent training throughput only; evaluations/saves excluded; not a completion promise"
+      },
+      "best_step": 154980,
+      "best_nll": 5.204786326736212,
+      "evaluations": [
+        {
+          "step": 154852,
+          "new_steps": 0,
+          "panels": {
+            "A": 5.95890699326992,
+            "B": 6.0233389884233475,
+            "C": 5.602312006056309,
+            "D": 5.23127343505621,
+            "E": 5.211796157062054
+          },
+          "fresh": {
+            "english_stories": {
+              "nll": 4.6515088975429535,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.854733645915985,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 154980,
+          "new_steps": 128,
+          "panels": {
+            "A": 5.931743644177914,
+            "B": 5.979852303862572,
+            "C": 5.546645067632198,
+            "D": 5.204786326736212,
+            "E": 5.156421948224306
+          },
+          "fresh": {}
+        },
+        {
+          "step": 155364,
+          "new_steps": 512,
+          "panels": {
+            "A": 5.934426948428154,
+            "B": 5.962733089923859,
+            "C": 5.5641982182860374,
+            "D": 5.240385539829731,
+            "E": 5.13959975913167
+          },
+          "fresh": {}
+        },
+        {
+          "step": 155876,
+          "new_steps": 1024,
+          "panels": {
+            "A": 5.89484079182148,
+            "B": 5.920578271150589,
+            "C": 5.504420429468155,
+            "D": 5.260260086506605,
+            "E": 5.141609815880656
+          },
+          "fresh": {
+            "english_stories": {
+              "nll": 4.683688253164291,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.587442874908447,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 156900,
+          "new_steps": 2048,
+          "panels": {
+            "A": 5.898027315735817,
+            "B": 5.908466771245003,
+            "C": 5.531541921198368,
+            "D": 5.247362621128559,
+            "E": 5.112993156537414
+          },
+          "fresh": {
+            "english_stories": {
+              "nll": 4.66250342130661,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.657702714204788,
+              "windows": 16
+            }
+          }
+        }
+      ]
+    },
+    "UPPER8-MLP": {
+      "step": 157817,
+      "source_step": 154852,
+      "durable_step": 157817,
+      "coordinates": 359190528,
+      "training_windows_seen": 17790,
+      "accepted_new_updates": 2965,
+      "execution_checks": [
+        {
+          "step": 154852,
+          "batch": 6,
+          "comparison": {
+            "memory": {
+              "message": "RESOURCE_EXHAUSTED: Out of memory while trying to allocate 45.76GiB. [executable_name='jit_step'] [tf-allocator-allocation-error='']",
+              "type": "JaxRuntimeError"
+            },
+            "passed": false,
+            "reason": "compiled memory guard"
+          },
+          "evaluation_unit": "one full batch6 equivalent",
+          "gradient_evaluations": 1,
+          "optimizer_updates_accepted_by_audit": 0,
+          "reference_microsteps": 6,
+          "scope": "candidate and six single-example gradients use same q/Adam/input; one proposal returned for caller acceptance",
+          "selected": "accumulated-batch6"
+        }
+      ],
+      "throughput": {
+        "seconds_per_update": 4.925264576333575,
+        "goal_new_steps": 8192,
+        "estimated_training_hours_to_goal": 7.151210539026555,
+        "estimated_training_hours_to_ceiling": 85.01417097466445,
+        "ceiling": 65104,
+        "remaining_work_hours": 108.88695773928879,
+        "input_tokens_per_second": 311.86141905566757,
+        "teacher_input_tokens_per_second": 311.86141905566757,
+        "c4_windows_remaining": null,
+        "caveat": "recent training throughput only; evaluations/saves excluded; not a completion promise"
+      },
+      "best_step": 154980,
+      "best_nll": 5.2047340497374535,
+      "evaluations": [
+        {
+          "step": 154852,
+          "new_steps": 0,
+          "panels": {
+            "A": 5.95890699326992,
+            "B": 6.0233389884233475,
+            "C": 5.602312006056309,
+            "D": 5.23127343505621,
+            "E": 5.211796157062054
+          },
+          "fresh": {
+            "english_stories": {
+              "nll": 4.6515088975429535,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.854733645915985,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 154980,
+          "new_steps": 128,
+          "panels": {
+            "A": 5.93208085000515,
+            "B": 5.9794725477695465,
+            "C": 5.546857915818691,
+            "D": 5.2047340497374535,
+            "E": 5.156595163047314
+          },
+          "fresh": {}
+        },
+        {
+          "step": 155364,
+          "new_steps": 512,
+          "panels": {
+            "A": 5.933268614113331,
+            "B": 5.961799696087837,
+            "C": 5.5627128183841705,
+            "D": 5.240408722311258,
+            "E": 5.139535512775183
+          },
+          "fresh": {}
+        },
+        {
+          "step": 155876,
+          "new_steps": 1024,
+          "panels": {
+            "A": 5.894662618637085,
+            "B": 5.921853616833687,
+            "C": 5.504610426723957,
+            "D": 5.259736463427544,
+            "E": 5.140215026214719
+          },
+          "fresh": {
+            "english_stories": {
+              "nll": 4.684178501367569,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.593196541070938,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 156900,
+          "new_steps": 2048,
+          "panels": {
+            "A": 5.908124729990959,
+            "B": 5.918077349662781,
+            "C": 5.53984072804451,
+            "D": 5.2474324479699135,
+            "E": 5.11344919167459
+          },
+          "fresh": {
+            "english_stories": {
+              "nll": 4.665473222732544,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.665167331695557,
+              "windows": 16
+            }
+          }
+        }
+      ]
+    },
+    "FULL-KD": {
+      "step": 157684,
+      "source_step": 154852,
+      "durable_step": 157684,
+      "coordinates": 1364173952,
+      "training_windows_seen": 16992,
+      "accepted_new_updates": 2832,
+      "execution_checks": [
+        {
+          "step": 154852,
+          "batch": 6,
+          "comparison": {
+            "memory": {
+              "message": "streamed executable HBM guard: {\"device\": 0, \"platform\": \"gpu\", \"limit\": 76481036288, \"in_use\": 35436987648, \"argument_bytes\": 20433573400, \"output_bytes\": 21826797900, \"temp_bytes\": 38813849600, \"alias_bytes\": 0}",
+              "type": "MemoryError"
+            },
+            "passed": false,
+            "reason": "compiled memory guard"
+          },
+          "evaluation_unit": "one full batch6 equivalent",
+          "gradient_evaluations": 1,
+          "optimizer_updates_accepted_by_audit": 0,
+          "reference_microsteps": 6,
+          "scope": "candidate and six single-example gradients use same q/Adam/input; one proposal returned for caller acceptance",
+          "selected": "accumulated-batch6"
+        }
+      ],
+      "throughput": {
+        "seconds_per_update": 5.274961573071778,
+        "goal_new_steps": 8192,
+        "estimated_training_hours_to_goal": 7.853831675462425,
+        "estimated_training_hours_to_ceiling": 91.24511307731271,
+        "ceiling": 65104,
+        "remaining_work_hours": 109.464857914573,
+        "input_tokens_per_second": 291.1869553403284,
+        "teacher_input_tokens_per_second": 291.1869553403284,
+        "c4_windows_remaining": null,
+        "caveat": "recent training throughput only; evaluations/saves excluded; not a completion promise"
+      },
+      "best_step": 156900,
+      "best_nll": 5.184274073690176,
+      "evaluations": [
+        {
+          "step": 154852,
+          "new_steps": 0,
+          "panels": {
+            "A": 5.95871464163065,
+            "B": 6.022881388664246,
+            "C": 5.602375261485577,
+            "D": 5.231138776987791,
+            "E": 5.211784716695547
+          },
+          "fresh": {
+            "english_stories": {
+              "nll": 4.651334792375565,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.854795157909393,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 154980,
+          "new_steps": 128,
+          "panels": {
+            "A": 5.932492546737194,
+            "B": 5.9828342497348785,
+            "C": 5.557125434279442,
+            "D": 5.213896289467812,
+            "E": 5.182697851210833
+          },
+          "fresh": {}
+        },
+        {
+          "step": 155364,
+          "new_steps": 512,
+          "panels": {
+            "A": 5.896561287343502,
+            "B": 5.94654293358326,
+            "C": 5.529673270881176,
+            "D": 5.214058883488178,
+            "E": 5.15933833271265
+          },
+          "fresh": {}
+        },
+        {
+          "step": 155876,
+          "new_steps": 1024,
+          "panels": {
+            "A": 5.899681940674782,
+            "B": 5.9296784698963165,
+            "C": 5.514584191143513,
+            "D": 5.210282240062952,
+            "E": 5.140727948397398
+          },
+          "fresh": {
+            "english_stories": {
+              "nll": 4.5763232707977295,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.813119679689407,
+              "windows": 16
+            }
+          }
+        },
+        {
+          "step": 156900,
+          "new_steps": 2048,
+          "panels": {
+            "A": 5.867558963596821,
+            "B": 5.913266971707344,
+            "C": 5.497438542544842,
+            "D": 5.184274073690176,
+            "E": 5.126339755952358
+          },
+          "fresh": {
+            "english_stories": {
+              "nll": 4.555452257394791,
+              "windows": 16
+            },
+            "russian_wikipedia": {
+              "nll": 7.790886998176575,
+              "windows": 16
+            }
+          }
+        }
+      ]
+    }
+  }
+}

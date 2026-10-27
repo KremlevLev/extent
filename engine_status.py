@@ -111,7 +111,9 @@ def format_report(alias,report,modified,active=None,cached=False,now=None):
         lines.append('\n'+str(arm))
         step=row.get('step');origin=row.get('source_step')
         lines.append(f'Шаг: {step if step is not None else "—"}')
-        if number(step) and number(origin) and step>=origin and number(contract.get('batch')):
+        if number(row.get('accepted_input_tokens')):
+            lines.append(f"Новые входные токены этой ветки: {row['accepted_input_tokens']/1e6:.3f} млн")
+        elif number(step) and number(origin) and step>=origin and number(contract.get('batch')):
             tokens=(step-origin)*contract['batch']*256
             lines.append(f'Новые входные токены этой ветки: {tokens/1e6:.3f} млн')
         history=row.get('history',[])
@@ -142,6 +144,7 @@ def format_report(alias,report,modified,active=None,cached=False,now=None):
         if number(row.get('best_nll')):
             label='C4 D' if row.get('best_panel')=='D' else 'Wiki A'
             lines.append(f'BEST {label}: {row["best_nll"]:.4f} @ {row.get("best_step","—")}')
+        if row.get('selected_batch'):lines.append(f"Выбранный batch: {row['selected_batch']}")
         if row.get('failed'):lines.append('⚠ Ветка отмечена failed')
         if row.get('durable_step') is not None:lines.append(f'Шаг удалённого сохранения: {row["durable_step"]}')
     lines.append(f'Ожидают HF: {len(report.get("pending_slots",[]))}')
@@ -155,8 +158,8 @@ HELP='/check — все сессии\n/check blackwell — одна сессия
 
 
 class Commands:
-    def __init__(self, rows, chat_id, reports=None):
-        self.rows=rows;self.chat_id=str(chat_id);self.reports=reports or Reports()
+    def __init__(self, rows, chat_id, reports=None, config=None, root=None):
+        self.rows=rows;self.chat_id=str(chat_id);self.reports=reports or Reports();self.config=config;self.root=root
 
     def reply(self, message):
         # Private chat only. Matching chat ID alone is insufficient in a group.
@@ -166,6 +169,7 @@ class Commands:
         if not parts:return []
         cmd=parts[0].split('@')[0].lower()
         if cmd in ('/help','/start'):return [HELP]
+        if self.config:self.rows=sessions(self.config,self.root)
         if cmd=='/sessions':return ['Сессии:\n'+'\n'.join('/check '+r['id'] for r in self.rows)]
         if cmd!='/check':return []
         selected=self.rows
@@ -218,7 +222,8 @@ def poll(token,handler,state_path,stop,call=api):
 def main(argv=None):
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('--work-dir',default=str(Path(__file__).resolve().parent.parent/'engine-core'))
-    p.add_argument('--config',help='JSON session registry; re-read on listener restart')
+    p.add_argument('--config',help='JSON session registry; re-read on every command')
+    p.add_argument('--ready-file',help=argparse.SUPPRESS)
     p.add_argument('--preview',action='store_true',help='print summary only; no Telegram access')
     a=p.parse_args(argv);root=Path(a.work_dir).expanduser().resolve()
     rows=sessions(a.config,root)
@@ -236,7 +241,11 @@ def main(argv=None):
     directory=root/'status-bot';directory.mkdir(parents=True,exist_ok=True)
     stop=threading.Event()
     for sig in (signal.SIGINT,signal.SIGTERM):signal.signal(sig,lambda *unused:stop.set())
-    with FileLock(str(lock),timeout=0):poll(token,Commands(rows,chat),directory/'cursor.json',stop)
+    with FileLock(str(lock),timeout=0):
+        if a.ready_file:write_json(Path(a.ready_file),dict(pid=os.getpid(),config=str(Path(a.config).resolve()) if a.config else None))
+        try:poll(token,Commands(rows,chat,config=a.config,root=root),directory/'cursor.json',stop)
+        finally:
+            if a.ready_file:Path(a.ready_file).unlink(missing_ok=True)
 
 
 if __name__=='__main__':
