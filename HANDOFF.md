@@ -1,3 +1,29 @@
+# 28 October2026 — EXP166 RECEIVED; EXP167 LR screen PREPARED
+
+Received private/runtime-full-stream.json: two invocations0.46095h+9.69066h,
+CURRENT181145 durable, pending0, finalization completed, stop by registered work
+deadline. Accepted23460 updates/48,046,080 inputs, batch8, ~1518input tok/s.
+Full decoder1,364,173,952 trainable coordinates; Adam26293/Edu cursor204673.
+A/B/C5.851569/5.880271/5.456707,D5.132805,E5.017505; source166
+5.870242/5.914796/5.491221,D5.176441,E5.110410. FinalEN/RU128
+4.507731/7.542571; do not compare directly to source16-window controls.
+Full training improves slowly, NOT proof that LR is the cause.
+
+User authorizes LR1e-5/3e-5/1e-4 screen. New167 SAME166CURRENT181145 q/Adam26293
+and fresh Edu204673 for all arms; scale norm/pregate1e-6/3e-6/1e-5 too.
+Fixed physical batch8; planner measures1..8 but must accept8, else abort.
+4096updates/8,388,608 inputs each,25,165,824 aggregate input presentations.
+Carry moments/no new warmup, same.5CE+.5KL and full decoder scope. Three serial
+child invocations, shared total HOURS/STOP/server.lock, separate resumable q/Adam/
+data/BEST; no winner claim unless all budgets and final panels complete.
+Default220GB localcap/free20GB,96GB HF cap (~66GB3fullstates), no parent deletion.
+Source descriptor externalizes parent manifest; no preflight-only22GB copies.
+engine_launch --runner lr -> engine_lr; --runner lr-arm -> engine_full_lr.
+Existing --runner full stays166; ALL166 pinned scientific files unchanged.
+Quiet notices/existing read-only status bot active-arm then aggregate registration.
+See results/EXP-167-protocol.md, EXP-167-launch.md.21 unique CPU engineering
+checks passed; no live Blackwell167 or remote execution result yet.
+
 # 26 October2026 — EXP163 three methods PREPARED, not a measured result
 
 User stopped162 and now has14h Blackwell; asks to test beyond rank256. New163

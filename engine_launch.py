@@ -26,7 +26,7 @@ def main(argv=None):
     # Only consume this wrapper's option; preserve every training argument.
     parser=argparse.ArgumentParser(add_help=False)
     parser.add_argument('--process-title',default='VLLM:EngineCore')
-    parser.add_argument('--runner',choices=('compare','methods','full','full164','full165'),default='compare')
+    parser.add_argument('--runner',choices=('compare','methods','full','full164','full165','lr','lr-arm'),default='compare')
     args,remaining=parser.parse_known_args(sys.argv[1:] if argv is None else argv)
     if not args.process_title or len(args.process_title)>64 or any(ord(c)<32 for c in args.process_title):
         raise ValueError('process title must contain 1..64 printable characters')
@@ -41,7 +41,7 @@ def main(argv=None):
           'nvml_process_name='+str(nvml_process_name() or 'unavailable'),flush=True)
     # New full launcher registers after its training lock. Legacy runners keep
     # pinned scientific files; attach their observer here without changing math.
-    if args.runner not in ('full','full164','full165') and '--no-telegram' not in remaining and os.environ.get('TELEGRAM_BOT_TOKEN') and (os.environ.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_USER_ID')):
+    if args.runner not in ('full','full164','full165','lr','lr-arm') and '--no-telegram' not in remaining and os.environ.get('TELEGRAM_BOT_TOKEN') and (os.environ.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_USER_ID')):
         observer=argparse.ArgumentParser(add_help=False)
         observer.add_argument('--work-dir',default=str(Path(__file__).resolve().parent.parent/'engine-core'))
         observed,_=observer.parse_known_args(remaining);root=Path(observed.work_dir).expanduser().resolve()
@@ -50,7 +50,11 @@ def main(argv=None):
             from extent.status_autostart import ensure_listener
             ensure_listener(root,'results/runtime-methods.json' if args.runner=='methods' else 'results/runtime-compare.json')
     # Same training process/PID/signals; observer is an independent read-only process.
-    if args.runner=='full':
+    if args.runner=='lr':
+        from engine_lr import main as run
+    elif args.runner=='lr-arm':
+        from engine_full_lr import main as run
+    elif args.runner=='full':
         from engine_full_stream import main as run
     elif args.runner=='full165':
         from engine_full_next import main as run

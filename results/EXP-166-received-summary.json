@@ -1,0 +1,56 @@
+{
+  "source_sha256": "3b6d6c48b7581899d4e8d78f719789239fc19f5093ae05d650d3a7d539bd39bf",
+  "status": "deadline_partial",
+  "finalization_status": "completed",
+  "pending_slots": [],
+  "cost": {
+    "attempted_updates": 23462,
+    "input_tokens": 48050176,
+    "ce_targets": 47862480,
+    "teacher_input_tokens": 48050176,
+    "accepted_updates": 23460,
+    "accepted_input_tokens": 48046080,
+    "accepted_ce_targets": 47858400,
+    "planner_input_presentations": 63488,
+    "training_seconds": 31987.265865917085
+  },
+  "session_hours": [
+    0.4609511939594005,
+    9.690660183805546
+  ],
+  "step": 181145,
+  "durable_step": 181145,
+  "data_windows": 204673,
+  "adam_count": 26293,
+  "source": {
+    "A": 5.870242170989513,
+    "B": 5.914795532822609,
+    "C": 5.4912205040454865,
+    "D": 5.176441255956888,
+    "E": 5.110409678891301
+  },
+  "final": {
+    "D": 5.132804777473211,
+    "E": 5.017505466938019,
+    "A": 5.851569123566151,
+    "B": 5.8802705854177475,
+    "C": 5.456706739962101
+  },
+  "fresh_final": {
+    "english_stories": {
+      "nll": 4.507731296122074,
+      "windows": 128
+    },
+    "russian_wikipedia": {
+      "nll": 7.542571119964123,
+      "windows": 128
+    }
+  },
+  "throughput": {
+    "seconds_per_update": 1.34928822144866,
+    "input_tokens_per_second": 1517.8373066958,
+    "teacher_input_tokens_per_second": 1517.8373066958,
+    "selected_batch": 8,
+    "remaining_work_hours": 0.0003404727001907304
+  }
+}
