@@ -103,7 +103,7 @@ def test_wrapper_lr_routing_keeps_full166(monkeypatch):
     assert calls==[['--max-wall-hours','9']]
 
 
-def test_freezer_pins_all_arms_to_same_final_current(tmp_path):
+def test_freezer_pins_all_arms_to_same_final_current(tmp_path,monkeypatch):
     directory=tmp_path/'results';directory.mkdir()
     contract=dict(protocol='exp166-full-stream-v1',code={},parent=dict(branches={'FULL-KD':dict(
         step=154852,adam_count=36548,manifest_sha='base',parent_windows=0)}))
@@ -113,7 +113,16 @@ def test_freezer_pins_all_arms_to_same_final_current(tmp_path):
         branches={'FULL-KD':dict(step=181145,durable_step=181145,training_windows_seen=204673,
             final=dict(last=dict(panels={'D':{'nll':5.13,'windows':[5.13]}},fresh_nll={})))})
     (directory/'runtime-full-stream.json').write_text(json.dumps(report))
-    plans=[model.freeze_parent(tmp_path,multiplier=m)[1] for m in (1,3,10)]
+    plans=[model.freeze_parent(tmp_path,multiplier=m)[1] for m in (1,3)]
+    # A missing local pointer must be restored from the durable donor on HF.
+    import extent.hf_artifact_sync
+    contents=pointer.read_bytes();pointer.unlink();downloads=[]
+    def restore(target,remote,hub):
+        downloads.append(remote);target.write_bytes(contents);return True
+    monkeypatch.setattr(extent.hf_artifact_sync,'restore_artifact',restore)
+    monkeypatch.setattr(extent.hf_artifact_sync,'upload_artifacts_together',lambda *a,**kw:True)
+    plans.append(model.freeze_parent(tmp_path,hub=object(),multiplier=10)[1])
+    assert downloads==['experiments/exp166-full-stream-v1/checkpoints/FULL-KD/checkpoint.json']
     assert plans[0]['full_source']==plans[1]['full_source']==plans[2]['full_source']
     assert plans[0]['full_source']['manifest_sha']==model.sha(pointer)
     assert all(len(json.dumps(p))<2000 for p in plans)

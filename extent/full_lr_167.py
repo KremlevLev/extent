@@ -41,7 +41,13 @@ def freeze_parent(work,hub=None,deadline=None,multiplier=1):
             raise ValueError('require durable EXP166 CURRENT181145 with completed final panels')
         for file,digest in report['contract']['code'].items():
             if sha(ROOT/file)!=digest:raise ValueError('parent scientific code changed: '+file)
-        pointer=work/'states/runtime-full-stream'/SOURCE_ARM/'checkpoint.json';meta=json.loads(pointer.read_text())
+        pointer=work/'states/runtime-full-stream'/SOURCE_ARM/'checkpoint.json'
+        if not pointer.exists() and hub is not None:
+            from extent.hf_artifact_sync import restore_artifact
+            pointer.parent.mkdir(parents=True,exist_ok=True)
+            if not restore_artifact(pointer,'experiments/exp166-full-stream-v1/checkpoints/'+SOURCE_ARM+'/checkpoint.json',hub):
+                raise FileNotFoundError('EXP166 CURRENT manifest missing locally and on HF')
+        meta=json.loads(pointer.read_text())
         if meta['step']!=SOURCE_STEP or meta['contract']!=dict(report['contract'],arm=SOURCE_ARM):raise ValueError('parent checkpoint mismatch')
         if manifest.exists() and sha(manifest)!=sha(pointer):raise ValueError('frozen parent changed')
         manifest.write_bytes(pointer.read_bytes())
