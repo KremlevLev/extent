@@ -98,11 +98,34 @@ def contract(experiment,worker,max_steps,corpus_dir,execution,source_plan,edu_di
 def prepare(patient,spec,payload,pin,ancestor=None,*,parent,parent_root):
     pointer=Path(parent_root)/'KD-C4-FRESH/checkpoint.json'
     source=dict(parent['branches'][spec['name']])
+    restore_base_dependency(pointer,source,check=patient.check)
     if sha(pointer)!=source['manifest_sha']:raise ValueError('base161 manifest changed')
     source['metadata']=json.loads(pointer.read_text())
     expanded=dict(parent,branches={spec['name']:source})
     base,q,_=prepare163(patient,spec,payload,pin,ancestor,parent=expanded,parent_root=parent_root)
     return base,q,SOURCE_STEP
+
+
+def restore_base_dependency(pointer,source,hub=None,check=lambda:None):
+    from extent.hf_artifact_sync import restore_artifact,artifact_config_from_env
+    from extent.chunked_checkpoint import digest
+    if hub is None:hub=artifact_config_from_env()
+    prefix='experiments/exp161-batch6-v1/checkpoints/KD-C4-FRESH'
+    pointer=Path(pointer);pointer.parent.mkdir(parents=True,exist_ok=True)
+    if not pointer.exists():
+        if hub is None or not restore_artifact(pointer,prefix+'/checkpoint.json',hub):
+            raise FileNotFoundError('EXP161 base manifest unavailable locally and on HF')
+    if sha(pointer)!=source['manifest_sha']:raise ValueError('EXP161 base manifest SHA mismatch')
+    meta=json.loads(pointer.read_text())
+    for leaf in meta['leaves']:
+        for chunk in leaf['chunks']:
+            check()
+            target=pointer.parent/chunk['file']
+            if target.exists() and digest(target)==chunk['sha256']:continue
+            target.parent.mkdir(parents=True,exist_ok=True)
+            if hub is None or not restore_artifact(target,prefix+'/'+chunk['file'],hub):
+                raise FileNotFoundError('EXP161 base chunk unavailable: '+chunk['file'])
+            if digest(target)!=chunk['sha256']:raise ValueError('EXP161 base chunk SHA mismatch')
 
 
 class ForkStore(RecoveryCheckpointStore):
@@ -145,7 +168,15 @@ def make_session(args,c,hub):
           training_windows_seen=SOURCE_WINDOWS,best_panel='D')}
     s.result=json.loads(s.path.read_text()) if s.path.exists() else dict(contract=c,branches=rows,sessions=[],pending_slots=[],
         cost=dict(attempted_updates=0,input_tokens=0,ce_targets=0,teacher_input_tokens=0))
-    if s.result['contract']!=c:raise ValueError('resume contract changed')
+    if s.result['contract']!=c:
+        previous=s.result['contract']
+        same={k:v for k,v in previous.items() if k!='code'}=={k:v for k,v in c.items() if k!='code'}
+        no_updates=all(r.get('step')==SOURCE_STEP and not r.get('accepted_new_updates',0) for r in s.result['branches'].values())
+        no_state=not (Path(args.checkpoint_dir)/s.stem/'FULL-KD/checkpoint.json').exists()
+        if not (same and no_updates and no_state and s.result.get('status')=='failed'):
+            raise ValueError('resume contract changed')
+        s.result.setdefault('preflight_repairs',[]).append(dict(old_code=previous['code'],reason='failed before any accepted update; same source and scientific settings'))
+        s.result['contract']=c
     runtime={k:version(k) for k in ('jax','jaxlib','flax','optax')}
     runtime.update(matmul_precision=jax.config.jax_default_matmul_precision,prng_impl=jax.config.jax_default_prng_impl)
     if runtime!=c['parent']['runtime'] or s.result.get('runtime',runtime)!=runtime:raise ValueError('math runtime changed')

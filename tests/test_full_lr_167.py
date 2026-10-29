@@ -151,3 +151,22 @@ def test_orchestrator_runs_serial_arms_with_one_common_budget(tmp_path,monkeypat
     assert result['matched_complete'] and len(calls)==3
     assert [int(c[c.index('--lr-multiplier')+1]) for c in calls]==[1,3,10]
     assert all(c[c.index('--pilot-updates')+1]=='4096' and '--clear-stop' not in c for c in calls)
+
+
+def test_deleted_base_manifest_and_chunks_restore_and_verify(tmp_path,monkeypatch):
+    import extent.hf_artifact_sync
+    remote=RecoveryCheckpointStore(tmp_path/'remote','unused',None)
+    remote.save('KD-C4-FRESH',{'source':161},{'parameters':{'w':jnp.arange(4.)}},154852)
+    directory=remote.directory('KD-C4-FRESH');files={p.name:p.read_bytes() for p in directory.iterdir() if p.is_file()}
+    # Chunk filenames contain generation subdirectories.
+    files={str(p.relative_to(directory)).replace('\\','/'):p.read_bytes() for p in directory.rglob('*') if p.is_file()}
+    calls=[]
+    def restore(target,path,hub):
+        key=path.split('/KD-C4-FRESH/',1)[1];calls.append(key);target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(files[key]);return True
+    monkeypatch.setattr(extent.hf_artifact_sync,'restore_artifact',restore)
+    pointer=tmp_path/'local/KD-C4-FRESH/checkpoint.json';source={'manifest_sha':model.sha(directory/'checkpoint.json')}
+    model.restore_base_dependency(pointer,source,object())
+    assert calls[0]=='checkpoint.json' and len(calls)>1
+    before=len(calls);model.restore_base_dependency(pointer,source,object());assert len(calls)==before
+    pointer.write_text('{}')
+    with pytest.raises(ValueError,match='manifest SHA mismatch'):model.restore_base_dependency(pointer,source,object())
