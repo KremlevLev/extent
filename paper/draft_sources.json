@@ -1,5 +1,5 @@
 {
-  "draft_date": "2026-10-20",
+  "draft_date": "2026-10-29",
   "files": [
     {
       "path": "results/EXP-061-production-aligned-scaling-campaign-summary.md",
@@ -125,6 +125,51 @@
       "path": "scripts/m3q_sequential_recovery_campaign.py",
       "sha256": "9bbc679f48c09b60e162e90fc0cd11cd4cf398e0ff8a77d324a405c1177a0840",
       "type": "current_audit_or_recipe"
+    },
+    {
+      "path": "results/EXP-155-session-2.json",
+      "sha256": "9b0f3b2423b44929a64d2ebb5da6257076afbf273651956c320af3983c6cf823",
+      "type": "received_numeric_evidence"
+    },
+    {
+      "path": "results/EXP-156-received-summary.json",
+      "sha256": "d313ff8498cc2132e362142b440df2c94d3120398f67f865ad608d7b05dadd17",
+      "type": "received_numeric_evidence"
+    },
+    {
+      "path": "results/EXP-157-received-summary.json",
+      "sha256": "6bfb7a0e84e6ae5b95526d8e58cd71e41783ba0d6da9115bf3a350cdd288b789",
+      "type": "received_numeric_evidence"
+    },
+    {
+      "path": "results/EXP-161-received-summary.json",
+      "sha256": "0238fc2298bbe846c9b085d9ce1b11dd2c8b4b5b52f68bcd1a45aedc7dbcb914",
+      "type": "received_numeric_evidence"
+    },
+    {
+      "path": "results/EXP-163-received-summary.json",
+      "sha256": "9f1138ec2e81acd38e2a1a5b3fbc2ba1f7ae0dc68f79c2f17d516cf3745f57af",
+      "type": "received_numeric_evidence"
+    },
+    {
+      "path": "results/EXP-164-received-summary.json",
+      "sha256": "426610dd9e7e1dae4deab1ffaf0063cb207f536bba0312b5e04d73f2ffe83d1d",
+      "type": "received_numeric_evidence"
+    },
+    {
+      "path": "results/EXP-165-received-summary.json",
+      "sha256": "0bd9aaf150ff70c4f8a64f46eacbd741acfaeac26c683fe019f0b3d37bc16c78",
+      "type": "received_numeric_evidence"
+    },
+    {
+      "path": "results/EXP-166-received-summary.json",
+      "sha256": "d97519be7bed15f69a881e832563821236c387b77f1759d88b7c9893457e04e3",
+      "type": "received_numeric_evidence"
+    },
+    {
+      "path": "paper/latest_recovery_data.json",
+      "sha256": "7ad8456bf3145a6a985c4dd0b3883be889ec20feacfe4ebaab5269192bc31f47",
+      "type": "received_numeric_evidence"
     }
   ],
   "note": "Historical source hashes refer to the original draft snapshots, not necessarily current ledger versions. Historical numbers need raw-artifact audit before submission. Figure provenance recorded separately.",
@@ -211,5 +256,12 @@
     "points": "paper/figures/continuation_points.csv",
     "provenance": "paper/figures/continuation_provenance.json",
     "scope": "Figures 8-10; same exposed panels, partial horizons; offline rebuild only."
+  },
+  "latest_figures": {
+    "scripts": [
+      "paper/make_progress_overview.py",
+      "paper/make_latest_figures.py"
+    ],
+    "scope": "through received EXP166; EXP167 prepared only"
   }
 }

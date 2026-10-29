@@ -16,6 +16,8 @@ from matplotlib.patches import Rectangle
 from matplotlib.ticker import FixedLocator, FuncFormatter
 
 ROOT = Path(__file__).resolve().parents[1]
+import sys
+sys.path.insert(0,str(ROOT))
 OUT = ROOT / 'paper/figures'
 SOURCES = []
 POINTS = []
@@ -70,7 +72,7 @@ def main():
     diagnostic = read('results/EXP-097-numerical-stability.json')['branches']['123']['SAFE-PROTECTED-R32']
     assert diagnostic['step']==8192 and diagnostic['complete']
     assert abs(diagnostic['locked_test_nll']-7.266784)<1e-6
-    for relative in ('paper/draft.ru.md','results/EXP-111-113-recovery-efficiency-protocol.md',
+    for relative in ('paper/draft.ru.md','paper/make_progress_overview.py','paper/progress_layout.py','results/EXP-111-113-recovery-efficiency-protocol.md',
                      'results/EXP-072-completed-summary.md'):
         path=ROOT/relative
         SOURCES.append(dict(path=relative,sha256=hashlib.sha256(path.read_bytes()).hexdigest()))
@@ -86,11 +88,11 @@ def main():
     r145 = worker('results/EXP-145-long-v1-session-1.json', 1)
     r147 = worker('results/EXP-147-fold-continue-session-1.json', 0)
     r153 = read('results/kaggle-recovery-2026-10-20/exp153-rank-growth-v2-worker-1.json')
-    r155 = read('results/EXP-155-session-1.json')
+    r155 = read('results/EXP-155-session-2.json')
     reports = [('136', r136), ('145', r145), ('147', r147), ('153 v2', r153), ('155', r155)]
     assert all(r['data']['panels'] == r136['data']['panels'] for _, r in reports)
     assert [branch(r)['source_step'] for _,r in reports] == [0,12586,24965,31126,37910]
-    assert branch(r155)['final']['last']['step'] == 80260
+    assert branch(r155)['final']['last']['step'] == 118304
     same = {p: [] for p in 'ABC'}
     for p in 'ABC':
         panel = branch(r136)['source_controls'][p]
@@ -111,95 +113,22 @@ def main():
                 same[p].append(point(exp,p,panel['nll'],e['step'],
                                       f'{exp}/evaluations-or-final/step{e["step"]}/{p}',
                                       'deadline' if e.get('endpoint') else 'registered'))
-    token_end = OFFSET + 80260*256
-    assert token_end == 28935168
+    token_end = OFFSET + 118304*256
+    assert token_end == 38674432
     prep = {'069_exact_dual_local':24*1024*64,
             '069_recurrent_local':24*2048*64,
             '072_onpolicy_local':24*4096*128}
     assert sum(prep.values()) == 17301504
 
-    fig = plt.figure(figsize=(18,10), facecolor='#fafbf9')
-    ax = fig.add_axes([.065,.285,.865,.53], facecolor='#fafbf9')
-    ax.set_yscale('log')
-    ax.set_xlim(-7.7,32)
-    ax.set_ylim(4.25,27)
-    ax.yaxis.set_major_locator(FixedLocator([4.5,5,6,7,10,15,20,25]))
-    ax.yaxis.set_major_formatter(FuncFormatter(lambda y,_:f'{y:g}'))
-    ax.yaxis.set_minor_locator(FixedLocator([]))
-    ax.set_xticks([0,2,4,6,8,10,12,14,16,18,20,22,24,26,28])
-    ax.tick_params(axis='both',labelsize=10)
-    ax.grid(axis='y',alpha=.16)
-    ax.set_ylabel('NLL ↓  ·  логарифмическая шкала', labelpad=12)
-    ax.set_xlabel('Млн входных позиций при сквозном обучении с начала EXP-111', labelpad=13)
-    ax.axvspan(-7.7,-1.05,color='#e8ecea',alpha=.8)
-    ax.axvline(-1.05,color='#9ba7a4',ls=(0,(3,4)),lw=1)
-    ax.axvline(OFFSET/1e6,color='#9ba7a4',ls=(0,(3,4)),lw=1)
-
-    # A comparison of two preparations, not a timed descent of one checkpoint.
-    xs=[-6.7,-3.1];ys=[early['TEACHER']['nll'],early['ONPOLICY']['nll']]
-    ax.scatter(xs,ys,s=85,color=['#9a5e56','#557768'],zorder=6)
-    ax.plot(xs,ys,color='#8b9993',lw=1.5,ls=(0,(3,4)))
-    ax.annotate('22,35', (xs[0],ys[0]),xytext=(0,14),textcoords='offset points',ha='center',fontsize=15,fontweight='bold',color='#7b4a44')
-    ax.annotate('10,55', (xs[1],ys[1]),xytext=(0,-25),textcoords='offset points',ha='center',fontsize=15,fontweight='bold',color='#43685b')
-    ax.text(-5.9,17.5,'Чистые входы\nQwen при подготовке',ha='center',fontsize=9.5,color='#6d514c')
-    ax.text(-3.7,7.8,'ONPOLICY:\nвходы гибридного\nпрефикса',ha='center',fontsize=10,color='#43685b')
-    ax.text(-4.4,5.0,'EXP-072 · 24 замены\nДругая оценка;\nздесь X не считает токены',ha='center',fontsize=10,color='#51615b',linespacing=1.4)
-
-    ax.plot([v['full_model_input_positions']/1e6 for v in old],[v['nll'] for v in old],
-            color='#337caa',lw=2.5,marker='o',ms=3,zorder=4)
-    ax.annotate('12,97',(0,old[0]['nll']),xytext=(10,10),textcoords='offset points',fontsize=14,fontweight='bold',color='#337caa')
-    ax.annotate('7,29',(OFFSET/1e6,old[-1]['nll']),xytext=(-10,23),textcoords='offset points',ha='right',fontsize=13,fontweight='bold',color='#337caa')
-    ax.text(4.15,16.8,'Защищённый rank 32\n+ устойчивый клиппинг\nEXP-111',ha='center',fontsize=12,color='#255e82',linespacing=1.5)
-    ax.text(4.1,5.1,'Быстрый спад, затем плато\n8,39 млн позиций',ha='center',fontsize=11,color='#255e82')
-    ax.text(4.35,9.1,'EXP-097: 12,97 → 7,267 за 2,10 млн\nТот же рецепт; отдельный прогон, не предок EXP-111',
-            ha='center',fontsize=9,color='#337caa',linespacing=1.5)
-    ax.text(OFFSET/1e6+.22,22,'Смена оценочного набора → A / B / C',fontsize=10,color='#67736d',rotation=0)
-
-    stage_bounds=[OFFSET/1e6]+[(OFFSET+s*256)/1e6 for s in (12586,24965,31126,37910,80260)]
-    for i,(lo,hi) in enumerate(zip(stage_bounds,stage_bounds[1:])):
-        ax.axvspan(lo,hi,color=['#d1e9df','#e8dfcf','#e7e2ef','#cee7e3','#c8e4df'][i],alpha=.24,zorder=0)
-        if i:ax.axvline(lo,color='#a2b4ad',lw=.8,ls=(0,(2,5)),zorder=0)
-        ax.add_patch(Rectangle((lo,1.018),hi-lo,.035,transform=ax.get_xaxis_transform(),
-                               color=['#789e8b','#b39665','#9383aa','#4e9b90','#197e74'][i],clip_on=False,lw=0))
-        ax.text((lo+hi)/2,1.067,['136','145','147','153 v2','155'][i],
-                transform=ax.get_xaxis_transform(),ha='center',fontsize=10,fontweight='bold',color='#39564d')
-    for p in 'ABC':
-        rows=same[p]
-        ax.plot([v['full_model_input_positions']/1e6 for v in rows],[v['nll'] for v in rows],
-                lw=2.7 if p=='C' else 1.4,color=COLORS[p],alpha=1 if p=='C' else .75,
-                marker='o',ms=3.1 if p=='C' else 2,zorder=5 if p=='C' else 3)
-        end=branch(r155)['final']['last']['panels'][p]['nll']
-        assert abs(rows[-1]['nll']-end)<1e-9
-        ax.scatter(token_end/1e6,end,s=48 if p=='C' else 24,color=COLORS[p],zorder=8)
-        label_y={'A':5.51,'B':5.15,'C':4.54}[p]
-        ax.annotate(f'{p}: {end:.3f}'.replace('.',','),(token_end/1e6,end),xytext=(30.0,label_y),
-                    textcoords='data',ha='left',va='center',fontsize=12,fontweight='bold',
-                    color=COLORS[p],arrowprops=dict(arrowstyle='-',lw=.9,color=COLORS[p]))
-    ax.text(19,13.1,'Нормализация + tanh + сброс динамики\n→ сворачивание поправки и новая R32\n→ продолжение → рост до R256',
-            ha='center',fontsize=13,color='#245e53',linespacing=1.55)
-    ax.annotate('4,646 — checkpoint 78 870, выбранный по A\n4,666 — последний checkpoint 80 260',
-                (token_end/1e6,4.6655588076),xytext=(20.8,7.6),fontsize=10.5,color='#087f78',
-                arrowprops=dict(arrowstyle='->',color='#087f78',connectionstyle='arc3,rad=-.1'))
-    fig.legend(handles=[Line2D([0],[0],color='#337caa',lw=2,label='Историческая оценка EXP-111')]+
-              [Line2D([0],[0],color=COLORS[p],lw=2,label='Панель '+p) for p in 'ABC'],
-              loc='upper right',bbox_to_anchor=(.932,.887),ncol=4,frameon=False,fontsize=10)
-
-    fig.text(.065,.952,'Extent: от неудачной композиции к NLL 4,67',fontsize=24,fontweight='bold',color='#173f34')
-    fig.text(.065,.912,'Одна история исследования · реальные измерения без сглаживания · исходный Qwen3-1.7B → 24 Mamba-3 MIMO + 4 GQA',
-             fontsize=12,color='#5e7069')
-    stages=[('111','Защищённая R32','8,389 млн'),('136','Норма + tanh\n+ совместный сброс','3,222 млн'),
-            ('145','Сворачивание\n+ новая R32 / Adam','3,169 млн'),('147','Сохранение R32\nи Adam','1,577 млн'),
-            ('153 v2','R32 → R256\n+ свежий Adam','1,737 млн'),('155','Та же R256 / Adam\nпродолжение на TPU','10,842 млн')]
-    for x,(exp,title,tokens) in zip([.07,.218,.366,.514,.662,.81],stages):
-        fig.text(x,.181,'EXP-'+exp,fontsize=11,fontweight='bold',color='#355e50')
-        fig.text(x,.139,title,fontsize=10,color='#50665c',linespacing=1.35)
-        fig.text(x,.111,'+ '+tokens,fontsize=12,fontweight='bold',color='#173f34')
-    fig.text(.065,.070,'Всего 46,237 млн предъявлений: 28,935 млн при сквозном обучении + 17,302 млн при послойной подготовке EXP-069/072.',
-             fontsize=11,fontweight='bold',color='#254b3d')
-    fig.text(.065,.044,'Блок и вся сеть требуют разных вычислений. Это не уникальные токены; поиск гипотез, кэши, оценки и ridge-калибровка (12 288 позиций) не включены.',
-             fontsize=9.5,color='#617269')
-    fig.text(.065,.021,'EXP-130 предложил рецепт сброса; EXP-136 повторил его из EXP-111 (затраты EXP-130 не прибавлены). Один сид; повторно используемая валидация. Разрыв оценки отмечен.',
-             fontsize=9.5,color='#617269')
+    late=read('paper/latest_recovery_data.json')
+    for row in late['points']:
+        for panel,v in row['panels'].items():
+            value=point(str(row['experiment']),panel,v['nll'],None,
+                'paper/latest_recovery_data.json:'+row['arm']+'/step'+str(row['step']),row['kind'])
+            value.update(global_step=row['step'],full_model_input_positions=row['full_model_input_positions'],arm=row['arm'])
+    from paper.progress_layout import draw
+    fig=draw(early,old,same,late)
+    token_end=late['token_ledger']['full_model_selected_path']
     for ext in ('png','pdf','svg'):
         path=OUT/f'progress_overview.ru.{ext}'
         fig.savefig(path,dpi=180,facecolor=fig.get_facecolor())
@@ -207,14 +136,15 @@ def main():
             path.write_text('\n'.join(line.rstrip() for line in path.read_text(encoding='utf-8').splitlines())+'\n',encoding='utf-8')
     plt.close(fig)
     with (OUT/'progress_overview_points.csv').open('w',encoding='utf-8',newline='') as f:
-        writer=csv.DictWriter(f,fieldnames=list(POINTS[0]));writer.writeheader();writer.writerows(POINTS)
-    audit=dict(date='2026-10-24',sources=SOURCES,selected_seed=123,points=len(POINTS),
+        writer=csv.DictWriter(f,fieldnames=list(POINTS[0])+['arm']);writer.writeheader();writer.writerows(POINTS)
+    audit=dict(date='2026-10-29',sources=SOURCES,selected_seed=123,points=len(POINTS),
                full_model_training_positions=token_end,local_preparation_positions=prep,
                local_preparation_total=sum(prep.values()),ridge_calibration_positions_separate=12288,
-               stage_updates=dict(EXP111=32768,EXP136=12586,EXP145=12379,EXP147=6161,EXP153v2=6784,EXP155=42350),
+               stage_updates=dict(EXP111=32768,EXP136=12586,EXP145=12379,EXP147=6161,EXP153v2=6784,EXP155=80394),
                scope='Selected lineage only. Not total research compute. No smooth curve across changed evaluation panels. Not unique tokens or FLOP equivalent.',
                preparation_basis='paper/draft.ru.md section3.4 and EXP111 protocol: reuse EXP069 local checkpoints -> EXP072 ONPOLICY -> EXP111; no EXP097 state reuse.',
-               historical_raw_sha256=qprov['sources']['111']['sha256'])
+               historical_raw_sha256=qprov['sources']['111']['sha256'],late_ledger=late['token_ledger'],
+               late_offsets=late['offsets'],late_extracted_sources=late['sources'])
     (OUT/'progress_overview_provenance.json').write_text(json.dumps(audit,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
     print(f'{len(POINTS)} source-backed points; {token_end:,} full-model positions; {sum(prep.values()):,} local positions separately.')
 

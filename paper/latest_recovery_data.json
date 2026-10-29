@@ -1,0 +1,2058 @@
+{
+  "date": "2026-10-29",
+  "scope": "Curated numeric extraction from received reports; excludes hardware, paths and secrets. Points are diagnostic, not independent tests.",
+  "sources": [
+    {
+      "label": "received runtime-b6.json",
+      "sha256": "74f09b5782c52e2c5e64e0aac9212a6230a91b1ac493d71f2b46a93cb42d7b9b"
+    },
+    {
+      "label": "received runtime-full-stream.json",
+      "sha256": "3b6d6c48b7581899d4e8d78f719789239fc19f5093ae05d650d3a7d539bd39bf"
+    },
+    {
+      "path": "results/EXP-155-session-2.json",
+      "sha256": "9b0f3b2423b44929a64d2ebb5da6257076afbf273651956c320af3983c6cf823"
+    },
+    {
+      "path": "results/EXP-163-received-summary.json",
+      "sha256": "9f1138ec2e81acd38e2a1a5b3fbc2ba1f7ae0dc68f79c2f17d516cf3745f57af"
+    },
+    {
+      "path": "results/EXP-164-received-summary.json",
+      "sha256": "426610dd9e7e1dae4deab1ffaf0063cb207f536bba0312b5e04d73f2ffe83d1d"
+    },
+    {
+      "label": "received extent-m3q-hidden-distill-159.txt",
+      "sha256": "0cb989943e6773bdaecc7bb5cb69f49f2201093cce575633f5e56dd56c699f43"
+    }
+  ],
+  "points": [
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 39154944,
+      "step": 120181,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.938475161790848,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.024956986308098,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.440547335892916,
+          "windows": 64
+        },
+        "D": {
+          "nll": 7.092354513704777,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.414602100849152,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 10.951031863689423,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 39351552,
+      "step": 120309,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.8625014796853065,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.932590618729591,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.371186330914497,
+          "windows": 64
+        },
+        "D": {
+          "nll": 7.034668251872063,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 39548160,
+      "step": 120437,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.8511704578995705,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.9421636909246445,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.349454566836357,
+          "windows": 64
+        },
+        "D": {
+          "nll": 7.043239742517471,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 39941376,
+      "step": 120693,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.823566947132349,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.905884779989719,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.330185495316982,
+          "windows": 64
+        },
+        "D": {
+          "nll": 7.0196520164608955,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 40727808,
+      "step": 121205,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.8538477048277855,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.9487477988004684,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.336404874920845,
+          "windows": 64
+        },
+        "D": {
+          "nll": 7.0157809518277645,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.269517540931702,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 10.750921487808228,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 42300672,
+      "step": 122229,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.823407594114542,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.936552956700325,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.330354921519756,
+          "windows": 64
+        },
+        "D": {
+          "nll": 7.034457121044397,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.321474671363831,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 11.006569027900696,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 43873536,
+      "step": 123253,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.841550804674625,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.913701586425304,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.321386873722076,
+          "windows": 64
+        },
+        "D": {
+          "nll": 7.001723080873489,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.232201129198074,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 10.954446792602539,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 45446400,
+      "step": 124277,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.801809649914503,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.887736529111862,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.308122858405113,
+          "windows": 64
+        },
+        "D": {
+          "nll": 6.958579871803522,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.199764966964722,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 10.96742582321167,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 48592128,
+      "step": 126325,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.769606601446867,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.880270853638649,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.279155161231756,
+          "windows": 64
+        },
+        "D": {
+          "nll": 6.961998783051968,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.212408035993576,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 11.114484250545502,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 51737856,
+      "step": 128373,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.755737464874983,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.863453134894371,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.2541572116315365,
+          "windows": 64
+        },
+        "D": {
+          "nll": 6.938263826072216,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.1087663769721985,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 10.679263532161713,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 58029312,
+      "step": 132469,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.723583769053221,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.806383885443211,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.221336364746094,
+          "windows": 64
+        },
+        "D": {
+          "nll": 6.926861763000488,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.079770714044571,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 11.04223084449768,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 64320768,
+      "step": 136565,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.694967217743397,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.798210456967354,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.189686316996813,
+          "windows": 64
+        },
+        "D": {
+          "nll": 6.941939286887646,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.0622738897800446,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 10.740506112575531,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 76903680,
+      "step": 144757,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.659601308405399,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.76164960116148,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.150866288691759,
+          "windows": 64
+        },
+        "D": {
+          "nll": 6.986490558832884,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.053392142057419,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 10.932335555553436,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 89486592,
+      "step": 152949,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 4.645724888890982,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.745982833206654,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.115913920104504,
+          "windows": 64
+        },
+        "D": {
+          "nll": 7.006055220961571,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.097484856843948,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 11.310111105442047,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-WIKI-CYCLIC",
+      "full_model_input_positions": 92251392,
+      "step": 154749,
+      "kind": "final",
+      "panels": {
+        "A": {
+          "nll": 4.647570628672838,
+          "windows": 64
+        },
+        "B": {
+          "nll": 4.746283158659935,
+          "windows": 32
+        },
+        "C": {
+          "nll": 4.0944952219724655,
+          "windows": 64
+        },
+        "D": {
+          "nll": 7.078081898391247,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 6.103204194456339,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 11.23339068889618,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 39215872,
+      "step": 120419,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 6.1790303736925125,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.138977587223053,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.67055020481348,
+          "windows": 64
+        },
+        "D": {
+          "nll": 6.1497513353824615,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 5.561779022216797,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 10.576343595981598,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 39412480,
+      "step": 120547,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.786495007574558,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.761367425322533,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.314240641891956,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.949622981250286,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 39609088,
+      "step": 120675,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.8295992612838745,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.7957663834095,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.346676677465439,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.919158488512039,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 40002304,
+      "step": 120931,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.809491582214832,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.784361034631729,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.280628934502602,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.888736814260483,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 40788736,
+      "step": 121443,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.795884132385254,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.799479782581329,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.316512644290924,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.868875943124294,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 5.290134638547897,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 9.404720962047577,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 42361600,
+      "step": 122467,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.829978726804256,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.788324669003487,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.349171973764896,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.848036527633667,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 5.249084860086441,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 9.722884595394135,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 43934464,
+      "step": 123491,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.940709263086319,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.906867399811745,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.512604363262653,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.819521456956863,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 5.215386092662811,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 8.8541858792305,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 45507328,
+      "step": 124515,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 6.005815856158733,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.9496075958013535,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.547997146844864,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.692253489047289,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 5.190595835447311,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 8.768485248088837,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 48653056,
+      "step": 126563,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 6.034069336950779,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.028804793953896,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.611333079636097,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.635604150593281,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 5.139479428529739,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 9.65326315164566,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 51798784,
+      "step": 128611,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 6.049774497747421,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.031451731920242,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.6188939437270164,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.55710906162858,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 5.019791811704636,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 8.576390087604523,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 58090240,
+      "step": 132707,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 6.089148730039597,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.078864440321922,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.743872486054897,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.4859115071594715,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.986941933631897,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 8.204380303621292,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 64381696,
+      "step": 136803,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 6.0253963097929955,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.115379452705383,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.696736201643944,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.431261219084263,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.926038295030594,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.78551658987999,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 76964608,
+      "step": 144995,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.975878722965717,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.0280193239450455,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.6524713933467865,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.297835029661655,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.7860192358493805,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.213399946689606,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 89547520,
+      "step": 153187,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.883248321712017,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.910932302474976,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.559494398534298,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.203391559422016,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.663119852542877,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.479251176118851,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 161,
+      "arm": "KD-C4-FRESH",
+      "full_model_input_positions": 92104960,
+      "step": 154852,
+      "kind": "final",
+      "panels": {
+        "A": {
+          "nll": 5.95890699326992,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.0233389884233475,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.602312006056309,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.23127343505621,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.6167414002120495,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.762478284537792,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 163,
+      "arm": "R256-CONTROL",
+      "full_model_input_positions": 92104960,
+      "step": 154852,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.95890699326992,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.0233389884233475,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.602312006056309,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.23127343505621,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.211796157062054,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.6515088975429535,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.854733645915985,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 163,
+      "arm": "R256-CONTROL",
+      "full_model_input_positions": 92301568,
+      "step": 154980,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.931743644177914,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.979852303862572,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.546645067632198,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.204786326736212,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.156421948224306,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 163,
+      "arm": "R256-CONTROL",
+      "full_model_input_positions": 92891392,
+      "step": 155364,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.934426948428154,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.962733089923859,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.5641982182860374,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.240385539829731,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.13959975913167,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 163,
+      "arm": "R256-CONTROL",
+      "full_model_input_positions": 93677824,
+      "step": 155876,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.89484079182148,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.920578271150589,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.504420429468155,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.260260086506605,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.141609815880656,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.683688253164291,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.587442874908447,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 163,
+      "arm": "R256-CONTROL",
+      "full_model_input_positions": 95250688,
+      "step": 156900,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.898027315735817,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.908466771245003,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.531541921198368,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.247362621128559,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.112993156537414,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.66250342130661,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.657702714204788,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 163,
+      "arm": "UPPER8-MLP",
+      "full_model_input_positions": 92104960,
+      "step": 154852,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.95890699326992,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.0233389884233475,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.602312006056309,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.23127343505621,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.211796157062054,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.6515088975429535,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.854733645915985,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 163,
+      "arm": "UPPER8-MLP",
+      "full_model_input_positions": 92301568,
+      "step": 154980,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.93208085000515,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.9794725477695465,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.546857915818691,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.2047340497374535,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.156595163047314,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 163,
+      "arm": "UPPER8-MLP",
+      "full_model_input_positions": 92891392,
+      "step": 155364,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.933268614113331,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.961799696087837,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.5627128183841705,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.240408722311258,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.139535512775183,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 163,
+      "arm": "UPPER8-MLP",
+      "full_model_input_positions": 93677824,
+      "step": 155876,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.894662618637085,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.921853616833687,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.504610426723957,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.259736463427544,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.140215026214719,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.684178501367569,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.593196541070938,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 163,
+      "arm": "UPPER8-MLP",
+      "full_model_input_positions": 95250688,
+      "step": 156900,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.908124729990959,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.918077349662781,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.53984072804451,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.2474324479699135,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.11344919167459,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.665473222732544,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.665167331695557,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 163,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 92104960,
+      "step": 154852,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.95871464163065,
+          "windows": 64
+        },
+        "B": {
+          "nll": 6.022881388664246,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.602375261485577,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.231138776987791,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.211784716695547,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.651334792375565,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.854795157909393,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 163,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 92301568,
+      "step": 154980,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.932492546737194,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.9828342497348785,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.557125434279442,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.213896289467812,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.182697851210833,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 163,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 92891392,
+      "step": 155364,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.896561287343502,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.94654293358326,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.529673270881176,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.214058883488178,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.15933833271265,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 163,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 93677824,
+      "step": 155876,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.899681940674782,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.9296784698963165,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.514584191143513,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.210282240062952,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.140727948397398,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.5763232707977295,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.813119679689407,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 163,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 95250688,
+      "step": 156900,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.867558963596821,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.913266971707344,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.497438542544842,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.184274073690176,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.126339755952358,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.555452257394791,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.790886998176575,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 96455168,
+      "step": 157685,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.870242170989513,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.914795532822609,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.4912205040454865,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.176441255956888,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.110409678891301,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.555780649185181,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.763791352510452,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 96717312,
+      "step": 157813,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.887602344155312,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.923012509942055,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.520875260233879,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.180701889097691,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.121553216129541,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 97202688,
+      "step": 158050,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.8667271733284,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.887673571705818,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.487279891967773,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.175672609359026,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.110194388777018,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.555139631032944,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.699653744697571,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 97503744,
+      "step": 158197,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.878723442554474,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.911784872412682,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.505258969962597,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.176661394536495,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.111080981791019,
+          "windows": 128
+        }
+      },
+      "fresh": {}
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 98552320,
+      "step": 158709,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.867361053824425,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.911281406879425,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.493669584393501,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.186377637088299,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.1227683406323195,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.596198916435242,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.707129001617432,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 100649472,
+      "step": 159733,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.8709797486662865,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.905595913529396,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.4879844933748245,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.170404180884361,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.095829457044601,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.553431004285812,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.744077086448669,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 104843776,
+      "step": 161781,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.863494299352169,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.898338869214058,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.476010136306286,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.168261483311653,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.10046498849988,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.569702565670013,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.7163907289505005,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 113232384,
+      "step": 165877,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.874131627380848,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.905207842588425,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.485332615673542,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.149659018963575,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.068185364827514,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.546481370925903,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.65026992559433,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 121620992,
+      "step": 169973,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.863131321966648,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.8917175978422165,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.484749682247639,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.147785674780607,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.0516192857176065,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.5493380427360535,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.5710872411727905,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 130009600,
+      "step": 174069,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.871901698410511,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.899102002382278,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.487155377864838,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.14148736000061,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.039201907813549,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.543316721916199,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.589442640542984,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 138398208,
+      "step": 178165,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.854360148310661,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.894197881221771,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.473076470196247,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.135627586394548,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.02576101757586,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.528598636388779,
+          "windows": 16
+        },
+        "russian_wikipedia": {
+          "nll": 7.666958391666412,
+          "windows": 16
+        }
+      }
+    },
+    {
+      "experiment": 166,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 144501248,
+      "step": 181145,
+      "kind": "final",
+      "panels": {
+        "D": {
+          "nll": 5.132804777473211,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.017505466938019,
+          "windows": 128
+        },
+        "A": {
+          "nll": 5.851569123566151,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.8802705854177475,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.456706739962101,
+          "windows": 64
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.507731296122074,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.542571119964123,
+          "windows": 128
+        }
+      }
+    }
+  ],
+  "hidden_matched": [
+    {
+      "arm": "CE-KD",
+      "updates": 6144,
+      "input_tokens": 1572864,
+      "panels": {
+        "A": 4.903924975544214,
+        "B": 5.017014369368553,
+        "C": 4.42378319427371
+      }
+    },
+    {
+      "arm": "CE-KD-HIDDEN",
+      "updates": 6144,
+      "input_tokens": 1572864,
+      "panels": {
+        "A": 4.903263512998819,
+        "B": 5.012825086712837,
+        "C": 4.415786311030388
+      }
+    }
+  ],
+  "offsets": {
+    "exp155_end": 38674432,
+    "exp161_c4_end": 92104960,
+    "exp166_start": 96455168,
+    "exp166_end": 144501248
+  },
+  "token_ledger": {
+    "full_model_selected_path": 144501248,
+    "local_preparation": 17301504,
+    "arithmetic_presentations": 161802752,
+    "stages": {
+      "EXP111": 8388608,
+      "EXP136": 3222016,
+      "EXP145": 3169024,
+      "EXP147": 1577216,
+      "EXP153v2": 1736704,
+      "EXP155": 20580864,
+      "EXP160_C4": 541440,
+      "EXP161_C4": 52889088,
+      "EXP163_FULL": 4349952,
+      "EXP164_FULL": 256,
+      "EXP165_FULL": 0,
+      "EXP166_FULL": 48046080
+    }
+  },
+  "teacher_E": 2.6158805210143328,
+  "teacher_D": 2.8844118886627257
+}

@@ -1,0 +1,9 @@
+{
+  "date": "2026-10-29",
+  "source": "paper/latest_recovery_data.json",
+  "sha256": "7ad8456bf3145a6a985c4dd0b3883be889ec20feacfe4ebaab5269192bc31f47",
+  "matched_updates": 2048,
+  "matched_inputs": 3145728,
+  "full_continuation_inputs": 48046080,
+  "scope": "diagnostic validation, one seed; LR and capacity differ in EXP163"
+}

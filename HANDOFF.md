@@ -1,3 +1,19 @@
+# 29 October2026 — paper refreshed through received EXP166
+
+Updated English/Russian drafts with extended155 CURRENT118304, Wiki/C4 domain
+tradeoff161, matched163 scope recipes, full continuation166 and bounded156/159
+quality checks. No runtime hardware details added to paper text or new figures.
+EXP167 remains PREPARED, not received. Full decoded capabilities after166 unknown.
+Figure11 rebuilt from551 source-backed panel points, with separate Wiki branch,
+evaluation boundary, early zoom and D/E inset. Figure12 shows matched163 cells
+and166 deltaNLL curves. PNG/PDF/SVG and compact numeric extraction/provenance
+archived, no weights or secrets. Ledger: selected full-model path144,501,248,
+block preparation17,301,504; arithmetic161,802,752 presentations, not unique
+or compute-equivalent tokens. Includes160C4 prefix541,440; don't omit it or add
+alternative161Wiki branch to the selected full-decoder trajectory. Figure source
+file paper/latest_recovery_data.json carries received raw hashes. Offline render,
+visual inspection, links and token ledger checked; training files unchanged.
+
 # 28 October2026 — EXP166 RECEIVED; EXP167 LR screen PREPARED
 
 Received private/runtime-full-stream.json: two invocations0.46095h+9.69066h,

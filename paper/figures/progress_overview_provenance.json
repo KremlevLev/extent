@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-24",
+  "date": "2026-10-29",
   "sources": [
     {
       "path": "paper/figures/points.csv",
@@ -19,7 +19,15 @@
     },
     {
       "path": "paper/draft.ru.md",
-      "sha256": "92b55020b24ec16a0cb42bf28d96b51faeef61e9cde4111fec1dfada85a48ee5"
+      "sha256": "29e2be2bf750f8dca498a40ff30621849c74afbbde1bf828ad921fac214f0f1e"
+    },
+    {
+      "path": "paper/make_progress_overview.py",
+      "sha256": "7ee412ae4a6c218f9b70fdc7c6e2d1336b5570f28623107d2e68eecab5e60b5b"
+    },
+    {
+      "path": "paper/progress_layout.py",
+      "sha256": "175301ddbc58a614b828058cf22e460f740f0cb1e4cbe9129bfa0bdbc6c9facd"
     },
     {
       "path": "results/EXP-111-113-recovery-efficiency-protocol.md",
@@ -46,13 +54,17 @@
       "sha256": "02c3f15726a4790de83107a3bb56871c55d8f93137f9a611d61fd44ab436b764"
     },
     {
-      "path": "results/EXP-155-session-1.json",
-      "sha256": "5dfd919d83a6f19e65bfd8895ec72708c4059d77125ecb3905c21540a8c64251"
+      "path": "results/EXP-155-session-2.json",
+      "sha256": "9b0f3b2423b44929a64d2ebb5da6257076afbf273651956c320af3983c6cf823"
+    },
+    {
+      "path": "paper/latest_recovery_data.json",
+      "sha256": "7ad8456bf3145a6a985c4dd0b3883be889ec20feacfe4ebaab5269192bc31f47"
     }
   ],
   "selected_seed": 123,
-  "points": 290,
-  "full_model_training_positions": 28935168,
+  "points": 551,
+  "full_model_training_positions": 144501248,
   "local_preparation_positions": {
     "069_exact_dual_local": 1572864,
     "069_recurrent_local": 3145728,
@@ -66,9 +78,60 @@
     "EXP145": 12379,
     "EXP147": 6161,
     "EXP153v2": 6784,
-    "EXP155": 42350
+    "EXP155": 80394
   },
   "scope": "Selected lineage only. Not total research compute. No smooth curve across changed evaluation panels. Not unique tokens or FLOP equivalent.",
   "preparation_basis": "paper/draft.ru.md section3.4 and EXP111 protocol: reuse EXP069 local checkpoints -> EXP072 ONPOLICY -> EXP111; no EXP097 state reuse.",
-  "historical_raw_sha256": "a85d7dcbc9e4f57a1e06346a72474b646779456c8bb0dba53654a9c3aaa9ba8d"
+  "historical_raw_sha256": "a85d7dcbc9e4f57a1e06346a72474b646779456c8bb0dba53654a9c3aaa9ba8d",
+  "late_ledger": {
+    "full_model_selected_path": 144501248,
+    "local_preparation": 17301504,
+    "arithmetic_presentations": 161802752,
+    "stages": {
+      "EXP111": 8388608,
+      "EXP136": 3222016,
+      "EXP145": 3169024,
+      "EXP147": 1577216,
+      "EXP153v2": 1736704,
+      "EXP155": 20580864,
+      "EXP160_C4": 541440,
+      "EXP161_C4": 52889088,
+      "EXP163_FULL": 4349952,
+      "EXP164_FULL": 256,
+      "EXP165_FULL": 0,
+      "EXP166_FULL": 48046080
+    }
+  },
+  "late_offsets": {
+    "exp155_end": 38674432,
+    "exp161_c4_end": 92104960,
+    "exp166_start": 96455168,
+    "exp166_end": 144501248
+  },
+  "late_extracted_sources": [
+    {
+      "label": "received runtime-b6.json",
+      "sha256": "74f09b5782c52e2c5e64e0aac9212a6230a91b1ac493d71f2b46a93cb42d7b9b"
+    },
+    {
+      "label": "received runtime-full-stream.json",
+      "sha256": "3b6d6c48b7581899d4e8d78f719789239fc19f5093ae05d650d3a7d539bd39bf"
+    },
+    {
+      "path": "results/EXP-155-session-2.json",
+      "sha256": "9b0f3b2423b44929a64d2ebb5da6257076afbf273651956c320af3983c6cf823"
+    },
+    {
+      "path": "results/EXP-163-received-summary.json",
+      "sha256": "9f1138ec2e81acd38e2a1a5b3fbc2ba1f7ae0dc68f79c2f17d516cf3745f57af"
+    },
+    {
+      "path": "results/EXP-164-received-summary.json",
+      "sha256": "426610dd9e7e1dae4deab1ffaf0063cb207f536bba0312b5e04d73f2ffe83d1d"
+    },
+    {
+      "label": "received extent-m3q-hidden-distill-159.txt",
+      "sha256": "0cb989943e6773bdaecc7bb5cb69f49f2201093cce575633f5e56dd56c699f43"
+    }
+  ]
 }

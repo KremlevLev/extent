@@ -1,6 +1,6 @@
 # Extent working preprint
 
-[Read the draft](draft.md) · [Русская версия](draft.ru.md). Updated 17 October 2026; **not submitted or peer reviewed**.
+[Read the draft](draft.md) · [Русская версия](draft.ru.md). Updated 29 October 2026; **not submitted or peer reviewed**.
 
 The draft describes the evidence chain: local transfer versus full composition,
 hybrid-prefix input shift, numerical norm overflow, and protected recovery with
@@ -44,3 +44,26 @@ Four additional figures are rebuilt directly from archived EXP-129–132 JSONs:
 Run `python paper/make_recent_figures.py` with matplotlib installed. This is offline analysis only. The script checks source/data consistency, durable cursors, completion of finalization, and source replay before extracting points. All four new figures have PNG, PDF, and SVG exports. `figures/recent_points.csv` contains 87 measured panel points; `figures/recent_provenance.json` and `../results/EXP-129-132-session-1-analysis.json` record raw hashes, costs, and failed profile checks. Raw JSONs are archived once under `results/`, with no checkpoint weights.
 
 The late runs are exploratory single-seed results on reused panels. The reset changes several components together and does not establish which caused the improvement or whether earlier preparation was harmful. The draft also reconstructs selected-path preparation presentations separately from full-model recovery and unmeasured teacher/search compute.
+
+## Latest recovery evidence (through EXP-166)
+
+The English and Russian drafts now include the extended EXP-155 lineage, the
+Wiki-versus-fresh-C4 domain tradeoff, matched EXP-163 adaptation recipes, the
+48.05M-input full-decoder continuation, and bounded downstream/hidden-loss checks.
+EXP-167 remains a prepared LR comparison, not a result.
+
+Figure11 now covers the selected lineage to EXP-166, with the alternative Wiki
+branch explicitly separated. Selected-path full-model presentations144,501,248;
+local block-training preparation17,301,504 separately. Figure12 shows matched
+EXP-163 quality and EXP-166 changes from its own source. Offline rebuild:
+
+```sh
+python -m paper.make_progress_overview
+python -m paper.make_latest_figures
+```
+
+`latest_recovery_data.json` archives a compact numeric extraction with original
+received-report hashes, domain panels, stage offsets and a checked token ledger.
+It contains no weights, secrets or runtime-machine details. Reported panels are
+reused diagnostic validation; an independent full-model capability result for
+CURRENT181145 has not been received.
