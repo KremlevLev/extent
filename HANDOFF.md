@@ -1,3 +1,20 @@
+# 31 October2026 — EXP168 implemented; fast local pause and verified state cleanup
+
+User authorized long continuation, fast GPU release and automatic local states
+removal after ordinary soft stop. New --runner long, engine_long.py, model/runner168;
+source167x1 CURRENT185241/Adam30389/Edu237441, fixed1e-5/1e-6,320M input horizon.
+Rebuild600M Edu in NEW dir and verify old100M binary prefix+validation;~2.4GB.
+Fast: engine_control --fast createsFAST_STOP; local checkpoint only, no final
+NLL or new HF upload; control waits for training PID exit then Telegram ack.
+NormalSTOP/time/data/token end: finalize/syncHF then delete ONLY known state slots
+with matching remote commit manifest; pending/mismatched/unknown slots retained.
+Fast never cleans local state. One checkpoint generation per slot, atomic temp;
+~22GB payload remains, not RAM-only pause or an instantaneous guarantee.
+12h synchronous HF sync,128GB upload/session,220GB localcap/free20GB. Phase counters
+include kernel/eval/planner/local save/sync and unattributed setupIO remainder.
+No live168 throughput/quality/pause timing measured.22 CPU checks passed. Commands
+in results/EXP-168-launch.md. Original167 pinned scientific files unchanged.
+
 # 30 October2026 — EXP167 scheduler repaired; EXP168 DESIGN ONLY
 
 Received x1: deadline_partial,3053accepted updates/6,252,544 inputs, CURRENT184198
