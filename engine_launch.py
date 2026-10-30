@@ -51,7 +51,7 @@ def main(argv=None):
             ensure_listener(root,'results/runtime-methods.json' if args.runner=='methods' else 'results/runtime-compare.json')
     # Same training process/PID/signals; observer is an independent read-only process.
     if args.runner=='lr':
-        from engine_lr import main as run
+        from engine_lr_finish import main as run
     elif args.runner=='lr-arm':
         from engine_full_lr import main as run
     elif args.runner=='full':

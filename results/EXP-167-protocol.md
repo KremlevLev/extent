@@ -55,8 +55,8 @@ final diagnostics complete with no pending state/report sync. E ranking alone
 does not establish an overall winner. No statistical superiority or multiple-seed
 claim from this single-seed123 screen. No automatic winner continuation yet.
 
-Wall budget is shared across the entire launch; remaining time is divided among
-remaining arms. Each arm reserves18min inside its allocation for finalization.
+Wall budget is shared across the entire launch; each active arm receives the remaining global wall time and stops at its
+fixed token quota; there is no rigid one-third allocation. Each arm reserves18min inside its allocation for finalization.
 On a deadline or soft STOP, preserve accepted q/Adam/cursor, stop scheduling arms,
 and mark comparison partial. A partial x10 cannot be compared to a full x1 tail.
 Nonfinite proposals are rejected; unexpected failure aborts the campaign with
@@ -84,3 +84,8 @@ source chunk restore without bootstrap copy, immutable source descriptors,
 all-batch/fixed8 planner, no unequal-tail ranking, serial orchestration and routes.
 Physical Blackwell throughput/HBM, full model quality, live Telegram and remote
 state transfers remain to be measured on the server.
+
+30October scheduler repair: engine_launch --runner lr now dispatches
+engine_lr_finish.py. Original engine_lr.py and pinned child scientific files
+stay unchanged, so accepted x1 CURRENT184198 resumes with its Adam/data.
+All completed samples exit without automatic horizon extension.

@@ -1,3 +1,18 @@
+# 30 October2026 — EXP167 scheduler repaired; EXP168 DESIGN ONLY
+
+Received x1: deadline_partial,3053accepted updates/6,252,544 inputs, CURRENT184198
+saved/pending0. Kernel ~1500tok/s, whole invocation~542tok/s; only1.158h updates
+within3.207h. Remaining costs lack phase breakdown, don't invent attribution.
+New engine_lr_finish.py gives each arm remaining GLOBAL time and finite4096
+quota; default --runner lr routes it. Original engine_lr.py and scientific167
+child files unchanged to preserve accepted-state contracts. Stop after all3
+samples, on shared deadline/STOP or corpus exhaustion; no repeats/autoextension.
+15 CPU tests passed including full-global budget and no work after completion.
+EXP168 protocol designed: finish167 then choose guarded LR, extend pinned Edu
+100M prefix to600M total (+500M), carry winner CURRENT/Adam/cursor, budget320M
+new accepted inputs across48+9+5h sessions; explicit phase timing and bounded
+storage. No168 runner implemented or live168 result. See results/EXP-168-protocol.md.
+
 # 29 October2026 — paper refreshed through received EXP166
 
 Updated English/Russian drafts with extended155 CURRENT118304, Wiki/C4 domain

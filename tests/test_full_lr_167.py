@@ -98,7 +98,7 @@ def test_wrapper_lr_routing_keeps_full166(monkeypatch):
     calls=[]
     monkeypatch.setitem(sys.modules,'setproctitle',SimpleNamespace(setproctitle=lambda t:None))
     monkeypatch.setattr(engine_launch,'nvml_process_name',lambda:None)
-    monkeypatch.setitem(sys.modules,'engine_lr',SimpleNamespace(main=lambda args:calls.append(args)))
+    monkeypatch.setitem(sys.modules,'engine_lr_finish',SimpleNamespace(main=lambda args:calls.append(args)))
     engine_launch.main(['--runner','lr','--max-wall-hours','9'])
     assert calls==[['--max-wall-hours','9']]
 
@@ -170,3 +170,22 @@ def test_deleted_base_manifest_and_chunks_restore_and_verify(tmp_path,monkeypatc
     before=len(calls);model.restore_base_dependency(pointer,source,object());assert len(calls)==before
     pointer.write_text('{}')
     with pytest.raises(ValueError,match='manifest SHA mismatch'):model.restore_base_dependency(pointer,source,object())
+
+
+def test_repaired_scheduler_gives_arm_remaining_total_not_one_third(tmp_path,monkeypatch):
+    import engine_lr_finish,extent.server_control
+    calls=[]
+    monkeypatch.setattr(extent.server_control,'storage_status',lambda *a:dict(free_bytes=200e9,work_bytes=0))
+    class Child:
+        def __init__(self,command,**kwargs):self.command=command;calls.append(command)
+        def wait(self):
+            m=int(self.command[self.command.index('--lr-multiplier')+1]);directory=tmp_path/'results';directory.mkdir(exist_ok=True)
+            row=dict(accepted_new_updates=4096,accepted_input_tokens=8388608,final=dict(last=dict(panels={'E':dict(nll=5.)})))
+            (directory/f'runtime-lr-x{m}.json').write_text(json.dumps(dict(status='completed',finalization_status='completed',pending_slots=[],branches={'FULL-KD':row})))
+            return 0
+    monkeypatch.setattr(engine_lr_finish.subprocess,'Popen',Child)
+    result=engine_lr_finish.main(['--work-dir',str(tmp_path),'--max-wall-hours','10','--no-telegram'])
+    assert result['matched_complete'] and len(calls)==3
+    assert all(float(c[c.index('--max-wall-hours')+1])>9.9 for c in calls)
+    calls.clear();result=engine_lr_finish.main(['--work-dir',str(tmp_path),'--max-wall-hours','10','--no-telegram'])
+    assert not calls and result['matched_complete']  # no second epoch / endless continuation
