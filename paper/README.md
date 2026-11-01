@@ -67,3 +67,5 @@ received-report hashes, domain panels, stage offsets and a checked token ledger.
 It contains no weights, secrets or runtime-machine details. Reported panels are
 reused diagnostic validation; an independent full-model capability result for
 CURRENT181145 has not been received.
+
+Updated1November2026: overview through received EXP168,651 points; selected full-model306,786,816 plus local preparation17,301,504, arithmetic324,088,320 presentations. See section4.16 in both drafts.

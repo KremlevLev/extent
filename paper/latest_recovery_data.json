@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-29",
+  "date": "2026-11-01",
   "scope": "Curated numeric extraction from received reports; excludes hardware, paths and secrets. Points are diagnostic, not independent tests.",
   "sources": [
     {
@@ -25,6 +25,10 @@
     {
       "label": "received extent-m3q-hidden-distill-159.txt",
       "sha256": "0cb989943e6773bdaecc7bb5cb69f49f2201093cce575633f5e56dd56c699f43"
+    },
+    {
+      "label": "received runtime-long.json",
+      "sha256": "01f8353704d5076326eccea3c743a74b0b925074f26a85e4c26c87896e8460f4"
     }
   ],
   "points": [
@@ -2004,6 +2008,786 @@
           "windows": 128
         }
       }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 152889856,
+      "step": 185241,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.8526208102703094,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.888257518410683,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.458522722125053,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.118224170058966,
+          "windows": 128
+        },
+        "E": {
+          "nll": 5.005714748054743,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.504802271723747,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.5550067238509655,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 161278464,
+      "step": 189337,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.849594697356224,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.888296380639076,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.463298864662647,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.120582461357117,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.9977914690971375,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.497595282271504,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.617467571049929,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 169667072,
+      "step": 193433,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.834215924143791,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.879025340080261,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.443118222057819,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.118088390678167,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.9820402674376965,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.495436357334256,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.626072905957699,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 178055680,
+      "step": 197529,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.854242965579033,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.884683817625046,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.464119516313076,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.114213231950998,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.982532195746899,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.495883518829942,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.619749538600445,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 186444288,
+      "step": 201625,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.846263915300369,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.866531550884247,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.4431231915950775,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.110909402370453,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.962380224838853,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.489738656207919,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.63298586755991,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 194832896,
+      "step": 205721,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.867816351354122,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.891621291637421,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.465514227747917,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.12798360735178,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.972561556845903,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.478920798748732,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 8.15338183939457,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 203221504,
+      "step": 209817,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.8332478031516075,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.862521678209305,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.426892057061195,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.103698685765266,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.9495614990592,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.479999972507358,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.802136264741421,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 211610112,
+      "step": 213913,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.818287841975689,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.847230032086372,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.410272426903248,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.105799101293087,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.939788054674864,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.4816266521811485,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.719773102551699,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 219998720,
+      "step": 218009,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.818173363804817,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.850107163190842,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.42065753787756,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.094732828438282,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.929073594510555,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.462975338101387,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.776319716125727,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 228387328,
+      "step": 222105,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.825705885887146,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.8639905750751495,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.437718242406845,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.097883727401495,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.926676817238331,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.474473571404815,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.797542653977871,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 236775936,
+      "step": 226201,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.8182720094919205,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.837903335690498,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.4137371480464935,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.099863722920418,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.913823822513223,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.4663460068404675,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.8557759039103985,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 245164544,
+      "step": 230297,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.79919471591711,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.8138307929039,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.399423360824585,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.088740348815918,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.907942643389106,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.464756181463599,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.718833532184362,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 253553152,
+      "step": 234393,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.822576433420181,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.851202875375748,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.448197141289711,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.1193871311843395,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.926916183903813,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.507937988266349,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.738311171531677,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 261941760,
+      "step": 238489,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.80236491560936,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.825929597020149,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.413549467921257,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.092030376195908,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.890060218051076,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.457135189324617,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.804567262530327,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 270330368,
+      "step": 242585,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.8090574741363525,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.842248022556305,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.421469539403915,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.076216049492359,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.881593054160476,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.439204627647996,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.711149495095015,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 278718976,
+      "step": 246681,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.7812234833836555,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.823725536465645,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.400176957249641,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.081595987081528,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.884423043578863,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.452573221176863,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.839479178190231,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 287107584,
+      "step": 250777,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.778988301753998,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.80561275780201,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.386639654636383,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.075083564966917,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.862265430390835,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.433011122047901,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.715385764837265,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 295496192,
+      "step": 254873,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.78229808062315,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.805238246917725,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.385746099054813,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.073192182928324,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.858817728236318,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.441694777458906,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.900136116892099,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 303884800,
+      "step": 258969,
+      "kind": "registered",
+      "panels": {
+        "A": {
+          "nll": 5.77105313539505,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.808868318796158,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.382138103246689,
+          "windows": 64
+        },
+        "D": {
+          "nll": 5.0695736184716225,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.852242905646563,
+          "windows": 128
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.434051355347037,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.7403720542788506,
+          "windows": 128
+        }
+      }
+    },
+    {
+      "experiment": 168,
+      "arm": "FULL-KD",
+      "full_model_input_positions": 306786816,
+      "step": 260386,
+      "kind": "final",
+      "panels": {
+        "D": {
+          "nll": 5.0731175020337105,
+          "windows": 128
+        },
+        "E": {
+          "nll": 4.844616016373038,
+          "windows": 128
+        },
+        "A": {
+          "nll": 5.767075300216675,
+          "windows": 64
+        },
+        "B": {
+          "nll": 5.804318964481354,
+          "windows": 32
+        },
+        "C": {
+          "nll": 5.3834535628557205,
+          "windows": 64
+        }
+      },
+      "fresh": {
+        "english_stories": {
+          "nll": 4.430822590366006,
+          "windows": 128
+        },
+        "russian_wikipedia": {
+          "nll": 7.754618387669325,
+          "windows": 128
+        }
+      }
     }
   ],
   "hidden_matched": [
@@ -2032,12 +2816,14 @@
     "exp155_end": 38674432,
     "exp161_c4_end": 92104960,
     "exp166_start": 96455168,
-    "exp166_end": 144501248
+    "exp166_end": 144501248,
+    "exp168_start": 152889856,
+    "exp168_end": 306786816
   },
   "token_ledger": {
-    "full_model_selected_path": 144501248,
+    "full_model_selected_path": 306786816,
     "local_preparation": 17301504,
-    "arithmetic_presentations": 161802752,
+    "arithmetic_presentations": 324088320,
     "stages": {
       "EXP111": 8388608,
       "EXP136": 3222016,
@@ -2050,7 +2836,9 @@
       "EXP163_FULL": 4349952,
       "EXP164_FULL": 256,
       "EXP165_FULL": 0,
-      "EXP166_FULL": 48046080
+      "EXP166_FULL": 48046080,
+      "EXP167_selected": 8388608,
+      "EXP168_FULL": 153896960
     }
   },
   "teacher_E": 2.6158805210143328,
