@@ -1,132 +1,114 @@
-# EXP169 — TPU execution and recovery diagnostics
+# EXP-169: TPU diagnosis and matched loss pilots
 
-Design1November2026. **Not launch-ready:** isolated supervisor implemented and
-CPU-tested; actual model worker, TPU engineering preflight and notebook launch
-cell remain to be implemented. Do not spend a queued TPU session on this file.
+Prepared 1 November 2026. Worker, CPU supervisor and launch notebook implemented.
+Local CPU and virtual-device checks are described below. No physical TPU run has
+been performed here;6400 input tokens/s is a target, never a measured promise.
 
-## Source and scope
+## Immutable source
 
-Freeze EXP168 CURRENT260386, full decoder coordinates, carried Adam105534,
-Edu cursor838601, seed123. Frozen embeddings/final norm/head, actual MIMO4 and
-adaptation rank256 unchanged. Full source manifest/chunks/runtime checked;
-per-window A-E source replay <=.03 before any accepted update. No automatic
-reset, loose tolerance or fallback to an old source. Source source-control NLL:
-A5.7670753,B5.8043190,C5.3834536,D5.0731175,E4.8446160.
-Data remains pinned600M Edu with verified original100M prefix and validation;
-next tokens start838601*256. Fresh100M pack alone is too short for this source.
+EXP168 FULL-KD CURRENT260386, Adam105534, Edu window838601, seed123. Full decoder
+coordinates; embeddings/final norm/tied head frozen. Actual Mamba MIMO rank4 and
+adaptation rank256 unchanged. Validate original source code SHA, manifest/chunks,
+runtime and Adam/data clocks. No replacement by BEST or older checkpoint.
+A-E per-window source replay tolerance .03 must pass before accepted updates.
+A5.7670753 B5.8043190 C5.3834536 D5.0731175 E4.8446160.
+Pinned FineWeb-Edu600M preserves old100M prefix and validation; no cycling.
+385,318,144 source-fresh input tokens remain. Checkpoint/corpus identity is enforced.
 
-## Why peak TFLOPS is not a throughput prediction
+## Resource policy
 
-Current create_v5e_mesh makes data1/fsdp4/tensor2 on8devices. Thus batch is not
-distributed over8 independent data replicas. Large vocab151936, sequence256,
-small microbatches, weight/optimizer sharding, collective traffic, Python tile
-dispatch and host-staged activation variants can constrain utilization. These
-are implementation facts and candidate explanations, not measured TPU attribution.
-Compare resident compiled step against batched streamed reference using actual
-same-model/same-batch measurements. No assumed5x multiplier in token planning.
+User runtime:500GB host RAM,20GB SSD,8x16GB TPU HBM. Aggregate128GB HBM is not a
+single pool. Mesh data1/fsdp4/tensor2; batch13 is valid because data axis size1.
+Checkpoint chunks, source/model/HF caches, datasets and compilation caches use
+verified tmpfs only. Require128GiB free tmpfs and256GiB effective available RAM,
+including cgroup restriction, before downloading. No SSD fallback. If /dev/shm is
+small, stop with an actionable small report instead of filling the20GB disk.
+Only small reports and bounded probe log tails are copied to Kaggle Output.
 
-## Fault containment
+## Shared9-hour budget
 
-Notebook parent must not initialize TPU/JAX. Run each speculative batch probe in
-a disposable subprocess owning the complete8device slice. Source q/Adam/cursor
-immutable; no accepted probe updates. Catch normal exception exit, fatal worker
-exit/signals, missing/corrupt JSON and timeout in CPU-only parent. Kill ONLY the
-probe's process group on timeout. Always retain log/returncode/timing and last
-verified fit. A worker failure does not by itself identify an OOM; distinguish
-memory evidence, numerical failure, source mismatch and device failure.
+Notebook starts its timer before clone/dependency installation. Supervisor receives
+only the remaining time; final18min reserved for final panels/checkpoint sync.
+Reuse verified published corpus packs via extent.tpu_data_169 before queueing;
+otherwise CPU preparation has75min cap. Planning has50min total cap, at most25min per engine;
+individual disposable probes have10min cap including initialization/compilation.
+These are ceilings, not waits. A successful early boundary immediately ends that
+engine sweep. Preparation/planning can be shorter; slow source downloads can
+prevent a useful training run and are recorded explicitly.
 
-Sweep EVERY INTEGER1,2,3,4,5,... until first failed trial or explicit wall/memory/trial ceiling.
-Keep last fitting batch, but select fastest measured finite candidate; biggest
-batch can be slower. No powers-of-two stepping or skipped intermediate sizes. Batches7 and13 are
-valid candidates. A batch incompatible with a mesh data-axis partition requires
-a different compatible layout; never unmasked padding or repeated examples. Warm2steps, time at least3 synchronized
-proposals, report input and next-token-target throughput separately. Probe
-duration must include compilation separately; no q/Adam/cursor mutation.
+Measure each integer batch1,2,3,... up to first failure or explicit time/trial cap
+(max128). Each probe is a separate process owning the whole TPU slice. Warm2 and
+time3 synchronized proposals. Restore identical q/Adam/cursor; accept zero updates.
+Select fastest finite successful batch, retaining last fit and failed-worker logs.
+Compare resident compiled whole-model step versus layer-streamed exact chain rule.
+No padding, repeated samples, powers-of-two jumps or assumed TFLOPS multiplier.
+Before training, reinitialize fresh worker and audit selected actual-batch gradient
+against streamed reference: cosine>=.98,relativeL2<=.15,CE error<=.03. No tolerance
+loosening. Teacher remains sharded in the reference too, never moved to one chip.
+Record per-chip parameter/Adam/base/teacher resident bytes, device memory stats and
+compiled memory analysis where supported. Missing stats mean unknown, not zero.
 
-If libtpu becomes unusable after worker failure, validate recovery in a fresh
-worker with the known fit before training. If that cannot initialize, persist
-CPU report and notify; do not falsely mark training successful. Host/notebook
-termination, unrecoverable accelerator faults and quota revocation cannot be
-guaranteed catchable. All successful later training must be resumable from a
-durable own checkpoint, not restarted from source after accepted updates.
+## Actual diagnostic pairs
 
-## Numerical and performance preflight
+* CE-only versus KL-only unaccepted proposals on one identical fresh training
+  window: objective, gradient norms/cosines by layer and mixer/MLP/norm groups;
+  actual update/weight ratios and unchanged BF16 coordinate-cast fractions.
+* Teacher-prefix versus hybrid-prefix block discrepancy, accumulated discrepancy,
+  input/output/residual RMS and max values, on one fresh train and one fixed Wiki
+  validation window. These observations do not establish a causal plateau culprit.
+* Matched training pilots: mixed .5CE+.5KL control versus CE-only, each from the
+  same source q/Adam, same physical batch and identical first approximately1M
+  fresh Edu tokens (ceil to a complete batch), with same A-E and EN/RU128 panels.
+  LR remains1e-5 mixers/MLPs,1e-6 norms,stableclip1; carried Adam, no warmup reset.
+  Pilot clocks/tokens/endpoints saved separately. Compare only equal completed
+  tails; partial pilot endpoints are not an equal-budget result. If fewer than3h
+  remain before a pilot, omit it explicitly. CE-only saves metrics, discards its
+  state and is never donated to control.
 
-Verify8local TPU devices/process_count1, BF16 compute/FP32 losses and coordinates,
-sharding of q and Adam mu/nu, replicated bytes per chip, actual batch layouts.
-Require physical dimensions divisible by partition counts. Record compile
-memory analysis and device memory stats where available; null is not zero.
-Audit selected resident whole-batch gradients against streamed whole-batch
-reference at same q/Adam/input. Existing thresholds cosine>=.98, relativeL2<=.15,
-CE error<=.03; all gradients/updates/parameters finite. Test at least two accepted
-engineering updates in a disposable state, including CURRENT/BEST divergence,
-then discard them before the scientific run. Peak speed is not evidence of
-correct loss or state recovery. Save/restore own state in a preflight roundtrip.
+Then spend the remaining budget continuing mixed control, restoring its own pilot
+CURRENT rather than restarting from the source. Billion-update ceiling cannot
+prematurely end9h; actual remaining fresh data/time stops it. No forced LR increase:
+EXP167 already found1x better than3x/10x. Longer alternative-loss benefit, causal
+activation clipping, FP32 trajectory and architectural capacity remain unmeasured.
 
-## Patient diagnostics and hypothesis checks
+## Fault handling and durability
 
-Measure fixed small train/validation losses at source separately: do not compare
-a random training batch with a differently distributed validation average.
-Decompose CE/KL gradient norms and cosines globally and per layer; compare mixer,
-MLP and norm groups, clipping factors, actual update/weight ratios, BF16 effective
-forward changes and nonfinite counts. Compute teacher/student layer output
-discrepancy and residual/update RMS on identical input and on hybrid-prefix input.
-Large activations alone are not an attribution of the plateau.
+CPU-only parent does not initialize JAX/TPU. It captures worker Python errors,
+fatal exits/signals, missing/corrupt JSON and bounded timeouts; terminates only
+its own child process group. First failed probe is a boundary of unknown cause,
+not automatically an OOM. Failure retains previous valid fits; selected batch is
+re-audited in a fresh worker. At most two continuation attempts, same contract,
+restore own CURRENT/Adam/data. Unsupported memory introspection is reported.
 
-Hypotheses: CE/KL gradient conflict; weak effective updates; localized layer
-error; train-vs-validation mismatch/domain specialization. Frozen-source
-candidate proposals CE-only, mixed CE/KL and KL-only can reveal local direction
-and cost, but do not establish long-run superiority. If token training probes
-are added, fork same source/Adam and use the SAME fresh token prefix and
-effective batch; isolate their costs from the selected continuation. No winner
-from unequal tails. No automatic high LR: EXP1671e-5 beat3e-5 and1e-4.
+Control keeps one pruned local atomic CURRENT in tmpfs every30min and on exit;
+HF sync after control pilot and at finalization. No22GB write for zero-update
+preflight; no checkpoints for CE-only pilot. Full sync is deliberately not performed
+every few minutes. Host/session loss can lose locally saved work since last HF
+sync; a recoverable worker exit can use local CURRENT. No claim that host death,
+quota revocation or unrecoverable libtpu faults can be caught100percent.
+Quiet Telegram start/end only; no new polling listener competing with the existing
+server bot. SIGINT/SIGTERM requests STOP; finalization remains bounded. All failures
+produce aggregate CPU report when the parent/host is alive.
 
-## Nine-hour budget and training
+## Launch and outputs
 
-Total9h including setup, diagnostics, compilations and saves. Reserve18min at end.
-Target setup+planner+diagnostics<=90min, with individual compile/probe deadlines;
-report partial diagnostics rather than consuming the whole session silently.
-Remaining work budget uses observed sustained accepted-input throughput,
-including periodic evaluation/checkpoint overhead; no TFLOPS-based token promise.
-Default main training continues unchanged CE/KL control from source, equal-batch
-probes counted separately. Token/data end stops without cycling. Limited-memory
-fallback must be an explicit execution choice and re-audited, not hidden.
+Use notebooks/extent-tpu-169.ipynb in a fresh TPU v5e8 session, Internet enabled.
+Enable EXTENT_DEPLOY_KEY_B64,HF_TOKEN,TELEGRAM_BOT_TOKEN,TELEGRAM_CHAT_ID secrets.
+Do not run the old notebook JAX/device preflight before the CPU supervisor.
+9h includes setup. Last cell starts engine_tpu169 with the remaining total budget.
 
-Measure exclusive wall phases, actual updates and whole-session throughput.
-Keep one local atomic CURRENT generation with q/Adam/data; HF periodically and
-exit, metrics separately. Any training worker death makes parent restore own
-last accepted durable state before retrying; lost unsaved work counted as cost.
-Bound retries and disk/HF queues. One existing read-only Telegram listener,
-start/completion/actionable error notices only. Parent saves aggregate report
-even when no candidate fits; failed hardware preflight must not launch training.
+Download extent-results/extent-m3q-tpu169.json (aggregate and matched pilot
+endpoints), runtime-tpu169-control.json (full trajectory/diagnostics), and
+runtime-tpu169-ce-only.json if that pilot ran. These reports suffice initially;
+no checkpoint downloads needed. Probe log tails are included on failure.
 
-## Implemented evidence
+## Local evidence
 
-extent/isolated_tpu_planner.py: CPU-only supervisor with process-group timeout,
-result validation, monotone batch growth and fastest successful-fit selection.
-Four local tests pass, including real failing/timeout subprocesses. No physical
-TPU throughput, recovery-from-libtpu-abort or model-worker result measured yet.
-
-## Actual session resource constraints
-
-User reports500GB host RAM,20GB SSD and8x16GB TPU HBM (128GB aggregate). HBM is
-NOT one128GB pool: validate compiled peak on EACH chip including replicated
-weights, gradients, optimizer, activations and runtime overhead. Null stats are
-unknown, not a guarantee. Run dense q/Adam with actual sharding checks.
-
-20GB SSD cannot fit a single~22GB full checkpoint, let alone atomic replacement.
-Large checkpoint chunks, immutable source caches, HF caches, compilation cache
-and packed corpus therefore MUST live on a verified RAM-backed mount; disk only
-small reports/logs under explicit budget. Before importing JAX/downloading weights,
-inspect actual mount filesystem/capacity and cgroup memory ceiling/current use;
-500GB machine RAM alone does not establish container availability. /dev/shm may
-be small despite host RAM. No silent fallback of large caches to /kaggle/working.
-If no sufficiently large RAM-backed mount exists, save a small actionable report
-and stop BEFORE downloads; don't fill SSD or pretend the training preflight passed.
-
-RAM-backed checkpoints survive worker restarts but not termination of the session
-or host. Preserve HF durability at bounded intervals and finalization; atomic
-replacement needs room for old+new generations. Cap cache and compile entries,
-clean disposable trial outputs after saving diagnostics, keep only necessary
-current/source data. Keep the original HF source untouched. Verify per-chip HBM
-and aggregate host RAM separately; do not spend all RAM on tmpfs caches.
+34 local tests passed (169 diagnostics, isolated planner,168 lifecycle and167 regression).
+Tests cover subprocess exception/timeout/malformed output containment, integer
+batch boundaries and fastest-fit selection; immutable source fork with carried
+Adam/data and own-state priority; real tiny-model compiled/reference gradients,
+two optimizer updates, CE/KL diagnostics without source mutation; eight virtual
+CPU devices with odd physical batch3 and sharded teacher/head evaluation. Virtual
+CPU devices establish plumbing/math checks, not physical TPU throughput or OOM
+recovery. The first actual TPU session remains the hardware validation.

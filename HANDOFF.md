@@ -1,3 +1,27 @@
+# 1 November2026 — EXP169 TPU diagnostic runner and launch notebook
+
+Implemented engine_tpu169 CPU supervisor, model/worker169, tpu_step_169 and
+notebooks/extent-tpu-169.ipynb. Source168 CURRENT260386/Adam105534/Edu838601;
+manifest/runtime/source replay checked, old pinned scientific files unchanged.
+Every integer batch1,2,3,...; separate disposable TPU processes, first failure or
+explicit time cap; fastest successful fit. Compare compiled/streamed execution;
+whole selected-batch numerical gate. Teacher/reference placement stays sharded.
+RAM-only large artifacts on verified tmpfs:500GB reported host,20GB SSD,
+8x16GB HBM. Refuse insufficient tmpfs/cgroup RAM before downloads. No SSD fallback.
+9h total incl notebook setup;18min final reserve, bounded source prep/probes.
+Publish existing3.2GB corpus packs once with extent.tpu_data_169 before queueing,
+so TPU restores verified source-identical data instead of600M retokenization.
+CE/KL gradient pairs/groups, actual update ratios/BF16 cast changes, teacher and
+hybrid-prefix layer errors/RMS on train and Wiki. Short matched approximately1M
+input pilots mixed vs CE-only; compare only complete equal tails; then continue
+mixed from OWN pilot CURRENT. CE-only state discarded, metrics retained.
+Quiet start/end Telegram only; no competing Kaggle getUpdates listener.
+34 local tests passed. Checks include real tiny-model gradients/two Adam updates/no source mutation,
+8 virtual CPU devices with odd batch and teacher/head evaluation, worker failures
+and timeout supervision. Physical TPU throughput/libtpu recovery NOT measured;
+6400 input tok/s is target, not promise. Read results/EXP-169-protocol.md and launch
+instructions; use FRESH notebook/kernel without old parent jax.devices preflight.
+
 # 31 October2026 — EXP168 implemented; fast local pause and verified state cleanup
 
 User authorized long continuation, fast GPU release and automatic local states
