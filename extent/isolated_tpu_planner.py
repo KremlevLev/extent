@@ -50,7 +50,7 @@ def run_probe(command,result_path,log_path,timeout_seconds,*,stop=lambda:False):
         return dict(row,status='invalid_result',error=str(exc))
 
 
-def grow(probe,*,first=1,max_batch=1024,max_trials=11,deadline=None,record=lambda result:None):
+def grow(probe,*,first=1,max_batch=1024,max_trials=1024,deadline=None,record=lambda result:None):
     """Keep successful fits after a failed disposable probe; choose fastest fit.
 
     Stop at first failed batch or explicit time/count cap. A failed batch is not
@@ -64,7 +64,7 @@ def grow(probe,*,first=1,max_batch=1024,max_trials=11,deadline=None,record=lambd
         except Exception as exc:row=dict(batch=batch,status='supervisor_error',error_type=type(exc).__name__,error=str(exc))
         trials.append(row);record(dict(trials=trials))
         if row['status']!='measured':break
-        batch*=2
+        batch+=1
     fits=[r for r in trials if r['status']=='measured']
     best=max(fits,key=lambda r:r['report']['input_tokens_per_second']) if fits else None
     result=dict(trials=trials,selected_batch=best['batch'] if best else None,

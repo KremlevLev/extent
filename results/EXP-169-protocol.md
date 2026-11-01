@@ -35,10 +35,11 @@ probe's process group on timeout. Always retain log/returncode/timing and last
 verified fit. A worker failure does not by itself identify an OOM; distinguish
 memory evidence, numerical failure, source mismatch and device failure.
 
-Sweep1,2,4,8,16,... until first failed trial or explicit wall/memory/trial ceiling.
+Sweep EVERY INTEGER1,2,3,4,5,... until first failed trial or explicit wall/memory/trial ceiling.
 Keep last fitting batch, but select fastest measured finite candidate; biggest
-batch can be slower. Optional bounded refinement between fitting/failing sizes
-only if planning budget remains. Warm2steps, time at least3 synchronized
+batch can be slower. No powers-of-two stepping or skipped intermediate sizes. Batches7 and13 are
+valid candidates. A batch incompatible with a mesh data-axis partition requires
+a different compatible layout; never unmasked padding or repeated examples. Warm2steps, time at least3 synchronized
 proposals, report input and next-token-target throughput separately. Probe
 duration must include compilation separately; no q/Adam/cursor mutation.
 
@@ -105,3 +106,27 @@ extent/isolated_tpu_planner.py: CPU-only supervisor with process-group timeout,
 result validation, monotone batch growth and fastest successful-fit selection.
 Four local tests pass, including real failing/timeout subprocesses. No physical
 TPU throughput, recovery-from-libtpu-abort or model-worker result measured yet.
+
+## Actual session resource constraints
+
+User reports500GB host RAM,20GB SSD and8x16GB TPU HBM (128GB aggregate). HBM is
+NOT one128GB pool: validate compiled peak on EACH chip including replicated
+weights, gradients, optimizer, activations and runtime overhead. Null stats are
+unknown, not a guarantee. Run dense q/Adam with actual sharding checks.
+
+20GB SSD cannot fit a single~22GB full checkpoint, let alone atomic replacement.
+Large checkpoint chunks, immutable source caches, HF caches, compilation cache
+and packed corpus therefore MUST live on a verified RAM-backed mount; disk only
+small reports/logs under explicit budget. Before importing JAX/downloading weights,
+inspect actual mount filesystem/capacity and cgroup memory ceiling/current use;
+500GB machine RAM alone does not establish container availability. /dev/shm may
+be small despite host RAM. No silent fallback of large caches to /kaggle/working.
+If no sufficiently large RAM-backed mount exists, save a small actionable report
+and stop BEFORE downloads; don't fill SSD or pretend the training preflight passed.
+
+RAM-backed checkpoints survive worker restarts but not termination of the session
+or host. Preserve HF durability at bounded intervals and finalization; atomic
+replacement needs room for old+new generations. Cap cache and compile entries,
+clean disposable trial outputs after saving diagnostics, keep only necessary
+current/source data. Keep the original HF source untouched. Verify per-chip HBM
+and aggregate host RAM separately; do not spend all RAM on tmpfs caches.
