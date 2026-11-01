@@ -1,5 +1,5 @@
 {
-  "draft_date": "2026-10-29",
+  "draft_date": "2026-11-01",
   "files": [
     {
       "path": "results/EXP-061-production-aligned-scaling-campaign-summary.md",
@@ -168,7 +168,7 @@
     },
     {
       "path": "paper/latest_recovery_data.json",
-      "sha256": "7ad8456bf3145a6a985c4dd0b3883be889ec20feacfe4ebaab5269192bc31f47",
+      "sha256": "ad18d6da6c0a7892322261fab9269750585e2ce1746cbf54962868dfbdab4fc3",
       "type": "received_numeric_evidence"
     }
   ],
@@ -262,6 +262,6 @@
       "paper/make_progress_overview.py",
       "paper/make_latest_figures.py"
     ],
-    "scope": "through received EXP166; EXP167 prepared only"
+    "scope": "through received EXP168; selected EXP167 LR-x1 included; alternative LR costs separate"
   }
 }

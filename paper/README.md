@@ -50,7 +50,7 @@ The late runs are exploratory single-seed results on reused panels. The reset ch
 The English and Russian drafts now include the extended EXP-155 lineage, the
 Wiki-versus-fresh-C4 domain tradeoff, matched EXP-163 adaptation recipes, the
 48.05M-input full-decoder continuation, and bounded downstream/hidden-loss checks.
-EXP-167 remains a prepared LR comparison, not a result.
+EXP-167 completed: the original1e-5 rate wins the measured comparison; EXP-168 continues that state.
 
 Figure11 now covers the selected lineage to EXP-166, with the alternative Wiki
 branch explicitly separated. Selected-path full-model presentations144,501,248;
