@@ -1,3 +1,28 @@
+# 1 November2026 — clean-start provenance audit and EXP170 prototype
+
+IMPORTANT: current Mamba lineage is NOT the historical INIT-K QKVO lift.
+Patient loads EXP069 RANDOM-prepared bank then EXP072 ONPOLICY endpoints.
+Confirmed original069 protocol and prepare_layer at received a385256: random
+mamba.init,1024 dual teacher-target fit/readout calibration/2048 recurrent local
+fit,context64.072 adds4096 updates/layer on512x128 cached windows. Historical
+exact-lift experiments remain separate; do not describe current recovery as
+starting from pure copied Q/K/V or infer direct head-preserving init failed.
+
+Compared arianraje b946069.../SHA6ca2cee... and100M/4k alignment. Old geometry
+G1/P64/N64/inner1536 is compressed; old lift pooling can erase head differences,
+but that pooling is NOT the random069 initializer. New170 engineering primitive:
+G8/P128/N128/inner2048/R4 for Qwen1.7B, own query-rank selection, zero dynamic
+rows, full normalization/tanh. Two queries/KV versus four in his4B explicitly
+handled by duplicate C slots without averaging/cropping. Z donor unresolved:
+random Z is an explicit adaptation, no99.95% inheritance claim.
+
+Five CPU checks pass, including independent NumPy recurrence and live dt/angle
+alignment gradients. EXP170 has audit/protocol and initializer/loss primitives,
+NO100M runner or hardware result. Proposed27-layer teacher-prefix bank can be
+composed with old4/28 and75%-replacement7/28 masks without retraining the bank.
+Read results/EXP-170-clean-start-audit.md and EXP-170-protocol.md before coding.
+Keep169 and historical pinned files unchanged. No remote job launched.
+
 # 1 November2026 — EXP169 TPU diagnostic runner and launch notebook
 
 Implemented engine_tpu169 CPU supervisor, model/worker169, tpu_step_169 and
