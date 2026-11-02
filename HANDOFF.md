@@ -1,3 +1,15 @@
+# 2 November2026 — technical report Volume II restored
+
+Current scientific ledger: extent technical report v2.md; document map RESEARCH.md.
+First report is preserved as historical VolumeI with navigation only. V2 backfills
+received129–154 outcomes and extends155–168, distinguishes missing139–142/149–152,
+records random-prepared069 provenance and marks169/170 PREPARED/ENGINEERING.
+Compact received167/168 summaries include raw SHA; no weights/private runtime
+files copied. Maintain V2 whenever new experiment evidence is reviewed: source,
+accepted tokens, panel/context, CURRENT/BEST, matched control, conclusion/limits,
+and raw/summary links. Also update HANDOFF for current state and operational
+changes; drafts are narrative derivatives, not replacements for the ledger.
+
 # 2 November2026 — EXP170 PyTorch clean QKVO stage1 runner
 
 Implemented engine_torch170.py; read results/EXP-170-pytorch-launch.md. Original

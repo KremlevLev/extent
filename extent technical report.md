@@ -1,5 +1,7 @@
 # Extent Technical Report and Experiment Ledger
 
+> **Volume I — historical archive.** The latest entries below cover measured EXP-155 and prepared EXP-156. Continue with [Volume II](extent%20technical%20report%20v2.md) for the backfilled EXP-129–154 outcomes, received EXP-156–168, the correction to the main lineage's initialization provenance, and prepared EXP-169–170. See [RESEARCH.md](RESEARCH.md) for the document map. Historical entries and their original dates are preserved; the original header date below is not the current project status.
+
 **Working title:** *Extent-14B: Compute-Efficient Transplantation of Qwen3-14B into a Mamba-3/MLA Hybrid*
 
 **Status:** research prototype; no quality or inference claims are established yet.

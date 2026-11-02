@@ -1,0 +1,157 @@
+{
+  "experiment": 167,
+  "source_label": "user-provided runtime-lr.json",
+  "raw_sha256": "fbb30f35a28c10ee01f1656289aeac01baef8fd0e0a5162e159f2206c97857f8",
+  "status": "completed",
+  "stop_reason": "all arm token samples completed",
+  "pending_slots": [],
+  "branches": {
+    "LR-x1": {
+      "step": 185241,
+      "source_step": 181145,
+      "durable_step": 185241,
+      "accepted_input_tokens": 8388608,
+      "accepted_new_updates": 4096,
+      "training_windows_seen": 237441,
+      "coordinates": 1364173952,
+      "selected_batch": 8,
+      "finalization_status": "completed",
+      "lr_multiplier": 1,
+      "last": {
+        "step": 185241,
+        "panels": {
+          "D": {
+            "nll": 5.118224170058966,
+            "windows": 128
+          },
+          "E": {
+            "nll": 5.005714748054743,
+            "windows": 128
+          },
+          "A": {
+            "nll": 5.8526208102703094,
+            "windows": 64
+          },
+          "B": {
+            "nll": 5.888257518410683,
+            "windows": 32
+          },
+          "C": {
+            "nll": 5.458522722125053,
+            "windows": 64
+          }
+        },
+        "fresh_nll": {
+          "english_stories": {
+            "nll": 4.504802271723747,
+            "windows": 128
+          },
+          "russian_wikipedia": {
+            "nll": 7.5550067238509655,
+            "windows": 128
+          }
+        }
+      }
+    },
+    "LR-x3": {
+      "step": 185241,
+      "source_step": 181145,
+      "durable_step": 185241,
+      "accepted_input_tokens": 8388608,
+      "accepted_new_updates": 4096,
+      "training_windows_seen": 237441,
+      "coordinates": 1364173952,
+      "selected_batch": 8,
+      "finalization_status": "completed",
+      "lr_multiplier": 3,
+      "last": {
+        "step": 185241,
+        "panels": {
+          "D": {
+            "nll": 5.135282903909683,
+            "windows": 128
+          },
+          "E": {
+            "nll": 5.015804635360837,
+            "windows": 128
+          },
+          "A": {
+            "nll": 5.865014269948006,
+            "windows": 64
+          },
+          "B": {
+            "nll": 5.914720341563225,
+            "windows": 32
+          },
+          "C": {
+            "nll": 5.490311950445175,
+            "windows": 64
+          }
+        },
+        "fresh_nll": {
+          "english_stories": {
+            "nll": 4.523173797875643,
+            "windows": 128
+          },
+          "russian_wikipedia": {
+            "nll": 7.593442935496569,
+            "windows": 128
+          }
+        }
+      }
+    },
+    "LR-x10": {
+      "step": 185241,
+      "source_step": 181145,
+      "durable_step": 185241,
+      "accepted_input_tokens": 8388608,
+      "accepted_new_updates": 4096,
+      "training_windows_seen": 237441,
+      "coordinates": 1364173952,
+      "selected_batch": 8,
+      "finalization_status": "completed",
+      "lr_multiplier": 10,
+      "last": {
+        "step": 185241,
+        "panels": {
+          "D": {
+            "nll": 5.311046488583088,
+            "windows": 128
+          },
+          "E": {
+            "nll": 5.157800123095512,
+            "windows": 128
+          },
+          "A": {
+            "nll": 6.073702268302441,
+            "windows": 64
+          },
+          "B": {
+            "nll": 6.086836367845535,
+            "windows": 32
+          },
+          "C": {
+            "nll": 5.691328898072243,
+            "windows": 64
+          }
+        },
+        "fresh_nll": {
+          "english_stories": {
+            "nll": 4.724911589175463,
+            "windows": 128
+          },
+          "russian_wikipedia": {
+            "nll": 7.928086504340172,
+            "windows": 128
+          }
+        }
+      }
+    }
+  },
+  "matched_complete": true,
+  "ranking_by_edu_E": [
+    "LR-x1",
+    "LR-x3",
+    "LR-x10"
+  ]
+}

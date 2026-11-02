@@ -1,5 +1,11 @@
 # Extent: JAX Mamba-3/MLA hybrid prototype
 
+Current research ledger: [Technical report, Volume II](extent%20technical%20report%20v2.md)
+and [document map](RESEARCH.md), updated2 November2026. It covers the latest
+received results and the clean-start provenance correction. Dated descriptions
+below remain historical; new PyTorch clean QKVO work is documented separately
+in [EXP170](results/EXP-170-pytorch-launch.md).
+
 Long T4 recovery: [EXP120–123 notebook](notebooks/extent-t4-long.ipynb) and
 [four launch cells/protocol](results/EXP-120-123-t4-launch.md). The new full-model
 backward has CPU engineering checks; physical GPU training remains unverified.

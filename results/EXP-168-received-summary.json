@@ -1,0 +1,78 @@
+{
+  "experiment": 168,
+  "source_label": "user-provided runtime-long.json",
+  "raw_sha256": "01f8353704d5076326eccea3c743a74b0b925074f26a85e4c26c87896e8460f4",
+  "status": "deadline_partial",
+  "stop_reason": "requested soft stop",
+  "pending_slots": [],
+  "branches": {
+    "FULL-KD": {
+      "step": 260386,
+      "source_step": 185241,
+      "durable_step": 260386,
+      "accepted_input_tokens": 153896960,
+      "accepted_new_updates": 75145,
+      "training_windows_seen": 838601,
+      "coordinates": 1364173952,
+      "selected_batch": 8,
+      "finalization_status": "completed",
+      "lr_multiplier": null,
+      "last": {
+        "step": 260386,
+        "panels": {
+          "D": {
+            "nll": 5.0731175020337105,
+            "windows": 128
+          },
+          "E": {
+            "nll": 4.844616016373038,
+            "windows": 128
+          },
+          "A": {
+            "nll": 5.767075300216675,
+            "windows": 64
+          },
+          "B": {
+            "nll": 5.804318964481354,
+            "windows": 32
+          },
+          "C": {
+            "nll": 5.3834535628557205,
+            "windows": 64
+          }
+        },
+        "fresh_nll": {
+          "english_stories": {
+            "nll": 4.430822590366006,
+            "windows": 128
+          },
+          "russian_wikipedia": {
+            "nll": 7.754618387669325,
+            "windows": 128
+          }
+        }
+      }
+    }
+  },
+  "cost": {
+    "attempted_updates": 75146,
+    "input_tokens": 153899008,
+    "ce_targets": 153297840,
+    "teacher_input_tokens": 153899008,
+    "accepted_updates": 75145,
+    "accepted_input_tokens": 153896960,
+    "accepted_ce_targets": 153295800,
+    "planner_input_presentations": 31744,
+    "training_seconds": 105987.18555302802
+  },
+  "phase_seconds": {
+    "report_and_remote_sync": 2176.6293769548647,
+    "evaluation": 1447.4915072896983,
+    "planner": 132.42659980105236,
+    "local_checkpoint": 1552.5705654595513,
+    "updates": 105987.18555302802,
+    "unattributed_setup_io": 8298.398813377833,
+    "wall": 119594.70241591102
+  },
+  "finalization_status": "completed"
+}
