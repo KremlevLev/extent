@@ -1,0 +1,3 @@
+# OPTIONAL upstream MIMO candidate. Chunked PyTorch works without this package.
+# Requires torch already installed. Install with --no-build-isolation.
+mamba-ssm @ git+https://github.com/state-spaces/mamba.git@e9594ce1c732d97440f0332fdc43170a2294dbfa

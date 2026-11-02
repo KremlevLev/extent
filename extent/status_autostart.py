@@ -2,7 +2,7 @@
 import hashlib,json,os,signal,subprocess,sys,tempfile,time
 from pathlib import Path
 from filelock import FileLock,Timeout
-from extent.campaign_checkpoint import write_json_atomic
+from extent.broad_corpus import write_json as write_json_atomic
 
 
 def paths(token):

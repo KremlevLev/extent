@@ -117,11 +117,11 @@ def format_report(alias,report,modified,active=None,cached=False,now=None):
             tokens=(step-origin)*contract['batch']*256
             lines.append(f'Новые входные токены этой ветки: {tokens/1e6:.3f} млн')
         history=row.get('history',[])
-        if history:
+        if history and contract.get('format') != 'torch-clean-align-v1':
             last=history[-1]
             lines.append('Train CE / KL / loss: '+ ' / '.join(short(last.get(k)) for k in ('ce','kl','loss')))
         # Same extractor as the read-only dashboard: never inject BEST as CURRENT.
-        if number(origin):
+        if number(origin) and contract.get('format') != 'torch-clean-align-v1':
             metric_points=points(report,arm)
             for panel in ('wiki_A','wiki_B','wiki_C','c4_D','edu_E'):
                 key='validation/'+panel+'_nll'
@@ -145,6 +145,16 @@ def format_report(alias,report,modified,active=None,cached=False,now=None):
             label='C4 D' if row.get('best_panel')=='D' else 'Wiki A'
             lines.append(f'BEST {label}: {row["best_nll"]:.4f} @ {row.get("best_step","—")}')
         if row.get('selected_batch'):lines.append(f"Выбранный batch: {row['selected_batch']}")
+        if contract.get('format') == 'torch-clean-align-v1':
+            if history:
+                last = history[-1]
+                lines.append(f"Alignment loss: {short(last.get('loss'), 5)}; LR: {short(last.get('lr'), 6)}")
+                lines.append(f"Скорость полного обновления: {short(last.get('input_tokens_per_second'), 0)} ток/с")
+            evaluations = row.get('evaluations', [])
+            if evaluations:
+                last = evaluations[-1]
+                for name in ('teacher', 'gqa4', 'gqa7'):
+                    lines.append(f"NLL Edu {name}: {short(last.get(name+'_edu_validation_nll'), 4)} @ {last.get('step')}")
         if row.get('failed'):lines.append('⚠ Ветка отмечена failed')
         if row.get('durable_step') is not None:lines.append(f'Шаг удалённого сохранения: {row["durable_step"]}')
     lines.append(f'Ожидают HF: {len(report.get("pending_slots",[]))}')

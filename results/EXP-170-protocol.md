@@ -1,5 +1,16 @@
 # EXP170: clean head-preserving preparation
 
+2 November implementation update: the original design below is retained for
+provenance. A separate PyTorch stage1 runner now exists: engine_torch170.py and
+extent/torch_clean_170.py / torch_train_170.py. Read EXP-170-pytorch-launch.md
+for its ACTUAL supported contract and install/launch instructions. It has local
+CPU numerical/integration tests, not a GPU speed/quality result. It trains the
+inherited27-layer bank; the proposed matched random pilot and historical A-E /
+WikiText2 panels below are NOT implemented in this launcher. Its declared loss
+normalizes by per-sequence teacher energy (microbatch-invariant), and its actual
+full-model panels are explicitly held-out Edu4096 teacher/gqa4/gqa7. Do not
+describe the entire historical proposal as executed or validated.
+
 DESIGN plus tested initializer/alignment primitives. NOT launch-ready. See
 EXP-170-clean-start-audit.md. Existing169 and historical code remain unchanged.
 

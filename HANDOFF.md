@@ -1,3 +1,38 @@
+# 2 November2026 — EXP170 PyTorch clean QKVO stage1 runner
+
+Implemented engine_torch170.py; read results/EXP-170-pytorch-launch.md. Original
+Qwen1.7B pinned source only, no Patient/069/072/old Adam. Elementwise verified
+own-head Q/K/V/O and Q/K norms, zero dynamic rows, random Z explicitly declared,
+G8/P128/N128/inner2048/MIMO4. Train all27 mixer modules (798,316,128 parameters)
+on original teacher-prefix full-block targets; frozen original MLP/residual,
+shared teacher pass, immediate per-layer backward. These composed hybrids are
+larger than original1.7B; record measured parameter counts. Fixed effective16x4k,
+1526 updates/100,007,936 fresh Edu inputs; all-mixer AdamW, warmup/cosine, global
+clip; per-sequence relative MSE makes uneven physical batches invariant.
+
+PyTorch has blockwise exact SSD (eager/torch.compile, checkpoint recomputation)
+and optional pinned official TileLang MIMO candidates. Upstream issue1044
+reports MIMO backward shared-memory launch failures on RTX PRO6000 Blackwell;
+do not assume official fused kernels work here. Real CUDA gates+isolated full-
+effective-update batch1..8/time-bounded planner required, fastest verified fit.
+Record teacher/student/backward/optimizer timings, peak memory, GPU utilization/
+power CSV, optional bounded layer0 profiler. No inferred4% MFU or promised speed.
+
+Own namespace only, one hourly/final CURRENT.pt (mixer+Adam, no teacher copies),
+atomic replacement. Exact contract/cursor/Adam resume; FAST_STOP retains local
+CURRENT and skips eval/HF. Normal finish uploads, verifies remote LFS SHA and
+manifest readback before deleting local CURRENT. Remote HF history is NOT pruned.
+Telegram existing listener auto-registers this report; quiet start/end/failure.
+Shared status writer/package imports made JAX-lazy; historical math unchanged.
+
+44 selected CPU checks pass with PyTorch2.11.0+cpu / transformers4.57.1.
+CPU checks cover recurrent/JAX values+gradients, cross-chunk carry and all-param
+gradients with checkpoint/AOT capture, tiny actual Qwen alignment update,
+microbatch partition equivalence, donor ownership, frozen teacher, Adam/cursor,
+remote cleanup guards. No physical GPU/TPU run or100M quality result by assistant.
+No matched random pilot or historic A-E/WikiText2 panels in the new runner;
+teacher/gqa4/gqa7 are held-out Edu4096 NLL panels, explicitly distinct.
+
 # 1 November2026 — clean-start provenance audit and EXP170 prototype
 
 IMPORTANT: current Mamba lineage is NOT the historical INIT-K QKVO lift.

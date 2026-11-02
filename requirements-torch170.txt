@@ -1,0 +1,9 @@
+# Install CUDA torch separately; keep this venv independent of old JAX runners.
+torch==2.11.0
+transformers==4.57.1
+huggingface-hub==0.36.2
+safetensors>=0.4.3
+numpy>=1.26,<3
+filelock>=3
+packaging>=24
+pytest>=8
