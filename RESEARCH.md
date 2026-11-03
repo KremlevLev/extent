@@ -1,6 +1,6 @@
 # Extent: research documents
 
-Updated2 November2026. Start with the current ledger, then follow its evidence links.
+Updated3 November2026. Start with the current ledger, then follow its evidence links.
 
 | Document | Role |
 |---|---|

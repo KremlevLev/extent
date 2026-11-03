@@ -287,7 +287,13 @@ def worker(a,root):
 
 def main(argv=None):
     a=parser().parse_args(argv);root=Path(a.work_dir);root.mkdir(parents=True,exist_ok=True)
-    if a.stage=='prepare':prepare(root);return
+    if a.stage=='prepare':
+        faulthandler.enable()
+        if hasattr(signal,'SIGUSR1'):faulthandler.register(signal.SIGUSR1,all_threads=True)
+        faulthandler.dump_traceback_later(180,repeat=True)
+        try:prepare(root)
+        finally:faulthandler.cancel_dump_traceback_later()
+        return
     if a.stage in ('probe','train'):worker(a,root);return
     from engine_tpu169 import ram_root
     from filelock import FileLock
