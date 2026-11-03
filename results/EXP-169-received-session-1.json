@@ -1,0 +1,47 @@
+{
+  "experiment": 169,
+  "status": "failed",
+  "trials": {
+    "compiled": {
+      "trials": [
+        {
+          "returncode": -15,
+          "seconds": 607.5561649829999,
+          "log": "/dev/shm/extent169/probe-compiled-b1.log",
+          "status": "probe_timeout",
+          "batch": 1
+        }
+      ],
+      "selected_batch": null,
+      "last_successful_batch": null,
+      "status": "no_valid_fit",
+      "reason": "failed_probe"
+    },
+    "streamed": {
+      "trials": [
+        {
+          "returncode": -15,
+          "seconds": 608.0952527309998,
+          "log": "/dev/shm/extent169/probe-streamed-b1.log",
+          "status": "probe_timeout",
+          "batch": 1
+        }
+      ],
+      "selected_batch": null,
+      "last_successful_batch": null,
+      "status": "no_valid_fit",
+      "reason": "failed_probe"
+    }
+  },
+  "warnings": [],
+  "target_input_tokens_per_second": 6400,
+  "resources": {
+    "tmpfs_free_bytes": 176093659136,
+    "effective_host_available": 351151013888
+  },
+  "error": {
+    "type": "RuntimeError",
+    "message": "No verified TPU batch fit; worker logs retained"
+  },
+  "wall_seconds": 1299.3069875240326
+}

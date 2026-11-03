@@ -1,3 +1,31 @@
+# 3 November2026 — EXP169 failure received; clean QKVO TPU171 prepared
+
+169 probes both timed out at600s, terminated by supervisor; no fit/accepted
+training. Tails show unexpected torch_xla import, not a proved OOM/deadlock.
+See results/EXP-169-failure-analysis.md and received-session-1.json. Wrapper
+environment disables Transformers optional backends; no TPU rerun verified.
+
+NEW171: engine_tpu171.py / extent/clean_tpu_171.py, fresh notebook
+notebooks/extent-tpu-171.ipynb and requirements-tpu171.txt. Read protocol/launch.
+Original pinned Qwen QKVO only, no Patient/old bank/Adam reconstruction. Clean170
+geometry/initializer, random Z declared. Stage1 all27 mixers on teacher-prefix
+block targets, frozen original MLP/residual; stacked-layer scan contains local
+gradients, blockwise SSD64 with recomputation, eight-way model sharding.
+TPU contract explicitly differs from170 GPU:context1024/effective16/6104 updates
+=100,007,936 inputs. Old A-E are not reused; teacher/gqa4/gqa7 use same4 Edu1024
+windows. No source-to-teacher equivalence or broad quality claim.
+Integer+1 batch1..16 bounded by60min planner/20min candidate, fastest complete
+effective-update speed; isolated children preserve earlier fits on later failure.
+Phase/PID/timestamp,180s Python dumps and SIGUSR1 before timeout; TPU discovery,
+collective smoke, compile and first execution separately visible. No Torch/XLA,
+Transformers or retokenization.9h absolute deadline includes all work,18min save.
+Original source/data/state on verified tmpfs; logs/reports on notebook SSD.
+Own chunked CURRENT+Adam+cursor,15min local saves/final HF verification, quiet
+start/end/failure Telegram. CPU tests include real8-virtual-device sharded
+gradients/Adam, recurrent output/gradient equivalence, causality, weighting,
+clock/source guards and timeout handling. Physical TPU memory/speed/convergence
+still unverified; don't promise6400tok/s or immunity to native runtime failure.
+
 # 2 November2026 — technical report Volume II restored
 
 Current scientific ledger: extent technical report v2.md; document map RESEARCH.md.

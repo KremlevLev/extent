@@ -23,7 +23,8 @@ def ram_root(path):
 
 def environment(root,platform):
     env=dict(os.environ,JAX_PLATFORMS=platform,HF_HOME=str(root/'hf'),HF_HUB_CACHE=str(root/'hf/hub'),
-        HUGGINGFACE_HUB_CACHE=str(root/'hf/hub'),TMPDIR=str(root/'tmp'),XLA_PYTHON_CLIENT_PREALLOCATE='false')
+        HUGGINGFACE_HUB_CACHE=str(root/'hf/hub'),TMPDIR=str(root/'tmp'),XLA_PYTHON_CLIENT_PREALLOCATE='false',
+        USE_TORCH='0',USE_TF='0',USE_FLAX='0')
     (root/'tmp').mkdir(exist_ok=True)
     env.pop('CUDA_VISIBLE_DEVICES',None)
     return env

@@ -1,0 +1,10 @@
+# Dedicated tokenizer-free JAX TPU environment. No torch/torch-xla/transformers.
+jax[tpu]==0.11.0
+flax==0.12.8
+optax==0.2.8
+numpy>=1.26,<3
+ml_dtypes>=0.5
+huggingface-hub==0.36.2
+safetensors>=0.4.3
+filelock>=3
+PyYAML>=6

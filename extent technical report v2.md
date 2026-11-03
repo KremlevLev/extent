@@ -261,6 +261,14 @@ PyTorch eager/compiled blockwise SSD и optional fused MIMO проверяютс
 
 ## 12. Карта источников и обновлений
 
+### 3 ноября2026: clean Q/K/V TPU171 подготовлен
+
+**PREPARED / ENGINEERING:** отдельный [TPU171 protocol](results/EXP-171-protocol.md) и [готовый notebook/запуск](results/EXP-171-launch.md). Исходный Qwen напрямую; старые bank/Adam не реконструируются. Геометрия чистого170 сохраняется, но context1024/effective16 отличается от GPU4096/effective16. Stage1 учит все27 mixers на teacher-prefix targets; блоковый SSD и stacked-layer gradient scan с model-sharding на8 устройствах. Подбирается integer batch, измеряется полное effective update; фазы, Python-стеки, compile/first execution записываются отдельно.18 локальных проверок проходят, включая настоящие градиенты/Adam на8 виртуальных CPU devices; физического TPU результата и выигрыша скорости пока нет. Это следующий подготовленный эксперимент, не исправленный результат169.
+
+### 3 ноября2026: получен неуспешный EXP-169
+
+**ENGINEERING:** [aggregate](results/EXP-169-received-session-1.json) показывает timeout обоих batch1 probes: compiled607.556с, streamed608.095с; returncode−15 после остановки supervisor. Валидного fit нет, обучающие ветки не запускались. Это не установленный OOM и не результат качества. Данные восстановлены. Какая часть startup/source reconstruction/compile/measurement заняла лимит600с, без worker logs неизвестно. [Разбор](results/EXP-169-failure-analysis.md). Предыдущая отметка «результата169 нет» выше относится к состоянию на2 ноября; теперь получен именно этот инженерный исход. Новая clean Q/K/V TPU-линия пока не реализована и не проверена физически.
+
 Научный журнал — этот том и архив первого; конкретные числовые отчёты/разборы — `results/`; компактная передача текущего состояния и эксплуатация — `HANDOFF.md`; связный текст статьи — `paper/draft.md` / `draft.ru.md`. Draft и HANDOFF могут содержать старые dated snapshots и не заменяют evidence ledger.
 
 Полученные167/168 сведены в компактные [167](results/EXP-167-received-summary.json) и [168](results/EXP-168-received-summary.json) с SHA256 исходных пользовательских файлов. В репозиторий не копируются огромные runtime JSON, веса, приватные credentials или серверные пути. Их summaries не означают нового запуска или повторной полной проверки удалённого payload.

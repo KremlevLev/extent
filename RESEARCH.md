@@ -12,6 +12,7 @@ Updated2 November2026. Start with the current ledger, then follow its evidence l
 | [Result artifacts](results/) | Per-experiment protocols, received summaries, analyses and audits. |
 | [Clean-start audit170](results/EXP-170-clean-start-audit.md) | Why the old trained lineage is not direct Q/K/V initialization. |
 | [PyTorch170 launch and limits](results/EXP-170-pytorch-launch.md) | New head-preserving stage1, setup, planner, stops and verification limits. |
+| [Clean QKVO TPU171](results/EXP-171-launch.md) | Separate original-Qwen TPU alignment, phase-aware speed planner, no historical bank reconstruction. |
 
 `MEASURED` describes received observations; `ENGINEERING` describes implementation
 checks; `PREPARED` describes code/plans without scientific outcomes. Missing
