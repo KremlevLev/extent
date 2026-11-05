@@ -59,8 +59,15 @@ def fetch_bank(root):
     from huggingface_hub import hf_hub_download
     root = Path(root)
     def get(name):
-        return Path(hf_hub_download(REPO, PREFIX+'/'+name, revision=REVISION,
-                                   repo_type='dataset', local_dir=root))
+        # HF local_dir preserves the FULL repo-relative filename (PREFIX/name).
+        # Our immutable bank layout is root/name. Move, don't copy gigabytes.
+        target = root/name
+        if target.is_file(): return target
+        downloaded = Path(hf_hub_download(REPO, PREFIX+'/'+name, revision=REVISION,
+                                         repo_type='dataset', local_dir=root))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if downloaded.resolve() != target.resolve(): downloaded.replace(target)
+        return target
     meta = json.loads(get('checkpoint.json').read_text())
     for row in validate_manifest(meta):
         for ch in row['chunks']:

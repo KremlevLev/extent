@@ -1,5 +1,12 @@
 # 5 November2026 — clean171 result received; frozen172 T4 quality prepared
 
+172 second attempt completed downloads/data prep then failed before GPU workers:
+HF local_dir preserved PREFIX/checkpoint.json while engine expected bank/checkpoint.json.
+fetch_bank now moves downloaded immutable files to its documented flat root,
+reuses existing valid root files, checks every SHA; added actual-SDK-layout
+download-to-reader regression including cached reuse/corruption. wrapt sitecustomize
+warnings were nonfatal and are not diagnosed as the cause of that failure.
+
 172 first Kaggle attempt failed at venv ensurepip before model download/CUDA.
 Notebook now uses venv --without-pip and host pip --python target for both
 dependency installs. A real CPU integration test forbids ensurepip and installs

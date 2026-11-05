@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 from extent.quality_172 import (MAPPING, validate_manifest, row_array, sha,
-    install_bank, Engine, summarize, EXPECTED_STEP, SOURCE, SOURCE_REVISION)
+    install_bank, Engine, summarize, EXPECTED_STEP, SOURCE, SOURCE_REVISION, fetch_bank, PREFIX)
 from extent.torch_clean_170 import CleanMamba, chunked_scan
 from engine_quality172 import load_journal
 
@@ -51,6 +51,37 @@ def test_chunk_integrity_extent_and_dtype(tmp_path):
     with pytest.raises(ValueError, match='truncated'): row_array(row, tmp_path)
     row['chunks'][0]['sha256'] = 'bad'
     with pytest.raises(ValueError, match='changed'): row_array(row, tmp_path)
+
+
+def test_hf_nested_download_layout_is_readable_and_reused(tmp_path, monkeypatch):
+    import huggingface_hub
+    meta = manifest()
+    payloads = {}
+    for i, row in enumerate(meta['leaves']):
+        name = meta['generation']+f'/{i}.npy'
+        file = tmp_path/f'source-{i}.npy'
+        np.save(file, np.arange(27, dtype=np.float32)+i)
+        payloads[PREFIX+'/'+name] = file.read_bytes()
+        row['chunks'] = [dict(file=name, bytes=file.stat().st_size, sha256=sha(file))]
+    payloads[PREFIX+'/checkpoint.json'] = json.dumps(meta).encode()
+    calls = []
+    def download(repo, filename, **kwargs):
+        calls.append(filename)
+        file = Path(kwargs['local_dir'])/filename  # actual SDK local_dir semantics
+        file.parent.mkdir(parents=True, exist_ok=True)
+        file.write_bytes(payloads[filename]); return str(file)
+    monkeypatch.setattr(huggingface_hub, 'hf_hub_download', download)
+    root = tmp_path/'bank'
+    assert fetch_bank(root) == meta
+    assert json.loads((root/'checkpoint.json').read_text()) == meta
+    for i,row in enumerate(meta['leaves']):
+        np.testing.assert_array_equal(row_array(row,root), (np.arange(27,dtype=np.float32)+i).reshape(27,1))
+    count = len(calls)
+    assert fetch_bank(root) == meta
+    assert len(calls) == count  # no second copy/redownload of valid flat files
+    # Detect a corrupt cached leaf instead of quietly reporting benchmark scores.
+    (root/meta['leaves'][0]['chunks'][0]['file']).write_bytes(b'broken')
+    with pytest.raises(ValueError,match='checksum'): fetch_bank(root)
 
 
 def test_exact_jax_checkpoint_to_torch_mapping_all_leaves(tmp_path):
