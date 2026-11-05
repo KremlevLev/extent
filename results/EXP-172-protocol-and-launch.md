@@ -69,6 +69,11 @@ Import **notebooks/extent-t4-quality-172.ipynb** into a fresh Kaggle notebook.
 Select GPU T4×2, Internet on; attach the same four secrets:
 EXTENT_DEPLOY_KEY_B64, HF_TOKEN, TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID.
 Dedicated environment installs GPU dependencies; no nvidia-smi precondition.
+Kaggle Python3.13 rejected the first notebook's ensurepip bootstrap before any
+weights or GPU work. Fixed: `venv --without-pip`, then host
+`python -m pip --python <env-python> install ...`. This officially supported
+pip route installs into the isolated target even when it contains no pip.
+No global Torch replacement, get-pip download, or sudo needed.
 Default session budget12h includes installation/prepare/evaluation. Final cell:
 
 ```python

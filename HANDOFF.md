@@ -1,5 +1,11 @@
 # 5 November2026 — clean171 result received; frozen172 T4 quality prepared
 
+172 first Kaggle attempt failed at venv ensurepip before model download/CUDA.
+Notebook now uses venv --without-pip and host pip --python target for both
+dependency installs. A real CPU integration test forbids ensurepip and installs
+a local wheel into the pip-free target. This fixes bootstrap, not evidence that
+subsequent CUDA precision gates or benchmarks have run.
+
 EXP171 CURRENT5120:83,886,080 accepted inputs; deadline_partial, no training
 failure; selected physical8/effective16/context1024. Update~2973tok/s,
 whole training loop2864tok/s. Last NLL evaluation4864 on only4 Edu windows:
