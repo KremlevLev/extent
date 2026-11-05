@@ -110,6 +110,21 @@ def load_journal(path):
     return items
 
 
+def worker_diagnostic(root, shard, returncode):
+    root = Path(root)
+    path = root/f'worker-{shard}.json'
+    state = json.loads(path.read_text()) if path.exists() else dict(status='missing_report')
+    state.update(shard=shard, returncode=returncode)
+    if returncode != 0 or state.get('status') in ('failed', 'missing_report'):
+        log = root/f'worker-{shard}.log'
+        if log.exists():
+            # Bounded tail also covers failures before Python can write a report.
+            with log.open('rb') as f:
+                f.seek(0, 2); size = f.tell(); f.seek(max(0, size-12000))
+                state['log_tail'] = f.read().decode('utf-8', errors='replace')
+    return state
+
+
 def gate(engine, panels):
     import torch
     import numpy as np
@@ -276,8 +291,11 @@ def main(argv=None):
             items, workers = {}, []
             for i in range(2):
                 items.update(load_journal(root/f'worker-{i}.jsonl'))
-                f = root/f'worker-{i}.json'
-                if f.exists(): workers.append(json.loads(f.read_text()))
+                if i < len(children):
+                    diagnostic = worker_diagnostic(root, i, children[i].returncode)
+                    workers.append(diagnostic)
+                    if diagnostic.get('status') in ('failed', 'missing_report') or diagnostic['returncode'] != 0:
+                        print('EXP172 WORKER FAILURE '+json.dumps(diagnostic, ensure_ascii=False), flush=True)
             status = 'completed' if (parent_error is None and len(children)==2 and
                 all(p.returncode==0 for p in children) and len(workers)==2 and
                 all(r['status']=='completed' for r in workers)) else 'partial_or_failed'

@@ -7,6 +7,17 @@ import sys
 import zipfile
 
 
+def test_worker_diagnostic_exposes_early_crash_without_report(tmp_path):
+    from engine_quality172 import worker_diagnostic
+    (tmp_path/'worker-0.log').write_text('Traceback: missing CUDA runtime\n')
+    row = worker_diagnostic(tmp_path, 0, 1)
+    assert row['returncode'] == 1 and row['status'] == 'missing_report'
+    assert 'missing CUDA runtime' in row['log_tail']
+    (tmp_path/'worker-1.json').write_text(json.dumps(dict(status='failed', error='actual failure')))
+    row = worker_diagnostic(tmp_path, 1, 2)
+    assert row['error'] == 'actual failure' and row['returncode'] == 2
+
+
 def test_notebook_avoids_ensurepip_and_targets_isolated_python():
     notebook = json.loads((Path(__file__).resolve().parents[1]/'notebooks/extent-t4-quality-172.ipynb').read_text())
     source = ''.join(notebook['cells'][2]['source'])
