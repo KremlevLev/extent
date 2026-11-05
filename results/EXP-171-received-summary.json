@@ -1,0 +1,354 @@
+{
+  "compile_seconds": 1.0957302639999398,
+  "contract": {
+    "Z": "random; QKVO and QK norms inherited",
+    "code": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+    "context": 1024,
+    "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+    "effective_batch": 16,
+    "experiment": 171,
+    "geometry": "H16/G8/P128/N128/R4",
+    "loss": "mean27-per-sequence-relative-block-MSE",
+    "optimizer": "Adam(.9,.95),eps1e-8,clip1,warm46,cosine.1,peak1e-3",
+    "protocol": "clean-qkvo-tpu-v1",
+    "revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+    "seed": 123,
+    "source": "Qwen/Qwen3-1.7B-Base",
+    "total_updates": 6104
+  },
+  "gradient_gate": {
+    "cosine": 0.9999924302101135,
+    "output_relative_l2": 0.005584784783422947,
+    "relative_l2": 0.0038945369888097048
+  },
+  "local_checkpoint_step": 5120,
+  "parameters": {
+    "hybrid_gqa4": 2128193280,
+    "hybrid_gqa7": 2077240992,
+    "original": 1720574976,
+    "trainable_mixers": 798316128
+  },
+  "pending_slots": [],
+  "status": "deadline_partial",
+  "whole_training_loop_tokens_per_second": 2864.070838551716,
+  "branch": {
+    "accepted_input_tokens": 83886080,
+    "evaluations": [
+      {
+        "gqa4_edu_validation_nll": 14.7604801480022,
+        "gqa7_edu_validation_nll": 14.825124940098439,
+        "step": 0,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 3.6923303389712396,
+        "gqa7_edu_validation_nll": 3.643494950012028,
+        "step": 128,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.8698385095083587,
+        "gqa7_edu_validation_nll": 2.821506943987029,
+        "step": 256,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.7764026123524177,
+        "gqa7_edu_validation_nll": 2.74133762423011,
+        "step": 384,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.7322348616106886,
+        "gqa7_edu_validation_nll": 2.70082921599596,
+        "step": 512,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.696273967783938,
+        "gqa7_edu_validation_nll": 2.6720595299207104,
+        "step": 640,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6853599250025297,
+        "gqa7_edu_validation_nll": 2.6597864928483266,
+        "step": 768,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6701275293195468,
+        "gqa7_edu_validation_nll": 2.64988833042417,
+        "step": 896,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.675132300264092,
+        "gqa7_edu_validation_nll": 2.658028681839899,
+        "step": 1024,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6533442373266434,
+        "gqa7_edu_validation_nll": 2.6311434748585274,
+        "step": 1152,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6492418343254083,
+        "gqa7_edu_validation_nll": 2.6270869899238893,
+        "step": 1280,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6478333160907526,
+        "gqa7_edu_validation_nll": 2.625861785978166,
+        "step": 1408,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6392205947771568,
+        "gqa7_edu_validation_nll": 2.619596826249437,
+        "step": 1536,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.644579662721994,
+        "gqa7_edu_validation_nll": 2.62524902179677,
+        "step": 1664,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.631328127833988,
+        "gqa7_edu_validation_nll": 2.610757631989868,
+        "step": 1792,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6318922816600034,
+        "gqa7_edu_validation_nll": 2.613234671912468,
+        "step": 1920,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.629637683708064,
+        "gqa7_edu_validation_nll": 2.607600927119847,
+        "step": 2048,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6244466116001877,
+        "gqa7_edu_validation_nll": 2.6025009453587984,
+        "step": 2176,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.62004612524605,
+        "gqa7_edu_validation_nll": 2.6011671250866306,
+        "step": 2304,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6191198063735737,
+        "gqa7_edu_validation_nll": 2.5999037182342737,
+        "step": 2432,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6237315516318045,
+        "gqa7_edu_validation_nll": 2.60375071550744,
+        "step": 2560,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6179561782792167,
+        "gqa7_edu_validation_nll": 2.6010260484085754,
+        "step": 2688,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.617689637960693,
+        "gqa7_edu_validation_nll": 2.597392249084055,
+        "step": 2816,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6151451640348164,
+        "gqa7_edu_validation_nll": 2.596617026529471,
+        "step": 2944,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6117335493846605,
+        "gqa7_edu_validation_nll": 2.5948281572478025,
+        "step": 3072,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.61146591648911,
+        "gqa7_edu_validation_nll": 2.591437271729709,
+        "step": 3200,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6102350818563185,
+        "gqa7_edu_validation_nll": 2.591231155022615,
+        "step": 3328,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.605516394562036,
+        "gqa7_edu_validation_nll": 2.58821070905072,
+        "step": 3456,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.606997623238512,
+        "gqa7_edu_validation_nll": 2.5895682714318715,
+        "step": 3584,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.606951861787052,
+        "gqa7_edu_validation_nll": 2.5892050436398386,
+        "step": 3712,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6020676919558645,
+        "gqa7_edu_validation_nll": 2.587042826245141,
+        "step": 3840,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.602672487409933,
+        "gqa7_edu_validation_nll": 2.5860906136700135,
+        "step": 3968,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.601678029766064,
+        "gqa7_edu_validation_nll": 2.584001058241023,
+        "step": 4096,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6005076485761567,
+        "gqa7_edu_validation_nll": 2.5843789220905022,
+        "step": 4224,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6006167198322854,
+        "gqa7_edu_validation_nll": 2.5834226598954038,
+        "step": 4352,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.6004986730372335,
+        "gqa7_edu_validation_nll": 2.5840226040091565,
+        "step": 4480,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.596946112221637,
+        "gqa7_edu_validation_nll": 2.5815403286662617,
+        "step": 4608,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.5974029809498718,
+        "gqa7_edu_validation_nll": 2.5800952370681838,
+        "step": 4736,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa4_edu_validation_nll": 2.5981243316262583,
+        "gqa7_edu_validation_nll": 2.5832235722248154,
+        "step": 4864,
+        "teacher_edu_validation_nll": 2.476396674401366
+      }
+    ],
+    "selected_batch": 8,
+    "source_step": 0,
+    "step": 5120
+  },
+  "history_summary": {
+    "updates": 5120,
+    "first": {
+      "input_tokens_per_second": 2940.174413148944,
+      "layer_relative_mse": [
+        2.2695376873016357,
+        0.14125502109527588,
+        0.012808063998818398,
+        0.001555444672703743,
+        0.0009161096531897783,
+        0.0018502306193113327,
+        0.0014818055788055062,
+        0.002274762839078903,
+        0.0019656422082334757,
+        0.005168638192117214,
+        0.005464812740683556,
+        0.017933707684278488,
+        0.006134786177426577,
+        0.009372190572321415,
+        0.013768239878118038,
+        0.03043927252292633,
+        0.03978041186928749,
+        0.08472871780395508,
+        0.06556279957294464,
+        0.0887758657336235,
+        0.0925883799791336,
+        0.08707517385482788,
+        0.0786760002374649,
+        0.05737847089767456,
+        0.07406681776046753,
+        0.06230807304382324,
+        0.04663371667265892
+      ],
+      "loss": 0.12220373749732971,
+      "lr": 2.173913043478261e-05,
+      "seconds": 5.572458533999907,
+      "step": 1
+    },
+    "last": {
+      "input_tokens_per_second": 2972.979989886738,
+      "layer_relative_mse": [
+        0.006080398801714182,
+        0.002959907054901123,
+        3.1188741559162736e-05,
+        3.3135984267573804e-05,
+        2.9691651434404776e-05,
+        5.1246701332274824e-05,
+        7.637358794454485e-05,
+        5.914123903494328e-05,
+        0.0001069626014214009,
+        0.0001408237440045923,
+        0.000158214577822946,
+        0.0003190032730344683,
+        0.0003214382450096309,
+        0.0004897151957266033,
+        0.0005737111205235124,
+        0.0007464578375220299,
+        0.0012552306288853288,
+        0.002834716346114874,
+        0.0015244963578879833,
+        0.0021136864088475704,
+        0.0024489928036928177,
+        0.002570999786257744,
+        0.0017029058653861284,
+        0.001449684496037662,
+        0.0015312524046748877,
+        0.0018922719173133373,
+        0.0013479902409017086
+      ],
+      "loss": 0.0012166532687842846,
+      "lr": 0.00015734686358143422,
+      "seconds": 5.510968811002385,
+      "step": 5120
+    },
+    "update_seconds": 28213.970097855017
+  },
+  "source_file_sha256": "1f1d6ac17cbc6386603292e49a852be371d5be5bae3064079fe0eeab8afac194",
+  "remote_revision": "d341d2b8f87592f617c44c92c5d7532669c75755"
+}

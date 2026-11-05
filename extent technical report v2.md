@@ -1,6 +1,6 @@
 # Extent Technical Report — Volume II
 
-**Обновлено:** 3 ноября 2026. **Охват:** результаты EXP-129–168, инженерный отказ EXP-169, аудит происхождения весов и подготовленные clean-start EXP-170–171.
+**Обновлено:** 5 ноября 2026. **Охват:** результаты EXP-129–168 и clean-start EXP-171, инженерный отказ EXP-169, аудит происхождения весов, подготовленные EXP-170 и бенчмарк EXP-172.
 
 Это продолжение [первого тома](extent%20technical%20report.md), а не повторная редакция его исторических записей. Первый том заканчивается результатом EXP-155 и планом EXP-156; результаты части EXP-130–154 туда не были перенесены. Здесь этот пробел восстановлен по архивам. Навигация по проекту — [RESEARCH.md](RESEARCH.md).
 
@@ -274,3 +274,34 @@ PyTorch eager/compiled blockwise SSD и optional fused MIMO проверяютс
 Полученные167/168 сведены в компактные [167](results/EXP-167-received-summary.json) и [168](results/EXP-168-received-summary.json) с SHA256 исходных пользовательских файлов. В репозиторий не копируются огромные runtime JSON, веса, приватные credentials или серверные пути. Их summaries не означают нового запуска или повторной полной проверки удалённого payload.
 
 Для каждой следующей записи достаточно: вопрос → source/отличие от контроля → measured status/accepted work → endpoint/выборка → вывод и ограничения → ссылка на raw/summary/hash. PREPARED обновляется полученным результатом отдельной датированной записью; старый план не переписывается задним числом как подтверждённый факт. Третий том открывается при следующей крупной фазе, со ссылками и сохранённой нумерацией EXP.
+# 5 November 2026 addendum — EXP171 received; EXP172 prepared
+
+Clean head-preserving Q/K/V/O bank, fresh original Qwen initialization:
+5120 accepted updates ×16×1024 = **83,886,080 input presentations**.
+Status deadline_partial; physical batch8/effective16. Approximately2973 tokens/s
+per update,2864 tokens/s across the training loop; not full-session throughput.
+Training relative block-MSE first0.122204 → last0.001217; this loss is not NLL.
+
+Composed hybrid held-out Edu NLL (same four1024-token windows,4092 targets):
+
+| Step | Input tokens | 4 attention /24 Mamba | 7 attention /21 Mamba |
+|---:|---:|---:|---:|
+|0|0|14.760480|14.825125|
+|128|2,097,152|3.692330|3.643495|
+|256|4,194,304|2.869839|2.821507|
+|1536|25,165,824|2.639221|2.619597|
+|3072|50,331,648|2.611734|2.594828|
+|4864|79,691,776|2.598124|2.583224|
+
+Original Qwen on this panel2.476397. Final saved5120 has no separate final NLL
+measurement. Small repeatedly observed panel, one seed, larger hybrids
+(2.128B/2.077B vs1.721B), changed geometry/context/objective/lineage: cannot rank
+this against old A-E recovery or infer full capabilities restored.
+Evidence: [compact received artifact](results/EXP-171-received-summary.json).
+Remote CURRENT5120 verified in HF dataset revision
+d341d2b8f87592f617c44c92c5d7532669c75755; not the old random069 bank.
+
+EXP172 is PREPARED quality measurement of frozen5120 on twoT4s: matched
+teacher/gqa4/gqa7 zero-shot choices, independent text panels and qualitative
+generation, conversion/precision gates, per-item durable progress. It has no
+physical measurement yet. [Protocol and launch](results/EXP-172-protocol-and-launch.md).

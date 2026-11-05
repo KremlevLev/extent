@@ -1,3 +1,22 @@
+# 5 November2026 — clean171 result received; frozen172 T4 quality prepared
+
+EXP171 CURRENT5120:83,886,080 accepted inputs; deadline_partial, no training
+failure; selected physical8/effective16/context1024. Update~2973tok/s,
+whole training loop2864tok/s. Last NLL evaluation4864 on only4 Edu windows:
+gqa4 2.598124/gqa7 2.583224 versus teacher2.476397; initial14.76048/14.82512.
+No broad capability restoration claim. See results/EXP-171-received-summary.json.
+Remote manifest CURRENT5120 checked at dataset revision d341d2b8f87592f617c44c92c5d7532669c75755.
+
+NEW172: engine_quality172.py, extent/quality_172.py, dedicated
+notebooks/extent-t4-quality-172.ipynb. Read results/EXP-172-protocol-and-launch.md.
+Two independent GPU shards, each scores identical items on teacher/gqa4/gqa7;
+ARC/PIQA/Wino/Hella/MMLU, English/Russian/Edu NLL, qualitative generation.
+Frozen5120; only mixer params downloaded, no Adam/old lineage/training data.
+FP16 GEMMs, FP32 Mamba coordinates/state; learned recurrence, HF teacher,
+FP16-vs-FP32 and four-window TPU replay gates before results. Matched per-item
+JSONL resume, explicit sample counts, two Telegram messages. No physical T4
+result yet; CPU validation is not accelerator performance evidence.
+
 # 3 November2026 — EXP169 failure received; clean QKVO TPU171 prepared
 
 169 probes both timed out at600s, terminated by supervisor; no fit/accepted
