@@ -26,6 +26,7 @@ def test_notebook_avoids_ensurepip_and_targets_isolated_python():
     assert "PIP = [sys.executable, '-m', 'pip', '--python', PYTHON]" in source
     assert source.count("subprocess.run(PIP + ['install'") == 2
     assert "[PYTHON, '-m', 'pip'" not in source
+    assert "pop('LD_LIBRARY_PATH'" not in source
 
 
 def test_real_install_into_pip_free_venv_with_ensurepip_forbidden(tmp_path):
