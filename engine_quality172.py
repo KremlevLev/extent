@@ -100,7 +100,9 @@ def prepare(root, cap):
 def load_journal(path):
     items = {}
     if path.exists():
-        lines = path.read_text().splitlines()
+        # JSONL records use LF only. str.splitlines also splits U+0085/U+2028/
+        # U+2029 INSIDE valid JSON strings (benchmark text), corrupting records.
+        lines = path.read_text(encoding='utf-8').split('\n')
         for i, line in enumerate(lines):
             try: row = json.loads(line)
             except json.JSONDecodeError:
@@ -108,6 +110,30 @@ def load_journal(path):
                 break  # interrupted final write; redo that one item
             items[row['id']] = row
     return items
+
+
+def aggregate(root, workers=None, error=None):
+    """CPU-only report rebuild from existing journals; no weights or GPU work."""
+    from extent.quality_172 import summarize
+    root = Path(root); items = {}
+    if workers is None:
+        workers = [json.loads(p.read_text(encoding='utf-8'))
+                   for i in range(2) if (p := root/f'worker-{i}.json').exists()]
+    for i in range(2):
+        shard = load_journal(root/f'worker-{i}.jsonl')
+        if items.keys() & shard.keys(): raise ValueError('duplicate item IDs across GPU shards')
+        items.update(shard)
+    complete = (error is None and len(workers)==2 and
+                all(r.get('status')=='completed' and r.get('returncode',0)==0 for r in workers) and
+                sum(r.get('completed_items',0) for r in workers)==len(items))
+    result = dict(experiment=172,status='completed' if complete else 'partial_or_failed',
+                  error=error,workers=workers,items=items,summary={})
+    try: result['summary'] = summarize(items)
+    except Exception as exc:
+        result.update(status='aggregation_failed',error=dict(type=type(exc).__name__,message=str(exc)[:250]))
+        raise
+    finally: write_json(root/'extent-m3q-quality172.json',result)
+    return result
 
 
 def worker_diagnostic(root, shard, returncode):
@@ -232,11 +258,16 @@ def parser():
     p.add_argument('--max-per-task', type=int, default=1000)
     p.add_argument('--shard', type=int, choices=[0, 1])
     p.add_argument('--deadline', type=float)
+    p.add_argument('--aggregate-only', action='store_true')
     return p
 
 
 def main(argv=None):
     a = parser().parse_args(argv); root = Path(a.work_dir); root.mkdir(parents=True, exist_ok=True)
+    if a.aggregate_only:
+        result=aggregate(root)
+        print(json.dumps(dict(status=result['status'],summary=result['summary']),ensure_ascii=False),flush=True)
+        return result
     if a.shard is not None:
         try: worker(a, root)
         except BaseException as exc:
@@ -287,23 +318,16 @@ def main(argv=None):
             for p in children:
                 if p.poll() is None: p.kill(); p.wait()
             for log in handles: log.close()
-            from extent.quality_172 import summarize
-            items, workers = {}, []
+            workers = []
             for i in range(2):
-                items.update(load_journal(root/f'worker-{i}.jsonl'))
                 if i < len(children):
                     diagnostic = worker_diagnostic(root, i, children[i].returncode)
                     workers.append(diagnostic)
                     if diagnostic.get('status') in ('failed', 'missing_report') or diagnostic['returncode'] != 0:
                         print('EXP172 WORKER FAILURE '+json.dumps(diagnostic, ensure_ascii=False), flush=True)
-            status = 'completed' if (parent_error is None and len(children)==2 and
-                all(p.returncode==0 for p in children) and len(workers)==2 and
-                all(r['status']=='completed' for r in workers)) else 'partial_or_failed'
-            result = dict(experiment=172, status=status, error=parent_error,
-                workers=workers, items=items, summary=summarize(items))
-            write_json(root/'extent-m3q-quality172.json', result)
-            notify('Extent EXP172: '+status+'; matched items='+str(len(items))+'; download extent-m3q-quality172.json')
-            print(json.dumps(dict(status=status, summary=result['summary']), ensure_ascii=False), flush=True)
+            result=aggregate(root,workers,parent_error)
+            notify('Extent EXP172: '+result['status']+'; matched items='+str(len(result['items']))+'; download extent-m3q-quality172.json')
+            print(json.dumps(dict(status=result['status'], summary=result['summary']), ensure_ascii=False), flush=True)
     return result
 
 

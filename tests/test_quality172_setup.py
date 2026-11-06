@@ -18,6 +18,31 @@ def test_worker_diagnostic_exposes_early_crash_without_report(tmp_path):
     assert row['error'] == 'actual failure' and row['returncode'] == 2
 
 
+def test_jsonl_unicode_separators_are_inside_records_not_record_boundaries(tmp_path):
+    from engine_quality172 import load_journal, aggregate
+    for i in range(2):
+        row=dict(id=f'n{i}',kind='nll',panel='edu_1024',targets=10,
+                 text='question\u0085inside\u2028paragraph\u2029next\nline',
+                 teacher=dict(sum_nll=20),gqa4=dict(sum_nll=30),gqa7=dict(sum_nll=25))
+        text=json.dumps(row,ensure_ascii=False)+'\n'
+        assert len(text.splitlines())>1  # reproduces the original reader's bug
+        path=tmp_path/f'worker-{i}.jsonl';path.write_text(text,encoding='utf-8')
+        assert load_journal(path)[row['id']]==row
+        (tmp_path/f'worker-{i}.json').write_text(json.dumps(dict(status='completed',completed_items=1)))
+    result=aggregate(tmp_path)
+    assert result['status']=='completed' and len(result['items'])==2
+    assert result['summary']['nll']['gqa4']['edu_1024']['nll']==3
+    assert (tmp_path/'extent-m3q-quality172.json').exists()
+
+
+def test_jsonl_corrupt_middle_not_silently_skipped(tmp_path):
+    import pytest
+    from engine_quality172 import load_journal
+    path=tmp_path/'journal.jsonl'
+    path.write_text('{"id":"good"}\n{"broken":\n{"id":"later"}\n',encoding='utf-8')
+    with pytest.raises(json.JSONDecodeError):load_journal(path)
+
+
 def test_notebook_avoids_ensurepip_and_targets_isolated_python():
     notebook = json.loads((Path(__file__).resolve().parents[1]/'notebooks/extent-t4-quality-172.ipynb').read_text())
     source = ''.join(notebook['cells'][2]['source'])

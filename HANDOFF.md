@@ -1,5 +1,15 @@
 # 5 November2026 — clean171 result received; frozen172 T4 quality prepared
 
+6Nov172 received: both T4 workers COMPLETED3108 matched items each (6216 total).
+Final parent aggregation failed JSONDecodeError in load_journal(splitlines).
+Reader now splits only LF, explicit UTF8 (Unicode NEL/LS/PS in JSON strings
+must not become record boundaries). CPU aggregate-only rebuild implemented;
+notebook exports BOTH raw JSONL journals as well as worker status/logs even
+when aggregate is absent. Do not rerun GPU work if journals survive.
+Worker status files alone contain no benchmark accuracies; need journals or
+aggregate to assess them. T4 actual precision/recurrence/teacher gates passed;
+four-window replay gqa4 2.596942/gqa7 2.580882/teacher2.474892.
+
 172 second attempt completed downloads/data prep then failed before GPU workers:
 HF local_dir preserved PREFIX/checkpoint.json while engine expected bank/checkpoint.json.
 fetch_bank now moves downloaded immutable files to its documented flat root,
