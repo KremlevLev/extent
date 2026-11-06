@@ -305,3 +305,24 @@ EXP172 is PREPARED quality measurement of frozen5120 on twoT4s: matched
 teacher/gqa4/gqa7 zero-shot choices, independent text panels and qualitative
 generation, conversion/precision gates, per-item durable progress. It has no
 physical measurement yet. [Protocol and launch](results/EXP-172-protocol-and-launch.md).
+
+## 6 November2026 — EXP172 complete quality result
+
+Frozen clean171 CURRENT5120,83,886,080 training inputs; benchmark adds zero
+training.6000 matched zero-shot questions/192 NLL windows/24 qualitative prompts.
+[Full analysis](results/EXP-172-result-analysis.md),
+[received summary and raw SHA](results/EXP-172-received-summary.json).
+MMLU original62.4%,gqa4 45.1%,gqa7 51.9%; Hella67.3/62.2/62.6%.
+Edu1024 NLL2.4359/2.5584/2.5483. All raw accuracies verified; no context
+truncations. Strong retention of several tested abilities, substantial MMLU loss,
+not complete teacher recovery. Nearly identical NLL of masks does not guarantee
+equal capabilities;7-attention gains6.8pp MMLU over4-attention.
+
+## 6 November2026 — EXP173 prepared, no scientific outcome yet
+
+User selected only gqa7 for TPU9h. [Protocol/launch](results/EXP-173-protocol-and-launch.md).
+Composed end-to-end CE+.5KL (actual .5CE+.5KL),21 mixer modules trainable,
+original parts frozen; frozen171 CURRENT5120/fresh Adam/fresh Edu offset83,886,080.
+Isolated +1 physical-batch planner at fixed effective16; full teacher/student/
+backward/Adam timing, exact tiled vocabulary loss.17 CPU checks passed; no
+physical TPU173 throughput, convergence or capability result.

@@ -1,3 +1,24 @@
+# 6 November2026 — EXP173 PREPARED, gqa7 end-to-end CE+KD
+
+User chose TPU9h; ONLY7 attention/21Mamba. See results/EXP-173-protocol-and-launch.md.
+engine_tpu173 + extent/end_to_end_173; fresh notebook extent-tpu-173.ipynb.
+Frozen171 CURRENT5120 -> new Adam, fresh Edu cursor83,886,080; composed
+CE+.5KL (loss .5CE+.5KL), all21 Mamba coordinates, original parts frozen.
+No gqa4 branch, no old random bank. Isolated +1 physical batch planner
+times complete teacher/student/backward/Adam; tiled exact-vocab head loss.
+No physical TPU173 run observed. Current whole-model capabilities remain172.
+
+# 6 November2026 — EXP172 full quality received
+
+Complete6216 matched jobs; raw metrics verified, zero context truncations.
+See results/EXP-172-result-analysis.md and EXP-172-received-summary.json.
+MMLU teacher62.4/gqa4 45.1/gqa7 51.9; Hella67.3/62.2/62.6.
+Edu1024 NLL2.4359/2.5584/2.5483; English1.3409/1.5397/1.5326;
+Russian1.5651/1.7099/1.6957. ARC-Easy norm improves67.0->74.2/74.6
+on this sampled evaluator; do not generalize to all tasks or official scores.
+Both numerical gates and T4 full run now measured. Coherent generation but
+errors/repetition remain. Similar mask NLL conceals6.8pp MMLU difference.
+
 # 5 November2026 — clean171 result received; frozen172 T4 quality prepared
 
 6Nov172 received: both T4 workers COMPLETED3108 matched items each (6216 total).
