@@ -41,9 +41,9 @@ def environment(root,platform):
 
 
 def prepare(root):
-    from huggingface_hub import hf_hub_download
     from extent.hf_download_retry import install_download_retries
     install_download_retries()
+    from huggingface_hub import hf_hub_download
     from extent.qwen_source import QWEN3_1_7B_BASE as source
     phase(root,'download_original_Qwen')
     for name in ('config.json','model.safetensors'):
