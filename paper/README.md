@@ -1,6 +1,6 @@
 # Extent working preprint
 
-[Read the draft](draft.md) · [Русская версия](draft.ru.md). Updated 29 October 2026; **not submitted or peer reviewed**.
+[Read the draft](draft.md) · [Русская версия](draft.ru.md). Updated 7 November 2026; **not submitted or peer reviewed**.
 
 The draft describes the evidence chain: local transfer versus full composition,
 hybrid-prefix input shift, numerical norm overflow, and protected recovery with
@@ -69,3 +69,10 @@ reused diagnostic validation; an independent full-model capability result for
 CURRENT181145 has not been received.
 
 Updated1November2026: overview through received EXP168,651 points; selected full-model306,786,816 plus local preparation17,301,504, arithmetic324,088,320 presentations. See section4.16 in both drafts.
+
+## Clean transfer evaluation (Figure 13)
+
+Sections 3.5 and 4.17 document EXP-171 and the matched EXP-172 evaluation.
+Run `python paper/make_clean_quality_figure.py` with matplotlib to rebuild
+PNG, PDF and SVG from the [received summary](../results/EXP-172-received-summary.json),
+which records the source contract and raw artifact hash.
