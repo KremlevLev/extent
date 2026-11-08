@@ -1,3 +1,28 @@
+# 8 November 2026 · EXP174 prepared
+
+Matched CE + KL from clean EXP171 CURRENT5120, gqa7 only. Compare Mamba-only
+and all active student weights, each at LR 1e-6, 3e-6 and 1e-5. Select the lowest
+held-out endpoint NLL after 128 matched updates. The winner resumes with its
+optimizer and cursor until the session deadline, regardless of NLL trend.
+Batch 8 and 16 probes are isolated and both keep effective batch 16.
+See results/EXP-174-protocol-and-launch.md and notebooks/extent-tpu-174.ipynb.
+
+# 8 November2026 — EXP173 received, severe early quality regression
+
+Fresh end-to-end gqa7 CE+KL from clean171 CURRENT5120. Replay NLL2.581202,
+teacher2.476397. By step128/2,097,152 new inputs NLL7.954306. Best post-start
+7.315026 at3968; latest measured7.746794 at5632. Saved CURRENT5842 has no
+held-out measurement at that exact step. deadline_partial, pending_slots=[].
+Preserve EXP171 CURRENT5120 as the baseline for further recovery experiments.
+This run has no matched CE-only or LR control. Early collapse coincides with
+warmup but does not identify the cause. Existing gates check finite numbers
+and source parity, not early quality retention.
+
+95,715,328 accepted inputs, physical8/effective16/context1024. All16 batch
+probes fit; selected3376.45tok/s, accepted updates3376.27tok/s excluding eval
+and saves, whole training loop3293.84tok/s. Source and all saved evaluations
+in results/EXP-173-received-summary.json.
+
 # 6 November2026 — EXP173 PREPARED, gqa7 end-to-end CE+KD
 
 User chose TPU9h; ONLY7 attention/21Mamba. See results/EXP-173-protocol-and-launch.md.

@@ -1,0 +1,467 @@
+{
+  "experiment": 173,
+  "source_file_sha256": "5cb21555c106c7774f73ee3165064e2d25d994f086b5d5cbef2d15d1a98423b9",
+  "status": "deadline_partial",
+  "selected_physical_batch": 8,
+  "trial_input_tokens_per_second": {
+    "1": 2652.538832329258,
+    "2": 3001.0007871466414,
+    "3": 3144.4026673799626,
+    "4": 3236.0540554091704,
+    "5": 3259.128599623149,
+    "6": 3284.873689349893,
+    "7": 3302.236581870038,
+    "8": 3376.4511141539706,
+    "9": 3356.4614587671435,
+    "10": 3364.942015283893,
+    "11": 3338.6473684577927,
+    "12": 3310.9433196143673,
+    "13": 3327.6942331255455,
+    "14": 3277.96917817937,
+    "15": 3250.182041983975,
+    "16": 3308.8001697822256
+  },
+  "probe_process_seconds_sum": 1503.4714369560002,
+  "probe_selected_input_tokens_per_second": 3376.4511141539706,
+  "training": {
+    "compile_seconds": 2.7800684889998593,
+    "contract": {
+      "Z": "random; QKVO and QK norms inherited",
+      "code": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+      "context": 1024,
+      "core_code": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+      "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+      "effective_batch": 16,
+      "experiment": 173,
+      "geometry": "H16/G8/P128/N128/R4",
+      "loss": ".5 CE + .5 full-vocabulary forward KL, T1; composed gqa7",
+      "optimizer": "Adam(.9,.95),eps1e-8,clip1,warm128,cosine.1,peak1e-4",
+      "protocol": "gqa7-end-to-end-ce-kd-v1",
+      "revision": "ea980cb0a6c2ae4b936e82123acc929f1cec04c1",
+      "seed": 123,
+      "source": "Qwen/Qwen3-1.7B-Base",
+      "source_cursor": 83886080,
+      "source_revision": "d341d2b8f87592f617c44c92c5d7532669c75755",
+      "source_step": 5120,
+      "total_updates": 12208
+    },
+    "gradient_gate": {
+      "cosine": 0.9999958276748657,
+      "output_relative_l2": 0.005778675898909569,
+      "relative_l2": 0.0029486920684576035
+    },
+    "local_checkpoint_step": 5842,
+    "parameters": {
+      "hybrid_gqa7": 2077240992,
+      "original": 1720574976,
+      "trainable_mixers": 620912544
+    },
+    "pending_slots": [],
+    "per_chip_memory": [
+      {
+        "bytes_in_use": 3538709504,
+        "bytes_limit": 16909332480,
+        "bytes_reservable_limit": 13495827456,
+        "bytes_reserved": 5988417536,
+        "largest_alloc_size": 3463989760,
+        "largest_free_block_bytes": 4503151104,
+        "num_allocs": 194,
+        "peak_bytes_in_use": 10283477504,
+        "peak_bytes_reserved": 5988417536
+      },
+      {
+        "bytes_in_use": 3538461696,
+        "bytes_limit": 16909332480,
+        "bytes_reservable_limit": 13495827456,
+        "bytes_reserved": 5988417536,
+        "largest_alloc_size": 3463989760,
+        "largest_free_block_bytes": 4503185408,
+        "num_allocs": 187,
+        "peak_bytes_in_use": 10282952192,
+        "peak_bytes_reserved": 5988417536
+      },
+      {
+        "bytes_in_use": 3538461696,
+        "bytes_limit": 16909332480,
+        "bytes_reservable_limit": 13495827456,
+        "bytes_reserved": 5988417536,
+        "largest_alloc_size": 3463989760,
+        "largest_free_block_bytes": 4503185408,
+        "num_allocs": 187,
+        "peak_bytes_in_use": 10282952192,
+        "peak_bytes_reserved": 5988417536
+      },
+      {
+        "bytes_in_use": 3538461696,
+        "bytes_limit": 16909332480,
+        "bytes_reservable_limit": 13495827456,
+        "bytes_reserved": 5988417536,
+        "largest_alloc_size": 3463989760,
+        "largest_free_block_bytes": 4503185408,
+        "num_allocs": 187,
+        "peak_bytes_in_use": 10282952192,
+        "peak_bytes_reserved": 5988417536
+      },
+      {
+        "bytes_in_use": 3538461696,
+        "bytes_limit": 16909332480,
+        "bytes_reservable_limit": 13495827456,
+        "bytes_reserved": 5988417536,
+        "largest_alloc_size": 3463989760,
+        "largest_free_block_bytes": 4503185408,
+        "num_allocs": 187,
+        "peak_bytes_in_use": 10282952192,
+        "peak_bytes_reserved": 5988417536
+      },
+      {
+        "bytes_in_use": 3538461696,
+        "bytes_limit": 16909332480,
+        "bytes_reservable_limit": 13495827456,
+        "bytes_reserved": 5988417536,
+        "largest_alloc_size": 3463989760,
+        "largest_free_block_bytes": 4503185408,
+        "num_allocs": 187,
+        "peak_bytes_in_use": 10282952192,
+        "peak_bytes_reserved": 5988417536
+      },
+      {
+        "bytes_in_use": 3538461696,
+        "bytes_limit": 16909332480,
+        "bytes_reservable_limit": 13495827456,
+        "bytes_reserved": 5988417536,
+        "largest_alloc_size": 3463989760,
+        "largest_free_block_bytes": 4503185408,
+        "num_allocs": 187,
+        "peak_bytes_in_use": 10282952192,
+        "peak_bytes_reserved": 5988417536
+      },
+      {
+        "bytes_in_use": 3538461696,
+        "bytes_limit": 16909332480,
+        "bytes_reservable_limit": 13495827456,
+        "bytes_reserved": 5988417536,
+        "largest_alloc_size": 3463989760,
+        "largest_free_block_bytes": 4503185408,
+        "num_allocs": 187,
+        "peak_bytes_in_use": 10282952192,
+        "peak_bytes_reserved": 5988417536
+      }
+    ],
+    "status": "deadline_partial",
+    "whole_training_loop_tokens_per_second": 3293.83523533674
+  },
+  "branch": {
+    "accepted_input_tokens": 95715328,
+    "evaluations": [
+      {
+        "gqa7_edu_validation_nll": 2.5812020287835353,
+        "step": 0,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.954306340520566,
+        "step": 128,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 8.228253167861833,
+        "step": 256,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.944492806204369,
+        "step": 384,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.816458738444488,
+        "step": 512,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.808771351565364,
+        "step": 640,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.824929663396184,
+        "step": 768,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.8611172464469545,
+        "step": 896,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.70569630731935,
+        "step": 1024,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.831742571013181,
+        "step": 1152,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.94637432079744,
+        "step": 1280,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.881620345577117,
+        "step": 1408,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.7633290370072325,
+        "step": 1536,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.838521023300037,
+        "step": 1664,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.791587255334341,
+        "step": 1792,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.754968980656807,
+        "step": 1920,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 8.124899154767496,
+        "step": 2048,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.800489916013716,
+        "step": 2176,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.940312733281975,
+        "step": 2304,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.825089008111292,
+        "step": 2432,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.7310467791813675,
+        "step": 2560,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.738022581456577,
+        "step": 2688,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.717348518259714,
+        "step": 2816,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.72282296308441,
+        "step": 2944,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 8.155846663817167,
+        "step": 3072,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.785478966676594,
+        "step": 3200,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.624460826288337,
+        "step": 3328,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.594618527886921,
+        "step": 3456,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.493943275011646,
+        "step": 3584,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.436209998405807,
+        "step": 3712,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.347274332801618,
+        "step": 3840,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.315025739772345,
+        "step": 3968,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.411080637285786,
+        "step": 4096,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.6692030711840555,
+        "step": 4224,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.663742990204782,
+        "step": 4352,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.6862968974332535,
+        "step": 4480,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.929269949129017,
+        "step": 4608,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.718375391508011,
+        "step": 4736,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.873567359305314,
+        "step": 4864,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.721064324253116,
+        "step": 4992,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.596619651697481,
+        "step": 5120,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.980511796789085,
+        "step": 5248,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.824357704915842,
+        "step": 5376,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.854959094512731,
+        "step": 5504,
+        "teacher_edu_validation_nll": 2.476396674401366
+      },
+      {
+        "gqa7_edu_validation_nll": 7.746794162724141,
+        "step": 5632,
+        "teacher_edu_validation_nll": 2.476396674401366
+      }
+    ],
+    "selected_batch": 8,
+    "source_step": 5120,
+    "step": 5842
+  },
+  "history_summary": {
+    "update_seconds_sum": 28349.24959174916,
+    "update_input_tokens_per_second": 3376.291414353953,
+    "early_and_final_steps": [
+      {
+        "ce": 2.536879539489746,
+        "input_tokens_per_second": 3062.5735692924277,
+        "kl": 0.10207618027925491,
+        "loss": 1.3194777965545654,
+        "lr": 7.81249980263965e-07,
+        "seconds": 5.349749035999594,
+        "step": 1
+      },
+      {
+        "ce": 2.535698413848877,
+        "input_tokens_per_second": 3377.1835685216156,
+        "kl": 0.12220362573862076,
+        "loss": 1.328951120376587,
+        "lr": 1.249999968422344e-05,
+        "seconds": 4.851379757000359,
+        "step": 16
+      },
+      {
+        "ce": 2.7115135192871094,
+        "input_tokens_per_second": 3376.1209356949594,
+        "kl": 0.14620687067508698,
+        "loss": 1.4288601875305176,
+        "lr": 2.499999936844688e-05,
+        "seconds": 4.852906727000118,
+        "step": 32
+      },
+      {
+        "ce": 2.752330780029297,
+        "input_tokens_per_second": 3376.927995942659,
+        "kl": 0.16612622141838074,
+        "loss": 1.459228515625,
+        "lr": 4.999999873689376e-05,
+        "seconds": 4.851746919000107,
+        "step": 64
+      },
+      {
+        "ce": 8.08548641204834,
+        "input_tokens_per_second": 3376.7060981711456,
+        "kl": 5.392731189727783,
+        "loss": 6.739109039306641,
+        "lr": 9.999999747378752e-05,
+        "seconds": 4.852065748000314,
+        "step": 128
+      },
+      {
+        "ce": 8.344867706298828,
+        "input_tokens_per_second": 3377.060361062008,
+        "kl": 5.70168924331665,
+        "loss": 7.02327823638916,
+        "lr": 9.997545566875488e-05,
+        "seconds": 4.851556753000295,
+        "step": 256
+      },
+      {
+        "ce": 7.690662384033203,
+        "input_tokens_per_second": 3376.665051229082,
+        "kl": 5.088937282562256,
+        "loss": 6.389800071716309,
+        "lr": 6.125879735918716e-05,
+        "seconds": 4.852124730001378,
+        "step": 5632
+      },
+      {
+        "ce": 7.530178070068359,
+        "input_tokens_per_second": 3376.333071308677,
+        "kl": 5.071996688842773,
+        "loss": 6.301087379455566,
+        "lr": 5.881674223928712e-05,
+        "seconds": 4.85260181799822,
+        "step": 5842
+      }
+    ],
+    "last_100_updates_mean_ce": 7.784014892578125,
+    "last_100_updates_mean_kl": 5.3010116386413575
+  },
+  "interpretation": "Source replay succeeds, then this composed CE+KL run regresses sharply. No final-step held-out evaluation. Frozen EXP171 CURRENT5120 remains the measured capability baseline. LR, optimizer, and objective causes are unresolved."
+}

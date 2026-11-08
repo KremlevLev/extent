@@ -75,7 +75,7 @@ def prepare(root):
     phase(root,'data_ready')
 
 
-def wait_child(command,root,log_path,timeout,*,stop=None):
+def wait_child(command,root,log_path,timeout,*,stop=None,label='EXP173'):
     """No accelerator in parent. SIGUSR1 writes Python stacks before timeout."""
     begun=time.monotonic();last=-1
     with Path(log_path).open('w') as log:
@@ -86,7 +86,8 @@ def wait_child(command,root,log_path,timeout,*,stop=None):
                 if int(elapsed//60)!=last:
                     last=int(elapsed//60)
                     stamp=json.loads((root/'phase.json').read_text()) if (root/'phase.json').exists() else {}
-                    print('EXP173 worker elapsed_minutes=',round(elapsed/60,1),'stage=',stamp.get('phase'),flush=True)
+                    print(label,'worker elapsed_minutes=',round(elapsed/60,1),'stage=',stamp.get('phase'),
+                          {key:stamp[key] for key in ('step','nll','tokens_per_second') if key in stamp},flush=True)
                 if elapsed>timeout or (stop and stop()):
                     if os.name=='posix':
                         try:os.kill(child.pid,signal.SIGUSR1)

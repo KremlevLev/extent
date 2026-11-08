@@ -326,3 +326,23 @@ original parts frozen; frozen171 CURRENT5120/fresh Adam/fresh Edu offset83,886,0
 Isolated +1 physical-batch planner at fixed effective16; full teacher/student/
 backward/Adam timing, exact tiled vocabulary loss.17 CPU checks passed; no
 physical TPU173 throughput, convergence or capability result.
+
+## 8 November2026 — EXP173 received
+
+The composed 7-attention hybrid starts from clean171 CURRENT5120. New Adam,
+peak1e-4 with128-update warmup, .5CE+.5full-vocabulary teacher-to-student KL,
+only the21 Mamba mixers trainable. Initial four-window Edu1024 replay2.581202
+with teacher2.476397. Same held-out panel gives7.954306 at128 updates
+(2,097,152 new input positions),7.315026 at the best post-start evaluation
+(3968), and7.746794 at the last recorded evaluation (5632). Training CE
+and KL also rise. The measurements document failure of this recipe to
+retain the source quality. They leave the cause unresolved.
+
+deadline_partial after5842 updates/95,715,328 new inputs. Saved CURRENT5842,
+no pending sync in report. Final checkpoint has no exact-step held-out NLL
+or downstream benchmark. Source171 quality evidence remains EXP172.
+
+All16 physical batches fit; selected8 at3376.45tok/s, about3376.27tok/s
+over accepted updates and3293.84tok/s across the training loop. Probe
+processes total25.06min. Timing excludes preparation/planning/final HF
+sync from the training-loop rate. [Received summary](results/EXP-173-received-summary.json).
