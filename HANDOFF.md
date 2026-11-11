@@ -1,3 +1,25 @@
+# 11 November 2026 · EXP174 received
+
+All six matched128-update pilots and four batch probes completed. Winner
+full-1e-06, physical8/effective16/context1024. Continued with its own Adam
+and cursor to4850 updates/79,462,400 new inputs on the winning trajectory.
+deadline_partial, worker returncode0, hf_verified=true. Source code hashes
+match the received report. [Summary](results/EXP-174-received-summary.json).
+
+Four-window monitor starts2.581020, best2.575785 at1920, final2.591883.
+Sixteen-window selection starts2.393898, winner at128 gives2.392084,
+final2.408868. Full1e-6 beats Mamba-only1e-6 by only0.000999 at128.
+Rates3e-6 and1e-5 worsen selection NLL in both scopes at the matched endpoint.
+No long matched frozen/full comparison or post-training capability benchmark.
+Low-rate training retains source NLL much better than173, but this constant
+LR continuation does not establish improvement. LR, warmup and implementation
+differences across173/174 prevent assigning173's failure to LR alone.
+
+Continuation update speed3165.08tok/s, loop3027.37tok/s. Batch16 fits but is
+slower for both scopes. All pilots plus continuation89,948,160 training inputs,
+90,144,768 including disposable probes. Source171 plus winning trajectory
+163,348,480 inputs. These counts exclude evaluation and teacher forwards.
+
 # Старт для следующего чата · 8 ноября 2026
 
 Репозиторий `C:\Users\lkremlev\extent`. Это продолжение Extent / Mamba‑3 in
@@ -22,7 +44,7 @@ the Qwen. Читай свежие записи сверху, затем акту
   задачам и генерации.
 - В EXP‑173 начальный NLL 2.5812 вырос до 7.9543 за 128 шагов. Высокий LR
   — проверяемая гипотеза. Причина пока не выделена контрольным прогоном.
-  **EXP‑174 запушен в `7a4cca6`, результатов TPU ещё нет.** В нём обе
+  EXP‑174 запушен в `7a4cca6`, результат получен 11 ноября и записан выше. В нём обе
   ветки стартуют с EXP‑171 и используют CE + KL. Сравниваются обучение
   только Mamba и всего студента при трёх LR. У победителя **нет остановки
   по NLL и лимита шагов**. Он продолжает до временного бюджета с резервом

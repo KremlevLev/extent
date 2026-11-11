@@ -346,3 +346,38 @@ All16 physical batches fit; selected8 at3376.45tok/s, about3376.27tok/s
 over accepted updates and3293.84tok/s across the training loop. Probe
 processes total25.06min. Timing excludes preparation/planning/final HF
 sync from the training-loop rate. [Received summary](results/EXP-173-received-summary.json).
+
+## 11 November 2026 · EXP174 received
+
+All six matched pilots completed 128 updates with identical source and fresh
+Edu prefix. Endpoint NLL uses16 held-out windows, separate from the four
+historical monitor windows. Each pilot presents2,097,152 input positions.
+
+| Trainable student scope | LR | Selection NLL at128 | Change from2.393898 |
+| --- | --- | --- | --- |
+| Mamba | 1e-6 | 2.393083 | -0.000815 |
+| Mamba | 3e-6 | 2.396367 | +0.002470 |
+| Mamba | 1e-5 | 2.409403 | +0.015505 |
+| Full student | 1e-6 | 2.392084 | -0.001814 |
+| Full student | 3e-6 | 2.401686 | +0.007788 |
+| Full student | 1e-5 | 2.416915 | +0.023018 |
+
+Selected full1e-6 continued with its own Adam and cursor to4850 total updates,
+79,462,400 new input positions including its pilot. Monitor NLL2.581020 at
+start, best2.575785 at1920, final2.591883 at4850. Selection NLL rises from
+pilot endpoint2.392084 to final2.408868. The tiny short-pilot advantage over
+Mamba-only does not establish full-training superiority. All scopes were
+matched only through128 updates, with one source and validation panel.
+
+The recipe retains source NLL far better than173, but continued constant-LR
+training fails to improve the held-out endpoint. Differences in LR, warmup
+and implementation prevent attributing173's severe regression to LR alone.
+No post174 task accuracy or generation assessment has been received.
+
+All four physical8/16 probes fit. Physical8 wins both scopes. Continuation
+averages3165.08 input tok/s over updates and3027.37 across the training loop.
+Normal deadline_partial exit, returncode0, final HF verification true.
+All pilots and continuation consume89,948,160 training inputs,90,144,768
+including disposable probes. Source171 plus winning trajectory163,348,480
+inputs excludes losing pilots, evaluation and teacher forwards.
+[Received summary with raw SHA and matched code hashes](results/EXP-174-received-summary.json).

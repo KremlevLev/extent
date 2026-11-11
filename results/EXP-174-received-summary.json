@@ -1,0 +1,1060 @@
+{
+  "complete_pilots": 6,
+  "experiment": 174,
+  "last_phase": {
+    "phase": "save_winner",
+    "pid": 20794,
+    "step": 4850,
+    "unix": 1794382402.3668582
+  },
+  "resources": {
+    "effective_host_available": 400282263552,
+    "tmpfs_free_bytes": 204010946560
+  },
+  "selected_batch": 8,
+  "status": "deadline_partial",
+  "winner": "full-1e-06",
+  "source_file_sha256": "9a090c53a6c79608c237b02360a2fa732db7df06b2470925185842c145c9dd5b",
+  "source_filename": "extent-m3q-tpu174.txt",
+  "pilots": [
+    {
+      "batch": 8,
+      "candidate": "mamba-1e-06",
+      "returncode": 0,
+      "seconds": 684.8358741669999,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 2097152,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 1e-06,
+          "scope": "mamba",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          },
+          {
+            "nll": 2.3938976895657684,
+            "panel": "selection_start",
+            "step": 0
+          },
+          {
+            "nll": 2.5818612107083942,
+            "panel": "monitor",
+            "step": 16
+          },
+          {
+            "nll": 2.5814692850569707,
+            "panel": "monitor",
+            "step": 32
+          },
+          {
+            "nll": 2.5818718903691655,
+            "panel": "monitor",
+            "step": 48
+          },
+          {
+            "nll": 2.582295258373809,
+            "panel": "monitor",
+            "step": 64
+          },
+          {
+            "nll": 2.582301761630926,
+            "panel": "monitor",
+            "step": 80
+          },
+          {
+            "nll": 2.581947483275293,
+            "panel": "monitor",
+            "step": 96
+          },
+          {
+            "nll": 2.581190420618738,
+            "panel": "monitor",
+            "step": 112
+          },
+          {
+            "nll": 2.5803894460609116,
+            "panel": "monitor",
+            "step": 128
+          },
+          {
+            "nll": 2.3930830596595682,
+            "panel": "selection",
+            "step": 128
+          }
+        ],
+        "initial_selection_nll": 2.3938976895657684,
+        "invocation_input_tokens": 2097152,
+        "loop_tokens_per_second": 3356.7179322712773,
+        "peak_lr": 1e-06,
+        "physical_batch": 8,
+        "scope": "mamba",
+        "selection_nll": 2.3930830596595682,
+        "selection_nll_delta": -0.0008146299062001816,
+        "status": "pilot_completed",
+        "step": 128
+      },
+      "accepted_update_seconds_sum": 623.6370762959995,
+      "accepted_update_tokens_per_second": 3362.776332118875
+    },
+    {
+      "batch": 8,
+      "candidate": "mamba-3e-06",
+      "returncode": 0,
+      "seconds": 685.717576728,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 2097152,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 3e-06,
+          "scope": "mamba",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          },
+          {
+            "nll": 2.3938976895657684,
+            "panel": "selection_start",
+            "step": 0
+          },
+          {
+            "nll": 2.5815128389807858,
+            "panel": "monitor",
+            "step": 16
+          },
+          {
+            "nll": 2.582573824497495,
+            "panel": "monitor",
+            "step": 32
+          },
+          {
+            "nll": 2.581441899781586,
+            "panel": "monitor",
+            "step": 48
+          },
+          {
+            "nll": 2.58186431317968,
+            "panel": "monitor",
+            "step": 64
+          },
+          {
+            "nll": 2.58135986328125,
+            "panel": "monitor",
+            "step": 80
+          },
+          {
+            "nll": 2.58051617008034,
+            "panel": "monitor",
+            "step": 96
+          },
+          {
+            "nll": 2.5816904554618767,
+            "panel": "monitor",
+            "step": 112
+          },
+          {
+            "nll": 2.5811848719681696,
+            "panel": "monitor",
+            "step": 128
+          },
+          {
+            "nll": 2.396367271624702,
+            "panel": "selection",
+            "step": 128
+          }
+        ],
+        "initial_selection_nll": 2.3938976895657684,
+        "invocation_input_tokens": 2097152,
+        "loop_tokens_per_second": 3356.8446712960736,
+        "peak_lr": 3e-06,
+        "physical_batch": 8,
+        "scope": "mamba",
+        "selection_nll": 2.396367271624702,
+        "selection_nll_delta": 0.0024695820589335504,
+        "status": "pilot_completed",
+        "step": 128
+      },
+      "accepted_update_seconds_sum": 623.6191839760002,
+      "accepted_update_tokens_per_second": 3362.8728138689016
+    },
+    {
+      "batch": 8,
+      "candidate": "mamba-1e-05",
+      "returncode": 0,
+      "seconds": 686.0297973410002,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 2097152,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 1e-05,
+          "scope": "mamba",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          },
+          {
+            "nll": 2.3938976895657684,
+            "panel": "selection_start",
+            "step": 0
+          },
+          {
+            "nll": 2.5813617128314394,
+            "panel": "monitor",
+            "step": 16
+          },
+          {
+            "nll": 2.582172710758034,
+            "panel": "monitor",
+            "step": 32
+          },
+          {
+            "nll": 2.5856030297302666,
+            "panel": "monitor",
+            "step": 48
+          },
+          {
+            "nll": 2.587643322240805,
+            "panel": "monitor",
+            "step": 64
+          },
+          {
+            "nll": 2.5872337363682183,
+            "panel": "monitor",
+            "step": 80
+          },
+          {
+            "nll": 2.5922439291796495,
+            "panel": "monitor",
+            "step": 96
+          },
+          {
+            "nll": 2.59850984724386,
+            "panel": "monitor",
+            "step": 112
+          },
+          {
+            "nll": 2.599826488327071,
+            "panel": "monitor",
+            "step": 128
+          },
+          {
+            "nll": 2.4094029908539145,
+            "panel": "selection",
+            "step": 128
+          }
+        ],
+        "initial_selection_nll": 2.3938976895657684,
+        "invocation_input_tokens": 2097152,
+        "loop_tokens_per_second": 3356.1993880012906,
+        "peak_lr": 1e-05,
+        "physical_batch": 8,
+        "scope": "mamba",
+        "selection_nll": 2.4094029908539145,
+        "selection_nll_delta": 0.01550530128814609,
+        "status": "pilot_completed",
+        "step": 128
+      },
+      "accepted_update_seconds_sum": 623.7338962310027,
+      "accepted_update_tokens_per_second": 3362.254340628796
+    },
+    {
+      "batch": 8,
+      "candidate": "full-1e-06",
+      "returncode": 0,
+      "seconds": 763.0046608550001,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 2097152,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 1e-06,
+          "scope": "full",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          },
+          {
+            "nll": 2.3938976895657684,
+            "panel": "selection_start",
+            "step": 0
+          },
+          {
+            "nll": 2.5820436002222324,
+            "panel": "monitor",
+            "step": 16
+          },
+          {
+            "nll": 2.581706743436125,
+            "panel": "monitor",
+            "step": 32
+          },
+          {
+            "nll": 2.5795452755567267,
+            "panel": "monitor",
+            "step": 48
+          },
+          {
+            "nll": 2.5805548913084984,
+            "panel": "monitor",
+            "step": 64
+          },
+          {
+            "nll": 2.5792896199902247,
+            "panel": "monitor",
+            "step": 80
+          },
+          {
+            "nll": 2.5796813666529204,
+            "panel": "monitor",
+            "step": 96
+          },
+          {
+            "nll": 2.5801535389173997,
+            "panel": "monitor",
+            "step": 112
+          },
+          {
+            "nll": 2.578780755036504,
+            "panel": "monitor",
+            "step": 128
+          },
+          {
+            "nll": 2.3920837581332477,
+            "panel": "selection",
+            "step": 128
+          }
+        ],
+        "initial_selection_nll": 2.3938976895657684,
+        "invocation_input_tokens": 2097152,
+        "loop_tokens_per_second": 3142.495286141052,
+        "peak_lr": 1e-06,
+        "physical_batch": 8,
+        "scope": "full",
+        "selection_nll": 2.3920837581332477,
+        "selection_nll_delta": -0.0018139314325207323,
+        "status": "pilot_completed",
+        "step": 128
+      },
+      "accepted_update_seconds_sum": 666.1516610499993,
+      "accepted_update_tokens_per_second": 3148.159980107884
+    },
+    {
+      "batch": 8,
+      "candidate": "full-3e-06",
+      "returncode": 0,
+      "seconds": 764.0306847269994,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 2097152,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 3e-06,
+          "scope": "full",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          },
+          {
+            "nll": 2.3938976895657684,
+            "panel": "selection_start",
+            "step": 0
+          },
+          {
+            "nll": 2.5817786372418743,
+            "panel": "monitor",
+            "step": 16
+          },
+          {
+            "nll": 2.582720237277004,
+            "panel": "monitor",
+            "step": 32
+          },
+          {
+            "nll": 2.5804618768328447,
+            "panel": "monitor",
+            "step": 48
+          },
+          {
+            "nll": 2.582432900705645,
+            "panel": "monitor",
+            "step": 64
+          },
+          {
+            "nll": 2.582224140185881,
+            "panel": "monitor",
+            "step": 80
+          },
+          {
+            "nll": 2.584639235092864,
+            "panel": "monitor",
+            "step": 96
+          },
+          {
+            "nll": 2.5860836741278717,
+            "panel": "monitor",
+            "step": 112
+          },
+          {
+            "nll": 2.5871591577315494,
+            "panel": "monitor",
+            "step": 128
+          },
+          {
+            "nll": 2.401685556242077,
+            "panel": "selection",
+            "step": 128
+          }
+        ],
+        "initial_selection_nll": 2.3938976895657684,
+        "invocation_input_tokens": 2097152,
+        "loop_tokens_per_second": 3143.1101491821314,
+        "peak_lr": 3e-06,
+        "physical_batch": 8,
+        "scope": "full",
+        "selection_nll": 2.401685556242077,
+        "selection_nll_delta": 0.007787866676308486,
+        "status": "pilot_completed",
+        "step": 128
+      },
+      "accepted_update_seconds_sum": 666.0268139889981,
+      "accepted_update_tokens_per_second": 3148.7501042782974
+    },
+    {
+      "batch": 8,
+      "candidate": "full-1e-05",
+      "returncode": 0,
+      "seconds": 764.5800981820003,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 2097152,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 1e-05,
+          "scope": "full",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          },
+          {
+            "nll": 2.3938976895657684,
+            "panel": "selection_start",
+            "step": 0
+          },
+          {
+            "nll": 2.5788987682711695,
+            "panel": "monitor",
+            "step": 16
+          },
+          {
+            "nll": 2.5791648051838956,
+            "panel": "monitor",
+            "step": 32
+          },
+          {
+            "nll": 2.5838223305382453,
+            "panel": "monitor",
+            "step": 48
+          },
+          {
+            "nll": 2.5909784192097387,
+            "panel": "monitor",
+            "step": 64
+          },
+          {
+            "nll": 2.5944144061583576,
+            "panel": "monitor",
+            "step": 80
+          },
+          {
+            "nll": 2.5993884432467316,
+            "panel": "monitor",
+            "step": 96
+          },
+          {
+            "nll": 2.600323599687653,
+            "panel": "monitor",
+            "step": 112
+          },
+          {
+            "nll": 2.6027713302060422,
+            "panel": "monitor",
+            "step": 128
+          },
+          {
+            "nll": 2.41691543116714,
+            "panel": "selection",
+            "step": 128
+          }
+        ],
+        "initial_selection_nll": 2.3938976895657684,
+        "invocation_input_tokens": 2097152,
+        "loop_tokens_per_second": 3142.1781808834685,
+        "peak_lr": 1e-05,
+        "physical_batch": 8,
+        "scope": "full",
+        "selection_nll": 2.41691543116714,
+        "selection_nll_delta": 0.02301774160137171,
+        "status": "pilot_completed",
+        "step": 128
+      },
+      "accepted_update_seconds_sum": 666.2237295829918,
+      "accepted_update_tokens_per_second": 3147.8194289366825
+    }
+  ],
+  "probes": [
+    {
+      "batch": 8,
+      "candidate": "mamba-1e-06",
+      "returncode": 0,
+      "seconds": 89.81326424099996,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 0,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 1e-06,
+          "scope": "mamba",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "engineering_inputs": 49152,
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          }
+        ],
+        "peak_lr": 1e-06,
+        "physical_batch": 8,
+        "probe_seconds": [
+          24.18006425300007,
+          4.8446558620000815,
+          4.844322303000013
+        ],
+        "scope": "mamba",
+        "status": "measured",
+        "step": 0,
+        "tokens_per_second": 3381.987186055309
+      }
+    },
+    {
+      "batch": 16,
+      "candidate": "mamba-1e-06",
+      "returncode": 0,
+      "seconds": 78.51643412800001,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 0,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 1e-06,
+          "scope": "mamba",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "engineering_inputs": 49152,
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          }
+        ],
+        "peak_lr": 1e-06,
+        "physical_batch": 16,
+        "probe_seconds": [
+          25.14334751699994,
+          4.945534349000013,
+          4.945442567999976
+        ],
+        "scope": "mamba",
+        "status": "measured",
+        "step": 0,
+        "tokens_per_second": 3312.91845840631
+      }
+    },
+    {
+      "batch": 8,
+      "candidate": "full-1e-06",
+      "returncode": 0,
+      "seconds": 93.15212109499998,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 0,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 1e-06,
+          "scope": "full",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "engineering_inputs": 49152,
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          }
+        ],
+        "peak_lr": 1e-06,
+        "physical_batch": 8,
+        "probe_seconds": [
+          27.642051477999757,
+          5.17464998100013,
+          5.17491837300031
+        ],
+        "scope": "full",
+        "status": "measured",
+        "step": 0,
+        "tokens_per_second": 3166.12238106859
+      }
+    },
+    {
+      "batch": 16,
+      "candidate": "full-1e-06",
+      "returncode": 0,
+      "seconds": 89.78515982299996,
+      "status": "exited",
+      "report": {
+        "accepted_input_tokens": 0,
+        "contract": {
+          "code": {
+            "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+            "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+            "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+            "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+          },
+          "context": 1024,
+          "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+          "effective_batch": 16,
+          "experiment": 174,
+          "loss": ".5 CE + .5 exact forward KL; T=1",
+          "optimizer": "fresh Adam(.9,.95), clip1",
+          "peak_lr": 1e-06,
+          "scope": "full",
+          "source_cursor": 83886080,
+          "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+          "source_step": 5120,
+          "warmup_updates": 32
+        },
+        "engineering_inputs": 49152,
+        "evaluations": [
+          {
+            "nll": 2.581020321664223,
+            "panel": "monitor",
+            "step": 0
+          }
+        ],
+        "peak_lr": 1e-06,
+        "physical_batch": 16,
+        "probe_seconds": [
+          27.977034881000236,
+          5.282015395000144,
+          5.281852855000125
+        ],
+        "scope": "full",
+        "status": "measured",
+        "step": 0,
+        "tokens_per_second": 3101.8940434058486
+      }
+    }
+  ],
+  "continuation": {
+    "batch": 8,
+    "candidate": "full-1e-06",
+    "returncode": 0,
+    "seconds": 25940.357269289,
+    "status": "exited",
+    "report": {
+      "accepted_input_tokens": 79462400,
+      "contract": {
+        "code": {
+          "engine_tpu174.py": "e7b8150cc8aa3e48fd041b71a5a0d72480a30b50e8422669c641216bd29bfeb4",
+          "extent/clean_tpu_171.py": "fef7b022fa077843b57e8943e8abe4c12c4a886aad945f2ab00b14cb71c81466",
+          "extent/end_to_end_173.py": "154a9e6fd6698bd0d613feb3b3a34d5ee7fd3bd7066f1b6df9799f2347b63e71",
+          "extent/end_to_end_174.py": "a128762a26dcae79f314c90b3de00e1c496e528b143154254c88f1ba9044bfbb"
+        },
+        "context": 1024,
+        "corpus": "d978a21dfd059b4a1e3ff26b0ffae5e80f3c473ad9f6d057518163fb6e78b52c",
+        "effective_batch": 16,
+        "experiment": 174,
+        "loss": ".5 CE + .5 exact forward KL; T=1",
+        "optimizer": "fresh Adam(.9,.95), clip1",
+        "peak_lr": 1e-06,
+        "scope": "full",
+        "source_cursor": 83886080,
+        "source_manifest_sha256": "b01e32eb687cc74e1a14d092ec489c5f815dc4f86a36be957e47bf75377562f7",
+        "source_step": 5120,
+        "warmup_updates": 32
+      },
+      "evaluations": [
+        {
+          "nll": 2.578780755036504,
+          "panel": "monitor",
+          "step": 128
+        },
+        {
+          "nll": 2.5783315529921187,
+          "panel": "monitor",
+          "step": 256
+        },
+        {
+          "nll": 2.576213698699444,
+          "panel": "monitor",
+          "step": 384
+        },
+        {
+          "nll": 2.5764695332546736,
+          "panel": "monitor",
+          "step": 512
+        },
+        {
+          "nll": 2.5777768072611194,
+          "panel": "monitor",
+          "step": 640
+        },
+        {
+          "nll": 2.576375802824108,
+          "panel": "monitor",
+          "step": 768
+        },
+        {
+          "nll": 2.578998882633034,
+          "panel": "monitor",
+          "step": 896
+        },
+        {
+          "nll": 2.5793248211067326,
+          "panel": "monitor",
+          "step": 1024
+        },
+        {
+          "nll": 2.580383837747434,
+          "panel": "monitor",
+          "step": 1152
+        },
+        {
+          "nll": 2.579054190149988,
+          "panel": "monitor",
+          "step": 1280
+        },
+        {
+          "nll": 2.580030096357985,
+          "panel": "monitor",
+          "step": 1408
+        },
+        {
+          "nll": 2.5769218377703447,
+          "panel": "monitor",
+          "step": 1536
+        },
+        {
+          "nll": 2.576350744402187,
+          "panel": "monitor",
+          "step": 1664
+        },
+        {
+          "nll": 2.5779025170110885,
+          "panel": "monitor",
+          "step": 1792
+        },
+        {
+          "nll": 2.5757850803587794,
+          "panel": "monitor",
+          "step": 1920
+        },
+        {
+          "nll": 2.5760945518695015,
+          "panel": "monitor",
+          "step": 2048
+        },
+        {
+          "nll": 2.5785881035022604,
+          "panel": "monitor",
+          "step": 2176
+        },
+        {
+          "nll": 2.5805670028790932,
+          "panel": "monitor",
+          "step": 2304
+        },
+        {
+          "nll": 2.5839825254498106,
+          "panel": "monitor",
+          "step": 2432
+        },
+        {
+          "nll": 2.585322017427297,
+          "panel": "monitor",
+          "step": 2560
+        },
+        {
+          "nll": 2.5853224350676625,
+          "panel": "monitor",
+          "step": 2688
+        },
+        {
+          "nll": 2.5864258409129093,
+          "panel": "monitor",
+          "step": 2816
+        },
+        {
+          "nll": 2.5908232956454667,
+          "panel": "monitor",
+          "step": 2944
+        },
+        {
+          "nll": 2.5958571149689944,
+          "panel": "monitor",
+          "step": 3072
+        },
+        {
+          "nll": 2.5966541517748043,
+          "panel": "monitor",
+          "step": 3200
+        },
+        {
+          "nll": 2.5939005891831624,
+          "panel": "monitor",
+          "step": 3328
+        },
+        {
+          "nll": 2.596128044240286,
+          "panel": "monitor",
+          "step": 3456
+        },
+        {
+          "nll": 2.5929345273552054,
+          "panel": "monitor",
+          "step": 3584
+        },
+        {
+          "nll": 2.5931738949474585,
+          "panel": "monitor",
+          "step": 3712
+        },
+        {
+          "nll": 2.591520695392687,
+          "panel": "monitor",
+          "step": 3840
+        },
+        {
+          "nll": 2.592210458287512,
+          "panel": "monitor",
+          "step": 3968
+        },
+        {
+          "nll": 2.592267376703018,
+          "panel": "monitor",
+          "step": 4096
+        },
+        {
+          "nll": 2.597221904020039,
+          "panel": "monitor",
+          "step": 4224
+        },
+        {
+          "nll": 2.604190710819129,
+          "panel": "monitor",
+          "step": 4352
+        },
+        {
+          "nll": 2.595512919645039,
+          "panel": "monitor",
+          "step": 4480
+        },
+        {
+          "nll": 2.5909890392076003,
+          "panel": "monitor",
+          "step": 4608
+        },
+        {
+          "nll": 2.5951513624144673,
+          "panel": "monitor",
+          "step": 4736
+        },
+        {
+          "nll": 2.5918832668927174,
+          "panel": "monitor_final",
+          "step": 4850
+        },
+        {
+          "nll": 2.4088677847257225,
+          "panel": "selection_final",
+          "step": 4850
+        }
+      ],
+      "final_selection_nll": 2.4088677847257225,
+      "hf_verified": true,
+      "invocation_input_tokens": 77365248,
+      "local_checkpoint_step": 4850,
+      "loop_tokens_per_second": 3027.372000976994,
+      "peak_lr": 1e-06,
+      "physical_batch": 8,
+      "scope": "full",
+      "status": "deadline_partial",
+      "step": 4850
+    },
+    "accepted_update_seconds_sum": 24443.3432070081,
+    "accepted_update_tokens_per_second": 3165.084552665397
+  },
+  "accounting": {
+    "winning_trajectory_input_tokens": 79462400,
+    "all_pilots_and_continuation_input_tokens": 89948160,
+    "disposable_probe_input_presentations": 196608,
+    "total_input_presentations_including_probes": 90144768,
+    "source171_plus_winning_trajectory_inputs": 163348480,
+    "limitations": "Winning trajectory counts its pilot once. Preparation and comparisons are separate costs. These are input presentations, excluding teacher forwards and validation."
+  }
+}
