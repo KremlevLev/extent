@@ -48,11 +48,10 @@ def test_separate_heads_match_dense_ce_kl_and_teacher_is_detached():
     assert not np.any(donor_grad)
 
 
-def virtual_full_update():
+def virtual_full_fixture():
     from jax.sharding import Mesh, NamedSharding, PartitionSpec
-    import optax
     from extent.clean_transplant_170 import initialize
-    from extent.clean_tpu_171 import layout, optimizer
+    from extent.clean_tpu_171 import layout
     from extent.config import Mamba3Config
     from extent.qwen3_teacher import Qwen3TeacherConfig
 
@@ -87,6 +86,14 @@ def virtual_full_update():
     p = jax.device_put(dict(mamba=bank, qwen=jax.tree.map(lambda x: x.astype(jnp.float32), donor)), param_layout)
     donor = jax.device_put(donor, donor_layout)
     tokens = jax.device_put(np.arange(64, dtype=np.int32)[None] % 24, rep)
+    return c, tc, p, donor, tokens, param_layout, mesh, rep
+
+
+def virtual_full_update():
+    import optax
+    from extent.clean_tpu_171 import layout, optimizer
+
+    c, tc, p, donor, tokens, param_layout, mesh, rep = virtual_full_fixture()
     full = jax.jit(make_gradient(c, tc, True), out_shardings=(rep, param_layout, rep))
     loss, grad, metrics = full(p, donor, tokens)
     frozen_layout = {"mamba": param_layout["mamba"]}

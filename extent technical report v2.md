@@ -381,3 +381,15 @@ All pilots and continuation consume89,948,160 training inputs,90,144,768
 including disposable probes. Source171 plus winning trajectory163,348,480
 inputs excludes losing pilots, evaluation and teacher forwards.
 [Received summary with raw SHA and matched code hashes](results/EXP-174-received-summary.json).
+
+## 11 November 2026 · EXP175 prepared
+
+Two-hour TPU objective diagnosis from clean171 CURRENT5120. Three matched
+full-student pilots at LR1e-6 compare CE, KL and their equal mixture.
+Fixed-batch learning, component-gradient alignment, actual Adam direction
+and BF16-cast changes are measured before comparison. All128 available
+Edu1024 validation windows are retained per window. Shared token budget
+is selected once from measured update speed, up to256 updates per arm.
+The best complete pilot continues from its own Adam and cursor until the
+time reserve. This is a prepared protocol with no physical TPU175 result.
+[Protocol and launch](results/EXP-175-protocol-and-launch.md).

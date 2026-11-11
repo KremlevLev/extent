@@ -1,3 +1,20 @@
+# 11 November 2026 · EXP175 prepared for two-hour TPU diagnosis
+
+User has2h TPU or12h2T4. Chose TPU with the already exercised full-student
+sharding. From clean171 CURRENT5120 compare CE-only, KL-only and .5CE+.5KL,
+all active student weights, fixed teacher, LR1e-6,32-step warmup, same fresh
+Edu prefix. Target256 matched updates/4.19M inputs per arm, auto-reduced
+equally from measured speed and remaining budget before pilots.
+
+Separate disposable same-batch32-update test, CE/KL gradient norms/cosines,
+actual Adam displacement, FP32 versus BF16-cast changes. Validate all128
+Edu windows and retain per-window CE/KL. Selected complete pilot continues
+with its own Adam/cursor until time reserve, regardless of NLL trend.
+Only winner uploaded,18min reserve. No new task-benchmark result.
+See results/EXP-175-protocol-and-launch.md and notebooks/extent-tpu-175.ipynb.
+14 CPU tests passed, including virtual eight-device gradients, Adam restore
+and failed-arm recovery. No physical TPU175 result received.
+
 # 11 November 2026 · EXP174 received
 
 All six matched128-update pilots and four batch probes completed. Winner
