@@ -1,3 +1,31 @@
+# 13 November 2026 · EXP175 received
+
+Completed, all three pilots matched224 updates/3,670,016 inputs each.
+Expanded128-window NLL starts2.544436. CE2.540840, KL2.541114,
+mixed2.541728. All slightly improve. CE wins, but its0.000274 advantage
+over KL is small, with a descriptive paired-window interval crossing0.
+CE continues to511 updates/8,372,224 inputs including its pilot,
+final NLL2.539805, KL0.131716. HF verified, batch8/effective16/context1024.
+All code hashes match. No post175 capability benchmark.
+
+Fixed-batch32 updates improve CE2.536957->2.524765 and KL.102025->.100193.
+Initial global gradient cosineCE/KL +.535085, raw norm ratio2.27. Actual
+first Adam displacement is opposed to its mixed gradient (cosine-.269509).
+These checks support limited learnability and do not reveal global CE/KL
+opposition. They do not prove universal update correctness.
+
+IMPORTANT diagnostic limitation: BF16 changed fraction equals FP32 fraction
+in every group. Do not use this unvalidated TPU counter to infer rounding
+survival or blame precision. CPU ones versus ones+1e-6 sanity gives changed
+FP32=1/BF16=0. TPU compiler effects remain a hypothesis, requiring an
+independent host bit-pattern/optimized-HLO check. Historical175 code stays
+pinned for restoring its checkpoint.
+
+All pilot/continuation training15,712,256 inputs, plus disposable524,288
+fixed-batch training and32,768 component-gradient inputs. Source171 plus
+winning CE92,258,304 inputs. Analysis and audit summary in
+results/EXP-175-result-analysis.md and results/EXP-175-received-summary.json.
+
 # 11 November 2026 · EXP175 prepared for two-hour TPU diagnosis
 
 User has2h TPU or12h2T4. Chose TPU with the already exercised full-student

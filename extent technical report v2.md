@@ -393,3 +393,34 @@ is selected once from measured update speed, up to256 updates per arm.
 The best complete pilot continues from its own Adam and cursor until the
 time reserve. This is a prepared protocol with no physical TPU175 result.
 [Protocol and launch](results/EXP-175-protocol-and-launch.md).
+
+## 13 November 2026 · EXP175 received
+
+All three full-student pilots completed224 matched updates,3,670,016
+inputs each. Initial128-window Edu1024 NLL2.544436. Endpoints are
+CE2.540840, KL2.541114 and mixed2.541728. All improve slightly. CE's
+registered advantage over KL is only0.000274 and its descriptive
+paired-window interval crosses0. The expanded panel is reused validation
+and contains correlated adjacent windows.
+
+Selected CE continues to511 updates/8,372,224 new winning-trajectory inputs.
+Final NLL2.539805 and KL0.131716. HF verified, batch8/effective16.
+No task or generation evaluation of this endpoint has been received.
+
+On a disposable fixed batch,32 mixed updates lower CE2.536957->2.524765,
+KL0.102025->0.100193. Initial global CE/KL gradient cosine+0.535085,
+raw norm ratioCE/KL2.27. First actual Adam displacement has cosine-0.269509
+with its mixed gradient. The experiment supports small improvements and
+limited learnability, leaving the reason for slow learning unresolved.
+
+The BF16 coordinate-change diagnostic is unvalidated on TPU. Its reported
+fractions exactly match FP32 in every group. CPU sanity on ones versus
+ones+1e-6 distinguishes FP32 and BF16 changes. Precision cannot be assigned
+as the bottleneck from this counter. Compiler behavior is an unconfirmed
+explanation for the diagnostic discrepancy.
+
+All pilot/continuation training15,712,256 inputs. Disposable diagnostic
+training524,288 and component-gradient evaluations32,768 are separate.
+Source171 plus winning CE trajectory92,258,304 input presentations.
+[Analysis](results/EXP-175-result-analysis.md) and
+[summary with raw SHA, code checks and per-window data](results/EXP-175-received-summary.json).
