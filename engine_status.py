@@ -117,11 +117,11 @@ def format_report(alias,report,modified,active=None,cached=False,now=None):
             tokens=(step-origin)*contract['batch']*256
             lines.append(f'Новые входные токены этой ветки: {tokens/1e6:.3f} млн')
         history=row.get('history',[])
-        if history and contract.get('format') != 'torch-clean-align-v1':
+        if history and contract.get('format') not in ('torch-clean-align-v1', 'torch-full-ce-v1'):
             last=history[-1]
             lines.append('Train CE / KL / loss: '+ ' / '.join(short(last.get(k)) for k in ('ce','kl','loss')))
         # Same extractor as the read-only dashboard: never inject BEST as CURRENT.
-        if number(origin) and contract.get('format') != 'torch-clean-align-v1':
+        if number(origin) and contract.get('format') not in ('torch-clean-align-v1', 'torch-full-ce-v1'):
             metric_points=points(report,arm)
             for panel in ('wiki_A','wiki_B','wiki_C','c4_D','edu_E'):
                 key='validation/'+panel+'_nll'
@@ -145,6 +145,15 @@ def format_report(alias,report,modified,active=None,cached=False,now=None):
             label='C4 D' if row.get('best_panel')=='D' else 'Wiki A'
             lines.append(f'BEST {label}: {row["best_nll"]:.4f} @ {row.get("best_step","—")}')
         if row.get('selected_batch'):lines.append(f"Выбранный batch: {row['selected_batch']}")
+        if contract.get('format') == 'torch-full-ce-v1':
+            if history:
+                lines.append(f"Train CE: {short(history[-1].get('ce'), 5)}; LR: {short(history[-1].get('lr'), 6)}")
+            if number(row.get('last_validation_nll')):
+                lines.append(f"NLL Edu: {row['last_validation_nll']:.5f} @ {row.get('validation_step')}; окон={row.get('validation_windows')}")
+            if history:
+                lines.append(f"Скорость обновления: {short(history[-1].get('input_tokens_per_second'), 0)} ток/с")
+            if number(row.get('loop_tokens_per_second')):
+                lines.append(f"Скорость с eval/save: {row['loop_tokens_per_second']:.0f} ток/с")
         if contract.get('format') == 'torch-clean-align-v1':
             if history:
                 last = history[-1]

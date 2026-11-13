@@ -57,29 +57,29 @@ def remote_api():
     return HfApi(token=os.environ.get('HF_TOKEN'))
 
 
-def restore_remote(root, policy):
+def restore_remote(root, policy, *, prefix=PREFIX):
     from huggingface_hub import hf_hub_download
     from huggingface_hub.errors import EntryNotFoundError
     repo = os.environ.get('EXTENT_HF_CHECKPOINT_REPO', 'levkremlev888/extent')
     try:
         metadata = policy.call(hf_hub_download, repo_id=repo, repo_type='dataset',
-            filename=PREFIX+'/latest.json', token=os.environ.get('HF_TOKEN'),
+            filename=prefix+'/latest.json', token=os.environ.get('HF_TOKEN'),
             local_dir=str(root/'remote-metadata'))
     except EntryNotFoundError:
         return
     meta = json.loads(Path(metadata).read_text())
-    if meta.get('file') != PREFIX+'/CURRENT.pt':
+    if meta.get('file') != prefix+'/CURRENT.pt':
         raise ValueError('remote CURRENT path differs')
     # Download directly to the CURRENT namespace; no second HF cache copy.
     downloaded = policy.call(hf_hub_download, repo_id=repo, repo_type='dataset',
-        filename=PREFIX+'/CURRENT.pt', revision=meta['commit'],
+        filename=prefix+'/CURRENT.pt', revision=meta['commit'],
         token=os.environ.get('HF_TOKEN'), local_dir=str(root/'remote-current'))
     if digest_file(downloaded) != meta['sha256']:
         raise ValueError('remote CURRENT SHA mismatch')
     Path(downloaded).replace(root/'CURRENT.pt')
 
 
-def sync_remote(root, report_path, policy):
+def sync_remote(root, report_path, policy, *, prefix=PREFIX, remove_local=True, checkpoint_step=None):
     """Commit CURRENT then a manifest; delete local ONLY after remote LFS SHA check."""
     api = remote_api()
     repo = os.environ.get('EXTENT_HF_CHECKPOINT_REPO', 'levkremlev888/extent')
@@ -88,29 +88,30 @@ def sync_remote(root, report_path, policy):
         raise ValueError('CURRENT must be a regular local file')
     sha = digest_file(current)
     commit = policy.call(api.upload_file, path_or_fileobj=str(current),
-        path_in_repo=PREFIX+'/CURRENT.pt', repo_id=repo, repo_type='dataset',
-        commit_message='EXP170 own mixer bank and optimizer CURRENT')
+        path_in_repo=prefix+'/CURRENT.pt', repo_id=repo, repo_type='dataset',
+        commit_message='Training parameters and optimizer CURRENT')
     commit_id = commit.oid
     info = policy.call(api.get_paths_info, repo_id=repo, repo_type='dataset',
-        paths=[PREFIX+'/CURRENT.pt'], revision=commit_id)
+        paths=[prefix+'/CURRENT.pt'], revision=commit_id)
     if len(info) != 1 or getattr(getattr(info[0], 'lfs', None), 'sha256', None) != sha:
         raise ValueError('remote LFS SHA not verified; retaining local CURRENT')
-    meta = dict(file=PREFIX+'/CURRENT.pt', sha256=sha, commit=commit_id,
-        step=json.loads(report_path.read_text()).get('local_checkpoint_step'))
+    meta = dict(file=prefix+'/CURRENT.pt', sha256=sha, commit=commit_id,
+        step=checkpoint_step if checkpoint_step is not None else json.loads(report_path.read_text()).get('local_checkpoint_step'))
     write_json(root/'latest.json', meta)
     from huggingface_hub import CommitOperationAdd
     policy.call(api.create_commit, repo_id=repo, repo_type='dataset',
-        operations=[CommitOperationAdd(path_in_repo=PREFIX+'/latest.json', path_or_fileobj=str(root/'latest.json')),
-                    CommitOperationAdd(path_in_repo=PREFIX+'/runtime.json', path_or_fileobj=str(report_path))],
-        commit_message='EXP170 verified CURRENT descriptor and report')
+        operations=[CommitOperationAdd(path_in_repo=prefix+'/latest.json', path_or_fileobj=str(root/'latest.json')),
+                    CommitOperationAdd(path_in_repo=prefix+'/runtime.json', path_or_fileobj=str(report_path))],
+        commit_message='Verified CURRENT descriptor and report')
     # Re-read exact manifest commit, rather than interpreting an upload as proof.
     from huggingface_hub import hf_hub_download
     readback = policy.call(hf_hub_download, repo_id=repo, repo_type='dataset',
-        filename=PREFIX+'/latest.json', token=os.environ.get('HF_TOKEN'),
+        filename=prefix+'/latest.json', token=os.environ.get('HF_TOKEN'),
         local_dir=str(root/'remote-verification'), force_download=True)
     if json.loads(Path(readback).read_text()) != meta:
         raise ValueError('remote manifest mismatch; retaining CURRENT')
-    current.unlink()
+    if remove_local:
+        current.unlink()
     return meta
 
 

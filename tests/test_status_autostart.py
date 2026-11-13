@@ -53,3 +53,32 @@ def test_adaptive_status_uses_explicit_token_clock_and_per_update_batch():
         step=157686,source_step=157684,accepted_input_tokens=2816,selected_batch=5,history=[dict(step=157686,seconds=1.,input_tokens=1280,accepted_input_tokens=2816)],evaluations=[])})
     text=engine_status.format_report('blackwell',report,0,True,now=0)
     assert '0.003 млн' in text and '1280 ток/с' in text and 'batch: 5' in text
+
+
+def test_requested_listener_restart_targets_only_known_bot_process(tmp_path, monkeypatch):
+    directory = tmp_path / "service"
+    directory.mkdir()
+    lock = directory / "listener.lock"
+    config = directory / "sessions.json"
+    (directory / "ready.json").write_text(json.dumps(dict(pid=901, config=str(config))))
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "test-secret")
+    monkeypatch.setenv("TELEGRAM_CHAT_ID", "123")
+    monkeypatch.setattr(auto, "paths", lambda token: (directory, lock))
+    running = [True]
+    killed = []
+    monkeypatch.setattr(auto, "lock_free", lambda path: not running[0])
+    monkeypatch.setattr(auto, "legacy_pids", lambda token: [901] if running[0] else [])
+
+    def kill(pid, sig):
+        killed.append(pid)
+        running[0] = False
+
+    def start(command, **kwargs):
+        running[0] = True
+        (directory / "ready.json").write_text(json.dumps(dict(pid=902, config=str(config))))
+        return SimpleNamespace(pid=902, poll=lambda: None)
+
+    monkeypatch.setattr(auto.os, "kill", kill)
+    monkeypatch.setattr(auto.subprocess, "Popen", start)
+    result = auto.ensure_listener(tmp_path / "work", "results/runtime-torch176.json", force_restart=True)
+    assert result["status"] == "started" and killed == [901]

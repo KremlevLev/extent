@@ -48,7 +48,7 @@ def lock_free(path):
     else:lock.release();return True
 
 
-def ensure_listener(root,report):
+def ensure_listener(root,report,*,force_restart=False):
     token=os.environ.get('TELEGRAM_BOT_TOKEN')
     chat=os.environ.get('TELEGRAM_CHAT_ID') or os.environ.get('TELEGRAM_USER_ID')
     if not token or not str(chat or '').isdigit():raise ValueError('Telegram credentials required for automatic /check')
@@ -61,7 +61,7 @@ def ensure_listener(root,report):
             write_json_atomic(config,dict(sessions=sessions(old,root)))
         register(config,root,report)
         service=json.loads(ready.read_text()) if ready.exists() else {}
-        if (not lock_free(listener_lock) and service.get('config')==str(config)
+        if (not force_restart and not lock_free(listener_lock) and service.get('config')==str(config)
             and (not sys.platform.startswith('linux') or service.get('pid') in legacy_pids(token))):
             print('status_bot=registered; existing listener reloads registry on /check',flush=True)
             return dict(status='registered',config=str(config))

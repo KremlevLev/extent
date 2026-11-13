@@ -1,3 +1,29 @@
+# 14 November 2026 · EXP176 PyTorch weekend continuation prepared
+
+User offered RTX PRO6000 until16Nov09:00MSK, roughly500GB RAM but only80GB
+free SSD. New engine_torch176 continues full CE from175 CURRENT511,
+preserving all active Qwen/Mamba tensors and Adam moments/count. Fixed LR1e-6,
+context1024/effective16, gqa7 only. Original torch170 is local alignment.
+
+Pinned source175 HF revision4bb81a483398a2a944a519507bb8df6d9c13d0be,
+generation step-511-9e08133cf6934ce4a0788601f6fd5101, cursor92,258,304.
+See results/EXP-176-source-reference.json and EXP-176-protocol-and-launch.md.
+Host-owned tmpfs carries source/data/checkpoints/caches. Retain30GiB SSD,
+use120GiB RAM-file budget, cap CUDA at90GiB or current free minus5GiB.
+Only latest remote-verified CURRENT permits normal-stop cleanup.
+FAST_STOP saves locally and releases GPU without final HF upload.
+Parent-owned periodic upload workers are separately cancellable.
+
+Mandatory isolated batch1..8 probes, real CUDA recurrence/gradient and
+source NLL gates, measured full-update timing. Automatic Telegram /check.
+No physical RTX throughput or learning result observed. The user's1750tok/s
+estimate is a planning assumption. Remaining fresh corpus is about508M inputs.
+HF usedStorage currently reports4.71TB.64GiB payload-upload budget reserves
+the final snapshot and normally allows only one intermediate upload.
+32 local CPU tests passed, including exact bridge/Adam continuity, full backward,
+immutable upload snapshots and cleanup retention on pause/failure. Actual CUDA
+checks execute on the server before training. No real EXP176 result received.
+
 # 13 November 2026 · EXP175 received
 
 Completed, all three pilots matched224 updates/3,670,016 inputs each.

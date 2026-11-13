@@ -424,3 +424,14 @@ training524,288 and component-gradient evaluations32,768 are separate.
 Source171 plus winning CE trajectory92,258,304 input presentations.
 [Analysis](results/EXP-175-result-analysis.md) and
 [summary with raw SHA, code checks and per-window data](results/EXP-175-received-summary.json).
+
+## 14 November 2026 · EXP176 prepared
+
+Full-student PyTorch CE continuation from the received175 step511,
+with exact active-tensor and Adam mapping. Constant LR1e-6 and the same
+context1024/effective16/fresh Edu cursor. Operator gates and source NLL
+replay precede measured CUDA batch selection. This separates a numerical
+port check from subsequent scientific training. The student-only CE
+execution also removes teacher diagnostic forwards used by the JAX CE arm.
+No physical EXP176 speed, convergence or capability result has been received.
+[Protocol](results/EXP-176-protocol-and-launch.md).
