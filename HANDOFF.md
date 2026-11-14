@@ -1,3 +1,18 @@
+# 15 November 2026 · Untouched175 gradient/Adam control completed
+
+Restored original175 CURRENT511, full pinned chunks and Adam. Same text as
+late176 gradient diagnosis. Full1024 gradient cosine vs FP32-projection /
+FP64 sequential state: FP32 SSD0.47024, BF16 compiled0.05653. Sensitivity
+therefore predates long176. Full-FP64 prefix128 norm283.836 vs late2629.545;
+one selected-coordinate finite difference1e-9 matches analytic derivative.
+Disposable Adam trials1e-6/1e-7/1e-8 all move against measured gradient,
+but single-step CE deltas are comparable to execution-path differences;
+no LR winner. Separate32-step fixed-batch LR1e-6 lowers CE2.681249→2.660917,
+validation8 worsens2.549205→2.550280. Can fit a batch; no generalization gain.
+All35 diagnostic updates discarded. Production code unchanged.
+See results/EXP-176-source175-control.md / JSON. Next: localize conditioning
+by operation/layer on175 before another long continuation or LR sweep.
+
 # 14 November 2026 · EXP176 stopped; full-model gradient sensitivity measured
 
 CURRENT9227 stopped normally after142802944 new inputs; final held-out

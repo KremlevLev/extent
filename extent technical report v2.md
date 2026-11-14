@@ -435,3 +435,16 @@ port check from subsequent scientific training. The student-only CE
 execution also removes teacher diagnostic forwards used by the JAX CE arm.
 No physical EXP176 speed, convergence or capability result has been received.
 [Protocol](results/EXP-176-protocol-and-launch.md).
+
+
+## 15 ноября 2026: контроль численной чувствительности EXP175/176
+
+**MEASURED / ENGINEERING:** [подробный контроль](results/EXP-176-source175-control.md).
+На исходном175511 уже расходятся полные градиенты FP32/BF16 и независимой
+FP64-рекурсии при почти одинаковом CE. Это не только поздний эффект176.
+Полная FP64-проверка выбранной координаты проходит конечную разность1e-9.
+Adam-сдвиг локально направлен против измеренного градиента; одношагового
+LR-победителя нет. На фиксированном batch32 шага при1e-6 снижают CE
+2.681249→2.660917, но8-window validation2.549205→2.550280 не улучшается.
+Все диагностические обновления отброшены; это не продолжение научной
+траектории и не восстановление task-качества. Производственный код не изменён.
