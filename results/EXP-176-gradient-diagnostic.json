@@ -1,0 +1,546 @@
+{
+  "status": "measured_diagnostic_not_training",
+  "checkpoint_step": 9227,
+  "checkpoint_commit": "0b5aed03f8f339c37ffca842bcd3bb7208a30067",
+  "checkpoint_sha256": "3078ac90eb433b832377a2a67ed7c0425e5cf9739f158160b3792df116f59acf",
+  "optimizer_updates": 0,
+  "windows": 1,
+  "length128": [
+    {
+      "precision": "fp32",
+      "backend": "oracle64",
+      "ce": 2.9933016300201416,
+      "seconds": 21.127468493767083,
+      "grad_norm": 3102.4666113354515,
+      "top_groups": [
+        [
+          "qwen.layers.2",
+          1794.9274198803798
+        ],
+        [
+          "mixers.20",
+          807.2396332303227
+        ],
+        [
+          "qwen.layers.19",
+          794.3837366879949
+        ],
+        [
+          "qwen.layers.15",
+          757.0294219669886
+        ],
+        [
+          "mixers.21",
+          653.7575023619327
+        ],
+        [
+          "mixers.17",
+          588.9994564947814
+        ],
+        [
+          "qwen.layers.11",
+          546.674779353787
+        ],
+        [
+          "mixers.18",
+          534.7112625222111
+        ]
+      ]
+    },
+    {
+      "precision": "fp32",
+      "backend": "chunked",
+      "ce": 2.993328809738159,
+      "seconds": 1.3374915150925517,
+      "grad_norm": 1979.0609104598589,
+      "top_groups": [
+        [
+          "qwen.layers.2",
+          1140.6248795726287
+        ],
+        [
+          "mixers.20",
+          524.2569780630141
+        ],
+        [
+          "qwen.layers.19",
+          503.3173698877405
+        ],
+        [
+          "qwen.layers.15",
+          482.7161585909645
+        ],
+        [
+          "mixers.21",
+          419.8708050821379
+        ],
+        [
+          "mixers.17",
+          355.3723765896577
+        ],
+        [
+          "mixers.18",
+          345.77741821089546
+        ],
+        [
+          "qwen.layers.11",
+          340.7245069478464
+        ]
+      ],
+      "cosine_vs_fp32_oracle64": 0.9378750449082331,
+      "relative_l2_vs_fp32_oracle64": 0.45866754742853055
+    },
+    {
+      "precision": "fp32",
+      "backend": "oracle32",
+      "ce": 2.9932990074157715,
+      "seconds": 14.518051488325,
+      "grad_norm": 2711.2705581103937,
+      "top_groups": [
+        [
+          "qwen.layers.2",
+          1584.4295283012198
+        ],
+        [
+          "mixers.20",
+          693.9521860307722
+        ],
+        [
+          "qwen.layers.19",
+          685.9057959803314
+        ],
+        [
+          "qwen.layers.15",
+          655.6829952856526
+        ],
+        [
+          "mixers.21",
+          596.873565381303
+        ],
+        [
+          "mixers.17",
+          522.5366913741699
+        ],
+        [
+          "qwen.layers.11",
+          489.04099971153926
+        ],
+        [
+          "mixers.18",
+          456.2676633840947
+        ]
+      ],
+      "cosine_vs_fp32_oracle64": 0.9841278904034124,
+      "relative_l2_vs_fp32_oracle64": 0.208903584755962
+    },
+    {
+      "precision": "bf16",
+      "backend": "chunked-compiled",
+      "ce": 2.9870529174804688,
+      "seconds": 23.871068123262376,
+      "grad_norm": 819.4194749018378,
+      "top_groups": [
+        [
+          "qwen.layers.2",
+          485.3233506237054
+        ],
+        [
+          "mixers.20",
+          241.51607177696513
+        ],
+        [
+          "qwen.layers.19",
+          206.50388960646617
+        ],
+        [
+          "mixers.21",
+          183.10895144752632
+        ],
+        [
+          "qwen.layers.15",
+          181.361416286674
+        ],
+        [
+          "mixers.18",
+          150.32245662837974
+        ],
+        [
+          "qwen.layers.11",
+          143.78078664119113
+        ],
+        [
+          "mixers.17",
+          124.65900460263065
+        ]
+      ],
+      "cosine_vs_fp32_oracle64": -0.24095834120685503,
+      "relative_l2_vs_fp32_oracle64": 1.0940941020122008
+    },
+    {
+      "precision": "bf16",
+      "backend": "oracle64",
+      "ce": 2.9864461421966553,
+      "seconds": 12.834565714001656,
+      "grad_norm": 1330.7838466362218,
+      "top_groups": [
+        [
+          "qwen.layers.2",
+          690.5477039749585
+        ],
+        [
+          "mixers.21",
+          360.5617561555862
+        ],
+        [
+          "mixers.20",
+          331.6611386977029
+        ],
+        [
+          "qwen.layers.19",
+          330.446979169057
+        ],
+        [
+          "mixers.18",
+          314.5322035955422
+        ],
+        [
+          "qwen.layers.15",
+          306.25411841969185
+        ],
+        [
+          "mixers.17",
+          230.95601219271646
+        ],
+        [
+          "qwen.layers.11",
+          227.70271949127255
+        ]
+      ],
+      "cosine_vs_fp32_oracle64": 0.03169473683890576,
+      "relative_l2_vs_fp32_oracle64": 1.0755474277151942
+    }
+  ],
+  "length1024": {
+    "checkpoint_step": 9227,
+    "cursor": 235061248,
+    "length": 1024,
+    "batch": 1,
+    "optimizer_updates": 0,
+    "tf32": false,
+    "rows": [
+      {
+        "precision": "fp32",
+        "backend": "oracle64",
+        "ce": 2.766294240951538,
+        "seconds": 101.70935954200104,
+        "grad_norm": 10947.524975924453,
+        "top_groups": [
+          [
+            "qwen.layers.2",
+            5923.0100716971565
+          ],
+          [
+            "qwen.layers.11",
+            3313.5247061527093
+          ],
+          [
+            "mixers.20",
+            2865.987783400704
+          ],
+          [
+            "qwen.layers.15",
+            2805.0646939485073
+          ],
+          [
+            "qwen.layers.19",
+            2268.2656478595754
+          ],
+          [
+            "mixers.13",
+            1988.740865487202
+          ],
+          [
+            "mixers.17",
+            1895.624604502218
+          ],
+          [
+            "mixers.18",
+            1884.1705413544241
+          ]
+        ]
+      },
+      {
+        "precision": "fp32",
+        "backend": "chunked",
+        "ce": 2.766336441040039,
+        "seconds": 3.5979847791604698,
+        "grad_norm": 7932.314227498876,
+        "top_groups": [
+          [
+            "qwen.layers.2",
+            3826.7101040795515
+          ],
+          [
+            "mixers.20",
+            2205.4378621071046
+          ],
+          [
+            "qwen.layers.15",
+            1953.313629374492
+          ],
+          [
+            "qwen.layers.19",
+            1877.3533979987446
+          ],
+          [
+            "qwen.layers.11",
+            1799.27319743109
+          ],
+          [
+            "mixers.17",
+            1763.2315737595738
+          ],
+          [
+            "mixers.18",
+            1641.007948522197
+          ],
+          [
+            "mixers.13",
+            1444.629758423079
+          ]
+        ],
+        "cosine_vs_fp32_oracle64": 0.10886203230630848,
+        "relative_l2_vs_fp32_oracle64": 1.1692958520475816
+      },
+      {
+        "precision": "fp32",
+        "backend": "oracle32",
+        "ce": 2.7663028240203857,
+        "seconds": 97.51582868536934,
+        "grad_norm": 8857.084677514933,
+        "top_groups": [
+          [
+            "qwen.layers.2",
+            4855.575979484956
+          ],
+          [
+            "qwen.layers.11",
+            2352.8701473794913
+          ],
+          [
+            "qwen.layers.15",
+            2258.0534113318367
+          ],
+          [
+            "mixers.20",
+            2154.5861006364075
+          ],
+          [
+            "qwen.layers.19",
+            1933.9655396804985
+          ],
+          [
+            "mixers.18",
+            1812.6494099608994
+          ],
+          [
+            "mixers.21",
+            1750.8923446744923
+          ],
+          [
+            "mixers.17",
+            1728.2233334175248
+          ]
+        ],
+        "cosine_vs_fp32_oracle64": -0.6433487773092871,
+        "relative_l2_vs_fp32_oracle64": 1.6418166153433125
+      },
+      {
+        "precision": "bf16",
+        "backend": "chunked-compiled",
+        "ce": 2.7599031925201416,
+        "seconds": 13.27194025926292,
+        "grad_norm": 14508.279529936306,
+        "top_groups": [
+          [
+            "qwen.layers.2",
+            7619.973564119122
+          ],
+          [
+            "qwen.layers.15",
+            4179.3281109402005
+          ],
+          [
+            "qwen.layers.11",
+            3837.8463120415386
+          ],
+          [
+            "mixers.20",
+            3762.1836973639115
+          ],
+          [
+            "qwen.layers.19",
+            3057.756034441551
+          ],
+          [
+            "mixers.17",
+            2978.5774590246297
+          ],
+          [
+            "mixers.18",
+            2767.9963075932737
+          ],
+          [
+            "mixers.13",
+            2359.9873062586457
+          ]
+        ],
+        "cosine_vs_fp32_oracle64": -0.36038316007477394,
+        "relative_l2_vs_fp32_oracle64": 1.9265267497969658
+      },
+      {
+        "precision": "bf16",
+        "backend": "oracle64",
+        "ce": 2.7576305866241455,
+        "seconds": 99.20408919407055,
+        "grad_norm": 5609.792849610558,
+        "top_groups": [
+          [
+            "qwen.layers.2",
+            2539.7808801365877
+          ],
+          [
+            "mixers.18",
+            2204.883078609016
+          ],
+          [
+            "qwen.layers.15",
+            1383.991574437058
+          ],
+          [
+            "mixers.17",
+            1361.7351451632878
+          ],
+          [
+            "mixers.20",
+            1340.2200126552893
+          ],
+          [
+            "qwen.layers.11",
+            1251.52128203249
+          ],
+          [
+            "qwen.layers.19",
+            1200.930822483904
+          ],
+          [
+            "mixers.14",
+            900.5490124904818
+          ]
+        ],
+        "cosine_vs_fp32_oracle64": -0.200206072419595,
+        "relative_l2_vs_fp32_oracle64": 1.211512085223801
+      }
+    ]
+  },
+  "full_fp64_length128": {
+    "checkpoint_step": 9227,
+    "cursor": 235061248,
+    "length": 128,
+    "batch": 1,
+    "optimizer_updates": 0,
+    "tf32": false,
+    "rows": [
+      {
+        "precision": "fp64",
+        "backend": "oracle64",
+        "ce": 2.993297182643269,
+        "seconds": 20.723702505696565,
+        "grad_norm": 2629.5450109572726,
+        "top_groups": [
+          [
+            "qwen.layers.2",
+            1526.2685322123284
+          ],
+          [
+            "mixers.20",
+            676.0078925533323
+          ],
+          [
+            "qwen.layers.19",
+            663.6799356520524
+          ],
+          [
+            "qwen.layers.15",
+            646.8846631610495
+          ],
+          [
+            "mixers.21",
+            566.33339585387
+          ],
+          [
+            "mixers.17",
+            503.2549030545569
+          ],
+          [
+            "qwen.layers.11",
+            465.3445717744594
+          ],
+          [
+            "mixers.18",
+            449.02999139263676
+          ]
+        ]
+      }
+    ],
+    "finite_difference": [
+      {
+        "parameter": "qwen.layers.2.mlp.down_proj.weight",
+        "index": 8861469,
+        "epsilon": 1e-07,
+        "analytic": -213.26600791843504,
+        "finite_difference": -200.19293828665852,
+        "plus": 2.9932782982541943,
+        "minus": 2.9933183368418517
+      },
+      {
+        "parameter": "qwen.layers.2.mlp.down_proj.weight",
+        "index": 8861469,
+        "epsilon": 1e-08,
+        "analytic": -213.26600791843504,
+        "finite_difference": -213.1310877784287,
+        "plus": 2.9932950688382385,
+        "minus": 2.993299331459994
+      },
+      {
+        "parameter": "qwen.layers.2.mlp.down_proj.weight",
+        "index": 8861469,
+        "epsilon": 1e-09,
+        "analytic": -213.26600791843504,
+        "finite_difference": -213.2646781394243,
+        "plus": 2.9932969695542355,
+        "minus": 2.993297396083592
+      },
+      {
+        "parameter": "qwen.layers.2.mlp.down_proj.weight",
+        "index": 8861469,
+        "epsilon": 1e-10,
+        "analytic": -213.26600791843504,
+        "finite_difference": -213.26554966449862,
+        "plus": 2.993297161318422,
+        "minus": 2.9932972039715318
+      }
+    ]
+  },
+  "limitations": [
+    "one late checkpoint and one fresh train window/prefix",
+    "FP32-oracle64 keeps FP32 projections; it is not an all-FP64 baseline",
+    "finite difference checks one post-hoc maximum-gradient coordinate",
+    "no proof of cause at original175 checkpoint or TPU behavior"
+  ],
+  "code_sha256": {
+    "sequential_oracle.py": "9cf56c6514d64d235d5da203807c8cd2453cd20d38e5aa147b4a79a95c52015b",
+    "run_reference.py": "77fc534841e3cc322fb75ef21f5251f27359def9fc1f835925c6827de034545a",
+    "test_oracle.py": "37eefa1609a5185a8778e5885fe5aaf8c56389ead3bcf0455fa59bc2baae2b79"
+  }
+}

@@ -1,3 +1,19 @@
+# 14 November 2026 · EXP176 stopped; full-model gradient sensitivity measured
+
+CURRENT9227 stopped normally after142802944 new inputs; final held-out
+NLL2.653833 vs2.539183 initial,128/128 windows worse. HF manifest/LFS verified,
+normal training RAM cleanup complete. Diagnostic re-download used owned tmpfs.
+Full-model gradient comparison on one fresh window (128/1024): compiled BF16,
+uncompiled FP32 and independent sequential FP64 recurrence disagree strongly.
+On1024 tokens FP32 SSD cosine0.109 vs FP32-projection/FP64-state oracle;
+BF16 compiled cosine-0.360. Do not label this a proven compiler bug.
+Full FP64 on128 tokens has grad norm2629.545; a post-hoc maximum-gradient
+coordinate passes central finite differences at1e-9 but not larger1e-6 steps.
+This establishes late-checkpoint conditioning/precision sensitivity, not the
+cause of original175 drift. No diagnostic optimizer updates. Before another
+long run, repeat on untouched175 and test actual Adam displacement on fixed data.
+See results/EXP-176-gradient-diagnostic.md and JSON for scope and evidence.
+
 # 14 November 2026 · EXP176 first CUDA attempt failed before training
 
 Connected to biig-mlserver using the existing biig_mlserver SSH key from the
