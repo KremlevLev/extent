@@ -51,6 +51,14 @@ def placeholder_attention(config):
 def ce_tile(features, head, targets):
     return F.cross_entropy(F.linear(features, head).float(), targets, reduction="sum")
 
+def sample_indices(length, device="cpu"):
+    """Evenly sample large tensors without float32 endpoint rounding."""
+    count = min(1024, length)
+    if count <= 1:
+        return torch.zeros(count, dtype=torch.int64, device=device)
+    return torch.arange(count, dtype=torch.int64, device=device) * (length - 1) // (count - 1)
+
+
 def sample_master_weights(model):
     names = ("qwen.embed_tokens.weight", "qwen.norm.weight",
              "qwen.layers.3.self_attn.q_proj.weight", "mixers.0.in_weight")
@@ -58,7 +66,7 @@ def sample_master_weights(model):
     result = {}
     for name in names:
         flat = parameters[name].detach().reshape(-1)
-        indices = torch.linspace(0, len(flat) - 1, min(1024, len(flat)), device=flat.device).long()
+        indices = sample_indices(len(flat), flat.device)
         result[name] = flat[indices].float().cpu()
     return result
 

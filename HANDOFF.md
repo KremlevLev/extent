@@ -1,3 +1,16 @@
+# 14 November 2026 · EXP176 first CUDA attempt failed before training
+
+Connected to biig-mlserver using the existing biig_mlserver SSH key from the
+VeriFinger chat. Launch report elapsed1788.56s; both backend batch1 probes
+passed source replay and failed in sample_master_weights, before any accepted
+update. FP32 torch.linspace rounded the embedding last index311164927 up to
+311164928, causing CUDA IndexKernel out-of-bounds. Reproduced on actual GPU.
+Integer-only evenly spaced indices fix the diagnostic; training math unchanged.
+Explicit compatibility accepts only the prior diagnostic code hash with every
+other contract field unchanged. CURRENT511 and Adam remain in owned tmpfs.
+At investigation GPU had another /opt/venv/bin/python at100% utilization;
+training restart is deferred to avoid competing with that workload.
+
 # 14 November 2026 · EXP176 PyTorch weekend continuation prepared
 
 User offered RTX PRO6000 until16Nov09:00MSK, roughly500GB RAM but only80GB

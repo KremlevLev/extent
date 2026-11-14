@@ -10,6 +10,15 @@ import torch
 
 from extent.torch_continue_176 import ExactRMSNorm, destinations, save_current
 
+@pytest.mark.parametrize("length", [1, 2048, 310771712, 151936 * 2048])
+def test_precision_sample_indices_stay_inside_large_parameters(length):
+    from extent.torch_continue_176 import sample_indices
+    indices = sample_indices(length)
+    assert indices.dtype == torch.int64
+    assert int(indices.min()) == 0
+    assert int(indices.max()) == length - 1
+    assert bool((indices[1:] >= indices[:-1]).all())
+
 def test_restart_excludes_journal_steps_not_in_restored_checkpoint():
     from engine_torch176 import history_at_checkpoint
     previous = dict(step=700, history=[dict(step=640), dict(step=650), dict(step=700)],
@@ -18,6 +27,17 @@ def test_restart_excludes_journal_steps_not_in_restored_checkpoint():
     assert restored["excluded_updates"] == 50
     assert restored["history"] == [dict(step=640), dict(step=650)]
     assert restored["evaluations"] == [dict(step=640, nll=2.53)]
+
+
+def test_diagnostic_only_contract_migration_rejects_training_changes():
+    from engine_torch176 import compatible_contract
+    expected = dict(lr=1e-6, code={"extent/torch_continue_176.py": "new", "other": "same"})
+    old = dict(expected, code=dict(expected["code"]))
+    old["code"]["extent/torch_continue_176.py"] = "624a9a35a5b4cac433d37b7ebf1e4178671f031683cfb770b81363b4619074da"
+    assert compatible_contract(old, expected)
+    assert not compatible_contract(dict(old, lr=1e-5), expected)
+    old["code"]["other"] = "changed"
+    assert not compatible_contract(old, expected)
 
 
 def test_mapping_keeps_only_active_modules_and_transposes_kernels():
