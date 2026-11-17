@@ -1,0 +1,230 @@
+{
+  "step": 5663,
+  "cursor": 92258304,
+  "context": 1024,
+  "effective_batch": 16,
+  "physical_batch": 8,
+  "disposable": true,
+  "persisted_updates": 5156,
+  "trials": [],
+  "initial_validation128": 2.5395079059526324,
+  "branch": "bf16",
+  "status": "time_budget",
+  "evaluations": [
+    {
+      "updates": 128,
+      "input_tokens": 2097152,
+      "nll": 2.541161813773215
+    },
+    {
+      "updates": 256,
+      "input_tokens": 4194304,
+      "nll": 2.5464897556230426
+    },
+    {
+      "updates": 384,
+      "input_tokens": 6291456,
+      "nll": 2.548282779753208
+    },
+    {
+      "updates": 512,
+      "input_tokens": 8388608,
+      "nll": 2.5514560993760824
+    },
+    {
+      "updates": 640,
+      "input_tokens": 10485760,
+      "nll": 2.5521523198112845
+    },
+    {
+      "updates": 768,
+      "input_tokens": 12582912,
+      "nll": 2.552982767112553
+    },
+    {
+      "updates": 896,
+      "input_tokens": 14680064,
+      "nll": 2.5489676455035806
+    },
+    {
+      "updates": 1024,
+      "input_tokens": 16777216,
+      "nll": 2.552153706550598
+    },
+    {
+      "updates": 1152,
+      "input_tokens": 18874368,
+      "nll": 2.5498578445985913
+    },
+    {
+      "updates": 1280,
+      "input_tokens": 20971520,
+      "nll": 2.5480755362659693
+    },
+    {
+      "updates": 1408,
+      "input_tokens": 23068672,
+      "nll": 2.550039771012962
+    },
+    {
+      "updates": 1536,
+      "input_tokens": 25165824,
+      "nll": 2.5514220586046576
+    },
+    {
+      "updates": 1664,
+      "input_tokens": 27262976,
+      "nll": 2.552377361804247
+    },
+    {
+      "updates": 1792,
+      "input_tokens": 29360128,
+      "nll": 2.5513435881584883
+    },
+    {
+      "updates": 1920,
+      "input_tokens": 31457280,
+      "nll": 2.5506581254303455
+    },
+    {
+      "updates": 2048,
+      "input_tokens": 33554432,
+      "nll": 2.55003516189754
+    },
+    {
+      "updates": 2176,
+      "input_tokens": 35651584,
+      "nll": 2.5489170625805855
+    },
+    {
+      "updates": 2304,
+      "input_tokens": 37748736,
+      "nll": 2.5491109043359756
+    },
+    {
+      "updates": 2432,
+      "input_tokens": 39845888,
+      "nll": 2.5483384551480412
+    },
+    {
+      "updates": 2560,
+      "input_tokens": 41943040,
+      "nll": 2.548124685883522
+    },
+    {
+      "updates": 2688,
+      "input_tokens": 44040192,
+      "nll": 2.548294729553163
+    },
+    {
+      "updates": 2816,
+      "input_tokens": 46137344,
+      "nll": 2.548487060703337
+    },
+    {
+      "updates": 2944,
+      "input_tokens": 48234496,
+      "nll": 2.5485110376030207
+    },
+    {
+      "updates": 3072,
+      "input_tokens": 50331648,
+      "nll": 2.5484807770699263
+    },
+    {
+      "updates": 3200,
+      "input_tokens": 52428800,
+      "nll": 2.550517275929451
+    },
+    {
+      "updates": 3328,
+      "input_tokens": 54525952,
+      "nll": 2.5511082550510764
+    },
+    {
+      "updates": 3456,
+      "input_tokens": 56623104,
+      "nll": 2.552122467197478
+    },
+    {
+      "updates": 3584,
+      "input_tokens": 58720256,
+      "nll": 2.5514494432136416
+    },
+    {
+      "updates": 3712,
+      "input_tokens": 60817408,
+      "nll": 2.553981028497219
+    },
+    {
+      "updates": 3840,
+      "input_tokens": 62914560,
+      "nll": 2.5528854643926024
+    },
+    {
+      "updates": 3968,
+      "input_tokens": 65011712,
+      "nll": 2.554291695356369
+    },
+    {
+      "updates": 4096,
+      "input_tokens": 67108864,
+      "nll": 2.554273488931358
+    },
+    {
+      "updates": 4224,
+      "input_tokens": 69206016,
+      "nll": 2.5588697949424386
+    },
+    {
+      "updates": 4352,
+      "input_tokens": 71303168,
+      "nll": 2.5643386766314507
+    },
+    {
+      "updates": 4480,
+      "input_tokens": 73400320,
+      "nll": 2.562919490970671
+    },
+    {
+      "updates": 4608,
+      "input_tokens": 75497472,
+      "nll": 2.5705465022474527
+    },
+    {
+      "updates": 4736,
+      "input_tokens": 77594624,
+      "nll": 2.566866846755147
+    },
+    {
+      "updates": 4864,
+      "input_tokens": 79691776,
+      "nll": 2.5727898441255093
+    },
+    {
+      "updates": 4992,
+      "input_tokens": 81788928,
+      "nll": 2.5717584947124124
+    },
+    {
+      "updates": 5120,
+      "input_tokens": 83886080,
+      "nll": 2.5831509940326214
+    }
+  ],
+  "start_validation128": 2.5395079059526324,
+  "checkpoint": "/dev/shm/extent176-ea39a8d2972d47f8a9f999eb5a9404c6/paired-bf16/CURRENT.pt",
+  "accepted_input_tokens": 84410368,
+  "last_train_ce": 2.686550259590149,
+  "raw_grad_norm": 126180.9453125,
+  "elapsed_seconds": 19787.36301666824,
+  "final_validation128": 2.5866123735904694,
+  "completed": true,
+  "remote": {
+    "file": "experiments/exp176-paired-precision-v1/bf16/CURRENT.pt",
+    "sha256": "d336684ced026b342228b710c0601ad6a4d1545ff460bc436f0ab5835ea15745",
+    "commit": "04e608d7bd9c0f294e07b5d5dbf27c8259366bcb",
+    "step": 5667
+  },
+  "hf_verified": true
+}

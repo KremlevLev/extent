@@ -1,0 +1,182 @@
+{
+  "step": 5814,
+  "cursor": 124878848,
+  "context": 1024,
+  "effective_batch": 16,
+  "physical_batch": 8,
+  "disposable": false,
+  "persisted_updates": 3324,
+  "trials": [],
+  "initial_validation128": 2.537057278677821,
+  "branch": "fp32",
+  "status": "time_budget",
+  "evaluations": [
+    {
+      "updates": 128,
+      "input_tokens": 2097152,
+      "nll": 2.5369453616440296,
+      "c4_nll": 2.8548992639407516
+    },
+    {
+      "updates": 256,
+      "input_tokens": 4194304,
+      "nll": 2.5384368589147925,
+      "c4_nll": 2.855905242264271
+    },
+    {
+      "updates": 384,
+      "input_tokens": 6291456,
+      "nll": 2.5434228722006083,
+      "c4_nll": 2.8611304676160216
+    },
+    {
+      "updates": 512,
+      "input_tokens": 8388608,
+      "nll": 2.544294321909547,
+      "c4_nll": 2.8623118614777923
+    },
+    {
+      "updates": 640,
+      "input_tokens": 10485760,
+      "nll": 2.5440337816253304,
+      "c4_nll": 2.862086118198931
+    },
+    {
+      "updates": 768,
+      "input_tokens": 12582912,
+      "nll": 2.5451665315777063,
+      "c4_nll": 2.8654145523905754
+    },
+    {
+      "updates": 896,
+      "input_tokens": 14680064,
+      "nll": 2.5465921070426702,
+      "c4_nll": 2.86609392054379
+    },
+    {
+      "updates": 1024,
+      "input_tokens": 16777216,
+      "nll": 2.543651775456965,
+      "c4_nll": 2.862781060859561
+    },
+    {
+      "updates": 1152,
+      "input_tokens": 18874368,
+      "nll": 2.541140721179545,
+      "c4_nll": 2.859874313697219
+    },
+    {
+      "updates": 1280,
+      "input_tokens": 20971520,
+      "nll": 2.5411411253735423,
+      "c4_nll": 2.8598627820611
+    },
+    {
+      "updates": 1408,
+      "input_tokens": 23068672,
+      "nll": 2.542837272398174,
+      "c4_nll": 2.861991419456899
+    },
+    {
+      "updates": 1536,
+      "input_tokens": 25165824,
+      "nll": 2.5450906017795205,
+      "c4_nll": 2.864454658702016
+    },
+    {
+      "updates": 1664,
+      "input_tokens": 27262976,
+      "nll": 2.5446524377912283,
+      "c4_nll": 2.864691225811839
+    },
+    {
+      "updates": 1792,
+      "input_tokens": 29360128,
+      "nll": 2.5435950020328164,
+      "c4_nll": 2.863665474578738
+    },
+    {
+      "updates": 1920,
+      "input_tokens": 31457280,
+      "nll": 2.5464877570047975,
+      "c4_nll": 2.8675457071512938
+    },
+    {
+      "updates": 2048,
+      "input_tokens": 33554432,
+      "nll": 2.5476034516468644,
+      "c4_nll": 2.8699053088203073
+    },
+    {
+      "updates": 2176,
+      "input_tokens": 35651584,
+      "nll": 2.5477542402222753,
+      "c4_nll": 2.869783000089228
+    },
+    {
+      "updates": 2304,
+      "input_tokens": 37748736,
+      "nll": 2.5494447108358145,
+      "c4_nll": 2.8705553570762277
+    },
+    {
+      "updates": 2432,
+      "input_tokens": 39845888,
+      "nll": 2.5489165242761374,
+      "c4_nll": 2.8694174801930785
+    },
+    {
+      "updates": 2560,
+      "input_tokens": 41943040,
+      "nll": 2.5519482074305415,
+      "c4_nll": 2.8725062431767583
+    },
+    {
+      "updates": 2688,
+      "input_tokens": 44040192,
+      "nll": 2.553351381793618,
+      "c4_nll": 2.872461725026369
+    },
+    {
+      "updates": 2816,
+      "input_tokens": 46137344,
+      "nll": 2.5521781845018268,
+      "c4_nll": 2.872226083651185
+    },
+    {
+      "updates": 2944,
+      "input_tokens": 48234496,
+      "nll": 2.550169115886092,
+      "c4_nll": 2.8686350621283054
+    },
+    {
+      "updates": 3072,
+      "input_tokens": 50331648,
+      "nll": 2.5541079975664616,
+      "c4_nll": 2.8725549522787333
+    },
+    {
+      "updates": 3200,
+      "input_tokens": 52428800,
+      "nll": 2.5521249705925584,
+      "c4_nll": 2.8708274494856596
+    }
+  ],
+  "start_validation128": 2.537057278677821,
+  "start_c4_nll": 2.8549751173704863,
+  "checkpoint": "/dev/shm/extent176-ea39a8d2972d47f8a9f999eb5a9404c6/continuation-fp32/CURRENT.pt",
+  "accepted_input_tokens": 54263808,
+  "last_train_ce": 2.4193344116210938,
+  "raw_grad_norm": 2330.29638671875,
+  "elapsed_seconds": 33881.677536544856,
+  "final_validation128": 2.549587336368859,
+  "final_c4_nll": 2.8678939128294587,
+  "completed": true,
+  "remote": {
+    "file": "experiments/exp176-fp32-continuation-v1/CURRENT.pt",
+    "sha256": "0110b661c0766d6bcfb941a16e80f76a7f332c068ab61ee1d27c27b1e267001d",
+    "commit": "30c49a8b7b3d8e6b16ab65f63b1e29a5e95bf6af",
+    "step": 5826
+  },
+  "hf_verified": true
+}

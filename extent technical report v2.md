@@ -433,7 +433,7 @@ context1024/effective16/fresh Edu cursor. Operator gates and source NLL
 replay precede measured CUDA batch selection. This separates a numerical
 port check from subsequent scientific training. The student-only CE
 execution also removes teacher diagnostic forwards used by the JAX CE arm.
-No physical EXP176 speed, convergence or capability result has been received.
+For received EXP176 results and the subsequent precision comparison, see the later sections below. No post-continuation task benchmark has been received.
 [Protocol](results/EXP-176-protocol-and-launch.md).
 
 
@@ -448,3 +448,19 @@ LR-победителя нет. На фиксированном batch32 шага
 2.681249→2.660917, но8-window validation2.549205→2.550280 не улучшается.
 Все диагностические обновления отброшены; это не продолжение научной
 траектории и не восстановление task-качества. Производственный код не изменён.
+
+
+## 17 ноября 2026: сравнение точности и продолжение FP32
+
+**MEASURED.** Обе ветки начинались с EXP175 step511, одинаковых весов и состояния Adam, context1024, effective batch16, полный student, CE и LR1e-6. Изменялись одновременно точность проекций и реализация рекурсии: BF16 с compiled chunked против FP32 с uncompiled chunked. Поэтому эффект одной только точности не выделен. Одна пара запусков, одна основная validation-панель из128 окон; статистическая и seed-репликация отсутствует.
+
+| Ветка | Дополнительные input-token presentations | NLL при старте | Финальный NLL |
+|---|---:|---:|---:|
+| BF16 / compiled | 84,475,904 | 2.539508 | 2.586612 |
+| FP32 / uncompiled | 32,620,544 | 2.538859 | 2.537057 |
+
+На сопоставленных31,457,280 входных токенах BF16: **2.550658**, FP32: **2.537199**. Различие стартовых NLL следует учитывать: относительно собственного старта изменения составляют +0.011150 и -0.001660. Обе финальные точки подтверждены на HF. Финальные токены рассчитаны по persisted_updates × 16 × 1024; поля step/accepted_input_tokens в отчётах обновлялись периодически и отстают от финального checkpoint. [BF16 raw](results/EXP-176-paired-bf16-received.json), [FP32 raw](results/EXP-176-paired-fp32-received.json).
+
+FP32 продолжен с checkpoint step2502 и состоянием Adam ещё на **54,460,416** входных токенов, до step5826; суммарно FP32 после EXP175 — **87,080,960**. Основная панель: 2.537057 → **2.549587**; дополнительная C4: 2.854975 → **2.867894**. Каждая панель содержит128 окон длиной1024. C4 здесь дополнительная проверочная панель, её независимость от всей прежней истории отбора не установлена. Финальный checkpoint подтверждён HF commit `30c49a8b7b3d8e6b16ab65f63b1e29a5e95bf6af`, SHA256 `0110b661c0766d6bcfb941a16e80f76a7f332c068ab61ee1d27c27b1e267001d`. [Raw continuation](results/EXP-176-fp32-continuation-received.json).
+
+**Интерпретация.** FP32/uncompiled лучше сохранил NLL в доступном совпадающем бюджете, но при дальнейшем CE обучении NLL вырос на обеих панелях. Это не доказывает причинную роль точности, отсутствие способности обучаться или восстановление downstream-качества. Поздняя диагностика чувствительности градиентов позволяет рассматривать численную устойчивость как гипотезу, а не установленную причину ухудшения. Предлагаемый следующий контролируемый опыт: CE против CE+KL с одной стартовой FP32-точкой, одинаковыми новыми данными, оптимизатором и бюджетом; прямой эффект KL пока не измерен на этой траектории.

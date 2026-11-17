@@ -1,3 +1,7 @@
+# 17 November 2026 · FP32 continuation received
+
+Paired175-start BF16 compiled vs FP32 uncompiled: matched31.457M inputs NLL2.550658 vs2.537199, with different numerical starts. Precision and kernel are confounded. FP32 checkpoint2502 was continued another54,460,416 inputs to step5826: Edu2.537057→2.549587, C4 2.854975→2.867894. Both 128-window panels; HF verified. Total FP32 inputs after175=87,080,960. A tiny improvement early is not a sustained gain. Source of drift unproven; CE-vs-CE+KL matched continuation is a proposed experiment, not a result. Original175, early FP32 and late FP32 preserved on HF; transient large RAM checkpoints cleaned after SHA/manifest verification. See volume II and results/EXP-176-*-received.json.
+
 # 15 November 2026 · Untouched175 gradient/Adam control completed
 
 Restored original175 CURRENT511, full pinned chunks and Adam. Same text as

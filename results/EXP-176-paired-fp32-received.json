@@ -1,0 +1,105 @@
+{
+  "step": 2495,
+  "cursor": 92258304,
+  "context": 1024,
+  "effective_batch": 16,
+  "physical_batch": 8,
+  "disposable": true,
+  "persisted_updates": 1991,
+  "trials": [],
+  "initial_validation128": 2.5388594875112176,
+  "branch": "fp32",
+  "status": "time_budget",
+  "evaluations": [
+    {
+      "updates": 128,
+      "input_tokens": 2097152,
+      "nll": 2.5385584086179733
+    },
+    {
+      "updates": 256,
+      "input_tokens": 4194304,
+      "nll": 2.5380487460643053
+    },
+    {
+      "updates": 384,
+      "input_tokens": 6291456,
+      "nll": 2.538031299598515
+    },
+    {
+      "updates": 512,
+      "input_tokens": 8388608,
+      "nll": 2.537524544633925
+    },
+    {
+      "updates": 640,
+      "input_tokens": 10485760,
+      "nll": 2.5374801736325026
+    },
+    {
+      "updates": 768,
+      "input_tokens": 12582912,
+      "nll": 2.539075451903045
+    },
+    {
+      "updates": 896,
+      "input_tokens": 14680064,
+      "nll": 2.5385925006121397
+    },
+    {
+      "updates": 1024,
+      "input_tokens": 16777216,
+      "nll": 2.538946630433202
+    },
+    {
+      "updates": 1152,
+      "input_tokens": 18874368,
+      "nll": 2.5392548190429807
+    },
+    {
+      "updates": 1280,
+      "input_tokens": 20971520,
+      "nll": 2.540070306509733
+    },
+    {
+      "updates": 1408,
+      "input_tokens": 23068672,
+      "nll": 2.540491779334843
+    },
+    {
+      "updates": 1536,
+      "input_tokens": 25165824,
+      "nll": 2.5395630607381463
+    },
+    {
+      "updates": 1664,
+      "input_tokens": 27262976,
+      "nll": 2.5380486343055964
+    },
+    {
+      "updates": 1792,
+      "input_tokens": 29360128,
+      "nll": 2.5390266636386514
+    },
+    {
+      "updates": 1920,
+      "input_tokens": 31457280,
+      "nll": 2.537199134938419
+    }
+  ],
+  "start_validation128": 2.5388594875112176,
+  "checkpoint": "/dev/shm/extent176-ea39a8d2972d47f8a9f999eb5a9404c6/paired-fp32/CURRENT.pt",
+  "accepted_input_tokens": 32505856,
+  "last_train_ce": 2.6681721210479736,
+  "raw_grad_norm": 6751.59228515625,
+  "elapsed_seconds": 19734.31830159109,
+  "final_validation128": 2.537057278677821,
+  "completed": true,
+  "remote": {
+    "file": "experiments/exp176-paired-precision-v1/fp32/CURRENT.pt",
+    "sha256": "d62339838b407ffbc332e4d96df699aa7810a980110df3b84631359945acc71b",
+    "commit": "51622cd35a33f79cf283c0d21dc9be961d38d8de",
+    "step": 2502
+  },
+  "hf_verified": true
+}
