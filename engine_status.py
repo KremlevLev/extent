@@ -146,6 +146,9 @@ def format_report(alias,report,modified,active=None,cached=False,now=None):
             lines.append(f'BEST {label}: {row["best_nll"]:.4f} @ {row.get("best_step","—")}')
         if row.get('selected_batch'):lines.append(f"Выбранный batch: {row['selected_batch']}")
         if contract.get('format') == 'torch-full-ce-v1':
+            if contract.get('experiment') == 177:
+                if number(row.get('last_kl')):lines.append(f"Train KL: {row['last_kl']:.5f}")
+                if number(row.get('last_c4_nll')):lines.append(f"NLL C4: {row['last_c4_nll']:.5f} @ {row.get('validation_step')}")
             if history:
                 lines.append(f"Train CE: {short(history[-1].get('ce'), 5)}; LR: {short(history[-1].get('lr'), 6)}")
             if number(row.get('last_validation_nll')):
